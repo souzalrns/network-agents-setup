@@ -65,6 +65,16 @@ export class OpenAIProvider implements LLMProvider {
       } catch {
         // corpo não era JSON (ex.: bloqueio de rede/proxy) — mantém statusText
       }
+      // Mensagens específicas para os códigos de erro mais comuns da OpenAI.
+      if (response.status === 401) {
+        throw new Error(`Chave de API inválida (401). Verifique sua OPENAI_API_KEY. Detalhe: ${detail}`);
+      }
+      if (response.status === 429) {
+        throw new Error(`Limite de requisições/cota da OpenAI excedido (429). Aguarde e tente novamente. Detalhe: ${detail}`);
+      }
+      if (response.status >= 500) {
+        throw new Error(`Erro interno da OpenAI (${response.status}). Tente novamente mais tarde. Detalhe: ${detail}`);
+      }
       throw new Error(`OpenAI API error (${response.status}): ${detail}`);
     }
     try {

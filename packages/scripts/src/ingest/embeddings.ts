@@ -42,6 +42,16 @@ export class EmbeddingGenerator {
     let processed = 0;
     let errors = 0;
 
+    // Checagem antecipada: sem isso, cada documento pendente entraria no loop abaixo,
+    // chamaria getOpenAIClient() e falharia individualmente (1 erro por documento) — só
+    // para reportar N vezes o mesmo problema de configuração. Uma única mensagem clara e
+    // retorno antecipado é mais honesto do que "N erros" quando a causa é sempre a mesma.
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === 'your-openai-api-key-here') {
+      console.log('⚠️ OPENAI_API_KEY não configurada. Pulando geração de embeddings.');
+      return { processed: 0, errors: 0 };
+    }
+
     // Busca documentos sem embedding (ver nota de fidelidade no topo do arquivo sobre
     // por que isso precisa ser SQL cru em vez de `prisma.legalDocument.findMany`).
     const documents = await prisma.$queryRaw<PendingDocument[]>`
