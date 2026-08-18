@@ -9,11 +9,26 @@
 // uma coluna Unsupported. `saveEmbedding()` já usava `$executeRaw` no original — mantido
 // como estava, incluindo o nome de tabela `"LegalDocument"` (correto porque o model não
 // tem `@@map`, então o Prisma usa o nome do model como nome da tabela).
+//
+// Segunda correção, encontrada rodando o smoke-test de verdade (sem OPENAI_API_KEY): o
+// texto original fazia `const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })`
+// no escopo do módulo — o SDK da OpenAI valida a apiKey e LANÇA no construtor se ela
+// estiver ausente. Como `scripts/ingest/index.ts` importa este arquivo incondicionalmente
+// (mesmo para quem só quer ingerir leis/jurisprudência, sem gerar embedding nenhum), isso
+// derrubava o processo inteiro só de importar o módulo, antes mesmo de rodar qualquer
+// ingestão. Trocado por uma instância lazy, criada só quando `generateEmbedding()` é
+// chamado de verdade.
 
 import { OpenAI } from 'openai';
 import { prisma } from '../db';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai: OpenAI | null = null;
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openai;
+}
 
 interface PendingDocument {
   id: string;
@@ -52,7 +67,7 @@ export class EmbeddingGenerator {
   }
 
   private static async generateEmbedding(text: string): Promise<number[]> {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAIClient().embeddings.create({
       model: 'text-embedding-3-small',
       input: text.slice(0, 8000),
     });

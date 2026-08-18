@@ -4,9 +4,37 @@
 // rascunho comentado (Fase 1.3) para "ingest_legislation_pt", sem corpo real. Reorientado
 // para consulta em tempo real da base já ingerida (ver nota completa em
 // brazilian-law.ts), espelhando exatamente a mesma estrutura, trocando jurisdiction para 'PT'.
+// Fallback simulado (mesma ideia de brazilian-law.ts) acrescentado por simetria — não veio
+// do material colado, que só deu o exemplo BR.
 
 import { MCPTool } from '../ToolRegistry';
 import { prisma } from './db';
+
+const SIMULATED_PT_LAWS = [
+  {
+    title: 'Lei 4/2015 - Código Civil',
+    type: 'lei',
+    number: '4',
+    year: '2015',
+    summary: 'Código Civil Português, tratando de direitos e obrigações.',
+    url: 'https://diariodarepublica.pt/dr/legislacao-consolidada/pesquisa?tipo=lei&numero=4&ano=2015',
+    tags: ['codigo-civil', 'moderna'],
+  },
+  {
+    title: 'Lei 58/2019 - RGPD nacional',
+    type: 'lei',
+    number: '58',
+    year: '2019',
+    summary: 'Execução do Regulamento Geral de Proteção de Dados em Portugal.',
+    url: 'https://diariodarepublica.pt/dr/legislacao-consolidada/pesquisa?tipo=lei&numero=58&ano=2019',
+    tags: ['protecao-dados', 'moderna'],
+  },
+];
+
+function simulatePortugueseLawSearch(query: string, type: string | undefined, limit: number) {
+  const q = query.toLowerCase();
+  return SIMULATED_PT_LAWS.filter((law) => (!type || law.type === type) && (law.title.toLowerCase().includes(q) || law.summary.toLowerCase().includes(q))).slice(0, limit);
+}
 
 export function createPortugueseLawTools(): MCPTool[] {
   return [
@@ -16,7 +44,7 @@ export function createPortugueseLawTools(): MCPTool[] {
       inputSchema: {
         type: 'object',
         properties: {
-          query: { type: 'string', description: 'Termo de busca (título, ementa ou tags)' },
+          query: { type: 'string', description: 'Termo de busca (título, ementa, conteúdo ou tags)' },
           type: {
             type: 'string',
             description: 'Filtra por tipo de documento',
@@ -35,6 +63,7 @@ export function createPortugueseLawTools(): MCPTool[] {
               OR: [
                 { title: { contains: query, mode: 'insensitive' } },
                 { summary: { contains: query, mode: 'insensitive' } },
+                { content: { contains: query, mode: 'insensitive' } },
                 { tags: { has: query.toLowerCase() } },
               ],
             },
@@ -42,9 +71,26 @@ export function createPortugueseLawTools(): MCPTool[] {
             take: limit,
           });
 
+          if (documents.length === 0) {
+            const simulated = simulatePortugueseLawSearch(query, type, limit);
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify(
+                    { count: simulated.length, documents: simulated, source: 'simulated', note: 'Nenhum resultado real ingerido ainda; mostrando amostra simulada.' },
+                    null,
+                    2
+                  ),
+                },
+              ],
+              metadata: { count: simulated.length, source: 'simulated' },
+            };
+          }
+
           return {
-            content: [{ type: 'text', text: JSON.stringify({ count: documents.length, documents }, null, 2) }],
-            metadata: { count: documents.length },
+            content: [{ type: 'text', text: JSON.stringify({ count: documents.length, documents, source: 'database' }, null, 2) }],
+            metadata: { count: documents.length, source: 'database' },
           };
         } catch (error: any) {
           return { content: [{ type: 'text', text: `Erro na busca de legislação PT: ${error.message}` }], isError: true };

@@ -13,7 +13,9 @@
     "validate:completeness": "ts-node src/validate/check-completeness.ts",
     "validate:agents": "ts-node src/validate/test-agents.ts",
     "schedule": "ts-node src/schedule/ingestion-schedule.ts",
-    "monitor:quality": "ts-node src/monitor/quality-check.ts"
+    "monitor:quality": "ts-node src/monitor/quality-check.ts",
+    "smoke-test": "ts-node src/smoke-test.ts",
+    "smoke-test:quick": "ts-node src/smoke-test.ts --quick"
   },
   "dependencies": {
     "@network-agents/core": "workspace:*",
