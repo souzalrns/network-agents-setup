@@ -95,7 +95,11 @@ async function main() {
   orchestrator.selfAwareness.updateState().catch((error: any) => {
     logger.error('Initial self-awareness update failed', { error: error.message });
   });
-  // 13. Graceful shutdown
+  // 13. Atualiza dashboard
+  orchestrator.metricsDashboard.updateMetrics().catch((error: any) => {
+    logger.error('Initial metrics update failed', { error: error.message });
+  });
+  // 14. Graceful shutdown
   const shutdown = async () => {
     logger.info('Shutting down...');
     orchestrator.opportunityRadar.stop();

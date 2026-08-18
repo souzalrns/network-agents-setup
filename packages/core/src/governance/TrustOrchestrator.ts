@@ -1,97 +1,238 @@
+import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
-import { TrustManager } from './TrustManager';
-import { SecurityManager } from '../security/SecurityManager';
+import { TrustManager, Competence } from './TrustManager';
 import { SelfAwareness } from '../observability/SelfAwareness';
+import { ImmunologicalMemory } from '../immunity/ImmunologicalMemory';
+import { SecurityManager } from '../security/SecurityManager';
 
-// P-014/015: Orquestra a certificação de competências combinando a
-// avaliação de confiança (TrustManager), a postura de segurança
-// (SecurityManager) e a autopercepção do sistema (SelfAwareness) em um
-// único parecer de certificação, além de expor a escalada de confiança.
-
-export interface CompetenceAssessment {
+export interface TrustAssessment {
   competenceId: string;
-  passed: boolean;
-  trustLevel: string;
-  trustScore: number;
-  securityScore: number;
-  healthScore: number;
-  combinedScore: number;
-  reason: string;
-  metrics: {
-    reliability: number;
-    stability: number;
-    compliance: number;
-    quality: number;
-    learningCapacity: number;
-    decisionQuality: number;
-  };
+  domain: string;
+  level: string;
+  score: number;
+  status: 'certified' | 'pending' | 'suspended' | 'revoked';
+  recommendations: string[];
+  timestamp: Date;
 }
 
-export class TrustOrchestrator {
+export class TrustOrchestrator extends EventEmitter {
   private logger = getGlobalLogger();
+  private assessments: Map<string, TrustAssessment> = new Map();
 
   constructor(
     private trustManager: TrustManager,
-    private securityManager: SecurityManager,
-    private selfAwareness: SelfAwareness
-  ) {}
+    private selfAwareness: SelfAwareness,
+    private immunologicalMemory: ImmunologicalMemory,
+    private securityManager: SecurityManager
+  ) {
+    super();
+    this.logger.info('[TrustOrchestrator] Initialized');
+  }
 
   /**
-   * Avalia uma competência combinando confiança, segurança e saúde do sistema.
+   * Avalia uma competência para certificação (P-015)
    */
-  async assessCompetence(competenceId: string): Promise<CompetenceAssessment> {
+  async assessCompetence(competenceId: string): Promise<TrustAssessment> {
+    this.logger.info(`[TrustOrchestrator] Assessing competence: ${competenceId}`);
+
+    // 1. Obtém competência
+    const competence = this.trustManager.getCompetence(competenceId);
+    if (!competence) {
+      throw new Error(`Competence ${competenceId} not found`);
+    }
+
+    // 2. Avalia métricas de confiança
     const evaluation = this.trustManager.evaluateCompetence(competenceId);
 
+    // 3. Verifica segurança
     const securityStatus = this.securityManager.getSecurityStatus();
-    const securityScore = Math.max(0, 100 - securityStatus.criticalEvents * 10);
 
+    // 4. Verifica saúde organizacional
     const state = this.selfAwareness.getState();
-    const healthScore = (state as any)?.health?.overall ?? (state as any)?.health ?? 70;
+    const health = state?.health?.overall || 50;
 
-    const trustScore =
-      (evaluation.metrics.reliability +
-        evaluation.metrics.stability +
-        evaluation.metrics.compliance +
-        evaluation.metrics.quality +
-        evaluation.metrics.learningCapacity +
-        evaluation.metrics.decisionQuality) /
-      6;
+    // 5. Calcula score final
+    const score = this.calculateFinalScore(evaluation, securityStatus, health);
 
-    const combinedScore = trustScore * 0.5 + securityScore * 0.25 + healthScore * 0.25;
+    // 6. Determina status
+    let status: 'certified' | 'pending' | 'suspended' | 'revoked';
+    if (evaluation.passed && score >= 70) {
+      status = 'certified';
+    } else if (score >= 40) {
+      status = 'pending';
+    } else {
+      status = 'suspended';
+    }
 
-    this.logger.info(
-      `[TrustOrchestrator] Competência ${competenceId} avaliada: combinedScore=${combinedScore.toFixed(1)}`
+    // 7. Gera recomendações
+    const recommendations = this.generateTrustRecommendations(evaluation, score);
+
+    // 8. Registra na memória imunológica
+    if (status === 'certified') {
+      this.immunologicalMemory.registerEvent({
+        type: 'recovery',
+        severity: 'low',
+        description: `Competência ${competence.name} certificada com score ${score}%`,
+        rootCause: 'certification_success',
+        impact: {
+          components: ['trust'],
+          durationMs: 0,
+          dataLoss: false,
+          serviceDegradation: false,
+        },
+        response: {
+          action: 'certified',
+          executedBy: 'TrustOrchestrator',
+          durationMs: 0,
+          success: true,
+        },
+        learnings: ['Certificação bem-sucedida'],
+        recommendations: ['Manter métricas de confiança'],
+        status: 'resolved',
+        metadata: { competenceId, score },
+      });
+    } else {
+      this.immunologicalMemory.registerEvent({
+        type: 'vulnerability',
+        severity: 'medium',
+        description: `Competência ${competence.name} não certificada (score: ${score}%)`,
+        rootCause: 'certification_failure',
+        impact: {
+          components: ['trust'],
+          durationMs: 0,
+          dataLoss: false,
+          serviceDegradation: true,
+        },
+        response: {
+          action: 'pending',
+          executedBy: 'TrustOrchestrator',
+          durationMs: 0,
+          success: false,
+        },
+        learnings: ['Necessário melhorar métricas'],
+        recommendations: recommendations,
+        status: 'open',
+        metadata: { competenceId, score },
+      });
+    }
+
+    // 9. Cria assessment
+    const assessment: TrustAssessment = {
+      competenceId,
+      domain: competence.domain,
+      level: evaluation.trustLevel,
+      score,
+      status,
+      recommendations,
+      timestamp: new Date(),
+    };
+
+    this.assessments.set(competenceId, assessment);
+    this.emit('trust:assessed', assessment);
+
+    this.logger.info(`[TrustOrchestrator] Assessment complete: ${competenceId} (${status})`);
+
+    return assessment;
+  }
+
+  /**
+   * Calcula score final
+   */
+  private calculateFinalScore(evaluation: any, securityStatus: any, health: number): number {
+    let score = 0;
+
+    // Métricas de confiança (60%)
+    const metricScore = (
+      (evaluation.metrics?.reliability || 0) * 0.2 +
+      (evaluation.metrics?.stability || 0) * 0.15 +
+      (evaluation.metrics?.compliance || 0) * 0.15 +
+      (evaluation.metrics?.quality || 0) * 0.15 +
+      (evaluation.metrics?.learningCapacity || 0) * 0.1 +
+      (evaluation.metrics?.decisionQuality || 0) * 0.15
     );
+    score += metricScore * 0.6;
+
+    // Segurança (20%)
+    const securityScore = Math.min(100, securityStatus.mfaEnabled * 10 + 50);
+    score += securityScore * 0.2;
+
+    // Saúde organizacional (20%)
+    score += health * 0.2;
+
+    return Math.max(0, Math.min(100, score));
+  }
+
+  /**
+   * Gera recomendações de confiança
+   */
+  private generateTrustRecommendations(evaluation: any, score: number): string[] {
+    const recommendations: string[] = [];
+
+    if (score < 70) {
+      recommendations.push('Melhorar métricas de confiança para alcançar certificação.');
+    }
+
+    if (evaluation.metrics?.reliability < 60) {
+      recommendations.push('Aumentar confiabilidade com mais evidências.');
+    }
+
+    if (evaluation.metrics?.stability < 60) {
+      recommendations.push('Melhorar estabilidade com testes e monitoramento.');
+    }
+
+    if (evaluation.metrics?.compliance < 60) {
+      recommendations.push('Garantir conformidade com políticas e regulamentações.');
+    }
+
+    if (evaluation.metrics?.quality < 60) {
+      recommendations.push('Melhorar qualidade com revisões e auditorias.');
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Escalada de confiança (P-014)
+   */
+  async escalateTrust(competenceId: string): Promise<{
+    escalated: boolean;
+    newLevel: string;
+    reason: string;
+  }> {
+    this.logger.info(`[TrustOrchestrator] Escalating trust for: ${competenceId}`);
+
+    const result = this.trustManager.escalateTrust(competenceId);
+
+    if (result.canEscalate && result.newLevel) {
+      this.logger.info(`[TrustOrchestrator] Trust escalated to ${result.newLevel} for ${competenceId}`);
+      this.emit('trust:escalated', { competenceId, newLevel: result.newLevel });
+    }
 
     return {
-      competenceId,
-      passed: evaluation.passed && combinedScore >= 60,
-      trustLevel: evaluation.trustLevel,
-      trustScore,
-      securityScore,
-      healthScore: typeof healthScore === 'number' ? healthScore : 70,
-      combinedScore,
-      reason: evaluation.reason,
-      metrics: evaluation.metrics,
+      escalated: result.canEscalate,
+      newLevel: result.newLevel || 'no_change',
+      reason: result.reason,
     };
   }
 
   /**
-   * Tenta escalar o nível de confiança de uma competência, considerando
-   * também a postura de segurança atual do sistema.
+   * Obtém avaliação por competência
    */
-  escalateTrust(competenceId: string): {
-    canEscalate: boolean;
-    newLevel?: string;
-    reason: string;
-  } {
-    const securityStatus = this.securityManager.getSecurityStatus();
-    if (securityStatus.criticalEvents > 0) {
-      return {
-        canEscalate: false,
-        reason: `Escalada bloqueada: ${securityStatus.criticalEvents} evento(s) crítico(s) de segurança em aberto.`,
-      };
-    }
-    return this.trustManager.escalateTrust(competenceId);
+  getAssessment(competenceId: string): TrustAssessment | undefined {
+    return this.assessments.get(competenceId);
+  }
+
+  /**
+   * Obtém todas as avaliações
+   */
+  getAssessments(): TrustAssessment[] {
+    return Array.from(this.assessments.values());
+  }
+
+  /**
+   * Obtém competências certificadas
+   */
+  getCertifiedCompetences(domain?: string): Competence[] {
+    return this.trustManager.getCertifiedCompetences(domain);
   }
 }

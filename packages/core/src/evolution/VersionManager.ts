@@ -1,117 +1,253 @@
 import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
 
-// P-007: Sistema de versionamento genérico para qualquer "artefato" da
-// plataforma (capacidade, decisão, ontologia, conhecimento, agente,
-// workflow), com suporte a depreciação, arquivamento e comparação.
-
-export type ArtifactType = 'capability' | 'decision' | 'ontology' | 'knowledge' | 'agent' | 'workflow';
-
-export interface ArtifactVersion {
+export interface VersionedArtifact {
   id: string;
-  artifactId: string;
-  artifactType: ArtifactType;
-  version: string; // ex.: 1.0.0
+  name: string;
+  type: 'capability' | 'decision' | 'ontology' | 'knowledge' | 'agent' | 'workflow';
+  version: string;
+  previousVersion?: string;
   content: any;
-  changelog: string;
-  status: 'active' | 'deprecated' | 'archived';
+  changes: string[];
+  author: string;
+  timestamp: Date;
+  status: 'draft' | 'active' | 'deprecated' | 'archived';
+  metadata: Record<string, any>;
+}
+
+export interface VersionHistory {
+  artifactId: string;
+  versions: VersionedArtifact[];
+  currentVersion: string;
   createdAt: Date;
-  createdBy?: string;
+  updatedAt: Date;
 }
 
 export class VersionManager extends EventEmitter {
-  private versions: Map<string, ArtifactVersion[]> = new Map();
   private logger = getGlobalLogger();
+  private artifacts: Map<string, VersionHistory> = new Map();
+  private versionCounter: Map<string, number> = new Map();
+
+  constructor() {
+    super();
+    this.logger.info('[VersionManager] Initialized');
+  }
 
   /**
-   * Cria uma nova versão para um artefato, incrementando automaticamente
-   * a versão semântica anterior caso nenhuma seja fornecida.
+   * Cria uma nova versão de um artefato
    */
-  createVersion(params: {
-    artifactId: string;
-    artifactType: ArtifactType;
-    content: any;
-    changelog: string;
-    version?: string;
-    createdBy?: string;
-  }): ArtifactVersion {
-    const history = this.versions.get(params.artifactId) || [];
-    const version = params.version || this.nextVersion(history);
-
-    const artifactVersion: ArtifactVersion = {
-      id: `ver_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      artifactId: params.artifactId,
-      artifactType: params.artifactType,
-      version,
-      content: params.content,
-      changelog: params.changelog,
-      status: 'active',
-      createdAt: new Date(),
-      createdBy: params.createdBy,
-    };
-
-    // A versão anterior ativa passa a ser superada (mas não depreciada automaticamente)
-    history.push(artifactVersion);
-    this.versions.set(params.artifactId, history);
-
-    this.logger.info(`[VersionManager] Nova versão criada: ${params.artifactId}@${version}`);
-    this.emit('version:created', artifactVersion);
-    return artifactVersion;
-  }
-
-  private nextVersion(history: ArtifactVersion[]): string {
-    if (history.length === 0) return '1.0.0';
-    const last = history[history.length - 1].version;
-    const parts = last.split('.').map((n) => parseInt(n, 10) || 0);
-    parts[2] = (parts[2] || 0) + 1;
-    return parts.join('.');
-  }
-
-  deprecate(artifactId: string, version: string, reason: string): ArtifactVersion {
-    const target = this.findVersion(artifactId, version);
-    target.status = 'deprecated';
-    this.logger.info(`[VersionManager] Versão depreciada: ${artifactId}@${version} — ${reason}`);
-    this.emit('version:deprecated', { version: target, reason });
-    return target;
-  }
-
-  archive(artifactId: string, version: string): ArtifactVersion {
-    const target = this.findVersion(artifactId, version);
-    target.status = 'archived';
-    this.logger.info(`[VersionManager] Versão arquivada: ${artifactId}@${version}`);
-    this.emit('version:archived', target);
-    return target;
-  }
-
-  compareVersions(
+  createVersion(
     artifactId: string,
-    versionA: string,
-    versionB: string
-  ): { changed: boolean; changelogA: string; changelogB: string } {
-    const a = this.findVersion(artifactId, versionA);
-    const b = this.findVersion(artifactId, versionB);
-    return {
-      changed: JSON.stringify(a.content) !== JSON.stringify(b.content),
-      changelogA: a.changelog,
-      changelogB: b.changelog,
-    };
-  }
-
-  getVersionHistory(artifactId: string): ArtifactVersion[] {
-    return this.versions.get(artifactId) || [];
-  }
-
-  getActiveVersion(artifactId: string): ArtifactVersion | undefined {
-    const history = this.versions.get(artifactId) || [];
-    return [...history].reverse().find((v) => v.status === 'active');
-  }
-
-  private findVersion(artifactId: string, version: string): ArtifactVersion {
-    const history = this.versions.get(artifactId) || [];
-    const found = history.find((v) => v.version === version);
-    if (!found) {
-      throw new Error(`Versão ${version} não encontrada para artefato ${artifactId}`);
+    name: string,
+    type: VersionedArtifact['type'],
+    content: any,
+    author: string,
+    changes: string[],
+    metadata: Record<string, any> = {}
+  ): VersionedArtifact {
+    // Obtém ou inicializa histórico
+    let history = this.artifacts.get(artifactId);
+    if (!history) {
+      history = {
+        artifactId,
+        versions: [],
+        currentVersion: '0.0.0',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.artifacts.set(artifactId, history);
+      this.versionCounter.set(artifactId, 0);
     }
-    return found;
+
+    // Incrementa versão
+    const counter = (this.versionCounter.get(artifactId) || 0) + 1;
+    this.versionCounter.set(artifactId, counter);
+    const version = `1.${counter}.0`;
+
+    // Cria artefato versionado
+    const artifact: VersionedArtifact = {
+      id: `${artifactId}@${version}`,
+      name,
+      type,
+      version,
+      previousVersion: history.currentVersion !== '0.0.0' ? history.currentVersion : undefined,
+      content,
+      changes,
+      author,
+      timestamp: new Date(),
+      status: 'active',
+      metadata,
+    };
+
+    // Adiciona ao histórico
+    history.versions.push(artifact);
+    history.currentVersion = version;
+    history.updatedAt = new Date();
+    this.artifacts.set(artifactId, history);
+
+    this.logger.info(`[VersionManager] New version created: ${artifactId}@${version}`);
+    this.emit('version:created', artifact);
+
+    return artifact;
+  }
+
+  /**
+   * Obtém versão atual de um artefato
+   */
+  getCurrentVersion(artifactId: string): VersionedArtifact | undefined {
+    const history = this.artifacts.get(artifactId);
+    if (!history) return undefined;
+
+    return history.versions.find((v) => v.version === history.currentVersion);
+  }
+
+  /**
+   * Obtém versão específica de um artefato
+   */
+  getVersion(artifactId: string, version: string): VersionedArtifact | undefined {
+    const history = this.artifacts.get(artifactId);
+    if (!history) return undefined;
+
+    return history.versions.find((v) => v.version === version);
+  }
+
+  /**
+   * Obtém todas as versões de um artefato
+   */
+  getVersionHistory(artifactId: string): VersionHistory | undefined {
+    return this.artifacts.get(artifactId);
+  }
+
+  /**
+   * Lista todos os artefatos versionados
+   */
+  listArtifacts(type?: VersionedArtifact['type']): VersionedArtifact[] {
+    const all: VersionedArtifact[] = [];
+    for (const history of this.artifacts.values()) {
+      const current = history.versions.find((v) => v.version === history.currentVersion);
+      if (current && (!type || current.type === type)) {
+        all.push(current);
+      }
+    }
+    return all;
+  }
+
+  /**
+   * Deprecia uma versão
+   */
+  deprecateVersion(artifactId: string, version: string, reason: string): void {
+    const history = this.artifacts.get(artifactId);
+    if (!history) {
+      throw new Error(`Artifact ${artifactId} not found`);
+    }
+
+    const artifact = history.versions.find((v) => v.version === version);
+    if (!artifact) {
+      throw new Error(`Version ${version} not found for ${artifactId}`);
+    }
+
+    artifact.status = 'deprecated';
+    artifact.metadata.deprecationReason = reason;
+    artifact.metadata.deprecatedAt = new Date();
+
+    this.artifacts.set(artifactId, history);
+    this.logger.info(`[VersionManager] Version deprecated: ${artifactId}@${version}`);
+    this.emit('version:deprecated', artifact);
+  }
+
+  /**
+   * Arquiva uma versão
+   */
+  archiveVersion(artifactId: string, version: string): void {
+    const history = this.artifacts.get(artifactId);
+    if (!history) {
+      throw new Error(`Artifact ${artifactId} not found`);
+    }
+
+    const artifact = history.versions.find((v) => v.version === version);
+    if (!artifact) {
+      throw new Error(`Version ${version} not found for ${artifactId}`);
+    }
+
+    artifact.status = 'archived';
+    this.artifacts.set(artifactId, history);
+    this.logger.info(`[VersionManager] Version archived: ${artifactId}@${version}`);
+    this.emit('version:archived', artifact);
+  }
+
+  /**
+   * Compara duas versões
+   */
+  compareVersions(artifactId: string, version1: string, version2: string): {
+    differences: string[];
+    similarity: number;
+  } {
+    const v1 = this.getVersion(artifactId, version1);
+    const v2 = this.getVersion(artifactId, version2);
+
+    if (!v1 || !v2) {
+      throw new Error('Version not found');
+    }
+
+    // Calcula similaridade simplificada
+    const content1 = JSON.stringify(v1.content);
+    const content2 = JSON.stringify(v2.content);
+
+    const differences: string[] = [];
+    if (content1 !== content2) {
+      differences.push('Conteúdo alterado');
+    }
+
+    if (v1.name !== v2.name) {
+      differences.push(`Nome alterado: ${v1.name} -> ${v2.name}`);
+    }
+
+    if (v1.type !== v2.type) {
+      differences.push(`Tipo alterado: ${v1.type} -> ${v2.type}`);
+    }
+
+    // Similaridade simples
+    const similarity = content1 === content2 ? 100 : 50;
+
+    return { differences, similarity };
+  }
+
+  /**
+   * Obtém estatísticas de versionamento
+   */
+  getStats(): {
+    totalArtifacts: number;
+    totalVersions: number;
+    activeVersions: number;
+    deprecatedVersions: number;
+    archivedVersions: number;
+    byType: Record<VersionedArtifact['type'], number>;
+  } {
+    const stats = {
+      totalArtifacts: this.artifacts.size,
+      totalVersions: 0,
+      activeVersions: 0,
+      deprecatedVersions: 0,
+      archivedVersions: 0,
+      byType: {} as Record<VersionedArtifact['type'], number>,
+    };
+
+    // Inicializa contadores por tipo
+    const types: VersionedArtifact['type'][] = ['capability', 'decision', 'ontology', 'knowledge', 'agent', 'workflow'];
+    for (const type of types) {
+      stats.byType[type] = 0;
+    }
+
+    for (const history of this.artifacts.values()) {
+      for (const version of history.versions) {
+        stats.totalVersions++;
+        if (version.status === 'active') stats.activeVersions++;
+        if (version.status === 'deprecated') stats.deprecatedVersions++;
+        if (version.status === 'archived') stats.archivedVersions++;
+        stats.byType[version.type] = (stats.byType[version.type] || 0) + 1;
+      }
+    }
+
+    return stats;
   }
 }

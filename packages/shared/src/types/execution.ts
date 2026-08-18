@@ -53,5 +53,9 @@ export interface ExecutionResult {
     durationMs?: number;
     totalTokens?: number;
     totalCost?: number;
+    // Nota de fidelidade: campo ausente no tipo original, mas atribuído por
+    // Orchestrator.processRequest (P-004, "reflection"). Adicionado como
+    // opcional para refletir o uso real feito pelo material do usuário.
+    reflection?: any;
   };
 }

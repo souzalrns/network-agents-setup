@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import { MCPTool, MCPToolResult, MCPServer as IMCPServer } from '../types/mcp';
 import { ToolRegistry } from '../tools/ToolRegistry';
 import { ToolExecutor } from '../tools/ToolExecutor';

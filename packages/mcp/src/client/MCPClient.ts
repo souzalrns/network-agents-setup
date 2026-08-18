@@ -11,7 +11,7 @@ export class MCPClient implements IMCPClient {
       if (!response.ok) {
         throw new Error(`Failed to get tools: ${response.statusText}`);
       }
-      const data = await response.json();
+      const data: any = await response.json();
       this.tools = data.tools || [];
       console.log(`[MCP Client] Connected to ${serverUrl}, loaded ${this.tools.length} tools`);
     } catch (error: any) {
@@ -37,7 +37,7 @@ export class MCPClient implements IMCPClient {
       if (!response.ok) {
         throw new Error(`Failed to execute tool: ${response.statusText}`);
       }
-      return await response.json();
+      return (await response.json()) as MCPToolResult;
     } catch (error: any) {
       return {
         content: [{ type: 'text', text: `MCP error: ${error.message}` }],

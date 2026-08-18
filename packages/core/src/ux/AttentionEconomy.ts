@@ -1,94 +1,235 @@
 import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
-
-// P-035: Economia de Atenção — orçamento de interrupções por usuário,
-// cooldown entre interrupções e priorização, para evitar sobrecarregar o
-// usuário com solicitações de HITL de baixo valor.
+import { HitlManager } from '../hitl/HitlManager';
 
 export interface AttentionBudget {
   userId: string;
-  dailyBudget: number;
-  used: number;
-  lastInterruptionAt?: Date;
-  resetAt: Date;
+  maxInterruptionsPerHour: number;
+  currentInterruptions: number;
+  lastReset: Date;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  cooldownUntil?: Date;
+}
+
+export interface AttentionRequest {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  estimatedAttentionCost: number; // minutos
+  requiresImmediate: boolean;
 }
 
 export class AttentionEconomy extends EventEmitter {
-  private budgets: Map<string, AttentionBudget> = new Map();
   private logger = getGlobalLogger();
+  private budgets: Map<string, AttentionBudget> = new Map();
+  private requests: Map<string, AttentionRequest> = new Map();
 
   constructor(
+    _hitlManager: HitlManager,
     private config: {
-      dailyBudget?: number;
-      cooldownMs?: number;
+      defaultMaxInterruptionsPerHour?: number;
+      cooldownAfterInterruption?: number; // minutos
+      minPriorityForImmediate?: 'low' | 'medium' | 'high' | 'critical';
     } = {}
   ) {
     super();
-    this.config.dailyBudget = config.dailyBudget ?? 10;
-    this.config.cooldownMs = config.cooldownMs ?? 5 * 60 * 1000; // 5 minutos
+    this.config.defaultMaxInterruptionsPerHour = config.defaultMaxInterruptionsPerHour || 5;
+    this.config.cooldownAfterInterruption = config.cooldownAfterInterruption || 10;
+    this.config.minPriorityForImmediate = config.minPriorityForImmediate || 'high';
+    this.logger.info('[AttentionEconomy] Initialized');
   }
 
-  private getOrCreateBudget(userId: string): AttentionBudget {
-    let budget = this.budgets.get(userId);
-    const now = new Date();
-    if (!budget || budget.resetAt < now) {
-      budget = {
-        userId,
-        dailyBudget: this.config.dailyBudget || 10,
-        used: 0,
-        resetAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
-      };
-      this.budgets.set(userId, budget);
-    }
+  /**
+   * Registra um usuário no sistema de atenção
+   */
+  registerUser(userId: string): AttentionBudget {
+    const budget: AttentionBudget = {
+      userId,
+      maxInterruptionsPerHour: this.config.defaultMaxInterruptionsPerHour || 5,
+      currentInterruptions: 0,
+      lastReset: new Date(),
+      priority: 'medium',
+    };
+
+    this.budgets.set(userId, budget);
+    this.logger.info(`[AttentionEconomy] User registered: ${userId}`);
     return budget;
   }
 
   /**
-   * Verifica se uma interrupção (HITL) pode ser enviada ao usuário agora.
+   * Verifica se um usuário pode ser interrompido
    */
-  canInterrupt(userId: string, priority: 'low' | 'medium' | 'high' | 'critical' = 'medium'): {
+  canInterrupt(userId: string, priority: 'low' | 'medium' | 'high' | 'critical'): {
     allowed: boolean;
     reason: string;
+    waitTime?: number;
   } {
-    const budget = this.getOrCreateBudget(userId);
+    const budget = this.budgets.get(userId);
+    if (!budget) {
+      return { allowed: false, reason: 'User not registered' };
+    }
 
-    // Interrupções críticas ignoram cooldown e orçamento
+    // Reseta contador se passou 1 hora
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    if (budget.lastReset < oneHourAgo) {
+      budget.currentInterruptions = 0;
+      budget.lastReset = new Date();
+      this.budgets.set(userId, budget);
+    }
+
+    // Verifica cooldown
+    if (budget.cooldownUntil && budget.cooldownUntil > new Date()) {
+      const waitTime = Math.ceil((budget.cooldownUntil.getTime() - Date.now()) / 60000);
+      return {
+        allowed: false,
+        reason: `Em cooldown por ${waitTime} minutos`,
+        waitTime,
+      };
+    }
+
+    // Verifica prioridade
+    const priorityLevels = { low: 0, medium: 1, high: 2, critical: 3 };
+    const requestPriority = priorityLevels[priority];
+
+    // Se for crítico, sempre permite
     if (priority === 'critical') {
-      return { allowed: true, reason: 'Prioridade crítica ignora orçamento de atenção.' };
+      return { allowed: true, reason: 'Prioridade crítica' };
     }
 
-    if (budget.used >= budget.dailyBudget) {
-      return { allowed: false, reason: 'Orçamento diário de interrupções esgotado.' };
+    // Se o usuário tem prioridade alta, permite mais interrupções
+    const maxInterruptions = budget.priority === 'high'
+      ? budget.maxInterruptionsPerHour + 2
+      : budget.priority === 'critical'
+      ? budget.maxInterruptionsPerHour + 5
+      : budget.maxInterruptionsPerHour;
+
+    // Verifica se atingiu o limite
+    if (budget.currentInterruptions >= maxInterruptions) {
+      const waitMinutes = 60 - Math.floor((Date.now() - budget.lastReset.getTime()) / 60000);
+      return {
+        allowed: false,
+        reason: `Limite de interrupções atingido (${budget.currentInterruptions}/${maxInterruptions})`,
+        waitTime: waitMinutes,
+      };
     }
 
-    if (budget.lastInterruptionAt) {
-      const elapsed = Date.now() - budget.lastInterruptionAt.getTime();
-      const cooldown = this.config.cooldownMs || 5 * 60 * 1000;
-      if (elapsed < cooldown && priority !== 'high') {
-        return { allowed: false, reason: `Em cooldown por mais ${Math.ceil((cooldown - elapsed) / 1000)}s.` };
-      }
+    // Verifica se a prioridade é alta o suficiente
+    if (requestPriority < priorityLevels[(this.config.minPriorityForImmediate || 'high')]) {
+      return {
+        allowed: false,
+        reason: `Prioridade ${priority} abaixo do mínimo para interrupção`,
+      };
     }
 
-    return { allowed: true, reason: 'Dentro do orçamento e cooldown.' };
+    return { allowed: true, reason: 'Interrupção permitida' };
   }
 
   /**
-   * Registra que uma interrupção foi enviada, consumindo orçamento.
+   * Registra uma interrupção
    */
-  recordInterruption(userId: string): void {
-    const budget = this.getOrCreateBudget(userId);
-    budget.used += 1;
-    budget.lastInterruptionAt = new Date();
+  recordInterruption(userId: string, requestId: string): void {
+    const budget = this.budgets.get(userId);
+    if (!budget) return;
+
+    budget.currentInterruptions++;
+    budget.cooldownUntil = new Date(Date.now() + (this.config.cooldownAfterInterruption || 10) * 60 * 1000);
     this.budgets.set(userId, budget);
-    this.logger.info(`[AttentionEconomy] Interrupção registrada para ${userId} (${budget.used}/${budget.dailyBudget})`);
-    this.emit('interruption:recorded', budget);
+
+    this.logger.info(`[AttentionEconomy] Interruption recorded for ${userId} (${budget.currentInterruptions})`);
+    this.emit('interruption:recorded', { userId, requestId, count: budget.currentInterruptions });
   }
 
-  resetBudget(userId: string): void {
-    this.budgets.delete(userId);
+  /**
+   * Solicita atenção do usuário
+   */
+  requestAttention(userId: string, title: string, description: string, priority: 'low' | 'medium' | 'high' | 'critical'): {
+    request: AttentionRequest;
+    allowed: boolean;
+    reason: string;
+  } {
+    const canInterrupt = this.canInterrupt(userId, priority);
+
+    const request: AttentionRequest = {
+      id: `att_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      userId,
+      title,
+      description,
+      priority,
+      estimatedAttentionCost: this.estimateAttentionCost(priority),
+      requiresImmediate: priority === 'critical',
+    };
+
+    this.requests.set(request.id, request);
+
+    this.logger.info(`[AttentionEconomy] Attention request: ${request.id} (${priority})`);
+
+    if (!canInterrupt.allowed) {
+      this.emit('attention:blocked', { request, reason: canInterrupt.reason });
+      return {
+        request,
+        allowed: false,
+        reason: canInterrupt.reason,
+      };
+    }
+
+    this.recordInterruption(userId, request.id);
+    this.emit('attention:requested', request);
+
+    return {
+      request,
+      allowed: true,
+      reason: 'Atenção solicitada com sucesso',
+    };
   }
 
-  getBudget(userId: string): AttentionBudget {
-    return this.getOrCreateBudget(userId);
+  /**
+   * Estima custo de atenção
+   */
+  private estimateAttentionCost(priority: 'low' | 'medium' | 'high' | 'critical'): number {
+    const costs: Record<string, number> = {
+      low: 1,
+      medium: 3,
+      high: 5,
+      critical: 10,
+    };
+    return costs[priority] || 3;
+  }
+
+  /**
+   * Atualiza prioridade do usuário
+   */
+  updateUserPriority(userId: string, priority: 'low' | 'medium' | 'high' | 'critical'): void {
+    const budget = this.budgets.get(userId);
+    if (!budget) return;
+
+    budget.priority = priority;
+    this.budgets.set(userId, budget);
+
+    this.logger.info(`[AttentionEconomy] User priority updated: ${userId} -> ${priority}`);
+    this.emit('user:priority_updated', { userId, priority });
+  }
+
+  /**
+   * Obtém estatísticas
+   */
+  getStats(): {
+    totalUsers: number;
+    totalRequests: number;
+    blockedRequests: number;
+    averageInterruptions: number;
+  } {
+    const budgets = Array.from(this.budgets.values());
+    const requests = Array.from(this.requests.values());
+
+    return {
+      totalUsers: budgets.length,
+      totalRequests: requests.length,
+      blockedRequests: requests.filter((r) => !r.requiresImmediate).length,
+      averageInterruptions: budgets.length > 0
+        ? budgets.reduce((sum, b) => sum + b.currentInterruptions, 0) / budgets.length
+        : 0,
+    };
   }
 }

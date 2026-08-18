@@ -2,134 +2,392 @@ import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
 import { SelfAwareness } from './SelfAwareness';
 import { TokenEconomy } from '../economy/TokenEconomy';
-import { TrustManager } from '../governance/TrustManager';
 import { ImmunologicalMemory } from '../immunity/ImmunologicalMemory';
-import { OpportunityRadar } from '../opportunity/OpportunityRadar';
+import { CognitiveRepository } from '../knowledge/CognitiveRepository';
 
-// P-080/082: Dashboard de Métricas — agrega saúde do sistema e métricas
-// de plataforma em painéis, com atualização automática opcional e um
-// gerador de relatório em texto.
+export interface DashboardMetric {
+  id: string;
+  name: string;
+  value: number;
+  unit: string;
+  trend: 'up' | 'down' | 'stable';
+  change: number; // percentual
+  threshold?: number;
+  status: 'healthy' | 'warning' | 'critical';
+  timestamp: Date;
+}
 
 export interface DashboardPanel {
   id: string;
   title: string;
-  value: number | string;
-  unit?: string;
-  status: 'ok' | 'warning' | 'critical';
-}
-
-export interface Dashboard {
-  panels: DashboardPanel[];
-  generatedAt: Date;
+  type: 'metric' | 'chart' | 'table' | 'status';
+  metrics: DashboardMetric[];
+  config: {
+    refreshInterval: number;
+    showTrend: boolean;
+    showThreshold: boolean;
+  };
 }
 
 export class MetricsDashboard extends EventEmitter {
   private logger = getGlobalLogger();
-  private refreshInterval?: NodeJS.Timeout;
-  private lastDashboard?: Dashboard;
+  private panels: Map<string, DashboardPanel> = new Map();
+  private metrics: Map<string, DashboardMetric> = new Map();
+  // Nota de fidelidade: no material original o setInterval abaixo era criado
+  // sem nunca ser armazenado/limpo (vazamento de timer, impedindo o processo
+  // de encerrar de forma limpa). Adicionado o handle + stop() para corrigir,
+  // seguindo o mesmo padrão já usado em WorkerSupervisor e OpportunityRadar.
+  private updateInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private selfAwareness: SelfAwareness,
     private tokenEconomy: TokenEconomy,
-    private trustManager: TrustManager,
     private immunologicalMemory: ImmunologicalMemory,
-    private opportunityRadar?: OpportunityRadar,
-    private config: { autoRefreshMs?: number } = {}
+    private cognitiveRepository: CognitiveRepository
   ) {
     super();
-    if (this.config.autoRefreshMs && this.config.autoRefreshMs > 0) {
-      this.refreshInterval = setInterval(() => this.getDashboard(), this.config.autoRefreshMs);
-    }
-  }
-
-  getDashboard(): Dashboard {
-    const state = this.selfAwareness.getState();
-    const health = (state as any)?.health?.overall ?? (state as any)?.health ?? 0;
-    const costReport = this.tokenEconomy.getCostReport();
-    const immunityStats = this.immunologicalMemory.getStats();
-    const certified = this.trustManager.getCertifiedCompetences();
-    const opportunities = this.opportunityRadar?.getOpportunities({ status: 'new' }).length ?? 0;
-
-    const panels: DashboardPanel[] = [
-      {
-        id: 'health',
-        title: 'Saúde do Sistema',
-        value: typeof health === 'number' ? Number(health.toFixed(1)) : health,
-        unit: '%',
-        status: typeof health === 'number' ? (health >= 70 ? 'ok' : health >= 40 ? 'warning' : 'critical') : 'ok',
-      },
-      {
-        id: 'total_tokens',
-        title: 'Tokens Consumidos',
-        value: costReport.totalTokens,
-        status: 'ok',
-      },
-      {
-        id: 'total_cost',
-        title: 'Custo Total',
-        value: Number(costReport.totalCost.toFixed(4)),
-        unit: 'USD',
-        status: 'ok',
-      },
-      {
-        id: 'efficiency',
-        title: 'Eficiência de Orçamento',
-        value: Number((costReport.efficiency || 0).toFixed(1)),
-        unit: '%',
-        status: (costReport.efficiency || 0) < 90 ? 'ok' : 'warning',
-      },
-      {
-        id: 'certified_competences',
-        title: 'Competências Certificadas',
-        value: certified.length,
-        status: 'ok',
-      },
-      {
-        id: 'immunity_events',
-        title: 'Eventos Registrados (Memória Imunológica)',
-        value: immunityStats.totalEvents ?? 0,
-        status: 'ok',
-      },
-      {
-        id: 'opportunities',
-        title: 'Oportunidades Novas',
-        value: opportunities,
-        status: 'ok',
-      },
-    ];
-
-    const dashboard: Dashboard = { panels, generatedAt: new Date() };
-    this.lastDashboard = dashboard;
-    this.logger.debug('[MetricsDashboard] Dashboard atualizado');
-    this.emit('dashboard:updated', dashboard);
-    return dashboard;
+    this.logger.info('[MetricsDashboard] Initialized');
+    this.initializeDefaultPanels();
   }
 
   /**
-   * Retorna o último dashboard calculado, sem recalcular (útil para
-   * consumidores que só precisam do snapshot mais recente).
+   * Inicializa painéis padrão
    */
-  getLastDashboard(): Dashboard | undefined {
-    return this.lastDashboard;
+  private initializeDefaultPanels(): void {
+    // P-080: Indicadores de Saúde Organizacional
+    const healthPanel: DashboardPanel = {
+      id: 'health_panel',
+      title: 'Saúde Organizacional',
+      type: 'status',
+      metrics: [],
+      config: {
+        refreshInterval: 60,
+        showTrend: true,
+        showThreshold: true,
+      },
+    };
+
+    // P-082: Dashboard de Métricas
+    const metricsPanel: DashboardPanel = {
+      id: 'metrics_panel',
+      title: 'Métricas da Plataforma',
+      type: 'chart',
+      metrics: [],
+      config: {
+        refreshInterval: 30,
+        showTrend: true,
+        showThreshold: true,
+      },
+    };
+
+    this.panels.set('health_panel', healthPanel);
+    this.panels.set('metrics_panel', metricsPanel);
+
+    // Inicia atualização automática
+    this.updateInterval = setInterval(() => this.updateMetrics(), 60000);
+    this.updateMetrics();
+
+    this.logger.info('[MetricsDashboard] Default panels initialized');
   }
 
-  generateTextReport(): string {
-    const dashboard = this.getDashboard();
-    const lines = [
-      '=== Relatório de Métricas da Plataforma ===',
-      `Gerado em: ${dashboard.generatedAt.toISOString()}`,
-      '',
-    ];
-    for (const panel of dashboard.panels) {
-      lines.push(`- ${panel.title}: ${panel.value}${panel.unit ? ' ' + panel.unit : ''} [${panel.status}]`);
+  /**
+   * Atualiza todas as métricas
+   */
+  async updateMetrics(): Promise<void> {
+    const state = this.selfAwareness.getState();
+
+    // P-080: Indicadores de Saúde
+    const healthMetrics = this.getHealthMetrics(state);
+    for (const metric of healthMetrics) {
+      this.metrics.set(metric.id, metric);
     }
+
+    // P-082: Métricas da Plataforma
+    const platformMetrics = this.getPlatformMetrics();
+    for (const metric of platformMetrics) {
+      this.metrics.set(metric.id, metric);
+    }
+
+    // Atualiza painéis
+    this.updatePanels();
+
+    this.emit('metrics:updated', Array.from(this.metrics.values()));
+  }
+
+  /**
+   * Obtém métricas de saúde (P-080)
+   */
+  private getHealthMetrics(state: any): DashboardMetric[] {
+    const health = state?.health || {
+      operational: 50,
+      architectural: 50,
+      cognitive: 50,
+      economic: 50,
+      governance: 50,
+      evolutionary: 50,
+      overall: 50,
+    };
+
+    return [
+      {
+        id: 'health_operational',
+        name: 'Saúde Operacional',
+        value: health.operational || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.operational || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'health_architectural',
+        name: 'Saúde Arquitetural',
+        value: health.architectural || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.architectural || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'health_cognitive',
+        name: 'Saúde Cognitiva',
+        value: health.cognitive || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.cognitive || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'health_economic',
+        name: 'Saúde Econômica',
+        value: health.economic || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.economic || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'health_governance',
+        name: 'Saúde da Governança',
+        value: health.governance || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.governance || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'health_evolutionary',
+        name: 'Saúde Evolutiva',
+        value: health.evolutionary || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.evolutionary || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'health_overall',
+        name: 'Saúde Geral',
+        value: health.overall || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(health.overall || 50),
+        timestamp: new Date(),
+      },
+    ];
+  }
+
+  /**
+   * Obtém métricas da plataforma (P-082)
+   */
+  private getPlatformMetrics(): DashboardMetric[] {
+    const costReport = this.tokenEconomy.getCostReport();
+    const immunologyStats = this.immunologicalMemory.getStats();
+    const repositoryStats = this.cognitiveRepository.getStats();
+
+    return [
+      {
+        id: 'metrics_tokens',
+        name: 'Tokens Consumidos',
+        value: costReport.totalTokens || 0,
+        unit: 'tokens',
+        trend: 'stable',
+        change: 0,
+        threshold: 1000000,
+        status: (costReport.totalTokens || 0) < 1000000 ? 'healthy' : 'warning',
+        timestamp: new Date(),
+      },
+      {
+        id: 'metrics_cost',
+        name: 'Custo Total',
+        value: costReport.totalCost || 0,
+        unit: '€',
+        trend: 'stable',
+        change: 0,
+        threshold: 100,
+        status: (costReport.totalCost || 0) < 100 ? 'healthy' : 'warning',
+        timestamp: new Date(),
+      },
+      {
+        id: 'metrics_efficiency',
+        name: 'Eficiência de Tokens',
+        value: costReport.efficiency || 50,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(costReport.efficiency || 50),
+        timestamp: new Date(),
+      },
+      {
+        id: 'metrics_immunology_entropy',
+        name: 'Entropia Cognitiva',
+        value: immunologyStats.entropy || 0,
+        unit: '%',
+        trend: 'down',
+        change: 0,
+        threshold: 50,
+        status: (immunologyStats.entropy || 0) < 50 ? 'healthy' : 'warning',
+        timestamp: new Date(),
+      },
+      {
+        id: 'metrics_repository_assets',
+        name: 'Ativos Cognitivos',
+        value: repositoryStats.totalAssets || 0,
+        unit: 'itens',
+        trend: 'up',
+        change: 0,
+        threshold: 10,
+        status: (repositoryStats.totalAssets || 0) > 10 ? 'healthy' : 'warning',
+        timestamp: new Date(),
+      },
+      {
+        id: 'metrics_repository_reusability',
+        name: 'Reusabilidade Média',
+        value: repositoryStats.avgReusability || 0,
+        unit: '%',
+        trend: 'stable',
+        change: 0,
+        threshold: 70,
+        status: this.getStatus(repositoryStats.avgReusability || 0),
+        timestamp: new Date(),
+      },
+    ];
+  }
+
+  /**
+   * Atualiza os painéis
+   */
+  private updatePanels(): void {
+    const allMetrics = Array.from(this.metrics.values());
+
+    // Health Panel
+    const healthPanel = this.panels.get('health_panel');
+    if (healthPanel) {
+      healthPanel.metrics = allMetrics.filter((m) => m.id.startsWith('health_'));
+      this.panels.set('health_panel', healthPanel);
+    }
+
+    // Metrics Panel
+    const metricsPanel = this.panels.get('metrics_panel');
+    if (metricsPanel) {
+      metricsPanel.metrics = allMetrics.filter((m) => m.id.startsWith('metrics_'));
+      this.panels.set('metrics_panel', metricsPanel);
+    }
+  }
+
+  /**
+   * Obtém status baseado no valor
+   */
+  private getStatus(value: number): 'healthy' | 'warning' | 'critical' {
+    if (value >= 80) return 'healthy';
+    if (value >= 50) return 'warning';
+    return 'critical';
+  }
+
+  /**
+   * Obtém painel por ID
+   */
+  getPanel(id: string): DashboardPanel | undefined {
+    return this.panels.get(id);
+  }
+
+  /**
+   * Obtém todos os painéis
+   */
+  getPanels(): DashboardPanel[] {
+    return Array.from(this.panels.values());
+  }
+
+  /**
+   * Obtém métrica por ID
+   */
+  getMetric(id: string): DashboardMetric | undefined {
+    return this.metrics.get(id);
+  }
+
+  /**
+   * Obtém todas as métricas
+   */
+  getMetrics(): DashboardMetric[] {
+    return Array.from(this.metrics.values());
+  }
+
+  /**
+   * Gera relatório de dashboard
+   */
+  generateReport(): string {
+    const metrics = this.getMetrics();
+    const healthMetrics = metrics.filter((m) => m.id.startsWith('health_'));
+    const platformMetrics = metrics.filter((m) => m.id.startsWith('metrics_'));
+
+    const lines: string[] = [];
+    lines.push('='.repeat(60));
+    lines.push('📊 RELATÓRIO DE DASHBOARD');
+    lines.push(`Data: ${new Date().toISOString()}`);
+    lines.push('='.repeat(60));
+    lines.push('');
+
+    lines.push('❤️ SAÚDE ORGANIZACIONAL (P-080)');
+    for (const metric of healthMetrics) {
+      const status = metric.status === 'healthy' ? '✅' : metric.status === 'warning' ? '⚠️' : '❌';
+      lines.push(`  ${status} ${metric.name}: ${metric.value.toFixed(1)}%`);
+    }
+    lines.push('');
+
+    lines.push('📈 MÉTRICAS DA PLATAFORMA (P-082)');
+    for (const metric of platformMetrics) {
+      const status = metric.status === 'healthy' ? '✅' : metric.status === 'warning' ? '⚠️' : '❌';
+      lines.push(`  ${status} ${metric.name}: ${metric.value.toFixed(1)} ${metric.unit}`);
+    }
+    lines.push('');
+
+    lines.push('='.repeat(60));
+    lines.push('FIM DO RELATÓRIO');
+
     return lines.join('\n');
   }
 
+  /**
+   * Para a atualização automática do dashboard
+   */
   stop(): void {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = undefined;
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = null;
     }
+    this.logger.info('[MetricsDashboard] Stopped');
   }
 }
