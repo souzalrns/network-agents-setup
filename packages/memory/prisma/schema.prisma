@@ -112,3 +112,42 @@ model Metrics {
   errors        Int       @default(0)
   @@map("metrics")
 }
+
+// ===== Ingestão Inicial: Direito BR/PT (proof-of-concept da pipeline de conhecimento) =====
+// Modelo colado literalmente pelo usuário. Duas correções de tipo foram necessárias porque
+// o próprio código de ingestão colado (scripts/ingest/brazilian-law.ts e jurisprudence.ts)
+// sempre atribui `year` e `number` como string (ex.: "2002", vindos de listas hardcoded ou
+// de `new Date().getFullYear().toString()`) e sempre passa `metadata` preenchido em todo
+// `create()` — o material original já declarava `year String?` e `metadata Json`
+// (não `Int?`/`Json?`); mantido assim para bater com o uso real.
+// Sem "@@map"/"@map": segue o texto colado ao pé da letra (tabela fica "LegalDocument",
+// o nome padrão que o Prisma usa quando nenhum @@map é declarado) — isso é o que faz
+// `UPDATE "LegalDocument" SET embedding = ...` em scripts/ingest/embeddings.ts (também
+// colado literalmente) bater com o nome real da tabela.
+model LegalDocument {
+  id            String    @id @default(cuid())
+  title         String
+  type          String    // lei, decreto, jurisprudencia, doutrina, norma, parecer
+  jurisdiction  String    // BR, PT, EU
+  number        String?
+  year          String?
+  summary       String?   @db.Text
+  content       String?   @db.Text
+  url           String?
+  source        String
+  metadata      Json
+  // NOTA DE FIDELIDADE: campo pgvector, como no material colado. "Unsupported" é o
+  // escape-hatch nativo do Prisma para tipos sem suporte de 1a classe (aqui, o tipo
+  // "vector" da extensão pgvector). Antes de rodar `prisma migrate dev` contra um
+  // Postgres real, é necessário habilitar a extensão manualmente:
+  //   CREATE EXTENSION IF NOT EXISTS vector;
+  // (não foi possível validar isso neste ambiente, que não tem Postgres ativo nem
+  // acesso de rede aos binários do Prisma — ver relatório final.)
+  embedding     Unsupported("vector")?
+  tags          String[]
+  relatedDocs   String[]  // IDs de documentos relacionados
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  @@index([type, jurisdiction, source])
+  @@index([jurisdiction, tags])
+}

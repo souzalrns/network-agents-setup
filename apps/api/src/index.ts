@@ -13,7 +13,13 @@ import {
 import { MemoryManager } from '@network-agents/memory';
 import { ExecutionService } from './services/ExecutionService';
 import { ToolRegistry } from '@network-agents/mcp';
-import { createDatabaseTools, createFilesystemTools, createWebTools } from '@network-agents/mcp';
+import {
+  createDatabaseTools,
+  createFilesystemTools,
+  createWebTools,
+  createBrazilianLawTools,
+  createPortugueseLawTools,
+} from '@network-agents/mcp';
 import { getGlobalLogger } from '@network-agents/observability';
 import { Pool } from 'pg';
 import { AGENT_CONFIGS } from '../../../config/agents.config';
@@ -33,6 +39,9 @@ async function main() {
     ...createDatabaseTools(dbPool),
     ...createFilesystemTools(process.env.FILESYSTEM_BASE || './data'),
     ...createWebTools(),
+    // Ingestão Inicial: Direito BR/PT (proof-of-concept) — ver packages/mcp/src/tools/legal
+    ...createBrazilianLawTools(),
+    ...createPortugueseLawTools(),
   ]);
   logger.info(`MCP Tools loaded: ${toolRegistry.listTools().length}`);
   // 3. LLM Provider

@@ -1,0 +1,35 @@
+{
+  "name": "@network-agents/scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scripts de ingestão, validação, agendamento e monitoramento de conhecimento da PCU (proof-of-concept: Direito BR/PT)",
+  "scripts": {
+    "ingest": "ts-node src/ingest/index.ts",
+    "ingest:br": "ts-node src/ingest/brazilian-law.ts",
+    "ingest:pt": "ts-node src/ingest/portuguese-law.ts",
+    "ingest:juris": "ts-node src/ingest/jurisprudence.ts",
+    "ingest:doctrine": "ts-node src/ingest/doctrine.ts",
+    "ingest:embeddings": "ts-node src/ingest/embeddings.ts",
+    "validate:completeness": "ts-node src/validate/check-completeness.ts",
+    "validate:agents": "ts-node src/validate/test-agents.ts",
+    "schedule": "ts-node src/schedule/ingestion-schedule.ts",
+    "monitor:quality": "ts-node src/monitor/quality-check.ts"
+  },
+  "dependencies": {
+    "@network-agents/core": "workspace:*",
+    "@network-agents/memory": "workspace:*",
+    "@network-agents/mcp": "workspace:*",
+    "@network-agents/observability": "workspace:*",
+    "@prisma/client": "^5.0.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0",
+    "node-cron": "^3.0.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/node-cron": "^3.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

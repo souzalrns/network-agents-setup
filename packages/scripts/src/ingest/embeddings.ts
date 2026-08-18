@@ -1,0 +1,84 @@
+// scripts/ingest/embeddings.ts
+//
+// Colado literalmente pelo usuário, com uma correção estrutural obrigatória:
+// `prisma.legalDocument.findMany({ where: { embedding: null, ... } })` não compila e não
+// funcionaria mesmo com o client gerado — campos `Unsupported("vector")` são omitidos
+// pelo Prisma Client de `where`/`select`/tipos de saída (é uma limitação de fato do
+// Prisma para tipos não suportados, não algo específico deste ambiente). Trocado por uma
+// query SQL crua equivalente (`prisma.$queryRaw`), que é a forma suportada de ler/filtrar
+// uma coluna Unsupported. `saveEmbedding()` já usava `$executeRaw` no original — mantido
+// como estava, incluindo o nome de tabela `"LegalDocument"` (correto porque o model não
+// tem `@@map`, então o Prisma usa o nome do model como nome da tabela).
+
+import { OpenAI } from 'openai';
+import { prisma } from '../db';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+interface PendingDocument {
+  id: string;
+  content: string | null;
+  summary: string | null;
+  title: string;
+}
+
+export class EmbeddingGenerator {
+  static async generateAll(): Promise<{ processed: number; errors: number }> {
+    let processed = 0;
+    let errors = 0;
+
+    // Busca documentos sem embedding (ver nota de fidelidade no topo do arquivo sobre
+    // por que isso precisa ser SQL cru em vez de `prisma.legalDocument.findMany`).
+    const documents = await prisma.$queryRaw<PendingDocument[]>`
+      SELECT id, content, summary, title
+      FROM "LegalDocument"
+      WHERE embedding IS NULL AND content IS NOT NULL
+      LIMIT 100
+    `;
+
+    for (const doc of documents) {
+      try {
+        const embedding = await this.generateEmbedding(doc.content || doc.summary || doc.title);
+        await this.saveEmbedding(doc.id, embedding);
+        processed++;
+        console.log(`✅ Embedding gerado para ${doc.id}`);
+      } catch (error) {
+        errors++;
+        console.error(`❌ Erro ao gerar embedding para ${doc.id}:`, error);
+      }
+    }
+
+    return { processed, errors };
+  }
+
+  private static async generateEmbedding(text: string): Promise<number[]> {
+    const response = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text.slice(0, 8000),
+    });
+
+    return response.data[0].embedding;
+  }
+
+  private static async saveEmbedding(docId: string, embedding: number[]): Promise<void> {
+    // Salva usando pgvector
+    await prisma.$executeRaw`
+      UPDATE "LegalDocument"
+      SET embedding = ${embedding}::vector
+      WHERE id = ${docId}
+    `;
+  }
+}
+
+// Executa se for chamado diretamente
+if (require.main === module) {
+  EmbeddingGenerator.generateAll()
+    .then((stats) => {
+      console.log('📊 Embeddings:', stats);
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('❌ Erro:', error);
+      process.exit(1);
+    });
+}
