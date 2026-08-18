@@ -12,6 +12,7 @@
     "ingest:embeddings": "ts-node src/ingest/embeddings.ts",
     "validate:completeness": "ts-node src/validate/check-completeness.ts",
     "validate:agents": "ts-node src/validate/test-agents.ts",
+    "validate:consistency": "ts-node src/validate/check-consistency.ts",
     "schedule": "ts-node src/schedule/ingestion-schedule.ts",
     "monitor:quality": "ts-node src/monitor/quality-check.ts",
     "smoke-test": "ts-node src/smoke-test.ts",
