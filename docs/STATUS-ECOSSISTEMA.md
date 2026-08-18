@@ -42,11 +42,11 @@ Agentes de negócio e dados sensíveis ficam na camada privada.
 
 ### Skills / espelhos
 
-| Repo | Notas |
-|------|-------|
-| [ECC](https://github.com/souzalrns/ECC) | Espelho Everything Claude Code |
-| [ui-ux-pro-max-skill](https://github.com/souzalrns/ui-ux-pro-max-skill) | Design system skill |
-| [designer-skills](https://github.com/souzalrns/designer-skills) | UX/UI skills |
+| Repo | STATUS | Notas |
+|------|--------|-------|
+| [ECC](https://github.com/souzalrns/ECC) | [docs/STATUS.md](https://github.com/souzalrns/ECC/blob/main/docs/STATUS.md) | Mirror — não é produto |
+| [ui-ux-pro-max-skill](https://github.com/souzalrns/ui-ux-pro-max-skill) | [docs/STATUS.md](https://github.com/souzalrns/ui-ux-pro-max-skill/blob/main/docs/STATUS.md) | Mirror skill |
+| [designer-skills](https://github.com/souzalrns/designer-skills) | [docs/STATUS.md](https://github.com/souzalrns/designer-skills/blob/main/docs/STATUS.md) | Mirror skill |
 
 ## Pendências transversais (resumo)
 
@@ -55,14 +55,16 @@ Agentes de negócio e dados sensíveis ficam na camada privada.
 | Conteúdo real no pipeline jurídico do PCU | Concluído (18/08/2026) | network-agents-setup |
 | Isolamento de banco para demo pública | Aberto | network-agents-setup |
 | STATUS.md por repo de produto | **Concluído (19/08/2026)** | todos os produtos listados acima |
+| STATUS.md em mirrors/skills | **Concluído (19/08/2026)** | ECC, ui-ux-pro-max-skill, designer-skills |
 | docs/generated (code-map + agents) | Seed inicial no Git | regenerar com scripts docs:* |
 
 ## Como uma sessão (Claude ou humana) deve começar
 
 1. Ler **este** ficheiro se a pergunta for “o que está a acontecer no conjunto”.
 2. Ler o `docs/STATUS.md` **do repo em que se está a trabalhar**.
-3. Se houver scripts: `validate:consistency`, `docs:code-map`, `docs:agents`.
-4. Supabase `system_inventory` / `pendencias_negocio` para estado operacional fino.
+3. Se o STATUS disser `mirror`, não abrir backlog de produto nesse repo.
+4. Se houver scripts: `validate:consistency`, `docs:code-map`, `docs:agents`.
+5. Supabase `system_inventory` / `pendencias_negocio` para estado operacional fino.
 
 ## Ferramentas de documentação (monorepo PCU)
 
