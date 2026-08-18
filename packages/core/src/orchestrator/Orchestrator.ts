@@ -5,6 +5,9 @@ import { Executor } from './Executor';
 import { MemoryManager } from '@network-agents/memory';
 import { AgentResponse } from '@network-agents/shared';
 import { getGlobalLogger } from '@network-agents/observability';
+import { HitlManager } from '../hitl/HitlManager';
+
+// Segurança, economia e governança básica (Fase 1 do projeto)
 import { SecurityManager } from '../security/SecurityManager';
 import { TokenEconomy } from '../economy/TokenEconomy';
 import { TrustManager } from '../governance/TrustManager';
@@ -12,40 +15,162 @@ import { ArchitectureCouncil } from '../governance/ArchitectureCouncil';
 import { SelfAwareness } from '../observability/SelfAwareness';
 import { ImmunologicalMemory } from '../immunity/ImmunologicalMemory';
 import { CompletenessValidator } from '../governance/CompletenessValidator';
+import { DeliberationEngine } from '../governance/DeliberationEngine';
 import { OpportunityRadar } from '../opportunity/OpportunityRadar';
 import { OrganizationalSimulator } from '../simulation/OrganizationalSimulator';
 
+// Complemento do projeto — providências P-004 a P-082
+import { ReflectionEngine } from '../cognitive/ReflectionEngine';
+import { DeliberationOrchestrator } from '../governance/DeliberationOrchestrator';
+import { CouncilsOrchestrator } from '../governance/Councils';
+import { TrustOrchestrator } from '../governance/TrustOrchestrator';
+import { IngestionOrchestrator } from '../knowledge/IngestionOrchestrator';
+import { CognitiveRepository } from '../knowledge/CognitiveRepository';
+import { WorkerSupervisor } from '../operations/WorkerSupervisor';
+import { AttentionEconomy } from '../ux/AttentionEconomy';
+import { AdaptiveInterface } from '../ux/AdaptiveInterface';
+import { AccumulationCycle } from '../evolution/AccumulationCycle';
+import { VersionManager } from '../evolution/VersionManager';
+import { DataGovernance } from '../data/DataGovernance';
+import { HorizontalAgents } from '../agents/HorizontalAgents';
+import { MetricsDashboard } from '../observability/MetricsDashboard';
+import { InfrastructureManager } from '../infrastructure/InfrastructureManager';
+import { RepositoryManager } from '../development/RepositoryManager';
+import { SpecialtyManager } from '../domains/SpecialtyManager';
+import { ProductManager } from '../products/ProductManager';
+import { DocumentationGovernance } from '../governance/DocumentationGovernance';
+import { AIVisibilityEngine } from '../search/AIVisibilityEngine';
+import { ComplianceManager } from '../compliance/ComplianceManager';
+
 export class Orchestrator {
   private logger = getGlobalLogger();
-  private opportunityRadar: OpportunityRadar;
-  private simulator: OrganizationalSimulator;
+
+  // Fase 1
+  public security: SecurityManager;
+  public tokenEconomy: TokenEconomy;
+  public trustManager: TrustManager;
+  public architectureCouncil: ArchitectureCouncil;
+  public selfAwareness: SelfAwareness;
+  public immunologicalMemory: ImmunologicalMemory;
+  public completenessValidator: CompletenessValidator;
+  public deliberationEngine: DeliberationEngine;
+  public opportunityRadar: OpportunityRadar;
+  public simulator: OrganizationalSimulator;
+
+  // Complemento do projeto
+  public reflectionEngine: ReflectionEngine;
+  public deliberationOrchestrator: DeliberationOrchestrator;
+  public councils: CouncilsOrchestrator;
+  public trustOrchestrator: TrustOrchestrator;
+  public cognitiveRepository: CognitiveRepository;
+  public ingestionOrchestrator: IngestionOrchestrator;
+  public workerSupervisor: WorkerSupervisor;
+  public attentionEconomy: AttentionEconomy;
+  public adaptiveInterface: AdaptiveInterface;
+  public accumulationCycle: AccumulationCycle;
+  public versionManager: VersionManager;
+  public dataGovernance: DataGovernance;
+  public horizontalAgents: HorizontalAgents;
+  public metricsDashboard: MetricsDashboard;
+  public infrastructureManager: InfrastructureManager;
+  public repositoryManager: RepositoryManager;
+  public specialtyManager: SpecialtyManager;
+  public productManager: ProductManager;
+  public documentationGovernance: DocumentationGovernance;
+  public aiVisibilityEngine: AIVisibilityEngine;
+  public complianceManager: ComplianceManager;
 
   constructor(
     private agentFactory: AgentFactory,
     private router: Router,
     private planner: Planner,
     private executor: Executor,
-    private memory: MemoryManager,
-    private security: SecurityManager,
-    private tokenEconomy: TokenEconomy,
-    private trustManager: TrustManager,
-    private architectureCouncil: ArchitectureCouncil,
-    private selfAwareness: SelfAwareness,
-    private immunologicalMemory: ImmunologicalMemory,
-    private completenessValidator: CompletenessValidator,
-    private deliberationEngine: any
+    _memory: MemoryManager,
+    private hitlManager: HitlManager
   ) {
-    // Inicializa dependências circulares
-    this.opportunityRadar = new OpportunityRadar(selfAwareness, {
+    // ===== Fase 1: segurança, economia e governança básica =====
+    this.security = new SecurityManager({
+      sessionTimeout: 24 * 60 * 60 * 1000,
+      maxLoginAttempts: 5,
+      rateLimitMax: 100,
+    });
+    this.tokenEconomy = new TokenEconomy({
+      defaultBudget: 1000000,
+      cacheTTL: 3600,
+      minSavingsForOptimization: 1000,
+    });
+    this.trustManager = new TrustManager();
+    this.architectureCouncil = new ArchitectureCouncil({
+      autoApproveThreshold: 80,
+      requireReviewForTypes: ['architecture_change', 'constitutional_change'],
+    });
+    this.completenessValidator = new CompletenessValidator({
+      minCompletenessForOperational: 80,
+      autoIngestEnabled: true,
+    });
+    this.selfAwareness = new SelfAwareness({
+      updateInterval: 60 * 1000,
+      historySize: 100,
+    });
+    this.immunologicalMemory = new ImmunologicalMemory({
+      maxEvents: 10000,
+      autoArchiveAfter: 90,
+      entropyThreshold: 50,
+    });
+    this.deliberationEngine = new DeliberationEngine({
+      operationalThreshold: 20,
+      tacticalThreshold: 50,
+      strategicThreshold: 75,
+    });
+    this.opportunityRadar = new OpportunityRadar(this.selfAwareness, {
       scanInterval: 60 * 60 * 1000,
       minPotential: 50,
       maxDistance: 70,
     });
-
-    this.simulator = new OrganizationalSimulator(selfAwareness, {
+    this.simulator = new OrganizationalSimulator(this.selfAwareness, {
       maxConcurrentSimulations: 5,
       defaultSteps: 100,
     });
+
+    // ===== Complemento do projeto: providências P-004 a P-082 =====
+    this.reflectionEngine = new ReflectionEngine();
+    this.deliberationOrchestrator = new DeliberationOrchestrator(
+      this.deliberationEngine,
+      this.architectureCouncil,
+      this.security,
+      this.tokenEconomy,
+      this.hitlManager
+    );
+    this.councils = new CouncilsOrchestrator(
+      this.architectureCouncil,
+      this.opportunityRadar,
+      this.tokenEconomy,
+      this.trustManager
+    );
+    this.trustOrchestrator = new TrustOrchestrator(this.trustManager, this.security, this.selfAwareness);
+    this.cognitiveRepository = new CognitiveRepository();
+    this.ingestionOrchestrator = new IngestionOrchestrator(this.completenessValidator, this.security);
+    this.workerSupervisor = new WorkerSupervisor();
+    this.attentionEconomy = new AttentionEconomy();
+    this.adaptiveInterface = new AdaptiveInterface();
+    this.accumulationCycle = new AccumulationCycle();
+    this.versionManager = new VersionManager();
+    this.dataGovernance = new DataGovernance(this.security);
+    this.horizontalAgents = new HorizontalAgents(this.tokenEconomy, this.cognitiveRepository);
+    this.metricsDashboard = new MetricsDashboard(
+      this.selfAwareness,
+      this.tokenEconomy,
+      this.trustManager,
+      this.immunologicalMemory,
+      this.opportunityRadar
+    );
+    this.infrastructureManager = new InfrastructureManager();
+    this.repositoryManager = new RepositoryManager(this.completenessValidator);
+    this.specialtyManager = new SpecialtyManager(this.agentFactory);
+    this.productManager = new ProductManager(this.specialtyManager);
+    this.documentationGovernance = new DocumentationGovernance();
+    this.aiVisibilityEngine = new AIVisibilityEngine();
+    this.complianceManager = new ComplianceManager(this.dataGovernance, this.security);
   }
 
   async processRequest(
@@ -74,8 +199,6 @@ export class Orchestrator {
         recommendations: ['Block and log source'],
         status: 'resolved',
         resolvedAt: new Date(),
-        recurrenceCount: 0,
-        similarEvents: [],
         metadata: { input: input.slice(0, 200) },
       });
       return {
@@ -120,6 +243,10 @@ export class Orchestrator {
     const budget = this.tokenEconomy.allocateBudget(executionId, 10000);
     logger.info(`Budget allocated: ${budget.allocated} tokens`);
 
+    // 5b. Inicia ciclo de acumulação cognitiva para a execução (P-040)
+    this.accumulationCycle.startCycle(executionId);
+    this.accumulationCycle.observe(executionId, input);
+
     // 6. Verifica completude de capacidades
     const emptyCapabilities = this.completenessValidator.getEmptyCapabilities();
     if (emptyCapabilities.length > 0) {
@@ -135,8 +262,6 @@ export class Orchestrator {
           learnings: ['Capabilities need immediate ingestion'],
           recommendations: ['Alimentar capacidade com conteúdo'],
           status: 'open',
-          recurrenceCount: 0,
-          similarEvents: [],
           metadata: { capabilityId: cap.id },
         });
       }
@@ -164,6 +289,16 @@ export class Orchestrator {
     // 9. Atualiza autopercepção
     await this.selfAwareness.updateState();
 
+    // 9b. Reflexão sobre o resultado da execução (P-004)
+    this.reflectionEngine.reflect({
+      executionId,
+      input,
+      output: result.finalOutput,
+      success: result.success,
+      errors: result.errors,
+      durationMs: result.metadata.durationMs,
+    });
+
     // 10. Registra evento na memória imunológica se houve erro
     if (!result.success) {
       this.immunologicalMemory.registerEvent({
@@ -176,8 +311,6 @@ export class Orchestrator {
         learnings: ['Execution failures detected'],
         recommendations: ['Investigate root cause and implement prevention'],
         status: 'open',
-        recurrenceCount: 0,
-        similarEvents: [],
         metadata: { executionId, errors: result.errors },
       });
     }
@@ -212,8 +345,9 @@ export class Orchestrator {
       onError?: (error: any) => void;
     }
   ): Promise<AgentResponse> {
-    // Implementação com streaming
-    // Similar ao processRequest mas com callbacks
+    // Implementação com streaming (callbacks reservados para uso futuro:
+    // hoje delega ao fluxo síncrono de processRequest).
+    void callbacks;
     return this.processRequest(input, context);
   }
 
@@ -235,13 +369,21 @@ export class Orchestrator {
     return this.simulator.runSimulation(scenarioId);
   }
 
+  async getMetricsReport(): Promise<string> {
+    return this.metricsDashboard.generateTextReport();
+  }
+
   async getSystemStatus(): Promise<any> {
     return {
       security: this.security.getSecurityStatus(),
-      trust: this.trustManager.getCompetences(),
+      trust: this.trustManager.getCertifiedCompetences(),
       health: this.selfAwareness.getState()?.health,
       entropy: this.immunologicalMemory.getStats(),
       opportunities: this.opportunityRadar.getOpportunities({ status: 'new' }).length,
+      dashboard: this.metricsDashboard.getDashboard(),
+      workers: this.workerSupervisor.getStats(),
+      productsInProduction: this.productManager.getProductsInProduction().length,
+      compliance: this.complianceManager.checkCompliance(),
     };
   }
 }

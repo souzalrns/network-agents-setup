@@ -27,7 +27,13 @@ export interface ImmunologicalEvent {
   similarEvents: string[];
   metadata: Record<string, any>;
 }
-export interface ImmunologicalMemory {
+// Nota: renomeada de "ImmunologicalMemory" para "ImmunologicalMemorySnapshot" para
+// não colidir com o nome da classe `ImmunologicalMemory` abaixo — declarar uma
+// interface e uma classe com o mesmo nome no mesmo arquivo faz o TypeScript tentar
+// mesclá-las (declaration merging), o que quebra a compilação aqui porque os campos
+// (arrays na interface) têm tipos incompatíveis com os campos privados da classe
+// (Maps com o mesmo nome).
+export interface ImmunologicalMemorySnapshot {
   events: ImmunologicalEvent[];
   patterns: ImmunologicalPattern[];
   antibodies: ImmunologicalAntibody[];
@@ -81,7 +87,6 @@ export class ImmunologicalMemory extends EventEmitter {
   private events: Map<string, ImmunologicalEvent> = new Map();
   private patterns: Map<string, ImmunologicalPattern> = new Map();
   private antibodies: Map<string, ImmunologicalAntibody> = new Map();
-  private entropyHistory: EntropyMetrics[] = [];
   private logger = getGlobalLogger();
   constructor(private config: {
     maxEvents?: number;

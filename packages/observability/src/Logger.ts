@@ -17,7 +17,7 @@ export class Logger {
     this.component = component;
     this.level = level;
   }
-  setExecutionId(executionId: string): void {
+  setExecutionId(executionId?: string): void {
     this.executionId = executionId;
   }
   debug(message: string, metadata?: Record<string, any>): void {
@@ -35,7 +35,9 @@ export class Logger {
   errorWithStack(message: string, error: Error, metadata?: Record<string, any>): void {
     this.log('error', message, { ...metadata, error: { message: error.message, stack: error.stack } });
   }
-  private log(level: string, message: string, metadata?: Record<string, any>): void {
+  // Público para permitir uso direto por middlewares (ex.: logging.ts), que
+  // precisam registrar a resposta HTTP com um nível calculado dinamicamente.
+  log(level: string, message: string, metadata?: Record<string, any>): void {
     if (!this.shouldLog(level)) return;
     const entry: LogEntry = { timestamp: new Date(), level: level as any, message, component: this.component, executionId: this.executionId, metadata };
     console.log(JSON.stringify(entry));

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
-import { SelfAwareness, OrganizationalState } from '../observability/SelfAwareness';
+import { SelfAwareness } from '../observability/SelfAwareness';
 export interface Opportunity {
   id: string;
   title: string;
@@ -174,7 +174,7 @@ export class OpportunityRadar extends EventEmitter {
   /**
    * Escaneia GitHub
    */
-  private async scanGitHub(source: RadarSource): Promise<Opportunity[]> {
+  private async scanGitHub(_source: RadarSource): Promise<Opportunity[]> {
     // Simulação - em produção, usaria API do GitHub
     return [
       {
@@ -218,7 +218,7 @@ export class OpportunityRadar extends EventEmitter {
   /**
    * Escaneia ArXiv
    */
-  private async scanArXiv(source: RadarSource): Promise<Opportunity[]> {
+  private async scanArXiv(_source: RadarSource): Promise<Opportunity[]> {
     // Simulação
     return [
       {
@@ -244,7 +244,7 @@ export class OpportunityRadar extends EventEmitter {
   /**
    * Escaneia tendências de mercado
    */
-  private async scanMarketTrends(source: RadarSource): Promise<Opportunity[]> {
+  private async scanMarketTrends(_source: RadarSource): Promise<Opportunity[]> {
     // Simulação
     return [
       {
@@ -288,7 +288,7 @@ export class OpportunityRadar extends EventEmitter {
   /**
    * Escaneia mudanças legislativas
    */
-  private async scanLegislation(source: RadarSource): Promise<Opportunity[]> {
+  private async scanLegislation(_source: RadarSource): Promise<Opportunity[]> {
     // Simulação
     return [
       {
@@ -314,7 +314,7 @@ export class OpportunityRadar extends EventEmitter {
   /**
    * Escaneia lacunas internas
    */
-  private async scanInternal(source: RadarSource): Promise<Opportunity[]> {
+  private async scanInternal(_source: RadarSource): Promise<Opportunity[]> {
     const state = this.selfAwareness.getState();
     if (!state) return [];
     const opportunities: Opportunity[] = [];
@@ -345,7 +345,7 @@ export class OpportunityRadar extends EventEmitter {
    * Encontra oportunidade similar
    */
   private findSimilar(opportunity: Opportunity): Opportunity | undefined {
-    for (const [id, existing] of this.opportunities) {
+    for (const existing of this.opportunities.values()) {
       // Verifica título similar
       const similarity = this.calculateSimilarity(opportunity.title, existing.title);
       if (similarity > 0.7) {

@@ -29,7 +29,6 @@ export class Executor {
       domain: plan.domain,
       steps: plan.steps.length,
     });
-    const startTime = Date.now();
     const results: ExecutionResult = {
       success: true,
       steps: [],
@@ -49,7 +48,6 @@ export class Executor {
     });
     for (let i = 0; i < plan.steps.length; i++) {
       const step = plan.steps[i];
-      const stepId = `step_${i}`;
       try {
         if (step.requiresApproval) {
           const approved = await this.requestHumanApproval(
@@ -143,7 +141,7 @@ export class Executor {
   private async executeStep(
     step: PlanStep,
     context: Record<string, any>,
-    executionId: string
+    _executionId: string
   ): Promise<{
     id: string;
     agentId: string;

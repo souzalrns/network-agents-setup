@@ -35,7 +35,7 @@ export class WebSocketClient extends EventEmitter {
         console.log('[WebSocket Client] Disconnected');
         this.attemptReconnect();
       });
-      this.ws.on('error', (error) => {
+      this.ws.on('error', (error: any) => {
         console.error('[WebSocket Client] Error:', error);
         if (!this.isConnected) {
           reject(error);
@@ -87,7 +87,7 @@ export class WebSocketClient extends EventEmitter {
         this.removeListener(`response:${message.id}`, handler);
         reject(new Error('Response timeout'));
       }, 30000);
-      this.ws.send(JSON.stringify(message), (error) => {
+      this.ws.send(JSON.stringify(message), (error: any) => {
         if (error) {
           clearTimeout(timeout);
           this.removeListener(`response:${message.id}`, handler);

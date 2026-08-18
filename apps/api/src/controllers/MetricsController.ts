@@ -12,11 +12,11 @@ export class MetricsController {
     });
     res.json(metrics);
   }
-  async getAgentMetrics(req: Request, res: Response): Promise<void> {
+  async getAgentMetrics(_req: Request, res: Response): Promise<void> {
     const stats = await this.executionService.getAgentStats();
     res.json(stats);
   }
-  async getHitlMetrics(req: Request, res: Response): Promise<void> {
+  async getHitlMetrics(_req: Request, res: Response): Promise<void> {
     const stats = await this.executionService.getHitlStats();
     res.json(stats);
   }

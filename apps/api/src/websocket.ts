@@ -173,7 +173,7 @@ export function setupWebSocket(
     }
   });
   // System
-  wsServer.on('system:status', (data: any, callback: any) => {
+  wsServer.on('system:status', (_data: any, callback: any) => {
     callback({
       status: 'healthy',
       connections: wsServer.getActiveConnections(),

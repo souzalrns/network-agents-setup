@@ -99,7 +99,7 @@ export class WebSocketServer extends EventEmitter {
         const result = await this.emitAsync('agent:list', data);
         callback(result);
       },
-      'system:status': async (data, callback) => {
+      'system:status': async (_data, callback) => {
         callback({
           status: 'healthy',
           connections: this.getActiveConnections(),

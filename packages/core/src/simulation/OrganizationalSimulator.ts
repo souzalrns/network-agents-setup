@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
 import { SelfAwareness, OrganizationalState } from '../observability/SelfAwareness';
-import { Opportunity } from '../opportunity/OpportunityRadar';
 export interface SimulationScenario {
   id: string;
   name: string;
@@ -139,12 +138,10 @@ export class OrganizationalSimulator extends EventEmitter {
     const events: SimulationEvent[] = [];
     const decisions: SimulationDecision[] = [];
     const agents: SimulationAgent[] = this.createSimulationAgents(scenario);
-    let currentStep = 0;
     const totalSteps = scenario.steps;
     this.logger.info(`[OrganizationalSimulator] Executing ${totalSteps} steps for ${scenario.id}`);
     // Simula evolução passo a passo
     for (let step = 0; step < totalSteps; step++) {
-      currentStep = step;
       // Atualiza estado
       this.updateState(state, scenario, step);
       // Processa decisões dos agentes
@@ -206,7 +203,7 @@ export class OrganizationalSimulator extends EventEmitter {
   /**
    * Cria agentes de simulação
    */
-  private createSimulationAgents(scenario: SimulationScenario): SimulationAgent[] {
+  private createSimulationAgents(_scenario: SimulationScenario): SimulationAgent[] {
     const agentRoles = ['CEO', 'CTO', 'CFO', 'COO', 'CMO', 'CLO'];
     
     return agentRoles.map((role, index) => ({
@@ -220,7 +217,7 @@ export class OrganizationalSimulator extends EventEmitter {
   /**
    * Atualiza estado da simulação
    */
-  private updateState(state: any, scenario: SimulationScenario, step: number): void {
+  private updateState(state: any, _scenario: SimulationScenario, step: number): void {
     // Simula evolução natural do estado
     // Em produção, implementaria modelos mais complexos
     // Flutuação aleatória controlada
@@ -241,7 +238,7 @@ export class OrganizationalSimulator extends EventEmitter {
     for (const dim of dimensions) {
       state.health[dim] = state.health[dim] * (1 - factor) + healthDeltas[dim] * factor;
     }
-    state.health.overall = Object.values(state.health).reduce((a: number, b: number) => a + b, 0) / dimensions.length;
+    state.health.overall = (Object.values(state.health) as number[]).reduce((a: number, b: number) => a + b, 0) / dimensions.length;
     // Atualiza timestamp
     state.timestamp = new Date();
     // Atualiza capacidades
@@ -255,8 +252,8 @@ export class OrganizationalSimulator extends EventEmitter {
    */
   private async agentDecision(
     agent: SimulationAgent,
-    state: any,
-    scenario: SimulationScenario,
+    _state: any,
+    _scenario: SimulationScenario,
     step: number
   ): Promise<SimulationDecision | null> {
     // Simula decisões baseadas no tipo de agente e estado atual
@@ -319,7 +316,7 @@ export class OrganizationalSimulator extends EventEmitter {
   /**
    * Aplica decisão ao estado
    */
-  private applyDecision(state: any, decision: SimulationDecision, scenario: SimulationScenario): void {
+  private applyDecision(state: any, decision: SimulationDecision, _scenario: SimulationScenario): void {
     // Aplica impacto da decisão ao estado simulado
     const impact = 0.1; // impacto percentual
     // Diferentes decisões afetam diferentes métricas
@@ -349,13 +346,13 @@ export class OrganizationalSimulator extends EventEmitter {
   /**
    * Calcula impacto de uma decisão
    */
-  private calculateDecisionImpact(decision: SimulationDecision): number {
+  private calculateDecisionImpact(_decision: SimulationDecision): number {
     return 0.5 + Math.random() * 0.5;
   }
   /**
    * Detecta eventos críticos
    */
-  private detectCriticalEvents(state: any, scenario: SimulationScenario): SimulationEvent[] {
+  private detectCriticalEvents(state: any, _scenario: SimulationScenario): SimulationEvent[] {
     const events: SimulationEvent[] = [];
     // Detecta degradação crítica
     if (state.health.overall < 30) {
@@ -388,7 +385,7 @@ export class OrganizationalSimulator extends EventEmitter {
     initialState: OrganizationalState,
     finalState: any,
     events: SimulationEvent[],
-    decisions: SimulationDecision[]
+    _decisions: SimulationDecision[]
   ): {
     roi: number;
     risk: number;

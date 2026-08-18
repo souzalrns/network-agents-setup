@@ -121,7 +121,7 @@ export class DeliberationEngine {
   /**
    * Gera alternativas para a deliberação
    */
-  private generateAlternatives(context: DeliberationContext): string[] {
+  private generateAlternatives(_context: DeliberationContext): string[] {
     const alternatives: string[] = [];
     // Alternativa 1: Execução direta (operacional)
     alternatives.push('Executar diretamente com recursos mínimos');

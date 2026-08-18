@@ -44,7 +44,6 @@ export interface AutonomyBoundary {
 }
 export class TrustManager extends EventEmitter {
   private competences: Map<string, Competence> = new Map();
-  private trustMetrics: Map<string, TrustMetrics> = new Map();
   private logger = getGlobalLogger();
   private autonomyBoundaries: Map<string, AutonomyBoundary> = new Map();
   /**

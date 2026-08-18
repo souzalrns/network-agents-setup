@@ -106,7 +106,7 @@ export class ExecutionService {
     const totalTokens = executions.reduce((sum: number, e: any) => sum + (e.totalTokens || 0), 0);
     return { totalCost, totalTokens, executions: executions.length };
   }
-  async getPerformanceMetrics(window: string): Promise<any> {
+  async getPerformanceMetrics(_window: string): Promise<any> {
     // Implementação simplificada
     const executions = await this.memory.executions.list(1000, 0);
     const durations = executions.map((e: any) => e.durationMs || 0).filter((d: number) => d > 0);

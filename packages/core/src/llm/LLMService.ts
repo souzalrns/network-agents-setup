@@ -59,7 +59,7 @@ export class OpenAIProvider implements LLMProvider {
         tools: options.tools,
       }),
     });
-    const data = await response.json();
+    const data: any = await response.json();
     const message = data.choices?.[0]?.message;
     return {
       content: message?.content || '',
@@ -91,7 +91,7 @@ export class OpenAIProvider implements LLMProvider {
         tool_choice: options.tools ? 'auto' : undefined,
       }),
     });
-    const data = await response.json();
+    const data: any = await response.json();
     const message = data.choices?.[0]?.message;
     return {
       content: message?.content || '',

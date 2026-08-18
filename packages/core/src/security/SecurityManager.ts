@@ -63,7 +63,8 @@ export class SecurityManager extends EventEmitter {
     if (existing) {
       throw new Error('User already exists');
     }
-    const hashedPassword = this.hashPassword(password);
+    // Em produção, o hash seria persistido em um banco de credenciais separado.
+    this.hashPassword(password);
     const user: User = {
       id: `user_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       email,
@@ -487,7 +488,7 @@ export class SecurityManager extends EventEmitter {
   /**
    * Verifica senha (simplificado)
    */
-  private verifyPassword(password: string): boolean {
+  private verifyPassword(_password: string): boolean {
     // Em produção, verificar contra hash armazenado
     return true;
   }

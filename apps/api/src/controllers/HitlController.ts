@@ -53,7 +53,7 @@ export class HitlController {
     }
     res.json(checkpoint);
   }
-  async getStats(req: Request, res: Response): Promise<void> {
+  async getStats(_req: Request, res: Response): Promise<void> {
     const pending = this.hitlManager.getPendingRequests();
     res.json({
       totalPending: pending.length,

@@ -219,9 +219,6 @@ export class TokenEconomy extends EventEmitter {
     if (!budget) {
       return { totalSavings: 0, savingsByStrategy: {}, efficiency: 0 };
     }
-    const totalTokens = this.costs
-      .filter((c) => c.model.includes(executionId))
-      .reduce((sum, c) => sum + c.totalTokens, 0);
     const efficiency = budget.allocated > 0 ? (budget.used / budget.allocated) * 100 : 0;
     return {
       totalSavings: budget.allocated - budget.used,
@@ -395,7 +392,7 @@ export class TokenEconomy extends EventEmitter {
   /**
    * Obtém relatório de custos
    */
-  getCostReport(period?: 'daily' | 'weekly' | 'monthly'): {
+  getCostReport(_period?: 'daily' | 'weekly' | 'monthly'): {
     totalTokens: number;
     totalCost: number;
     byModel: Record<string, { tokens: number; cost: number }>;

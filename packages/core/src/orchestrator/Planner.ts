@@ -1,9 +1,9 @@
 import { AgentFactory } from '../agents/AgentFactory';
 import { LLMService } from '../llm/LLMService';
-import { Plan, PlanStep } from '@network-agents/shared';
+import { Plan } from '@network-agents/shared';
 export class Planner {
   constructor(
-    private agentFactory: AgentFactory,
+    _agentFactory: AgentFactory,
     private llm: LLMService
   ) {}
   async plan(

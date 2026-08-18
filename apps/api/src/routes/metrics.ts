@@ -6,7 +6,7 @@ export function createMetricsRoutes(executionService: ExecutionService) {
   const router = express.Router();
   const controller = new MetricsController(executionService);
   const metrics = getGlobalMetrics();
-  router.get('/prometheus', (req, res) => {
+  router.get('/prometheus', (_req, res) => {
     const allMetrics = metrics.getMetrics();
     let output = '';
     for (const m of allMetrics) {

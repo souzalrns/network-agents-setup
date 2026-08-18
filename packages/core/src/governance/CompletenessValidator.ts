@@ -177,7 +177,7 @@ export class CompletenessValidator extends EventEmitter {
   /**
    * Processa a ingestão de conteúdo
    */
-  private async processIngestion(capability: Capability, content: any): Promise<void> {
+  private async processIngestion(_capability: Capability, _content: any): Promise<void> {
     // Simula processamento
     return new Promise((resolve) => {
       setTimeout(resolve, 500);

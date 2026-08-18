@@ -34,11 +34,11 @@ export class MetricsRepository {
     if (startDate) where.date = { gte: startDate };
     if (endDate) where.date = { lte: endDate };
     const metrics = await this.prisma.metrics.findMany({ where });
-    const totalExecutions = metrics.reduce((sum, m) => sum + m.executions, 0);
-    const totalTokens = metrics.reduce((sum, m) => sum + m.tokens, 0);
-    const totalCost = metrics.reduce((sum, m) => sum + m.cost, 0);
-    const totalDuration = metrics.reduce((sum, m) => sum + m.durationMs, 0);
-    const totalErrors = metrics.reduce((sum, m) => sum + m.errors, 0);
+    const totalExecutions = metrics.reduce((sum: number, m: any) => sum + m.executions, 0);
+    const totalTokens = metrics.reduce((sum: number, m: any) => sum + m.tokens, 0);
+    const totalCost = metrics.reduce((sum: number, m: any) => sum + m.cost, 0);
+    const totalDuration = metrics.reduce((sum: number, m: any) => sum + m.durationMs, 0);
+    const totalErrors = metrics.reduce((sum: number, m: any) => sum + m.errors, 0);
     return { totalExecutions, totalTokens, totalCost, totalDuration, totalErrors, count: metrics.length };
   }
   async deleteOld(days: number): Promise<any> {

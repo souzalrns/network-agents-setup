@@ -38,6 +38,18 @@ export class ChatController {
       });
     }
   }
+  /**
+   * Consulta o status de uma execução de chat previamente iniciada.
+   */
+  async getChatStatus(req: Request, res: Response): Promise<void> {
+    const { executionId } = req.params;
+    const execution = await this.executionService.getExecution(executionId);
+    if (!execution) {
+      res.status(404).json({ error: 'Execution not found' });
+      return;
+    }
+    res.json(execution);
+  }
   private async processChatStream(
     executionId: string,
     message: string,
