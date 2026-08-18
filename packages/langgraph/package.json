@@ -1,0 +1,19 @@
+{
+  "name": "@network-agents/langgraph",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@network-agents/core": "workspace:*",
+    "@network-agents/shared": "workspace:*",
+    "@network-agents/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

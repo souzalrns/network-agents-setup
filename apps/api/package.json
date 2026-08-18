@@ -1,0 +1,32 @@
+{
+  "name": "@network-agents/api",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@network-agents/core": "workspace:*",
+    "@network-agents/memory": "workspace:*",
+    "@network-agents/mcp": "workspace:*",
+    "@network-agents/observability": "workspace:*",
+    "@network-agents/websocket": "workspace:*",
+    "@network-agents/langgraph": "workspace:*",
+    "@network-agents/shared": "workspace:*",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "ws": "^8.14.0",
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "@types/ws": "^8.5.0",
+    "@types/pg": "^8.10.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}

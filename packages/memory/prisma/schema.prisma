@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  name              String?
+  // Renomeado de "preferences" para "preferencesJson" (mantendo a coluna "preferences" no banco
+  // via @map) para não colidir com a relação "preferences" abaixo — o schema original enviado
+  // pelo usuário declarava os dois campos com o mesmo nome, o que o Prisma rejeita.
+  preferencesJson   Json?     @map("preferences")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  executions        Execution[]
+  conversations     Conversation[]
+  preferences       UserPreference[]
+  @@map("users")
+}
+model UserPreference {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  key           String
+  value         Json
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id])
+  @@unique([userId, key])
+  @@map("user_preferences")
+}
+model Conversation {
+  id            String      @id @default(cuid())
+  title         String?
+  userId        String?     @map("user_id")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastMessageAt DateTime    @default(now())
+  messageCount  Int         @default(0)
+  user          User?       @relation(fields: [userId], references: [id])
+  executions    Execution[]
+  messages      Message[]
+  @@map("conversations")
+}
+model Message {
+  id            String    @id @default(cuid())
+  conversationId String   @map("conversation_id")
+  role          String
+  content       String    @db.Text
+  agentId       String?   @map("agent_id")
+  metadata      Json?
+  createdAt     DateTime  @default(now())
+  conversation  Conversation @relation(fields: [conversationId], references: [id])
+  @@map("messages")
+}
+model Execution {
+  id            String    @id @default(cuid())
+  status        String
+  domain        String?   @db.VarChar(50)
+  intent        String
+  message       String    @db.Text
+  result        String?   @db.Text
+  errors        String?   @db.Text
+  steps         Json?
+  metadata      Json?
+  totalTokens   Int?      @default(0)
+  totalCost     Float?    @default(0)
+  durationMs    Int?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+  conversationId String?   @map("conversation_id")
+  userId         String?   @map("user_id")
+  conversation  Conversation? @relation(fields: [conversationId], references: [id])
+  user          User?         @relation(fields: [userId], references: [id])
+  checkpoints   Checkpoint[]
+  logs          ExecutionLog[]
+  @@map("executions")
+}
+model Checkpoint {
+  id            String    @id @default(cuid())
+  executionId   String    @map("execution_id")
+  hitlRequestId String    @map("hitl_request_id")
+  stepIndex     Int       @map("step_index")
+  state         Json
+  memorySnapshot Json
+  createdAt     DateTime  @default(now())
+  restoredAt    DateTime?
+  execution     Execution @relation(fields: [executionId], references: [id])
+  @@map("checkpoints")
+}
+model ExecutionLog {
+  id            String    @id @default(cuid())
+  executionId   String    @map("execution_id")
+  level         String
+  message       String    @db.Text
+  metadata      Json?
+  timestamp     DateTime  @default(now())
+  execution     Execution @relation(fields: [executionId], references: [id])
+  @@map("execution_logs")
+}
+model Metrics {
+  id            String    @id @default(cuid())
+  date          DateTime  @default(now())
+  agentId       String?   @map("agent_id")
+  executions    Int       @default(0)
+  tokens        Int       @default(0)
+  cost          Float     @default(0)
+  durationMs    Int       @default(0)
+  errors        Int       @default(0)
+  @@map("metrics")
+}
