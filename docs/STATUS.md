@@ -2,8 +2,8 @@
 
 > Última atualização: 18/08/2026. Este arquivo existe para responder uma pergunta em
 > segundos, sem reabrir o histórico de conversas: **o que deste repo está real e
-> funcionando, o que está só desenhado, e o que já existe em outro lugar e não deveria
-> ser duplicado aqui.**
+> funcionando, o que está só desenhado, e qual camada (pública/genérica aqui vs.
+> privada/produção em `agent-network-mcp`) cada peça deveria ocupar.**
 >
 > Regra para qualquer sessão futura (Claude ou humano): antes de retomar trabalho neste
 > repo, consultar `system_inventory` e `pendencias_negocio` (área `agent-network` e
@@ -17,19 +17,37 @@ em `docs/estrutura-geral-agentes.md` — 5 camadas (Orquestração Central, Dom�
 Especialistas, Transversais/Skills, Segurança/HITL), Router→Planner→Executor→Orchestrator,
 Prisma+Redis, MCP tools, observabilidade própria.
 
-## ⚠️ Existe sobreposição não resolvida com `agent-network-mcp`
+## Princípio de arquitetura: uma arquitetura, duas camadas de deployment
 
-O repo `github.com/souzalrns/agent-network-mcp` já é uma rede de agentes **em produção**
-(Vercel, dashboard, GitHub Actions, bridge chat↔Claude Code), com 34 agentes configurados
-em `lib/agents.js`, incluindo `direito-br-pt` — que já tem RAG real funcionando
-(`knowledge_chunks` no Supabase, embeddings Gemini, 46 chunks ingeridos em 06/08/2026,
-incluindo conteúdo real de usucapião/regimes de bens).
+Não são dois projetos separados que coincidem — é **uma única arquitetura de agentes
+com duas camadas de instância**, com um princípio de design que decide onde cada coisa
+mora:
 
-Este repo (`network-agents-setup`) foi construído em paralelo, do zero, **sem checar
-primeiro** se esse trabalho já existia — esse é o erro a não repetir. Decisão pendente
-(registrada em `pendencias_negocio`, área `agent-network-setup-vs-mcp`): manter os dois
-propositalmente separados (este = arquitetura de referência/estudo, `agent-network-mcp` =
-produção), fundir um no outro, ou descontinuar este.
+1. **Camada pública/genérica — este repo (`network-agents-setup` / PCU).** Motor
+   transversal, pluggable e reutilizável: um agente por domínio/projeto (o "plug") +
+   toda a infraestrutura compartilhada (orquestração, memória, tools, pipeline de
+   ingestão etc.). Destinado a portfólio e a qualquer desenvolvedor.
+2. **Camada privada/produção — `agent-network-mcp`.** Instância específica da
+   LRNSdigital com os agentes dos negócios reais (mesaflow, viannalegal, direito-br-pt
+   etc.) — os agentes de projeto são os plugins privados que se encaixam na estrutura
+   transversal. Aqui ficam dados sensíveis, configurações de negócio e fluxos que não
+   devem ser públicos.
+
+**Regra que decide onde cada coisa vive:**
+
+- Conhecimento de domínio (leis, regras, bases de dados públicas) → camada genérica
+  (este repo) e é reutilizável, mesmo que tenha sido usado primeiro numa pesquisa
+  específica — ele atende a qualquer pessoa por natureza.
+- Agente de negócio / lógica privada → é o plugin, isolado em `agent-network-mcp`.
+- O diferencial competitivo real não está no código dos agentes no Git (que qualquer um
+  pode clonar vazio) — está na **ingestão de conhecimento real e curado**. Por isso este
+  repo precisa demonstrar essa capacidade de forma crível (conteúdo substantivo, não
+  placeholder), enquanto o isolamento de banco garante que dados privados de produção
+  nunca vazem para o repositório público.
+
+Sempre que fizer sentido, melhorias somam de um lado para o outro — não é para duplicar
+sem necessidade. Quando este repo for de fato publicado como portfólio, a versão
+publicada é uma cópia do estado atual com qualquer resquício de plugin privado removido.
 
 ## O que está implementado aqui e seu estado real
 
@@ -50,13 +68,15 @@ estruturalmente, mas nenhuma linha de conteúdo jurídico real foi persistida em
 nenhum a partir deste repo — porque (a) não há Postgres real conectado e (b) o scraping
 das fontes oficiais está bloqueado neste ambiente.
 
-## Alternativa já funcionando (fora deste repo)
+## Referência real já funcionando (camada privada, fora deste repo)
 
 `ask_agent_network` / `run_specific_agent(agent: 'direito-br-pt')` via o MCP
-"Rede de Agentes LRNSdigital" — já responde perguntas jurídicas BR/PT reais, citando
+"Rede de Agentes LRNSdigital" já responde perguntas jurídicas BR/PT reais, citando
 artigos corretos, usando conteúdo real ingerido no Supabase `agent-network-memory`
-(tabela `knowledge_chunks`). É a via recomendada para uso imediato enquanto a decisão
-acima não é tomada.
+(tabela `knowledge_chunks`). Isso prova que o conceito funciona — o próximo passo aqui é
+levar essa mesma qualidade de conteúdo (curado, real) para a camada genérica/pública
+deste repo, sem apontar para o banco privado de produção (ver princípio de isolamento
+acima).
 
 ## Limitações confirmadas deste sandbox (não deste repo)
 
