@@ -25,20 +25,20 @@ Agentes de negócio e dados sensíveis ficam na camada privada.
 | Repo | Visibilidade | Camada | STATUS local | Notas |
 |------|--------------|--------|--------------|-------|
 | [network-agents-setup](https://github.com/souzalrns/network-agents-setup) | Público | Genérica / PCU | [docs/STATUS.md](./STATUS.md) | Demo + ingestão jurídica real; isolamento de banco ainda pendente |
-| [agent-network-mcp](https://github.com/souzalrns/agent-network-mcp) | Público | Privada / produção | `docs/STATUS.md` (se existir) | MCP em produção; 30+ agentes com systemPrompt + conhecimento |
-| [pcu-nucleo-generico](https://github.com/souzalrns/pcu-nucleo-generico) | Público | Núcleo conceptual | — | Núcleo genérico PCU |
+| [agent-network-mcp](https://github.com/souzalrns/agent-network-mcp) | Público | Privada / produção | [docs/STATUS.md](https://github.com/souzalrns/agent-network-mcp/blob/main/docs/STATUS.md) | MCP em produção |
+| [pcu-nucleo-generico](https://github.com/souzalrns/pcu-nucleo-generico) | Público | Núcleo conceptual | [docs/STATUS.md](https://github.com/souzalrns/pcu-nucleo-generico/blob/main/docs/STATUS.md) | Aponta para network-agents-setup |
 
 ### Produtos / negócios
 
-| Repo | Visibilidade | Domínio |
-|------|--------------|---------|
-| [mesaflow-api](https://github.com/souzalrns/mesaflow-api) | Privado | SaaS restaurantes |
-| [vianna-gestao](https://github.com/souzalrns/vianna-gestao) | Privado | Gestão processos ViannaLegal |
-| [viannalegal-site](https://github.com/souzalrns/viannalegal-site) | Público | Cidadania PT |
-| [viannalegal](https://github.com/souzalrns/viannalegal) | Público | — |
-| [sst-portugal-site](https://github.com/souzalrns/sst-portugal-site) | Público | SST |
-| [canidelo-vista-mar](https://github.com/souzalrns/canidelo-vista-mar) | Público | Imobiliário |
-| [vistamar-gaia](https://github.com/souzalrns/vistamar-gaia) | Público | Imobiliário |
+| Repo | Visibilidade | STATUS |
+|------|--------------|--------|
+| [mesaflow-api](https://github.com/souzalrns/mesaflow-api) | Privado | [docs/STATUS.md](https://github.com/souzalrns/mesaflow-api/blob/main/docs/STATUS.md) |
+| [vianna-gestao](https://github.com/souzalrns/vianna-gestao) | Privado | [docs/STATUS.md](https://github.com/souzalrns/vianna-gestao/blob/main/docs/STATUS.md) |
+| [viannalegal-site](https://github.com/souzalrns/viannalegal-site) | Público | [docs/STATUS.md](https://github.com/souzalrns/viannalegal-site/blob/main/docs/STATUS.md) |
+| [viannalegal](https://github.com/souzalrns/viannalegal) | Público | [docs/STATUS.md](https://github.com/souzalrns/viannalegal/blob/main/docs/STATUS.md) |
+| [sst-portugal-site](https://github.com/souzalrns/sst-portugal-site) | Público | [docs/STATUS.md](https://github.com/souzalrns/sst-portugal-site/blob/main/docs/STATUS.md) |
+| [canidelo-vista-mar](https://github.com/souzalrns/canidelo-vista-mar) | Público | [docs/STATUS.md](https://github.com/souzalrns/canidelo-vista-mar/blob/main/docs/STATUS.md) |
+| [vistamar-gaia](https://github.com/souzalrns/vistamar-gaia) | Público | [docs/STATUS.md](https://github.com/souzalrns/vistamar-gaia/blob/main/docs/STATUS.md) |
 
 ### Skills / espelhos
 
@@ -50,14 +50,12 @@ Agentes de negócio e dados sensíveis ficam na camada privada.
 
 ## Pendências transversais (resumo)
 
-Atualizar quando o Supabase mudar; detalhe fino fica em `pendencias_negocio`.
-
 | ID / tema | Estado | Onde |
 |-----------|--------|------|
 | Conteúdo real no pipeline jurídico do PCU | Concluído (18/08/2026) | network-agents-setup |
-| Isolamento de banco para demo pública | Aberto | network-agents-setup (docker-compose local / schema isolado) |
-| STATUS.md por repo de produto | Parcial | só PCU tem STATUS completo |
-| Documentação automática de código | Em curso | scripts `docs:*` neste repo |
+| Isolamento de banco para demo pública | Aberto | network-agents-setup |
+| STATUS.md por repo de produto | **Concluído (19/08/2026)** | todos os produtos listados acima |
+| docs/generated (code-map + agents) | Seed inicial no Git | regenerar com scripts docs:* |
 
 ## Como uma sessão (Claude ou humana) deve começar
 
@@ -66,17 +64,19 @@ Atualizar quando o Supabase mudar; detalhe fino fica em `pendencias_negocio`.
 3. Se houver scripts: `validate:consistency`, `docs:code-map`, `docs:agents`.
 4. Supabase `system_inventory` / `pendencias_negocio` para estado operacional fino.
 
-## Ferramentas de documentação (neste monorepo PCU)
+## Ferramentas de documentação (monorepo PCU)
 
 ```bash
-# Mapa de pacotes, entrypoints e árvore relevante
 pnpm --filter @network-agents/scripts docs:code-map
-
-# Documentação dos agentes a partir de config/agents.config.ts
 pnpm --filter @network-agents/scripts docs:agents
-
-# Consistência STATUS ↔ seeds ↔ agents
+pnpm --filter @network-agents/scripts docs:all
 pnpm --filter @network-agents/scripts validate:consistency
 ```
 
 Saídas em `docs/generated/` — geradas, não editar à mão.
+
+No `agent-network-mcp`:
+
+```bash
+node scripts/document-agents.js
+```
