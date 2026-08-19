@@ -1,12 +1,12 @@
 # STATUS-ECOSSISTEMA — LRNSdigital
 
-> **Índice unificado** para tomar pé do que está a acontecer no conjunto de repositórios.
-> Última atualização: 19/08/2026.
+> **Atalho:** para “lê o status dos projetos”, preferir o resumo único:
+> [docs/STATUS-PROJETOS.md](./STATUS-PROJETOS.md)
 >
-> Fonte operacional canónica: Supabase `agent-network-memory` → tabelas
-> `system_inventory` e `pendencias_negocio`.
-> Este ficheiro é o **espelho legível no Git** (portfólio + sessões sem acesso ao banco).
-> Cada repo mantém o seu próprio `docs/STATUS.md` para detalhe local.
+> Este ficheiro é o **mapa completo**. Fonte operacional canónica: Supabase
+> `system_inventory` + `pendencias_negocio`.
+>
+> Última atualização: 19/08/2026.
 
 ## Princípio de arquitetura
 
@@ -54,17 +54,15 @@ Agentes de negócio e dados sensíveis ficam na camada privada.
 |-----------|--------|------|
 | Conteúdo real no pipeline jurídico do PCU | Concluído (18/08/2026) | network-agents-setup |
 | Isolamento de banco para demo pública | Aberto | network-agents-setup |
-| STATUS.md por repo de produto | **Concluído (19/08/2026)** | todos os produtos listados acima |
-| STATUS.md em mirrors/skills | **Concluído (19/08/2026)** | ECC, ui-ux-pro-max-skill, designer-skills |
-| docs/generated (code-map + agents) | Seed inicial no Git | regenerar com scripts docs:* |
+| STATUS.md por repo | **Concluído** | produtos + mirrors |
+| Entrada única “status dos projetos” | **Concluído** | [STATUS-PROJETOS.md](./STATUS-PROJETOS.md) |
+| docs/generated | Seed no Git | regenerar com scripts docs:* |
 
-## Como uma sessão (Claude ou humana) deve começar
+## Como uma sessão deve começar
 
-1. Ler **este** ficheiro se a pergunta for “o que está a acontecer no conjunto”.
-2. Ler o `docs/STATUS.md` **do repo em que se está a trabalhar**.
-3. Se o STATUS disser `mirror`, não abrir backlog de produto nesse repo.
-4. Se houver scripts: `validate:consistency`, `docs:code-map`, `docs:agents`.
-5. Supabase `system_inventory` / `pendencias_negocio` para estado operacional fino.
+- **“Lê o status dos projetos”** → abrir [STATUS-PROJETOS.md](./STATUS-PROJETOS.md) e resumir.
+- Trabalho num repo → `docs/STATUS.md` desse repo + `CLAUDE.md`.
+- Operacional fino → Supabase `system_inventory` / `pendencias_negocio`.
 
 ## Ferramentas de documentação (monorepo PCU)
 
@@ -75,10 +73,4 @@ pnpm --filter @network-agents/scripts docs:all
 pnpm --filter @network-agents/scripts validate:consistency
 ```
 
-Saídas em `docs/generated/` — geradas, não editar à mão.
-
-No `agent-network-mcp`:
-
-```bash
-node scripts/document-agents.js
-```
+No `agent-network-mcp`: `node scripts/document-agents.js`
