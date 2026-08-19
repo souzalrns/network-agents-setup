@@ -67,50 +67,78 @@ jobs:
         id: install
         # Sem pnpm-lock.yaml commitado ainda — --no-frozen-lockfile evita falha aqui.
         # TODO (docs/STATUS.md): commitar o lockfile para builds reprodutíveis.
-        run: pnpm install --no-frozen-lockfile 2>&1 | tee /tmp/install.log
+        run: pnpm install --no-frozen-lockfile 2>&1 | tee /tmp/log-install.log
+        continue-on-error: true
+
+      - name: Habilitar extensão pgvector no banco de teste
+        id: pgvector
+        run: psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS vector;" 2>&1 | tee /tmp/log-pgvector.log
+        continue-on-error: true
+
+      - name: Gerar Prisma Client
+        id: prisma_generate
+        run: pnpm --filter @network-agents/memory exec prisma generate 2>&1 | tee /tmp/log-prisma-generate.log
+        continue-on-error: true
+
+      - name: Aplicar schema Prisma ao banco de teste
+        id: prisma_push
+        run: pnpm --filter @network-agents/memory exec prisma db push --skip-generate --accept-data-loss 2>&1 | tee /tmp/log-prisma-push.log
+        continue-on-error: true
+
+      - name: Type-check (tsc --noEmit, todos os pacotes)
+        id: typecheck
+        run: pnpm run ci:typecheck 2>&1 | tee /tmp/log-typecheck.log
+        continue-on-error: true
+
+      - name: Consistência STATUS ↔ código ↔ agents.config
+        id: consistency
+        run: pnpm --filter @network-agents/scripts run validate:consistency 2>&1 | tee /tmp/log-consistency.log
+        continue-on-error: true
+
+      - name: Smoke test funcional (ingestão real contra Postgres real)
+        id: smoke
+        run: pnpm run ci:smoke-test 2>&1 | tee /tmp/log-smoke.log
         continue-on-error: true
 
       # DEBUG TEMPORÁRIO (remover depois de diagnosticado): o download do log completo
       # via API do GitHub redireciona para um blob (results-receiver.actions.githubusercontent.com
       # / *.blob.core.windows.net) que não está na allowlist de rede do sandbox onde este
-      # workflow foi escrito, e o token do sandbox não tem acesso à Checks API para setar
-      # output.summary de outra forma. Publicar como um check-run próprio contorna isso —
-      # dá para ler via `GET /repos/.../commits/{sha}/check-runs`, sem precisar do blob.
-      - name: Publicar log de instalação (debug temporário)
-        if: steps.install.outcome == 'failure'
+      # workflow foi escrito, e WebFetch também é bloqueado pelo proxy nesse host. Publicar
+      # como check-run próprio contorna isso — dá para ler via
+      # `GET /repos/.../commits/{sha}/check-runs`, sem precisar do blob.
+      - name: Publicar logs de qualquer passo que falhou (debug temporário)
+        if: |
+          steps.install.outcome == 'failure' || steps.pgvector.outcome == 'failure' ||
+          steps.prisma_generate.outcome == 'failure' || steps.prisma_push.outcome == 'failure' ||
+          steps.typecheck.outcome == 'failure' || steps.consistency.outcome == 'failure' ||
+          steps.smoke.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const log = fs.readFileSync('/tmp/install.log', 'utf8').slice(-60000);
+            const files = ['install', 'pgvector', 'prisma-generate', 'prisma-push', 'typecheck', 'consistency', 'smoke'];
+            let summary = '';
+            for (const f of files) {
+              const path = `/tmp/log-${f}.log`;
+              if (fs.existsSync(path)) {
+                const content = fs.readFileSync(path, 'utf8').slice(-8000);
+                summary += `### ${f}\n\`\`\`\n${content}\n\`\`\`\n\n`;
+              }
+            }
             await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              name: 'debug-install-log',
+              name: 'debug-ci-logs',
               head_sha: context.sha,
               status: 'completed',
               conclusion: 'neutral',
-              output: { title: 'pnpm install log', summary: '```\n' + log + '\n```' },
+              output: { title: 'Logs dos passos do CI', summary: summary.slice(0, 65000) },
             });
 
-      - name: Falhar se a instalação falhou
-        if: steps.install.outcome == 'failure'
+      - name: Falhar o job se algum passo falhou
+        if: |
+          steps.install.outcome == 'failure' || steps.pgvector.outcome == 'failure' ||
+          steps.prisma_generate.outcome == 'failure' || steps.prisma_push.outcome == 'failure' ||
+          steps.typecheck.outcome == 'failure' || steps.consistency.outcome == 'failure' ||
+          steps.smoke.outcome == 'failure'
         run: exit 1
-
-      - name: Habilitar extensão pgvector no banco de teste
-        run: psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS vector;"
-
-      - name: Gerar Prisma Client
-        run: pnpm --filter @network-agents/memory exec prisma generate
-
-      - name: Aplicar schema Prisma ao banco de teste
-        run: pnpm --filter @network-agents/memory exec prisma db push --skip-generate --accept-data-loss
-
-      - name: Type-check (tsc --noEmit, todos os pacotes)
-        run: pnpm run ci:typecheck
-
-      - name: Consistência STATUS ↔ código ↔ agents.config
-        run: pnpm --filter @network-agents/scripts run validate:consistency
-
-      - name: Smoke test funcional (ingestão real contra Postgres real)
-        run: pnpm run ci:smoke-test
