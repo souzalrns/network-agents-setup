@@ -100,12 +100,14 @@ jobs:
         run: pnpm run ci:smoke-test 2>&1 | tee /tmp/log-smoke.log
         continue-on-error: true
 
-      # DEBUG TEMPORÁRIO (remover depois de diagnosticado): o download do log completo
-      # via API do GitHub redireciona para um blob (results-receiver.actions.githubusercontent.com
-      # / *.blob.core.windows.net) que não está na allowlist de rede do sandbox onde este
-      # workflow foi escrito, e WebFetch também é bloqueado pelo proxy nesse host. Publicar
-      # como check-run próprio contorna isso — dá para ler via
-      # `GET /repos/.../commits/{sha}/check-runs`, sem precisar do blob.
+      # Diagnóstico permanente (não é debug temporário): o download do log completo via
+      # API do GitHub redireciona para um blob (results-receiver.actions.githubusercontent.com
+      # / *.blob.core.windows.net), inacessível a partir do sandbox onde este workflow foi
+      # escrito e testado (fora da allowlist de rede; WebFetch também é bloqueado pelo
+      # proxy nesse host). Publicar como check-run próprio contorna isso — qualquer sessão
+      # futura lê o log de uma falha via `GET /repos/.../commits/{sha}/check-runs`, sem
+      # precisar do blob. Mantido mesmo com o CI verde porque o problema de acesso ao log
+      # é do ambiente de quem diagnostica, não do estado do CI.
       - name: Publicar logs de qualquer passo que falhou (debug temporário)
         if: |
           steps.install.outcome == 'failure' || steps.pgvector.outcome == 'failure' ||
