@@ -1,16 +1,26 @@
 # CLAUDE.md — network-agents-setup (PCU)
 
-## Bootstrap obrigatório (sempre, sem o utilizador pedir)
+## Frase curta do utilizador
+
+Se disser **“lê o status dos projetos”** (ou “status dos projetos”, “como estão os projetos”):
+
+1. Abrir **`docs/STATUS-PROJETOS.md`** (ficheiro único).
+2. Resumir a tabela e a pendência aberta principal.
+3. Perguntar em qual projeto trabalhar, se ainda não estiver claro.
+
+Não pedir lista de paths nem ler os 13 STATUS um a um a menos que peçam detalhe.
+
+## Bootstrap obrigatório (sessão de código neste repo)
 
 No **início de cada sessão** ou antes da **primeira alteração de código**:
 
 1. Ler `docs/STATUS.md` (estado deste repo).
-2. Ler `docs/STATUS-ECOSSISTEMA.md` (mapa LRNSdigital + o que não tocar).
+2. Se a pergunta for transversal: `docs/STATUS-PROJETOS.md` ou `docs/STATUS-ECOSSISTEMA.md`.
 3. Se existirem, consultar `docs/generated/AGENTS.md` e `docs/generated/CODE_MAP.md`.
 4. Resumir em 3–5 linhas: camada, o que está real, pendências abertas, restrições.
 5. Só depois propor ou executar trabalho.
 
-Não esperar o utilizador dizer “lê o STATUS”.
+Não esperar o utilizador dizer “lê o STATUS” para o bootstrap **deste** repo.
 
 ## Identidade deste repo
 
@@ -42,6 +52,7 @@ pnpm --filter @network-agents/scripts validate:consistency
 
 | Precisas de… | Vai a… |
 |--------------|--------|
+| Status de todos os projetos (1 ficheiro) | `docs/STATUS-PROJETOS.md` |
 | Produção MCP + memória | `agent-network-mcp` |
 | Inventário operacional ao vivo | Supabase `system_inventory` / `pendencias_negocio` |
 | Produto restaurantes | `mesaflow-api` |
