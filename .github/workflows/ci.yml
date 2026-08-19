@@ -48,9 +48,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        # Sem "version:" aqui de propósito — o action-setup lê a versão do campo
+        # "packageManager" do package.json raiz (pnpm@8.0.0). Especificar os dois ao
+        # mesmo tempo é erro fatal do action ("Multiple versions of pnpm specified"),
+        # descoberto na primeira execução real deste workflow no GitHub (run 32210472782).
         uses: pnpm/action-setup@v4
-        with:
-          version: 8
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
