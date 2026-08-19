@@ -12,9 +12,9 @@ Atualizado: 19/08/2026 · Detalhe por repo: `docs/STATUS.md` em cada GitHub · O
 | # | Projeto | Camada | Estado |
 |---|---------|--------|--------|
 | 1 | **network-agents-setup** (PCU) | Pública / genérica | Demo + ingestão jurídica real; isolamento de banco **ainda aberto** |
-| 2 | **agent-network-mcp** | Privada / produção | MCP em produção (Vercel), 30+ agentes, memória Supabase |
-| 3 | **mesaflow-api** | Produto | API NestJS avançada; faturação fiscal ainda **mock** |
-| 4 | **vianna-gestao** | Produto | Gestão processos; falta import Astrea + edição |
+| 2 | **agent-network-mcp** | Privada / produção | MCP em produção; Graphify local; **Actions desligados** (custo zero) |
+| 3 | **mesaflow-api** | Produto | API NestJS; fiscal **mock**; Graphify local (`graphify-out/` ignored) |
+| 4 | **vianna-gestao** | Produto | Gestão processos; Graphify local; falta import Astrea + edição |
 | 5 | **viannalegal-site** | Produto | Em produção (viannalegal.com.br), 82 artigos |
 | 6 | **sst-portugal-site** | Produto | Conteúdo ok; **noindex** até TSST N6 |
 | 7 | **canidelo / vistamar** | Produto | Sites venda imóvel em produção |
@@ -22,6 +22,8 @@ Atualizado: 19/08/2026 · Detalhe por repo: `docs/STATUS.md` em cada GitHub · O
 | 9 | **ECC / ui-ux / designer-skills** | Mirror | **Não são produtos** — só referência |
 
 **Arquitetura:** um sistema de agentes, duas deployments — PCU genérico (portfólio) + MCP privado (negócios reais).
+
+**Graphify:** instalado em mesaflow-api, agent-network-mcp, vianna-gestao. Artefactos em `graphify-out/` **não vão para o Git**; update só local (`graphify update .`). Sem CI pago.
 
 ---
 
@@ -48,6 +50,6 @@ Atualizado: 19/08/2026 · Detalhe por repo: `docs/STATUS.md` em cada GitHub · O
 ## Resposta esperada do assistente
 
 1. Tabela ou bullets do estado atual (como acima).
-2. Pendência transversal aberta principal: **isolamento de banco da demo PCU**.
+2. Pendência transversal aberta principal: **isolamento de banco da demo PCU** (confirmar também no Supabase inventário).
 3. Perguntar em qual projeto trabalhar, se ainda não estiver claro.
 4. Só então aprofundar o `docs/STATUS.md` desse repo.
