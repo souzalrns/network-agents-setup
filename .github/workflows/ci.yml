@@ -58,7 +58,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          # Sem "cache: pnpm" de propósito — essa opção exige pnpm-lock.yaml commitado
+          # para funcionar como chave de cache, e ainda não temos um (ver TODO abaixo e
+          # docs/STATUS.md). Sem cache o install é mais lento, mas funciona. Descoberto na
+          # segunda execução real deste workflow no GitHub (run 32210560330).
 
       - name: Instalar dependências
         # Sem pnpm-lock.yaml commitado ainda — --no-frozen-lockfile evita falha aqui.
