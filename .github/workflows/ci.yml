@@ -64,9 +64,38 @@ jobs:
           # segunda execução real deste workflow no GitHub (run 32210560330).
 
       - name: Instalar dependências
+        id: install
         # Sem pnpm-lock.yaml commitado ainda — --no-frozen-lockfile evita falha aqui.
         # TODO (docs/STATUS.md): commitar o lockfile para builds reprodutíveis.
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile 2>&1 | tee /tmp/install.log
+        continue-on-error: true
+
+      # DEBUG TEMPORÁRIO (remover depois de diagnosticado): o download do log completo
+      # via API do GitHub redireciona para um blob (results-receiver.actions.githubusercontent.com
+      # / *.blob.core.windows.net) que não está na allowlist de rede do sandbox onde este
+      # workflow foi escrito, e o token do sandbox não tem acesso à Checks API para setar
+      # output.summary de outra forma. Publicar como um check-run próprio contorna isso —
+      # dá para ler via `GET /repos/.../commits/{sha}/check-runs`, sem precisar do blob.
+      - name: Publicar log de instalação (debug temporário)
+        if: steps.install.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('/tmp/install.log', 'utf8').slice(-60000);
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'debug-install-log',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: 'neutral',
+              output: { title: 'pnpm install log', summary: '```\n' + log + '\n```' },
+            });
+
+      - name: Falhar se a instalação falhou
+        if: steps.install.outcome == 'failure'
+        run: exit 1
 
       - name: Habilitar extensão pgvector no banco de teste
         run: psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS vector;"
