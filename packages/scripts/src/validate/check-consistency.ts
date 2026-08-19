@@ -46,7 +46,15 @@ function countLawListEntries(source: string): number {
 
 /** Extrai chaves do mapa de seed content (ex.: '10406/2002') */
 function countSeedEntries(source: string, mapName: string): number {
-  const re = new RegExp(`const ${mapName}[\s\S]*?=\s*\{([\s\S]*?)\n\};`);
+  // BUG CORRIGIDO 18/08/2026: template literal comum (backtick) processa escapes de
+  // string ANTES de virar regex — `\s`/`\S` não são sequências de escape reconhecidas em
+  // strings JS, então o backslash é descartado silenciosamente (`\s` vira só `s`),
+  // corrompendo o padrão para `[sS]` em vez de "qualquer caractere". Resultado: o regex
+  // nunca casava e countSeedEntries() sempre retornava 0, mesmo com os verbetes presentes
+  // (confirmado rodando manualmente contra brazilian-law.ts real: 15 entradas existem,
+  // mas o check reportava 0). `String.raw` preserva os backslashes literalmente, sem
+  // processar como escape de string — é o jeito certo de montar regex dinâmico assim.
+  const re = new RegExp(String.raw`const ${mapName}[\s\S]*?=\s*\{([\s\S]*?)\n\};`);
   const block = source.match(re);
   if (!block) return 0;
   return countMatches(block[1], /['"]\d+\/\d+['"]\s*:/g);
@@ -301,9 +309,10 @@ function checkAgentsConfig(): CheckResult[] {
       continue;
     }
 
-    // Extrai o bloco do agente (aproximação: do id até o próximo id ou fecho)
+    // Extrai o bloco do agente (aproximação: do id até o próximo id ou fecho).
+    // Mesmo bug de countSeedEntries() acima — String.raw para não perder os `\s`.
     const blockRe = new RegExp(
-      `id:\s*['"]${agent.id}['"][\s\S]*?(?=id:\s*['"]|\];)`,
+      String.raw`id:\s*['"]${agent.id}['"][\s\S]*?(?=id:\s*['"]|\];)`,
       'm'
     );
     const block = cfg.match(blockRe)?.[0] || '';

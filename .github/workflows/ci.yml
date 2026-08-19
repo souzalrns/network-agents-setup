@@ -75,5 +75,8 @@ jobs:
       - name: Type-check (tsc --noEmit, todos os pacotes)
         run: pnpm run ci:typecheck
 
+      - name: Consistência STATUS ↔ código ↔ agents.config
+        run: pnpm --filter @network-agents/scripts run validate:consistency
+
       - name: Smoke test funcional (ingestão real contra Postgres real)
         run: pnpm run ci:smoke-test
