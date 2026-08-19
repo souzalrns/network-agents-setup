@@ -1,0 +1,79 @@
+name: CI
+
+# Repositório público (github.com/souzalrns/network-agents-setup) — minutos de GitHub
+# Actions em runners hospedados pelo GitHub são ilimitados e gratuitos para repos
+# públicos, sem risco de estourar cota. Ver docs/STATUS.md para o contexto completo.
+#
+# Diferença importante deste ambiente de CI para o sandbox onde este pipeline foi
+# desenvolvido: aqui o egress de rede NÃO é bloqueado, então `prisma generate` e
+# `prisma db push` rodam de verdade (no sandbox de desenvolvimento, binaries.prisma.sh
+# retorna 403 — ver docs/STATUS.md). Por isso este CI valida o pipeline contra um
+# Postgres real com pgvector, não contra o harness fake usado durante o desenvolvimento.
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: network_agents_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/network_agents_ci
+      # Opcional: se configurada em Settings > Secrets, os testes de embeddings/orquestrador
+      # rodam completos. Sem ela, o smoke-test detecta a ausência e reporta "parcial" em vez
+      # de falhar (ver packages/scripts/src/smoke-test.ts, hasRealApiKey()).
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Instalar dependências
+        # Sem pnpm-lock.yaml commitado ainda — --no-frozen-lockfile evita falha aqui.
+        # TODO (docs/STATUS.md): commitar o lockfile para builds reprodutíveis.
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Habilitar extensão pgvector no banco de teste
+        run: psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Gerar Prisma Client
+        run: pnpm --filter @network-agents/memory exec prisma generate
+
+      - name: Aplicar schema Prisma ao banco de teste
+        run: pnpm --filter @network-agents/memory exec prisma db push --skip-generate --accept-data-loss
+
+      - name: Type-check (tsc --noEmit, todos os pacotes)
+        run: pnpm run ci:typecheck
+
+      - name: Smoke test funcional (ingestão real contra Postgres real)
+        run: pnpm run ci:smoke-test

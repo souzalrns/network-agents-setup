@@ -86,3 +86,23 @@ acima).
 - Egress bloqueado para `legislacao.presidencia.gov.br` e `diariodarepublica.pt`.
 - `new PrismaClient()` lança na hora de importar o módulo (client stub não gerado) —
   qualquer script que importe `packages/scripts/src/db.ts` sem workaround quebra.
+
+## CI (`.github/workflows/ci.yml`) — 18/08/2026
+
+Repositório é **público**, confirmado via API do GitHub (`private: false`) — minutos de
+GitHub Actions em runners hospedados pelo GitHub são ilimitados e gratuitos, sem risco de
+cota. Isso resolve a limitação acima: o egress bloqueado é uma característica só deste
+sandbox de desenvolvimento, não do runner do GitHub Actions. Por isso o CI roda o
+pipeline de verdade — Postgres real (serviço `pgvector/pgvector:pg16`), `prisma generate`
+e `prisma db push` reais (não o harness fake usado durante o desenvolvimento), depois
+`tsc --noEmit` (via `tsconfig.typecheck.json`, committed — necessário porque nenhum
+pacote em `packages/*/` tem `tsconfig.json` próprio) e o `smoke-test.ts --quick`.
+
+**Ainda não verificado de ponta a ponta**: este sandbox não tem Docker, então o workflow
+foi escrito e revisado (YAML validado, `tsc` local confirmado limpo contra o mesmo
+`tsconfig.typecheck.json`) mas não pôde ser executado aqui contra um Postgres real antes
+do push. A primeira execução real acontece no GitHub após o push — vale conferir a aba
+Actions do repo.
+
+Pendências conhecidas do CI: sem `pnpm-lock.yaml` commitado ainda (`--no-frozen-lockfile`
+contorna isso, mas builds não são 100% reprodutíveis até isso ser corrigido).

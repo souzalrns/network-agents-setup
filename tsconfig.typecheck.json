@@ -1,0 +1,39 @@
+{
+  "//": "Config de type-check agregado, usado pelo CI (.github/workflows/ci.yml) e por qualquer sessão de desenvolvimento interativa. Existe porque nenhum pacote em packages/*/ tem um tsconfig.json próprio (só o script `tsc` no package.json, que falha sozinho sem config local) — em vez de criar um tsconfig por pacote agora, este arquivo compila todos de uma vez com `paths` apontando direto para cada `src/index.ts`, do mesmo jeito que foi validado manualmente durante a sessão que reescreveu o conteúdo jurídico (ver docs/STATUS.md).",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "declaration": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@network-agents/shared": ["packages/shared/src/index.ts"],
+      "@network-agents/observability": ["packages/observability/src/index.ts"],
+      "@network-agents/memory": ["packages/memory/src/index.ts"],
+      "@network-agents/mcp": ["packages/mcp/src/index.ts"],
+      "@network-agents/websocket": ["packages/websocket/src/index.ts"],
+      "@network-agents/core": ["packages/core/src/index.ts"],
+      "@network-agents/scripts": ["packages/scripts/src/index.ts"]
+    }
+  },
+  "include": [
+    "packages/shared/src/**/*.ts",
+    "packages/observability/src/**/*.ts",
+    "packages/memory/src/**/*.ts",
+    "packages/mcp/src/**/*.ts",
+    "packages/websocket/src/**/*.ts",
+    "packages/core/src/**/*.ts",
+    "packages/scripts/src/**/*.ts",
+    "apps/api/src/**/*.ts",
+    "config/**/*.ts"
+  ]
+}

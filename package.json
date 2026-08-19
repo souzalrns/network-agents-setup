@@ -13,10 +13,14 @@
     "format": "pnpm run --parallel format",
     "clean": "rm -rf node_modules packages/*/node_modules apps/*/node_modules",
     "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "ci:typecheck": "tsc -p tsconfig.typecheck.json --noEmit",
+    "ci:smoke-test": "TS_NODE_PROJECT=tsconfig.typecheck.json TS_NODE_TRANSPILE_ONLY=true node -r ts-node/register -r tsconfig-paths/register packages/scripts/src/smoke-test.ts --quick"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0"
   },
