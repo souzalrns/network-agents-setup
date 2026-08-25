@@ -1,16 +1,14 @@
 # Knowledge Packs
 
-Conhecimento operacional injetável nos agentes do setup de marketing.
-
-**Prompt** = comportamento · **Knowledge** = factos/checklists · **Skills** = ações (ver [skills-map.md](./skills-map.md))
+Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.md](./skills-map.md)
 
 ---
 
-## Packs disponíveis
+## Inventário completo
 
-### Discoverability e produto digital
-| Arquivo | Agente |
-|---------|--------|
+### Discoverability e produto
+| Pack | Agente |
+|------|--------|
 | [ui.md](./ui.md) | ui |
 | [ux.md](./ux.md) | ux |
 | [ai-visibility.md](./ai-visibility.md) | ai-visibility |
@@ -18,38 +16,48 @@ Conhecimento operacional injetável nos agentes do setup de marketing.
 | [geo-agent.md](./geo-agent.md) | geo-agent |
 | [item-13-ai-findability.md](./item-13-ai-findability.md) | fluxo item 13 |
 
-### Criação e narrativa
-| Arquivo | Agente |
-|---------|--------|
+### Criação
+| Pack | Agente |
+|------|--------|
 | [copywriter.md](./copywriter.md) | copywriter |
+| [storytelling.md](./storytelling.md) | storytelling |
 | [diretor-arte.md](./diretor-arte.md) | diretor-arte |
+| [editor-video.md](./editor-video.md) | editor-video |
+| [ugc-specialist.md](./ugc-specialist.md) | ugc-specialist |
+| [critic-criativo.md](./critic-criativo.md) | critic-criativo |
+
+### Conteúdo e social
+| Pack | Agente |
+|------|--------|
 | [content-strategist.md](./content-strategist.md) | content-strategist |
 | [social-media-manager.md](./social-media-manager.md) | social-media-manager |
+| [influencer-strategist.md](./influencer-strategist.md) | influencer-strategist |
+| [trend-hunter.md](./trend-hunter.md) | trend-hunter |
+
+### Performance e inteligência
+| Pack | Agente |
+|------|--------|
+| [media-buyer.md](./media-buyer.md) | media-buyer |
+| [performance-analyst.md](./performance-analyst.md) | performance-analyst |
+| [research-marketing.md](./research-marketing.md) | research-marketing |
 
 ### Orquestração e meta
-| Arquivo | Uso |
-|---------|-----|
+| Pack | Uso |
+|------|-----|
 | [marketing-orquestrador.md](./marketing-orquestrador.md) | marketing-orquestrador |
-| [imported-from-harnesses.md](./imported-from-harnesses.md) | regras Ruflo/Hermes/Orca |
+| [imported-from-harnesses.md](./imported-from-harnesses.md) | regras multi-agente |
 | [skills-map.md](./skills-map.md) | skill → agente |
 
 ---
 
-## Cobertura (horizontais prioritários)
+## Estado
 
-| Agente | Prompt | Knowledge |
-|--------|--------|-----------|
-| ui, ux, ai-visibility, seo, copy, geo | Sim | Sim |
-| diretor-arte, content-strategist, social-media-manager, marketing-orquestrador | Sim | Sim |
-| storytelling, media-buyer, performance-analyst, editor-video, influencer, ugc, trend-hunter, research, critic | Sim | Ainda não |
-| Verticais de cliente | Sim | Contexto por cliente (não pack genérico) |
-
----
-
-## Item 13
-
-Playbook + packs + mapa de skills: **documentação fechada**.  
-Pendente operacional: **piloto num site real**.
+| Camada | Status |
+|--------|--------|
+| Horizontais de marketing — prompt + knowledge | **Completo** |
+| Verticais de cliente | Prompt no agency doc; contexto por cliente |
+| Skills runtime ligadas | Mapa feito; integração produção pendente |
+| Item 13 piloto real | Pendente |
 
 ---
 
