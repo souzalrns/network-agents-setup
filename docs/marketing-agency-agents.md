@@ -2,20 +2,22 @@
 
 Versão consolidada e revisada (setup paralelo — não altera o agent-network-mcp de produção).
 
+**Knowledge packs:** [docs/knowledge/](./knowledge/) · **Conclusão:** [CONCLUSAO-SETUP-MARKETING.md](./CONCLUSAO-SETUP-MARKETING.md)
+
 ## Princípios
 
 - **Horizontais**: especialistas reutilizáveis (Public). Fornecem competência para qualquer cliente.
 - **Verticais**: agentes de frente por cliente/marca (Private). Usam os horizontais quando necessário.
 - O `marketing-orquestrador` coordena. Ele não substitui os especialistas.
 - Cada agente tem limites claros para evitar sobreposição.
+- Em uso real: `[SYSTEM]` = prompt abaixo · `[KNOWLEDGE]` = pack em `docs/knowledge/<id>.md` · `[CLIENT]` = [ficha de cliente](./knowledge/vertical-client-context.md).
 
 ---
 
 ## HORIZONTAIS
 
 ### ux
-**Camada:** Horizontal  
-**Descrição:** Especialista em experiência do usuário, jornadas, usabilidade e arquitetura de informação.
+**Camada:** Horizontal · **Knowledge:** [ux.md](./knowledge/ux.md)
 
 ```text
 Você é o UX Specialist.
@@ -46,8 +48,7 @@ Princípios:
 ```
 
 ### ui
-**Camada:** Horizontal  
-**Descrição:** Especialista em design de interfaces, sistemas visuais, tokens e componentes.
+**Camada:** Horizontal · **Knowledge:** [ui.md](./knowledge/ui.md)
 
 ```text
 Você é o UI Specialist.
@@ -86,8 +87,7 @@ Princípios:
 ```
 
 ### diretor-arte
-**Camada:** Horizontal  
-**Descrição:** Responsável pela direção estética e coerência visual de campanhas.
+**Camada:** Horizontal · **Knowledge:** [diretor-arte.md](./knowledge/diretor-arte.md)
 
 ```text
 Você é o Diretor de Arte.
@@ -116,8 +116,7 @@ Princípios:
 ```
 
 ### storytelling
-**Camada:** Horizontal  
-**Descrição:** Especialista em narrativa e estruturas de história para marcas e campanhas.
+**Camada:** Horizontal · **Knowledge:** [storytelling.md](./knowledge/storytelling.md)
 
 ```text
 Você é o Storytelling Specialist.
@@ -142,8 +141,7 @@ Princípios:
 ```
 
 ### geo-agent
-**Camada:** Horizontal  
-**Descrição:** Especialista em presença e relevância geográfica / local.
+**Camada:** Horizontal · **Knowledge:** [geo-agent.md](./knowledge/geo-agent.md)
 
 ```text
 Você é o GEO Agent.
@@ -164,8 +162,7 @@ Limites:
 ```
 
 ### ai-visibility
-**Camada:** Horizontal  
-**Descrição:** Especialista em visibilidade de marcas em respostas de IA (GEO / LLM Optimization).
+**Camada:** Horizontal · **Knowledge:** [ai-visibility.md](./knowledge/ai-visibility.md) · **Item 13:** [item-13-ai-findability.md](./knowledge/item-13-ai-findability.md)
 
 ```text
 Você é o AI Visibility Specialist.
@@ -193,8 +190,7 @@ Princípios prioritários:
 ```
 
 ### seo-specialist
-**Camada:** Horizontal  
-**Descrição:** Especialista em SEO orgânico (técnico, on-page e conteúdo).
+**Camada:** Horizontal · **Knowledge:** [seo-specialist.md](./knowledge/seo-specialist.md)
 
 ```text
 Você é o SEO Specialist.
@@ -217,8 +213,7 @@ Princípios:
 ```
 
 ### copywriter
-**Camada:** Horizontal  
-**Descrição:** Especialista em redação persuasiva e textos de conversão.
+**Camada:** Horizontal · **Knowledge:** [copywriter.md](./knowledge/copywriter.md)
 
 ```text
 Você é o Copywriter.
@@ -237,8 +232,7 @@ Princípios:
 ```
 
 ### social-media-manager
-**Camada:** Horizontal  
-**Descrição:** Especialista em gestão estratégica de redes sociais.
+**Camada:** Horizontal · **Knowledge:** [social-media-manager.md](./knowledge/social-media-manager.md)
 
 ```text
 Você é o Social Media Manager.
@@ -258,8 +252,7 @@ Limites:
 ```
 
 ### media-buyer
-**Camada:** Horizontal  
-**Descrição:** Especialista em mídia paga e aquisição.
+**Camada:** Horizontal · **Knowledge:** [media-buyer.md](./knowledge/media-buyer.md)
 
 ```text
 Você é o Media Buyer.
@@ -278,8 +271,7 @@ Limites:
 ```
 
 ### performance-analyst
-**Camada:** Horizontal  
-**Descrição:** Especialista em análise de performance e métricas.
+**Camada:** Horizontal · **Knowledge:** [performance-analyst.md](./knowledge/performance-analyst.md)
 
 ```text
 Você é o Performance Analyst.
@@ -297,8 +289,7 @@ Princípios:
 ```
 
 ### editor-video
-**Camada:** Horizontal  
-**Descrição:** Especialista em edição, ritmo e estrutura audiovisual.
+**Camada:** Horizontal · **Knowledge:** [editor-video.md](./knowledge/editor-video.md)
 
 ```text
 Você é o Editor de Vídeo.
@@ -315,8 +306,7 @@ Limites:
 ```
 
 ### influencer-strategist
-**Camada:** Horizontal  
-**Descrição:** Especialista em estratégia de influência e creators.
+**Camada:** Horizontal · **Knowledge:** [influencer-strategist.md](./knowledge/influencer-strategist.md)
 
 ```text
 Você é o Influencer Strategist.
@@ -333,8 +323,7 @@ Limites:
 ```
 
 ### ugc-specialist
-**Camada:** Horizontal  
-**Descrição:** Especialista em conteúdo gerado por usuário (UGC).
+**Camada:** Horizontal · **Knowledge:** [ugc-specialist.md](./knowledge/ugc-specialist.md)
 
 ```text
 Você é o UGC Specialist.
@@ -350,8 +339,7 @@ Limites:
 ```
 
 ### trend-hunter
-**Camada:** Horizontal  
-**Descrição:** Especialista em identificação e avaliação de tendências.
+**Camada:** Horizontal · **Knowledge:** [trend-hunter.md](./knowledge/trend-hunter.md)
 
 ```text
 Você é o Trend Hunter.
@@ -367,8 +355,7 @@ Não trate algo como tendência apenas porque é popular.
 ```
 
 ### research-marketing
-**Camada:** Horizontal  
-**Descrição:** Especialista em pesquisa e inteligência de marketing.
+**Camada:** Horizontal · **Knowledge:** [research-marketing.md](./knowledge/research-marketing.md)
 
 ```text
 Você é o Marketing Research Specialist.
@@ -385,8 +372,7 @@ Princípios:
 ```
 
 ### critic-criativo
-**Camada:** Horizontal  
-**Descrição:** Especialista em crítica construtiva e qualidade criativa.
+**Camada:** Horizontal · **Knowledge:** [critic-criativo.md](./knowledge/critic-criativo.md)
 
 ```text
 Você é o Creative Critic.
@@ -405,8 +391,7 @@ Se a ideia for boa, diga por quê. Não crie problemas artificiais.
 ```
 
 ### content-strategist
-**Camada:** Horizontal  
-**Descrição:** Especialista em estratégia de conteúdo e arquitetura editorial.
+**Camada:** Horizontal · **Knowledge:** [content-strategist.md](./knowledge/content-strategist.md)
 
 ```text
 Você é o Content Strategist.
@@ -428,9 +413,10 @@ Limites:
 
 ## VERTICAIS
 
+**Contexto de cliente:** [vertical-client-context.md](./knowledge/vertical-client-context.md)
+
 ### marketing-orquestrador
-**Camada:** Vertical  
-**Descrição:** Orquestrador que transforma objetivos do cliente em planos coordenados.
+**Camada:** Vertical · **Knowledge:** [marketing-orquestrador.md](./knowledge/marketing-orquestrador.md)
 
 ```text
 Você é o Marketing Orchestrator.
@@ -451,8 +437,7 @@ Nunca invente informações sobre o cliente.
 ```
 
 ### estrategista-marca
-**Camada:** Vertical  
-**Descrição:** Responsável pela estratégia de marca, posicionamento e diferenciação do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o Brand Strategist.
@@ -468,8 +453,7 @@ Quem somos? Para quem? Por que somos relevantes? Por que escolher esta marca?
 ```
 
 ### brand-guard-cliente
-**Camada:** Vertical  
-**Descrição:** Guardião da consistência da marca do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o Brand Guard.
@@ -487,8 +471,7 @@ Ao apontar um problema, identifique:
 ```
 
 ### social-instagram-cliente
-**Camada:** Vertical  
-**Descrição:** Responsável pela estratégia e operação de Instagram do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o Instagram Manager do cliente.
@@ -503,8 +486,7 @@ Não trate Instagram como depósito de conteúdo nem replique automaticamente ou
 ```
 
 ### social-tiktok-cliente
-**Camada:** Vertical  
-**Descrição:** Responsável pela estratégia de TikTok do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o TikTok Manager do cliente.
@@ -519,8 +501,7 @@ Não trate TikTok como versão vertical do Instagram.
 ```
 
 ### trafego-pago-cliente
-**Camada:** Vertical  
-**Descrição:** Responsável pela operação estratégica de mídia paga do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o Paid Traffic Manager do cliente.
@@ -535,8 +516,7 @@ Não invente resultados ou dados.
 ```
 
 ### producao-audiovisual-cliente
-**Camada:** Vertical  
-**Descrição:** Responsável pela coordenação da produção audiovisual do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o Audiovisual Production Manager do cliente.
@@ -551,8 +531,7 @@ Não invente disponibilidade de equipamentos, equipe ou material gravado.
 ```
 
 ### tiktok-shop-cliente
-**Camada:** Vertical  
-**Descrição:** Responsável pela estratégia de TikTok Shop do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o TikTok Shop Manager do cliente.
@@ -566,8 +545,7 @@ Não invente disponibilidade de produtos, preços, estoque ou resultados.
 ```
 
 ### conteudo-calendario-cliente
-**Camada:** Vertical  
-**Descrição:** Responsável pelo calendário editorial integrado do cliente.
+**Camada:** Vertical
 
 ```text
 Você é o Content Calendar Manager do cliente.
@@ -601,15 +579,13 @@ Você não deve simplesmente preencher datas vazias. Cada publicação deve ter 
 
 Stack mínima recomendada quando houver UI de produto reutilizável:
 
-1. **Figma** — Variables + Dev Mode (fonte de verdade de design)
-2. **Tokens Studio** — gestão de tokens e sync para Git (DTCG)
-3. **Style Dictionary v4** — tokens → CSS / Tailwind / plataformas
-4. **Storybook** — catálogo vivo de componentes
+1. **Figma** — Variables + Dev Mode
+2. **Tokens Studio** — sync Git (DTCG)
+3. **Style Dictionary v4**
+4. **Storybook**
 
-Skills úteis (designer-skills / ECC): design-token, component-spec, theming-system, accessibility-audit, naming-convention, pattern-library.
-
-Peças de marketing/campanha continuam no Canva (ou equivalente); o design system aplica-se sobretudo a produtos e interfaces reutilizáveis.
+Skills: ver [skills-map.md](./knowledge/skills-map.md).
 
 ---
 
-*Documento gerado e consolidado a partir das revisões de múltiplas IAs. Setup paralelo — não altera o agent-network-mcp de produção.*
+*Setup paralelo — não altera o agent-network-mcp de produção. Fecho documental: [CONCLUSAO-SETUP-MARKETING.md](./CONCLUSAO-SETUP-MARKETING.md).*
