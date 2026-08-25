@@ -13,8 +13,10 @@ Conhecimento operacional injetável nos agentes horizontais do setup de marketin
 | Arquivo | Agente | Conteúdo principal |
 |---------|--------|---------------------|
 | [ui.md](./ui.md) | `ui` | Tokens (3 camadas), pipeline Figma→código, estados, a11y UI |
-| [ai-visibility.md](./ai-visibility.md) | `ai-visibility` | GEO/AEO baseado em evidência 2026, o que funciona vs mito |
 | [ux.md](./ux.md) | `ux` | Jornadas, fricção, priorização, a11y de fluxo |
+| [ai-visibility.md](./ai-visibility.md) | `ai-visibility` | GEO/AEO baseado em evidência 2026, o que funciona vs mito |
+| [seo-specialist.md](./seo-specialist.md) | `seo-specialist` | Intent-first, on-page, técnico mínimo, E-E-A-T, fronteira com GEO |
+| [copywriter.md](./copywriter.md) | `copywriter` | Proof, clareza, especificidade, anti-hype, QA por formato |
 
 ---
 
@@ -48,10 +50,10 @@ Pedido concreto e verificável
 
 ## Próximos packs sugeridos
 
-1. `copywriter` — clareza, prova, anti-hype, adaptação por canal
-2. `seo-specialist` — intenção de busca, on-page, técnico mínimo
-3. `diretor-arte` — coerência de campanha, brief visual
-4. `marketing-orquestrador` — decomposição de objetivo → tarefas entre especialistas
+1. `diretor-arte` — coerência de campanha, brief visual
+2. `marketing-orquestrador` — decomposição de objetivo → tarefas entre especialistas
+3. `content-strategist` — pilares, jornada editorial
+4. `social-media-manager` — pilares por plataforma, brief de conteúdo
 
 ---
 
