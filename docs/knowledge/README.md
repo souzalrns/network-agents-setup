@@ -10,13 +10,14 @@ Conhecimento operacional injetável nos agentes horizontais do setup de marketin
 
 ## Packs disponíveis
 
-| Arquivo | Agente | Conteúdo principal |
-|---------|--------|---------------------|
+| Arquivo | Agente / uso | Conteúdo principal |
+|---------|--------------|---------------------|
 | [ui.md](./ui.md) | `ui` | Tokens (3 camadas), pipeline Figma→código, estados, a11y UI |
 | [ux.md](./ux.md) | `ux` | Jornadas, fricção, priorização, a11y de fluxo |
 | [ai-visibility.md](./ai-visibility.md) | `ai-visibility` | GEO/AEO baseado em evidência 2026, o que funciona vs mito |
-| [seo-specialist.md](./seo-specialist.md) | `seo-specialist` | Intent-first, on-page, técnico mínimo, E-E-A-T, fronteira com GEO |
+| [seo-specialist.md](./seo-specialist.md) | `seo-specialist` | Intent-first, on-page, técnico mínimo, E-E-A-T |
 | [copywriter.md](./copywriter.md) | `copywriter` | Proof, clareza, especificidade, anti-hype, QA por formato |
+| [imported-from-harnesses.md](./imported-from-harnesses.md) | orquestração / rede | Regras de Ruflo, Hermes, Orca, evidência, SKILL.md |
 
 ---
 
@@ -50,10 +51,10 @@ Pedido concreto e verificável
 
 ## Próximos packs sugeridos
 
-1. `diretor-arte` — coerência de campanha, brief visual
-2. `marketing-orquestrador` — decomposição de objetivo → tarefas entre especialistas
-3. `content-strategist` — pilares, jornada editorial
-4. `social-media-manager` — pilares por plataforma, brief de conteúdo
+1. **Item 13 fecho** — playbook AI-findability + `geo-agent` pack + piloto num site real
+2. `diretor-arte` — coerência de campanha, brief visual
+3. `marketing-orquestrador` — decomposição com regras R1–R5 importadas
+4. `content-strategist` / `social-media-manager`
 
 ---
 
