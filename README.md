@@ -1,24 +1,67 @@
-# Network Agents
+# Network Agents Setup
 
-## Plataforma Cognitiva Universal
+Arquitetura e documentação de **redes multi-agente** — com foco portfolio na **agência de marketing** (papéis, knowledge packs, AI Findability).
+
+> **One-liner:** especialistas com limites claros + conhecimento operacional + playbook para marcas serem encontradas e recomendadas por IA.
+
+---
+
+## Portfolio (começar aqui)
+
+| Documento | Conteúdo |
+|-----------|----------|
+| **[docs/PORTFOLIO.md](./docs/PORTFOLIO.md)** | Narrativa completa: problema, solução, diagrama, diferenciais |
+| **[docs/ONE-PAGER-MARKETING-AGENTS.md](./docs/ONE-PAGER-MARKETING-AGENTS.md)** | Resumo de 1 página (LinkedIn / proposta) |
+| [docs/marketing-agency-agents.md](./docs/marketing-agency-agents.md) | System prompts + limites de todos os agentes |
+| [docs/knowledge/](./docs/knowledge/) | Knowledge packs por especialidade |
+| [docs/CONCLUSAO-SETUP-MARKETING.md](./docs/CONCLUSAO-SETUP-MARKETING.md) | Fecho documental e próximos passos |
+
+### Destaques do desenho
+
+- **Horizontais** (SEO, AI Visibility, UI/UX, copy, mídia, UGC…) + **verticais** por cliente  
+- **Orquestrador** que planeia e faz handoffs — não substitui o especialista  
+- **Prompt ≠ knowledge** — checklists e anti-padrões por papel  
+- **Item 13 — AI Findability** — estruturar projetos para IA encontrar e recomendar  
+- Regras portáteis de harnesses (Ruflo / Hermes / Orca) sem lock-in de runtime  
+
+```text
+Objetivo → marketing-orquestrador → horizontais / verticais
+                ↓
+         [KNOWLEDGE] + [CLIENT]
+```
+
+**Estado:** documentação de sistema **completa**. Runtime de produção vive à parte (`agent-network-mcp`). Piloto live e wiring de skills = fase seguinte.
+
+---
+
+## Outra documentação no repo
+
+| Doc | Nota |
+|-----|------|
+| [docs/estrutura-geral-agentes.md](./docs/estrutura-geral-agentes.md) | Especificação ampla (providências / estrutura geral) |
+
+---
+
+## Plataforma (código / infra — monorepo)
+
+> Alguns módulos podem conter stubs; ver nota de maturidade abaixo antes de uso em produção.
 
 ### Estrutura
 
 ```
 network-agents/
 ├── packages/
-│   ├── core/           # Núcleo da rede (Orquestrador, Executor, Planner)
-│   ├── memory/         # Memória persistente (PostgreSQL + Redis)
-│   ├── mcp/            # MCP para ferramentas
-│   ├── observability/  # Logs, métricas, tracing
-│   ├── websocket/      # Comunicação em tempo real
-│   ├── langgraph/      # Fluxos complexos com LangGraph
-│   └── shared/         # Tipos e utilitários compartilhados
-├── apps/
-│   └── api/            # API REST + WebSocket
-├── config/             # Configurações
-├── tests/              # Testes (unitários, integração, e2e)
-└── k8s/                # Kubernetes manifests
+│   ├── core/           # Núcleo (Orquestrador, Executor, Planner)
+│   ├── memory/         # Memória (PostgreSQL + Redis)
+│   ├── mcp/            # MCP
+│   ├── observability/
+│   ├── websocket/
+│   ├── langgraph/
+│   └── shared/
+├── apps/api/
+├── config/
+├── tests/
+└── k8s/
 ```
 
 ### Requisitos
@@ -33,52 +76,26 @@ network-agents/
 ```bash
 pnpm install
 cp .env.example .env
-# Edite .env com suas credenciais
 pnpm run build
 pnpm run dev
 ```
 
-### Docker
+### Docker / Kubernetes
 
 ```bash
 docker-compose up -d
-```
-
-### Kubernetes
-
-```bash
 kubectl apply -f k8s/
 ```
 
-### Endpoints
+### Endpoints principais
 
 | Endpoint | Método | Descrição |
 |----------|--------|-----------|
-| `/chat` | POST | Envia mensagem para a rede |
-| `/chat/stream` | POST | Streaming de resposta |
-| `/executions` | GET | Lista execuções |
-| `/executions/:id` | GET | Detalhes de execução |
+| `/chat` | POST | Mensagem para a rede |
+| `/chat/stream` | POST | Streaming |
 | `/agents` | GET | Lista agentes |
-| `/hitl/pending` | GET | Solicitações HITL pendentes |
-| `/metrics` | GET | Métricas detalhadas |
 | `/health` | GET | Health check |
-| `/ws` | WebSocket | Comunicação em tempo real |
-
-### WebSocket
-
-```javascript
-const ws = new WebSocket('ws://localhost:3000/ws');
-
-ws.on('open', () => {
-  ws.send(JSON.stringify({
-    id: 'msg-1',
-    type: 'request',
-    action: 'chat:send',
-    payload: { message: 'Olá' },
-    timestamp: new Date(),
-  }));
-});
-```
+| `/ws` | WebSocket | Tempo real |
 
 ### Testes
 
@@ -92,12 +109,12 @@ MIT
 
 ---
 
-## Documentação adicional
+## Nota de maturidade
 
-A documentação original de especificação ("PROVIDÊNCIAS IDENTIFICADAS — ESTRUTURA GERAL DE AGENTES", com as 121 providências P-AG-001 a P-AG-121f que fundamentaram esta arquitetura) está disponível em [`docs/estrutura-geral-agentes.md`](./docs/estrutura-geral-agentes.md).
+- **Documentação da agência multi-agente (portfolio):** pronta para partilha e testes com o padrão `[SYSTEM]+[KNOWLEDGE]+[CLIENT]+[TASK]`.
+- **Código da plataforma neste repo:** pode incluir implementações simplificadas/stub (ex.: MFA, scanners externos, partes de simulação). Tratar antes de produção.
+- **Produção operacional de agentes:** repo separado `agent-network-mcp` (não sobrescrito por este setup paralelo).
 
-## Nota sobre o estado do projeto
+---
 
-Este repositório reúne todo o código e documentação gerados ao longo do desenvolvimento incremental do projeto "network-agents", incluindo a camada de orquestração central, os módulos de governança organizacional (Conselho de Arquitetura, Deliberação, Confiança/Autonomia, Completude, Economia de Tokens, Segurança, Autopercepção, Radar de Oportunidades, Simulação Organizacional e Memória Imunológica), testes unitários e infraestrutura de deploy (Docker/Kubernetes).
-
-Vários módulos contêm implementações declaradamente simplificadas/stub (documentadas no código-fonte), como: verificação de senha, MFA, coleta de estado em `SelfAwareness`, scanners externos do `OpportunityRadar`, e o motor de decisão do `OrganizationalSimulator` (baseado em `Math.random()`). Esses pontos foram sinalizados durante o desenvolvimento e devem ser tratados antes de qualquer uso em produção.
+*LRNSdigital*
