@@ -2,6 +2,8 @@
 
 Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.md](./skills-map.md)
 
+**Setup paralelo** — não altera o `agent-network-mcp` de produção.
+
 ---
 
 ## Inventário completo
@@ -44,9 +46,11 @@ Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.
 ### Orquestração e meta
 | Pack | Uso |
 |------|-----|
-| [marketing-orquestrador.md](./marketing-orquestrador.md) | marketing-orquestrador |
+| [marketing-orquestrador.md](./marketing-orquestrador.md) | knowledge do orquestrador |
+| [orquestrador-playbook.md](./orquestrador-playbook.md) | **fluxos A–E + handoffs** |
 | [imported-from-harnesses.md](./imported-from-harnesses.md) | regras multi-agente |
 | [skills-map.md](./skills-map.md) | skill → agente |
+| [vertical-client-context.md](./vertical-client-context.md) | ficha de cliente |
 
 ---
 
@@ -54,11 +58,8 @@ Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.
 
 | Camada | Status |
 |--------|--------|
-| Horizontais de marketing — prompt + knowledge | **Completo** |
-| Verticais de cliente | Prompt no agency doc; contexto por cliente |
-| Skills runtime ligadas | Mapa feito; integração produção pendente |
-| Item 13 piloto real | Pendente |
-
----
-
-Setup paralelo — não altera o agent-network-mcp de produção.
+| Horizontais — prompt + knowledge | Completo |
+| Playbook do orquestrador | Feito |
+| Verticais | Prompt + template de ficha |
+| Produção (`agent-network-mcp`) | **Intocada** |
+| Piloto real | Pendente |
