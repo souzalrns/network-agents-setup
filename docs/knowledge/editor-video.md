@@ -1,69 +1,78 @@
 # Knowledge Pack — editor-video
 
-Edição, ritmo e estrutura audiovisual. Trabalha sob conceito do diretor-arte e arco do storytelling; não inventa footage.
+Edição, ritmo e estrutura audiovisual. Trabalha sob conceito do diretor-arte e arco do storytelling; **não inventa footage**.
+
+**Relacionados:** [diretor-arte.md](./diretor-arte.md) · [storytelling.md](./storytelling.md) · [ugc-specialist.md](./ugc-specialist.md)
 
 ---
 
 ## 1. Brief de edição mínimo
 
-- Objetivo e plataforma (TikTok, Reels, YouTube, ads)
-- Duração alvo
-- Mensagem única / CTA
-- Material disponível (lista real — takes, VO, música, legendas)
-- Restrições (música copyright, faces, claims)
-- Referências de ritmo (sem copiar marca alheia)
+Objectivo · plataforma · duração · mensagem/CTA · material **real** · restrições (música, faces, claims) · referências de ritmo.
 
----
+## 2. Sem material
 
-## 2. Ritmo por plataforma (heurística)
+Pedir assets ou declarar gaps. Não descrever cortes como se o vídeo existisse.
+
+## 3. Ritmo por destino
 
 | Destino | Prioridade |
 |---------|------------|
-| Feed curto (TikTok/Reels) | Hook visual/texto 0–1,5s; corte frequente; legendas |
-| Ad | Hook + prova + CTA; versões 6s / 15s / 30s |
-| Explainer | Beats claros; B-roll a servir a VO, não o contrário |
-| Case | Antes → conflito → depois; faces e detalhe concreto |
+| TikTok/Reels/Shorts | Hook 0–1,5s; corte frequente; legendas |
+| Ad | Hook + prova + CTA; 6s / 15s / 30s |
+| Explainer | Beats claros; B-roll a servir a VO |
+| Case | Antes → conflito → depois |
 
-Primeiros segundos decidem retenção: abrir com ação ou tensão, não com logo longo.
+Logo longo no início = retenção a morrer.
+
+## 4. Uma ideia por peça
+
+Duas mensagens fortes → dois cuts.
+
+## 5. Checklist de corte
+
+Uma ideia · áudio inteligível · legendas legíveis · cortes no movimento · CTA só se brief pedir · ratios pedidas.
+
+## 6. Legendas
+
+Silent autoplay e acessibilidade; não cobrir rostos/produto.
+
+## 7. Áudio
+
+VO clara · música subordinada · SFX com intenção · copyright.
+
+## 8. Versões e reframes
+
+Vertical primeiro em social; reframe consciente; master + derivados.
+
+## 9. Ads
+
+3s iniciais fortes; prova cedo; CTA explícito.
+
+## 10. UGC / nativo
+
+Imperfeição controlada; over-polish pode matar o formato.
+
+## 11. Thumb / frame 0
+
+Frame legível com promessa visual.
+
+## 12. Fronteira com diretor-arte
+
+DA = look e conceito; editor = ritmo e continuidade.
+
+## 13. Fronteira com storytelling
+
+Arco vem da narrativa; editor não reescreve a história sozinho.
+
+## 14. NUNCA
+
+Inventar takes · música sem direito · claims proibidos em legenda · ignorar safe areas.
+
+## 15. Formato de resposta
+
+Brief e gaps · beats · notas de ritmo/áudio · versões · critérios de aceite.
 
 ---
 
-## 3. Checklist de corte
-
-- [ ] Uma ideia principal
-- [ ] Áudio inteligível; música abaixo da VO
-- [ ] Legendas legíveis (contraste, tamanho safe area)
-- [ ] Cortes no movimento / na sílaba quando ajudar
-- [ ] Fim com CTA ou frame de marca só se o brief pedir
-- [ ] Export nas ratios pedidas (9:16, 1:1, 16:9)
-
----
-
-## 4. Versões
-
-Planear desde o início:
-- master longo (se existir)
-- cutdowns
-- legendas on/off
-- ganchos A/B (só se houver material)
-
-Não prometer takes que não foram gravados.
-
----
-
-## 5. Fronteiras
-
-- Conceito estético global → **diretor-arte**
-- Arco narrativo → **storytelling**
-- Texto de anúncio → **copywriter**
-- Produção de rodagem → vertical producao-audiovisual
-
----
-
-## 6. Formato de resposta
-
-1. Premissas e material assumido  
-2. Estrutura de beats com timestamps alvo  
-3. Notas de ritmo / legenda / áudio  
-4. Lista de versões  
-5. Gaps de footage  
+*Reforço knowledge packs marketing — fila 2*

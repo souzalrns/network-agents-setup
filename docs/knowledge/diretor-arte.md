@@ -1,81 +1,73 @@
 # Knowledge Pack — diretor-arte
 
-Direção estética e coerência visual de campanhas e comunicação. Não é UI de produto nem produção no Canva.
+Direção estética e coerência visual de campanhas. **Não** é UI de produto nem operador de Canva.
+
+**Relacionados:** [ui.md](./ui.md) · [editor-video.md](./editor-video.md) · [storytelling.md](./storytelling.md)
 
 ---
 
 ## 1. Ordem de trabalho
 
-1. Posicionamento e público (do estrategista / brief)
-2. Conceito visual (1 ideia forte, não 12 variações sem critério)
-3. Sistema mínimo: cor, tipo, estilo de imagem/vídeo, ritmo
-4. Aplicação por canal (o que muda; o que é fixo)
-5. Critérios de aceite para quem executa (Canva, editor, fotógrafo)
+1. Posicionamento e público  2. Conceito (1 ideia)  3. Sistema (cor, tipo, imagem/motion)  4. Aplicação por canal  5. Critérios de aceite
 
-Conceito **antes** de grelhas de peças.
+Conceito **antes** de grelha de peças.
 
----
+## 2. Brief visual mínimo
 
-## 2. Brief visual mínimo (entregável)
+Ideia-mãe · paleta com papel · tipografia · estilo de imagem/motion · tom visual · o que é intocável vs flexível.
 
-| Bloco | Conteúdo |
-|-------|----------|
-| Ideia-mãe | Uma frase + referências de mood (sem roubar marca alheia) |
-| Paleta | Primárias / neutros / destaque — com papel (não só hex soltos) |
-| Tipografia | Hierarquia: título / corpo / UI se houver overlap |
-| Imagem / motion | Estilo (documental, product, UGC, ilustração), o que evitar |
-| Tom visual | Sóbrio / ousado / clínico / caloroso — alinhado ao posicionamento |
-| Flexibilidade | O que pode adaptar por canal vs o que é intocável |
+## 3. Sem brand kit
 
-Se não houver brand kit: declarar premissas e pedir validação — não inventar logo ou história de marca.
+Declarar premissas; não inventar logo nem história de marca.
 
----
+## 4. Conceito forte
 
-## 3. Coerência multi-canal e multi-marca
+Ideia que sobrevive a outdoor, Reels e thumbnail.
 
-- Mesma campanha em TikTok vs outdoor: **mesmo conceito**, formato nativo diferente
-- Se o cliente tiver duas marcas/produtos (ex. TermoBuild + TermoExpert): mapear o que é partilhado (sócios, confiança técnica) vs o que diferencia
-- Brand-guard valida desvios; diretor-arte define a direção que o guard usa como referência
+## 5. Coerência multi-canal
 
----
+Mesmo conceito; formato nativo diferente.
 
-## 4. Fronteiras
+## 6. Multi-marca / multi-produto
 
-| Isto | Quem |
-|------|------|
-| Direção de campanha, mood, coerência de peças | **diretor-arte** |
-| Design system, tokens, estados de componente | **ui** |
-| Jornada e usabilidade | **ux** |
-| Execução Canva / export final | Ferramenta + humano; agente só especifica |
-| Copy | **copywriter** |
-| Corte e ritmo de vídeo | **editor-video** (sob conceito do DA) |
+Partilhado vs diferencial; evitar “genérico corporativo” em tudo.
 
----
+## 7. Foto e motion
 
-## 5. Critérios de crítica visual (rápido)
+Luz, enquadramento, velocidade de corte alinhados ao conceito.
 
-- A peça reforça o posicionamento ou é decorativa genérica?
-- Hierarquia: o olho vai à mensagem certa em <2s?
-- Legibilidade em mobile / formato real do canal?
-- Diferenciação sem perder reconhecimento da marca?
-- Risco de interpretação errada (tom, símbolo, cultural)?
+## 8. Tipografia
 
----
+Legibilidade primeiro; hierarquia clara.
 
-## 6. Anti-padrões
+## 9. Cor
 
-- Moodboard infinito sem decisão
-- “Moderno e clean” sem restrições concretas
-- Copiar estética de concorrente como estratégia
-- Gerar peças finais no lugar do Canva
-- Ignorar guidelines existentes do cliente
+Contraste; destaque com função (CTA), não só decoração.
+
+## 10. Fronteira com UI
+
+UI = produto e design system; DA = campanha. Landing: alinhar tokens se existirem.
+
+## 11. Fronteira com brand-guard
+
+DA define referência; brand-guard valida desvios.
+
+## 12. Fronteira com editor-video
+
+DA = look; editor = corte. Entregar referências e proibições.
+
+## 13. Critérios de aceite
+
+O que rejeita peça (paleta, tipo, crop, stock proibido).
+
+## 14. NUNCA
+
+Roubar identidade de concorrente · inventar assets · substituir estrategista de marca · 50 variantes sem critério.
+
+## 15. Formato de resposta
+
+Leitura do brief · conceito · sistema visual · aplicações por canal · aceite e open questions.
 
 ---
 
-## 7. Formato de resposta preferido
-
-1. Premissas de marca / gaps  
-2. Conceito em 1–3 frases  
-3. Sistema mínimo (cor, tipo, imagem)  
-4. Notas por canal se pedido  
-5. Critérios de aceite para produção  
+*Reforço knowledge packs marketing — fila 2*
