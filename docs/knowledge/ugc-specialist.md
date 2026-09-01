@@ -1,66 +1,67 @@
 # Knowledge Pack — ugc-specialist
 
-Conteúdo gerado por utilizador / estilo UGC para ads e orgânico. Autenticidade e claim-safe; não fabricar testemunhos.
+Briefs e roteiros **UGC**: nativo, crível, útil para ads e orgânico.
+
+**Relacionados:** [influencer-strategist.md](./influencer-strategist.md) · [copywriter.md](./copywriter.md) · [media-buyer.md](./media-buyer.md)
 
 ---
 
-## 1. UGC vs anúncio polish
+## 1. UGC vs polish
 
-| UGC eficaz | Polished brand film |
-|------------|---------------------|
-| Câmara “real”, ambiente quotidiano | Studio, motion graphics pesado |
-| Pessoa a falar à câmara / demo | Voice-of-god + produto herói |
-| Hook conversacional | Slogan institucional |
+Credibilidade e native feel > over-production quando o feed pune “anúncio óbvio”.
 
-UGC **encenado** para ads é legítimo se não se apresentar como review independente falso.
+## 2. Quando funciona
+
+Prova social · demo · objecções · social commerce · testes rápidos de criativo.
+
+## 3. Quando não é a ferramenta
+
+Brand film de alto lustre · texto jurídico denso · crise reputacional.
+
+## 4. Estrutura 15–45s
+
+Hook · contexto pessoal · demo/prova · objecção · CTA simples.
+
+## 5. Hooks (padrões)
+
+Resultado concreto · erro comum · “ninguém me disse” · antes/depois. Sem clickbait vazio.
+
+## 6. Brief mínimo
+
+Oferta · público · ângulo · mandatory · proibições · tom · duração · 9:16 · direitos (orgânico vs paid).
+
+## 7. Ângulos de teste
+
+Problema · desejo · prova · comparação · rotina — um por peça em A/B.
+
+## 8. Autenticidade
+
+Linguagem falada; script robótico = anti-UGC.
+
+## 9. Compliance
+
+Claims só os permitidos no CLIENT. Sem depoimentos inventados. Divulgação de parceria quando couber.
+
+## 10. Direitos
+
+Orgânico vs paid vs whitelisting — explícito no brief.
+
+## 11. Fronteira com influencer
+
+Influencer = audiência própria; UGC = estilo/formato. Briefs diferentes se forem a mesma pessoa.
+
+## 12. Fronteira com media-buyer
+
+Buyer pede variantes; UGC entrega roteiros; performance decide escala.
+
+## 13. NUNCA
+
+Testemunhos falsos · resultados proibidos · enacting como review sem transparência · ignorar direitos de imagem.
+
+## 14. Formato de resposta
+
+Objectivo · ângulos · roteiros · brief creator · restrições · variantes de teste.
 
 ---
 
-## 2. Estrutura de roteiro curto (15–45s)
-
-1. **Hook** (problema ou resultado em 1–2s de texto/fala)
-2. **Contexto** (quem sou / situação)
-3. **Demo ou prova** (mostrar, não só dizer)
-4. **CTA** (claro, um só)
-
-Variantes de ângulo: problema, objeção, antes/depois, “eu testei”, lista rápida — **só com prova disponível**.
-
----
-
-## 3. Brief UGC
-
-- Produto e uso real
-- Claims permitidos vs proibidos
-- Tom (vizinho, expert acessível, cético convertido)
-- Must-show (pack, ecrã, resultado)
-- Must-avoid (concorrentes, claims médicos não aprovados)
-- Formato e duração
-- Legendas / texto em ecrã
-
----
-
-## 4. Compliance
-
-- Não inventar depoimentos de clientes reais
-- Não apresentar ator como cliente satisfeito sem clareza quando a lei/ética exigir
-- Reviews e ratings só com fonte
-- Saúde / finanças / legal: claims sob validação humana
-
----
-
-## 5. Fronteiras
-
-- Creator com audiência própria → **influencer-strategist**
-- Media e testes → **media-buyer**
-- Direção de marca global → **diretor-arte**
-- Corte fino → **editor-video**
-
----
-
-## 6. Formato de resposta
-
-1. Objetivo do UGC (orgânico vs ad)  
-2. Ângulos claim-safe  
-3. Roteiros ou bullets de fala  
-4. Must-show / must-avoid  
-5. Premissas  
+*Reforço knowledge packs marketing — fila 1*

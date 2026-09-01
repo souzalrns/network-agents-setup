@@ -1,64 +1,51 @@
 # Knowledge Pack — trend-hunter
 
-Identificar e avaliar tendências. Nem tudo que é popular é tendência útil para a marca.
+Tendências **acionáveis**. Popular ≠ útil para a marca.
+
+**Relacionados:** [content-strategist.md](./content-strategist.md) · [social-media-manager.md](./social-media-manager.md) · [research-marketing.md](./research-marketing.md)
 
 ---
 
 ## 1. Classificação
 
-| Tipo | Definição | Ação típica |
-|------|-----------|-------------|
-| **Fenómeno pontual** | Pico curto (meme de 48h) | Só se fit extremo e velocidade |
-| **Tendência de formato** | Ex.: carrossel educativo, POV | Adaptar ao pilar da marca |
-| **Tendência cultural** | Mudança de valor/comportamento | Avaliar posicionamento |
-| **Ciclo sazonal** | Volta todos os anos | Planear com calendário |
-| **Falso positivo** | Hype de nicho irrelevante ao ICP | Ignorar |
+Moda passageira · tendência sustentada · mudança estrutural.
+
+## 2. Filtro PASS/FAIL
+
+Fit de pilares · capacidade de executar a tempo · risco reputacional · ruído de plataforma.
+
+## 3. Sinais com fonte
+
+Plataformas · search · imprensa · VOC · dados CLIENT. Citar origem.
+
+## 4. Timing
+
+Cedo / janela / tarde — declarar fase com incerteza.
+
+## 5. Output útil
+
+O que é · evidência · fase · fit · uso ou “não usar” · validade da recomendação.
+
+## 6. Anti-padrões
+
+Meme de 48h como pilar · forçar em audiência errada · copiar rival sem fit · certeza sem dados.
+
+## 7. Fronteira com research
+
+Research aprofunda; trend-hunter filtra o que move **agora**.
+
+## 8. Fronteira com social/content
+
+Eles executam; trend-hunter não monta calendário inteiro.
+
+## 9. NUNCA
+
+Inventar trends · garantir viral · ignorar brand safety · “está no FYP” = “serve esta marca”.
+
+## 10. Formato de resposta
+
+3–5 candidatas · filtro · uso/descarte · fontes · validade.
 
 ---
 
-## 2. Filtro de relevância (pass/fail)
-
-1. Tem relação com ICP ou categoria da marca?
-2. Dá para entrar **sem forçar** o produto?
-3. Risco reputacional?
-4. Tempo de meia-vida vs capacidade de produção?
-5. Há ângulo original (não só copy do áudio da moda)?
-
-Se 2+ forem não → não recomendar chase.
-
----
-
-## 3. Output útil
-
-Para cada item:
-- Nome / descrição curta
-- Estágio (emergente / pico / saturado / a cair)
-- Evidência (onde visto — sem inventar volumes)
-- Fit com marca (alto/médio/baixo + porquê)
-- Ideia de execução **ou** razão para passar
-
----
-
-## 4. Anti-padrões
-
-- “Está no TikTok logo é tendência estratégica”
-- Inventar % de crescimento ou “todos estão a fazer”
-- Forçar trend ofensivo ou off-brand
-- Confundir trend de plataforma com insight de negócio
-
----
-
-## 5. Fronteiras
-
-- Execução social → social-media-manager / verticais
-- Pesquisa de mercado profunda → research-marketing
-- Criativo final → DA / ugc / editor
-
----
-
-## 6. Formato de resposta
-
-1. Scope (categoria, região, plataformas)  
-2. Lista classificada  
-3. Top 1–3 acionáveis com brief leve  
-4. O que ignorar e porquê  
+*Reforço knowledge packs marketing — fila 1*

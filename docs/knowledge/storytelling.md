@@ -1,70 +1,71 @@
 # Knowledge Pack — storytelling
 
-Narrativa e estruturas de história para marca e campanhas. Não é copy de venda direta nem plano de mídia.
+Narrativa a serviço da mensagem. Não substitui copy de conversão directa.
+
+**Relacionados:** [copywriter.md](./copywriter.md) · [editor-video.md](./editor-video.md) · [content-strategist.md](./content-strategist.md)
 
 ---
 
-## 1. Quando usar narrativa (e quando não)
+## 1. Quando usar narrativa
 
-| Usar história | Preferir mensagem direta |
-|---------------|---------------------------|
-| Mudar crença ou identidade percebida | Preço, horário, CTA urgente |
-| Explicar transformação / antes-depois | Compliance, disclaimers |
-| Marca com tensão humana real | Specs técnicos densos |
-| Filme, keynote, manifesto | Anúncio de remarketing saturado |
+Mudança de percepção · memorização · ligação emocional · processo complexo com tempo/personagem.
 
-Se a história atrasa a resposta útil (SEO/IA answer-first), põe a resposta primeiro e a narrativa depois.
+## 2. Quando NÃO forçar narrativa
 
----
-
-## 2. Estruturas úteis (escolher uma)
-
-| Estrutura | Esqueleto |
-|-----------|-----------|
-| **Situação → tensão → viragem → novo normal** | Clássico de marca |
-| **Problema → stale solution → insight → caminho** | B2B / categoria |
-| **Personagem → desejo → obstáculo → ajuda → resultado** | Caso de cliente (só com factos reais) |
-| **Mito a derrubar → evidência → nova regra** | Thought leadership |
-
-Uma peça = um arco. Não empilhar três climaxes.
-
----
+CTA de preço · erro de UI · FAQ legal seco · remarketing hiper-directo. Aí copy claro ganha.
 
 ## 3. Elementos mínimos
 
-- **Protagonista** — cliente ou utilizador, raramente a empresa como herói absoluto
-- **Tensão** — o que está em jogo (tempo, dinheiro, risco, status, saúde)
-- **Especificidade** — detalhes observáveis > metáforas vagas
-- **Viragem** — o que muda (mecanismo ou decisão), sem milagre inventado
-- **Prova** — se houver caso real; senão frame como hipotético/ilustrativo
+Personagem (ou “tu”) · desejo/problema · obstáculo · viragem · novo estado. Sem obstáculo = descrição, não história.
+
+## 4. Estruturas úteis
+
+Antes→depois (com prova) · Problema→insight→caminho · Jornada do cliente · Mito→realidade (sem arrogância).
+
+## 5. Arco curto (social/vídeo)
+
+Gancho 0–3s · contexto · conflito · resolução · CTA suave.
+
+## 6. Arco longo
+
+Setup · confrontação · resolução · prova · convite. Não perder a promessa do início.
+
+## 7. Protagonista
+
+O cliente como centro; marca como guia — salvo campanha institucional consciente.
+
+## 8. Autenticidade
+
+Detalhes concretos > adjetivos vazios.
+
+## 9. Prova na história
+
+Resultado verificável ou processo real. YMYL: âncora factual obrigatória.
+
+## 10. Tom
+
+Seguir CLIENT. Drama gratuito em marca sóbria = FAIL.
+
+## 11. Adaptação por formato
+
+Vídeo: show don’t tell · Carrossel: uma batida/frame · Artigo: subtítulos = batidas · Áudio: frases curtas.
+
+## 12. Fronteira com copywriter
+
+Copy fecha oferta/acção; storytelling carrega memória e significado.
+
+## 13. Fronteira com editor-video / diretor-arte
+
+Narrativa define batidas; edição e imagem executam.
+
+## 14. NUNCA
+
+Inventar cases · factos falsos emocionais · substituir disclaimer legal por história.
+
+## 15. Formato de resposta
+
+Objectivo · estrutura · batidas/roteiro · facto vs dramatização · adaptações de formato.
 
 ---
 
-## 4. Adaptação por formato
-
-| Formato | Ajuste |
-|--------|--------|
-| 15–30s vídeo | Só tensão + viragem; zero setup longo |
-| 60–90s | Um beat por ~15s |
-| Carrossel | 1 beat por slide |
-| Long-form | Arco completo; subtítulos como beats |
-| Keynote | Três atos máx.; slide ≠ parágrafo |
-
----
-
-## 5. Fronteiras
-
-- Copy de conversão / CTA / anúncio direto → **copywriter**
-- Conceito visual → **diretor-arte**
-- Roteiro de cortes → **editor-video** (narrativa sob arco do storytelling)
-- Não inventar casos de cliente, prémios ou dramas falsos
-
----
-
-## 6. Formato de resposta
-
-1. Objetivo da peça e público  
-2. Estrutura escolhida + porquê  
-3. Beats numerados  
-4. O que é facto vs ilustração  
-5. Notas de adaptação por canal se pedido  
+*Reforço knowledge packs marketing — fila 1*

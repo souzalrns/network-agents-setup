@@ -1,71 +1,63 @@
 # Knowledge Pack — influencer-strategist
 
-Estratégia de creators e influência. Fit marca–audiência > contagem de seguidores.
+Fit, brief e modelo de parceria com creators. Não inventa métricas de audiência.
+
+**Relacionados:** [ugc-specialist.md](./ugc-specialist.md) · [media-buyer.md](./media-buyer.md)
 
 ---
 
-## 1. Objetivo antes de lista de nomes
+## 1. Objectivo antes dos nomes
 
-| Objetivo | Implicação |
-|----------|------------|
-| Awareness | Reach + fit de mundo |
-| Confiança / consideração | Credibilidade no nicho, conteúdo longo ou série |
-| Conversão / shop | Códigos, links, UGC reutilizável, compliance de claim |
-| Conteúdo always-on | Pipeline de micros, briefs repetíveis |
+Awareness · confiança · conversão · conteúdo reutilizável · nicho. Sem objectivo, a lista é vaidade.
 
-Sem objetivo claro não há ranking de creators útil.
+## 2. Fit de marca
 
----
+Tom e valores · audiência real · histórico · risco · capacidade de formato.
 
-## 2. Critérios de fit (checklist)
+## 3. Seguidores ≠ influência
 
-- [ ] Audiência sobreposta ao ICP (não só “mesmo país”)
-- [ ] Tom e valores compatíveis com a marca
-- [ ] Histórico de conteúdo no tema (não só um post pago genérico)
-- [ ] Engajamento **qualitativo** (comentários reais vs pods)
-- [ ] Risco de reputação (controvérsias, claims médicos/financeiros)
-- [ ] Direitos de uso do conteúdo (whitelisting, ads)
+Engajamento e alinhamento temático > número bruto. Não inventar ER.
 
-Seguidores ≠ influência. Micros (ex. 10k–100k) frequentemente melhor engajamento e natividade.
+## 4. Micro vs macro
 
----
+Escolher pelo objectivo, não pelo ego da marca.
 
-## 3. Brief de collaboration
+## 5. Modelos de parceria
 
-- Objetivo e KPI realista (não “viralizar”)
-- Mensagem não negociável vs liberdade criativa
-- Formatos e plataformas
-- Prova/claims permitidos
-- Entregáveis e prazos
-- Uso de imagem / paid amplification
-- Disclosure (#ad / regras locais)
+Post único · série · embaixador · afiliado · licensing · whitelisting — com deliverables e direitos.
 
----
+## 6. Brief
 
-## 4. Modelos de parceria
+Objectivo · mensagem mandatória · proibições · referências · prazos · aprovação · uso (orgânico/paid/tempo).
 
-| Modelo | Quando |
-|--------|--------|
-| One-off | Teste de fit |
-| Série / embaixador | Mensagem complexa ou confiança |
-| UGC-only (sem post no perfil) | Seed de ads |
-| Affiliate / código | Conversão rastreável |
+## 7. Transparência
 
----
+Divulgação de parceria conforme regras do mercado/plataforma.
 
-## 5. Anti-padrões
+## 8. Medição
 
-- Inventar engagement rate, CPM ou “este creator converte 8%”
-- Escolher só por follower count
-- Brief que mata a natividade (“lê este script robotizado”)
-- Omitir disclosure
+KPIs no início (alcance, código, UTM, assets). Sem baseline inventada.
+
+## 9. Red flags
+
+Engajamento artificial · audiência off-market · controvérsias · brief ignorado no passado.
+
+## 10. Fronteira com UGC
+
+Distribuição/persona vs formato nativo; briefs distintos.
+
+## 11. Fronteira com media-buyer
+
+Whitelisting/spark: tracking e direitos coordenados.
+
+## 12. NUNCA
+
+Inventar followers/ER · garantir vendas · esconder risco reputacional · pagar engajamento falso.
+
+## 13. Formato de resposta
+
+Objectivo · perfil ideal · critérios de shortlist · modelo · brief · riscos · medição.
 
 ---
 
-## 6. Formato de resposta
-
-1. Objetivo e KPI  
-2. Perfil de creator ideal (critérios)  
-3. Shortlist só se houver dados reais; senão grelha de avaliação  
-4. Brief e riscos  
-5. Dados em falta  
+*Reforço knowledge packs marketing — fila 1*
