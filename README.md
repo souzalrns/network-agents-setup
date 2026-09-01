@@ -14,8 +14,8 @@ Arquitetura e documentação de **redes multi-agente** — com foco portfolio na
 | **[docs/ONE-PAGER-MARKETING-AGENTS.md](./docs/ONE-PAGER-MARKETING-AGENTS.md)** | Resumo de 1 página (LinkedIn / proposta) |
 | [docs/marketing-agency-agents.md](./docs/marketing-agency-agents.md) | System prompts + limites de todos os agentes |
 | [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md) | **Item 13 — AI Findability** (playbook canónico P0/P1/P2) |
+| [docs/knowledge/ai-findability.md](./docs/knowledge/ai-findability.md) | Item 13 knowledge operacional (50 chunks RAG) |
 | [docs/knowledge/](./docs/knowledge/) | Knowledge packs por especialidade |
-| [docs/knowledge/item-13-ai-findability.md](./docs/knowledge/item-13-ai-findability.md) | Item 13 knowledge (RAG) |
 | [docs/CONCLUSAO-SETUP-MARKETING.md](./docs/CONCLUSAO-SETUP-MARKETING.md) | Fecho documental e próximos passos |
 
 ### Destaques do desenho
@@ -42,6 +42,7 @@ Objetivo → marketing-orquestrador → horizontais / verticais
 |-----|------|
 | [docs/estrutura-geral-agentes.md](./docs/estrutura-geral-agentes.md) | Especificação ampla (providências / estrutura geral) |
 | [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md) | Playbook operacional Item 13 (PASS/FAIL, bots, handoffs) |
+| [docs/knowledge/ai-findability.md](./docs/knowledge/ai-findability.md) | Chunks RAG para agents responderem perguntas Item 13 |
 
 ---
 
@@ -54,9 +55,9 @@ Objetivo → marketing-orquestrador → horizontais / verticais
 ```
 network-agents/
 ├── packages/
-│   ├── core/           # Núcleo (Orquestrador, Executor, Planner)
-│   ├── memory/         # Memória (PostgreSQL + Redis)
-│   ├── mcp/            # MCP
+│   ├── core/
+│   ├── memory/
+│   ├── mcp/
 │   ├── observability/
 │   ├── websocket/
 │   ├── langgraph/
@@ -83,29 +84,6 @@ pnpm run build
 pnpm run dev
 ```
 
-### Docker / Kubernetes
-
-```bash
-docker-compose up -d
-kubectl apply -f k8s/
-```
-
-### Endpoints principais
-
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/chat` | POST | Mensagem para a rede |
-| `/chat/stream` | POST | Streaming |
-| `/agents` | GET | Lista agentes |
-| `/health` | GET | Health check |
-| `/ws` | WebSocket | Tempo real |
-
-### Testes
-
-```bash
-pnpm test
-```
-
 ### Licença
 
 MIT
@@ -115,8 +93,8 @@ MIT
 ## Nota de maturidade
 
 - **Documentação da agência multi-agente (portfolio):** pronta para partilha e testes com o padrão `[SYSTEM]+[KNOWLEDGE]+[CLIENT]+[TASK]`.
-- **Código da plataforma neste repo:** pode incluir implementações simplificadas/stub (ex.: MFA, scanners externos, partes de simulação). Tratar antes de produção.
-- **Produção operacional de agentes:** repo separado `agent-network-mcp` (não sobrescrito por este setup paralelo).
+- **Código da plataforma neste repo:** pode incluir stubs — tratar antes de produção.
+- **Produção operacional de agentes:** repo separado `agent-network-mcp`.
 
 ---
 
