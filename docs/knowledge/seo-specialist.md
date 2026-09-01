@@ -1,116 +1,126 @@
 # Knowledge Pack — seo-specialist
 
-Conhecimento operacional para o agente SEO Specialist (orgânico: técnico, on-page, conteúdo). Complementa `ai-visibility` sem o substituir.
+Conhecimento operacional do **SEO Specialist**. Complementa `ai-visibility` e o playbook Item 13; não os substitui.
+
+**Playbook relacionado:** [../item-13-ai-findability.md](../item-13-ai-findability.md) · **Chunks findability:** [ai-findability.md](./ai-findability.md)
 
 ---
 
-## 1. Ordem de prioridade (não pule etapas)
+## 1. Ordem de prioridade (não pular)
 
-| Prioridade | Foco | Critério de “feito” |
-|------------|------|---------------------|
-| **1** | Indexabilidade e crawl | URLs importantes rastreáveis, indexáveis onde pretendido, visíveis no Search Console |
-| **2** | Arquitetura e links internos | Páginas prioritárias alcançáveis em poucos cliques, âncoras descritivas |
-| **3** | Qualidade da página + intent | Uma intenção primária clara por URL; conteúdo útil e único |
-| **4** | Performance (CWV) | LCP, INP, CLS em faixa “good” no campo (CrUX) |
-| **5** | Schema e rich eligibility | Markup válido alinhado ao conteúdo visível |
-| **6** | Autoridade / off-page | Só depois da base técnica e de conteúdo |
+1. Indexabilidade e crawl
+2. Arquitectura e links internos
+3. Qualidade da página + intent
+4. Performance (CWV no campo)
+5. Schema alinhado ao visível
+6. Off-page / autoridade (só depois da base)
 
-Corrigir bloqueadores técnicos **antes** de otimizar copy ou keyword stuffing.
+Bloqueadores técnicos antes de “otimizar copy”.
+
+## 2. O que o SEO entrega
+
+Checklist verificável, intent por URL, gaps técnicos, prioridades com impacto. Não entrega copy final nem promessas de ranking.
+
+## 3. Intent — quatro tipos
+
+Informational · Navigational · Commercial investigation · Transactional. Uma URL = uma intent primária.
+
+## 4. Sintoma: várias URLs, mesma intent
+
+Canibalização. Verificar: titles parecidos, GSC canónica alternativa, outlines iguais. Correção: fundir + 301 + uma canónica.
+
+## 5. Sintoma: keyword no title, conteúdo genérico
+
+FAIL de utilidade. Correção: responder à pergunta real do SERP com factos.
+
+## 6. On-page mínimo por URL
+
+Title único · meta description · 1 H1 · headings lógicos · intro que responde · internal links · media com alt útil · canonical correcta.
+
+## 7. Title — regras
+
+Intent + diferenciador; evitar clickbait vazio; não repetir o mesmo template em 20 URLs.
+
+## 8. H1 vs title
+
+Podem diferir ligeiramente; ambos reflectem a mesma intent. Não encher H1 de keywords.
+
+## 9. Soft-404 e SPA
+
+URL inexistente → 200 + shell = FAIL crítico (Item 13 P0). SPA sem HTML de conteúdo = FAIL crawl.
+
+## 10. Canonical
+
+Autorreferente na URL canónica. Nunca “tudo → home”.
+
+## 11. Sitemap
+
+Só URLs a indexar; 200; canónicas; sem preview/staging.
+
+## 12. robots.txt
+
+Não bloquear o que se quer rankear. Alinhar ao playbook Item 13 (search/answer Allow; train Disallow por defeito).
+
+## 13. CWV
+
+LCP, INP, CLS no **campo** (CrUX), não só lab.
+
+## 14. Schema — regra de ouro
+
+Só o que está visível. FAQPage sem FAQ = FAIL.
+
+## 15. Schema por tipo
+
+Home: Organization · Serviço: Service · Artigo: Article/BlogPosting · FAQ: FAQPage · Local: LocalBusiness se NAP real.
+
+## 16. Internal linking
+
+Pilar ↔ spokes; âncoras descritivas; páginas órfãs = risco.
+
+## 17. Thin content
+
+Pouco valor único, doorway de cidade. Fundir ou não publicar.
+
+## 18. Conteúdo YMYL
+
+Fonte, data, autoria; SEO não inventa prazos legais nem taxas de sucesso.
+
+## 19. Pesquisa de keywords
+
+Seed → intent → mapa de URLs → priorizar por negócio + viabilidade. Volume sozinho não manda.
+
+## 20. SERP analysis
+
+O que rankeia, formato, gaps factuais — antes do brief de conteúdo.
+
+## 21. EEAT operacional
+
+SEO assinala ausência de expertise; não fabrica credenciais.
+
+## 22. Fronteira com ai-visibility
+
+SEO: P0 técnico, intent, arquitectura. AI-Visibility: citabilidade, entidade, Item 13 lead.
+
+## 23. Fronteira com copy / content-strategist
+
+SEO define intent e requisitos; copy escreve; content define pilares. SEO não reescreve a voz da marca.
+
+## 24. Fronteira com geo-agent
+
+GEO só com intent local real. Não criar 20 landing cidade-clone.
+
+## 25. O que o SEO NUNCA faz
+
+Inventar rankings ou tráfego · prometer posição · copy final longo · gerir ads · PASS canónico só porque o lab passou.
+
+## 26. Formato de resposta preferido
+
+1. Objectivo e URLs  2. Bloqueadores P0  3. Intent por URL  4. Prioridades  5. O que medir  6. Handoffs
+
+## 27. Checklist rápido P0 (Item 13)
+
+HTML texto · title · description · canonical · H1 · 404 real · schema coerente.
 
 ---
 
-## 2. Intenção de busca (antes de escrever)
-
-| Tipo | Exemplo de query | Formato de página típico |
-|------|------------------|---------------------------|
-| Informational | “o que é X”, “como fazer Y” | Guia, definição, tutorial |
-| Commercial investigation | “melhor X”, “X vs Y” | Comparação, roundup, alternativa |
-| Transactional | “preço X”, “contratar X” | Landing, produto, contacto |
-| Navigational | nome da marca | Homepage / página canônica |
-
-**Regra:** mismatch de intent é causa frequente de página que “não rankeia” apesar de estar “otimizada”. Uma URL = uma intenção primária. Evitar duas páginas a competir pela mesma keyword sem canonical/consolidação.
-
----
-
-## 3. On-page checklist (por página)
-
-- [ ] **Title tag** único, alinhado à intent, legível (não keyword salad)
-- [ ] **Meta description** útil para CTR (não ranking factor direto, mas influencia clique)
-- [ ] **H1** único; hierarquia H2/H3 lógica
-- [ ] Resposta / ponto principal **cedo** no conteúdo (ajuda SEO e citação em IA)
-- [ ] Conteúdo único — sem thin/duplicate a competir
-- [ ] URLs legíveis e estáveis
-- [ ] Imagens: alt descritivo; dimensões para evitar CLS
-- [ ] Links internos para páginas relacionadas (cluster / jornada)
-- [ ] CTA ou próximo passo claro quando a intent for comercial/transacional
-
-### E-E-A-T (prático)
-
-- Experiência: exemplos, dados, observações de quem fez
-- Expertise: autor identificável; credenciais quando YMYL
-- Autoridade: fontes primárias citadas; menções externas
-- Trust: HTTPS, contacto, about, disclosures; sem claims inventados
-
----
-
-## 4. Técnico mínimo (o que o agente deve checar / recomendar)
-
-| Área | O que importa |
-|-------|----------------|
-| HTTPS | Site inteiro |
-| robots.txt | Não bloquear páginas importantes por engano |
-| Sitemap | Reflete a superfície pública real |
-| Canonical | Consistente; sem loops |
-| Indexação | noindex só com intenção; páginas mortas tratadas |
-| Redirects | Evitar cadeias longas |
-| Mobile | Usável; layout estável |
-| Core Web Vitals | LCP (good ~<2.5s), INP (<200ms), CLS (<0.1) — validar com dados de campo, não só lab |
-| JS rendering | Conteúdo crítico no HTML quando possível (crawlers de IA muitas vezes não executam JS) |
-
-Não inventar scores de PageSpeed ou rankings sem dados fornecidos.
-
----
-
-## 5. Schema (quando recomendar)
-
-Útil e alinhado ao visível:
-
-- Organization (+ sameAs)
-- Article / BlogPosting (author, datePublished, dateModified)
-- FAQPage (só se houver FAQ real na página)
-- Product / Service / LocalBusiness quando aplicável
-- BreadcrumbList
-
-Não inventar tipos; não marcar o que a página não mostra. Schema não substitui conteúdo fraco.
-
----
-
-## 6. Fronteira com outros agentes
-
-| Tema | Quem lidera |
-|------|-------------|
-| Rankings, keywords, on-page, técnico SEO | **seo-specialist** |
-| Citação em LLMs / AI Overviews / entity para IA | **ai-visibility** (com SEO como base) |
-| Presença local / intenção geográfica | **geo-agent** |
-| Copy de conversão / headlines de anúncio | **copywriter** |
-| Mídia paga | **media-buyer** |
-
----
-
-## 7. O que o agente NUNCA faz
-
-1. Inventar posições, volume de busca, backlinks ou “você está na posição X”
-2. Prometer ranking ou tráfego garantido
-3. Recomendar keyword stuffing ou conteúdo manipulado
-4. Tratar GEO/AEO hacks (llms.txt como magia) como substituto de SEO base — ver pack `ai-visibility`
-5. Substituir análise de intent por lista genérica de “melhores práticas”
-
----
-
-## 8. Formato de resposta preferido
-
-1. Premissas e dados em falta (GSC, URLs, concorrentes, keywords-alvo)
-2. Bloqueadores técnicos vs oportunidades de conteúdo (nessa ordem)
-3. Intent da(s) página(s) em discussão
-4. Recomendações priorizadas e verificáveis
-5. O que medir depois (impressões, cliques, queries, indexação) — sem inventar baseline
+*Reforço knowledge packs marketing — network-agents-setup*
