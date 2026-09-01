@@ -1,165 +1,67 @@
-# Item 13 — Playbook: AI Findability
+> **Playbook canónico (P0/P1/P2, robots, handoffs, template):** [../item-13-ai-findability.md](../item-13-ai-findability.md)  
+> Em conflito de regras operacionais, **prevalece o playbook canónico**. Este ficheiro é contexto RAG para agents.
 
-**Objetivo:** estruturar projetos (sites, páginas, entidades de marca) para sistemas de IA **encontrarem, compreenderem e citarem/recomendarem** com mais probabilidade — sem prometer controlo sobre o modelo.
+# Knowledge — Item 13 AI Findability
 
-**Agentes envolvidos:** `ai-visibility` (lead) + `seo-specialist` (base) + `geo-agent` (quando intent local) + `copywriter` / `content-strategist` (conteúdo answer-first).
+**Lead agent:** `ai-visibility`  
+**Base técnica:** `seo-specialist`  
+**Conteúdo:** `copywriter`, `content-strategist`  
+**Local (opcional):** `geo-agent`  
+**Validação:** `critic-criativo`  
+**Disparo:** `marketing-orquestrador`
 
-**Knowledge de apoio:** `ai-visibility.md`, `seo-specialist.md`, `geo-agent.md`.
+## Quando usar
 
----
+- “Ser encontrado / citado / recomendado por IA”
+- Auditoria de discoverability
+- Site SPA ou HTML fraco
+- Preparar cutover SSG/SSR
+- Revisar llms.txt, schema, answer-first, entidade
 
-## 1. Princípios não negociáveis
+## Saída esperada (ai-visibility)
 
-1. **SEO sólido é a entrada** — AI Overviews e retrieval puxam sobretudo páginas já rastreáveis e relevantes.
-2. **Resposta no topo** — bloco direto (40–60 palavras) antes do storytelling longo.
-3. **Entidade clara** — uma identidade canónica de marca (nome, URL, sameAs, factos consistentes).
-4. **Evidência** — estatísticas, fontes, experiência real; não adjetivos vazios.
-5. **HTML legível** — conteúdo crítico no HTML inicial quando possível (muitos crawlers de IA não correm JS).
-6. **Honestidade** — não prometer “vais aparecer no ChatGPT”; medir o que for mensurável.
-7. **llms.txt é opcional** — não é alavanca principal (Google não o usa para generative features).
+1. Lista de URLs prioritárias (máx. 5–15 no piloto)
+2. Tabela PASS/FAIL por URL (template do playbook §9)
+3. Gaps P0 vs P1 vs P2
+4. Política de bots aplicada (default ou override do cliente)
+5. Lab vs domínio canónico explicitado
+6. Próximas 3 acções ordenadas
 
----
+## Regras operacionais (resumo)
 
-## 2. Checklist por projeto (ordem de execução)
+| Camada | Regra |
+|--------|--------|
+| P0 | HTML texto no 1.º response; title/desc/canonical por URL; 1 H1; 404 real; schema coerente |
+| P1 descoberta | Sitemap só canónicas; robots sem contradição; llms.txt alinhado |
+| Bots default | Allow search/answer; Disallow GPTBot + Google-Extended (override só com decisão registada) |
+| Edge | Cloudflare/WAF não pode contradizer robots do repo sem nota → FAIL |
+| P1 conteúdo | Answer-first; factos extraíveis; unique_promise; 1 URL/intent; fundir thin |
+| P1 entidade | Organization + Person; sameAs reais; datas; YMYL disclaimer se aplicável |
+| P2 | GSC páginas/queries; inspeção URL; PASS lab ≠ PASS canónico |
 
-### Fase A — Fundação técnica (seo-specialist + dev)
+## Anti-padrões (memória curta)
 
-- [ ] HTTPS em todo o site
-- [ ] robots.txt: páginas importantes não bloqueadas; decisão explícita sobre bots de treino vs retrieval
-- [ ] Sitemap atualizado com a superfície pública real
-- [ ] Canonicals corretos; sem cadeias longas de redirect
-- [ ] Conteúdo prioritário presente no HTML renderizado (verificar, não assumir)
-- [ ] Core Web Vitals em faixa aceitável no campo (não só lab)
+SPA `#root` vazio · canonical → home · posts thin em massa · FAQPage sem FAQ · preview `.vercel.app` como marca · claims inventados · robots Allow+Disallow no mesmo UA · soft-404
 
-### Fase B — Entidade de marca (ai-visibility)
+## Exemplo de referência (só doc)
 
-- [ ] Nome canónico da marca / produto (uma grafia principal)
-- [ ] Organization (ou LocalBusiness) schema com `url`, `name`, `sameAs` (LinkedIn, etc. quando reais)
-- [ ] Página About / contacto com factos verificáveis
-- [ ] Factos públicos consistentes (morada, preços de referência, posicionamento) — sem contradições entre páginas
-- [ ] Autor identificável em conteúdo YMYL ou editorial forte
+- Lab Next SSG (ex. ViannaLegal ht7m) ≈ P0 alinhado  
+- Produção SPA (ex. viannalegal.com.br shell) ≈ FAIL P0 até HTML real no domínio canónico  
 
-### Fase C — Páginas prioritárias AI-ready (conteúdo)
+## O que não fazer
 
-Para cada URL prioritária (máx. 5–10 no piloto):
+- Prometer “vais aparecer no ChatGPT”
+- Inventar métricas, menções ou rankings
+- Substituir o `seo-specialist` em arquitectura técnica profunda
+- Criar 20 páginas cidade-clone (geo)
+- Declarar PASS no domínio canónico só porque o lab passou
 
-- [ ] **Intent única** clara (informational / commercial / transactional / local)
-- [ ] **Answer block** no início (pergunta implícita → resposta completa)
-- [ ] Evidência: números, fontes nomeadas, ou experiência first-hand
-- [ ] Hierarquia H1/H2 legível; listas/tabelas quando compararem opções
-- [ ] FAQ real + FAQPage schema **só se** o FAQ estiver visível na página
-- [ ] Article/Service/Product schema alinhado ao tipo de página
-- [ ] `dateModified` atualizado quando houver mudança substantiva
-
-### Fase D — Formatos que IAs citam com mais frequência
-
-- [ ] Página de definição / “o que é” do serviço principal
-- [ ] Comparação ou alternativas (quando o mercado permitir e for honesto)
-- [ ] FAQ das dúvidas reais do cliente (não keyword stuffing)
-- [ ] How-to com passos verificáveis (se for o caso de uso)
-- [ ] Dados proprietários ou estatísticas próprias quando existirem
-
-### Fase E — Local (se aplicável — geo-agent)
-
-- [ ] NAP (nome, morada, telefone) consistente em site e perfis
-- [ ] LocalBusiness / área de serviço explícita
-- [ ] Conteúdo com intenção local real (cidade/região), não spam de keywords de cidade
-- [ ] Perfis Google Business / equivalentes alinhados aos factos do site
-
-### Fase F — Opcional / experimental
-
-- [ ] `llms.txt` como **mapa** das melhores URLs (não como substituto de HTML/SEO)
-- [ ] Tracking de mention/citation em prompts-alvo (ferramenta à escolha do cliente) — baseline antes de “melhorar”
-
----
-
-## 3. Template mínimo de página AI-ready
+## Handoff mínimo
 
 ```text
-[H1] Título alinhado à intent
-
-[Answer block — 40–60 palavras]
-Resposta direta à pergunta principal da página.
-
-[Evidência]
-- Facto ou número + fonte/contexto
-- Facto ou número + fonte/contexto
-
-[Desenvolvimento]
-Secções H2 com uma ideia cada. Tabelas se for comparação.
-
-[FAQ] (opcional)
-Perguntas reais + respostas curtas. Schema FAQPage só se visível.
-
-[Entidade / CTA]
-Quem é a organização + próximo passo claro se intent comercial.
+orquestrador → seo-specialist (P0)
+             → ai-visibility (lead Item 13)
+             → geo-agent? (só local)
+             → copywriter / content-strategist
+             → critic-criativo (PASS/FAIL)
 ```
-
----
-
-## 4. Fluxo de agentes (item 13)
-
-```text
-Objetivo: "estruturar [projeto] para IA encontrar e recomendar"
-
-1. marketing-orquestrador / planejador
-   → critério de pronto + lista de URLs prioritárias
-
-2. seo-specialist
-   → Fase A + intent por URL + bloqueadores técnicos
-
-3. ai-visibility
-   → Fase B + C + D (diagnóstico + prioridades; sem inventar rankings)
-
-4. geo-agent (se local)
-   → Fase E
-
-5. copywriter / content-strategist
-   → reescrever answer blocks e FAQs com prova disponível
-
-6. Verificação
-   → HTML, schema validator, lista do que mudou, o que medir a seguir
-```
-
-Não spawnar todos se o site for pequeno: seo + ai-visibility bastam no piloto.
-
----
-
-## 5. Critério de “item 13 fechado” num projeto
-
-| Critério | Evidência |
-|----------|----------|
-| Fundação técnica sem bloqueador óbvio | Checklist A com itens verificados |
-| Entidade documentada | Schema Organization/LocalBusiness + factos consistentes |
-| ≥ 3 URLs prioritárias com answer-first + prova | Diff ou lista de páginas |
-| Schema só onde o conteúdo existe | Rich Results / validator sem erro grave |
-| Decisões experimentais rotuladas | llms.txt / tracking como opcional, não como “magia” |
-| Métricas honestas definidas | Ex.: queries-alvo, indexação, mention rate se houver tool — **sem baseline inventada** |
-
----
-
-## 6. Anti-padrões (falhar o item 13)
-
-- Tratar llms.txt como trabalho principal
-- Schema sem conteúdo correspondente
-- Keyword stuffing de cidades / “melhor X 2026” vazio
-- Prometer citação em ChatGPT / Perplexity / AI Overview
-- Inventar FAQ, estatísticas ou sameAs
-- Otimizar copy antes de corrigir noindex / JS-only content / canonical errado
-
----
-
-## 7. Piloto sugerido (quando for a fase 3)
-
-**Candidato forte:** ViannaLegal (já tem FAQ schema, sitemap, trabalho de SEO/AEO documentado no agente de produção).
-
-Passos do piloto:
-1. Inventário de 5 URLs prioritárias
-2. Correr Fases A–D (e E se local)
-3. Registar gaps vs checklist
-4. Implementar só o top 5 de impacto
-5. Definir medição em 30 dias (GSC + opcional citation tool)
-
----
-
-*Item 13 — playbook de fecho. Setup paralelo / knowledge.*
