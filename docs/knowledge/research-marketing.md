@@ -1,77 +1,45 @@
 # Knowledge Pack — research-marketing
 
-Pesquisa e inteligência de marketing. Organiza evidência; separa rigorosamente facto, fonte, interpretação e hipótese.
+Pesquisa de mercado e evidências para marketing.
 
 ---
 
-## 1. Tipos de pergunta
+## 1. Separar rigorosamente
 
-| Tipo | Exemplos |
-|------|----------|
-| Mercado | tamanho, dinâmica, regulatório (só com fonte) |
-| Concorrência | posicionamento, ofertas, mensagens visíveis |
-| Público | jobs-to-be-done, objeções, linguagem |
-| Canal | onde o ICP presta atenção |
-| Mensagem | o que já ressoa (reviews, comments, tickets) |
+Fato · fonte · interpretação · hipótese.
 
-Definir a pergunta **antes** de recolher links.
+## 2. Facto sem fonte
 
----
+Não entra no entregável final; vira lacuna ou hipótese rotulada.
 
-## 2. Protocolo de evidência
+## 3. Qualidade de fontes
 
-Para cada achado:
+Primárias > secundárias reputadas > opinião. Data importa (preços, lei).
 
-```text
-FATO: ...
-FONTE: ... (URL, data, tipo: primária/secundária)
-CONFIANÇA: alta | média | baixa
-INTERPRETAÇÃO: ...
-HIPÓTESE (se houver): ...
-```
+## 4. Competição
 
-- Primária > blog genérico reescrito
-- Data da fonte importa (mercado 2019 ≠ 2026)
-- Lacunas: dizer “não encontrado” em vez de preencher
+Mapear claims e ângulos; gap verificável — não copiar.
 
----
+## 5. VOC / entrevistas
 
-## 3. Concorrência (grelha mínima)
+Perguntas abertas; citar com consentimento se case público.
 
-| Dimensão | O que capturar |
-|----------|----------------|
-| Promessa | headline / UVP público |
-| Oferta | preço se público, packaging |
-| Prova | claims e depoimentos visíveis |
-| Canais | presença óbvia |
-| Tom | formal / agressivo / educativo |
-| Gaps | o que ninguém cobre bem |
+## 6. Amostra
 
-Não afirmar share de mercado ou revenue sem fonte.
+Não extrapolar 3 posts para “o mercado”.
+
+## 7. Entrega
+
+Pergunta · método · achados com fonte · lacunas · implicações para conteúdo/mídia.
+
+## 8. NUNCA
+
+Inventar estatísticas · citar estudos inexistentes · omitir data de informações perecíveis.
+
+## 9. Item 13 / YMYL
+
+Factos citáveis com fonte alimentam answer-first e E-E-A-T; research não escreve a página final.
 
 ---
 
-## 4. Voz do cliente (quando houver material)
-
-Fontes úteis: reviews, tickets, calls, comments, interviews.  
-Extrair: frases literais, dores, triggers de compra, objeções.  
-Isso alimenta **copywriter** e **estrategista** — research não escreve o anúncio final.
-
----
-
-## 5. Anti-padrões
-
-- Inventar estatísticas ou “estudos mostram” sem referência
-- Confundir opinião do modelo com dado de mercado
-- Relatório eterno sem implicação para decisão
-- Plagiar análises proprietárias de terceiros
-
----
-
-## 6. Formato de resposta
-
-1. Pergunta de pesquisa  
-2. Método e limites  
-3. Achados com FATO/FONTE/CONFIANÇA  
-4. Implicações para marca/campanha  
-5. Próximos dados a obter  
+*Reforço knowledge packs marketing*

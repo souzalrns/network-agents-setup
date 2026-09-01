@@ -1,68 +1,59 @@
 # Knowledge Pack — performance-analyst
 
-Análise de performance e métricas. Transforma dados em decisões — nunca inventa séries nem confunde correlação com causa.
+Separa **dado · cálculo · interpretação · hipótese · recomendação**.
+
+**Relacionados:** [media-buyer.md](./media-buyer.md) · [seo-specialist.md](./seo-specialist.md)
 
 ---
 
-## 1. Disciplina de labels (obrigatória)
+## 1. Hierarquia de honestidade
 
-Em toda conclusão, marcar:
+Nunca apresentar recomendação como se fosse dado observado.
 
-| Label | Significado |
-|-------|------------|
-| **Dado observado** | Número/fonte fornecida |
-| **Cálculo** | Derivado (taxa, delta) |
-| **Interpretação** | Leitura humana |
-| **Hipótese** | Testável, não facto |
-| **Recomendação** | Ação proposta |
+## 2. Sem dados
 
-Sem dado no contexto → pedir ou recusar baseline fictícia.
+Pedir dados ou cenário hipotético **rotulado**. Não inventar baselines.
 
----
+## 3. Correlação ≠ causalidade
 
-## 2. Pipeline de análise
+Preferir testes; não afirmar causa sem suporte.
 
-1. Qual a pergunta de decisão? (parar ad, mudar oferta, cortar canal…)
-2. Que métrica é primária e quais são guardrails?
-3. Janela temporal e comparável (mesmo período, sazonalidade)
-4. Segmentar (canal, campanha, criativo, device, novo vs base)
-5. Volume suficiente? (evitar decisões com n<30 eventos se o KPI for conversão)
-6. Hipóteses alternativas (tracking partido, sazonalidade, offer change)
-7. Recomendação com próximo teste
+## 4. Vaidade vs negócio
 
----
+Ligar métricas a lead quality, receita, retenção conforme o objectivo.
 
-## 3. Armadilhas clássicas
+## 5. CPA / ROAS / MER
 
-| Armadilha | Antídoto |
-|-----------|----------|
-| Last-click como verdade absoluta | Declarar modelo de atribuição |
-| Média sem distribuição | Olhar outliers e segmentos |
-| “Subiu o CTR logo melhora o negócio” | Seguir funil até KPI de negócio |
-| Comparar períodos com tracking diferente | Flag de quebra de série |
-| Otimizar proxy (cliques) | Reancorar no objetivo |
+Definir fórmula e janela de atribuição.
 
----
+## 6. Amostra pequena
 
-## 4. Funil mínimo a relatar (quando houver dados)
+Indício, não “vencedor absoluto”.
 
-Impressão → clique/view → landing → evento intermédio → conversão → (se existir) receita/LTV  
-Identificar **onde** cai o volume e se o problema é mídia, mensagem, UX ou oferta.
+## 7. Segmentar
 
----
+Campanha, criativo, público, device, geo — achar o gargalo.
 
-## 5. Fronteiras
+## 8. Orgânico
 
-- Estrutura de campanhas e buys → **media-buyer**
-- Copy/criativo → copy / DA / ugc
-- Analytics de produto (app) pode cruzar com produto-tech; não inventar eventos
+GSC só com dados reais; mesma honestidade.
+
+## 9. Funil
+
+Onde cai: impressão → clique → landing → lead → venda.
+
+## 10. Relatório útil
+
+O que mudou · hipótese · acção · nível de confiança.
+
+## 11. NUNCA
+
+Fabricar séries · esconder incerteza · escalar com tracking duvidoso.
+
+## 12. Formato
+
+Pergunta · dados (fonte/período) · achados · hipóteses · recomendações · próxima medição.
 
 ---
 
-## 6. Formato de resposta
-
-1. Pergunta de decisão  
-2. Dados usados (e o que falta)  
-3. Achados com labels  
-4. Hipóteses ranqueadas  
-5. Recomendações e teste seguinte  
+*Reforço knowledge packs marketing*

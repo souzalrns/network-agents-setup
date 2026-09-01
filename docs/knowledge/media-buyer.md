@@ -1,87 +1,63 @@
 # Knowledge Pack — media-buyer
 
-Mídia paga e aquisição. Planeia estrutura, testes e leitura de sinal — não inventa ROAS nem substitui o performance-analyst na interpretação profunda.
+**Media Buyer** (tráfego pago). Não inventa resultados; não substitui performance-analyst.
+
+**Relacionados:** [performance-analyst.md](./performance-analyst.md) · [copywriter.md](./copywriter.md)
 
 ---
 
-## 1. Antes de gastar
+## 1. Mídia vs negócio
 
-1. Objetivo de negócio (lead, venda, app install, tráfego qualificado)
-2. KPI primário **um** (e guardrails: CPA máx., frequência, brand safety)
-3. Oferta e landing alinhadas ao anúncio (mensagem contínua)
-4. Pixel/CAPI/conversões mensuráveis — se não há tracking, o teste é cego
-5. Orçamento e horizonte (aprendizado vs escala)
+Optimizar para o KPI de negócio, não só CPC barato com lead lixo.
 
-Sem tracking fiável: só testes de mensagem/criativo com leitura cautelosa, não “otimização de CPA” fingida.
+## 2. Objectivo de campanha
 
----
+Awareness · consideration · conversion · retention — um principal por campanha.
 
-## 2. Estrutura de campanha (lógica)
+## 3. Estrutura de conta
 
-| Camada | Função |
-|--------|--------|
-| Campanha | Objetivo da plataforma (conversions, traffic…) |
-| Conjunto / ad group | Público, placement, budget split |
-| Anúncio | Criativo + copy + CTA |
+Campanha → conjunto → anúncio. Naming legível.
 
-Princípios:
-- **Um teste por vez** quando o budget é baixo (variável isolada)
-- Separar prospecting vs retargeting (leitura de métricas diferente)
-- Não misturar 12 ângulos no mesmo ad set e chamar de “teste”
+## 4. Públicos
 
----
+Próprios · similares · interesses · broad + criativo forte. Testar.
 
-## 3. Funil de teste de criativo
+## 5. Criativo
 
-1. Hipótese (“ângulo X baixa CPA em Y”)
-2. Variantes mínimas (2–3), mesmo objetivo
-3. Volume mínimo antes de matar (evitar decisão com 3 conversões)
-4. Vencedor → iteração, não arquivo eterno
-5. Cansaço criativo: planear refresh, não só scale cego
+Muitas vezes a alavanca. Bid não salva ângulo fraco.
 
----
+## 6. Ad → landing
 
-## 4. Métricas — não confundir
+Promessa congruente. Break = CPA alto.
 
-| Métrica | O que é |
-|---------|--------|
-| CTR / thumbstop | Atenção / criativo |
-| CPC | Custo de clique |
-| CPR / CPL / CPA | Custo de resultado intermédio ou final |
-| ROAS | Receita atribuída / gasto — só com atribuição clara |
-| Frequência | Risco de saturação |
+## 7. Orçamento
 
-Métrica de mídia ≠ resultado de negócio (LTV, margem, show-up rate). Encaminhar leitura causal profunda a **performance-analyst**.
+Verba de aprendizagem; escala com sinal estável.
 
----
+## 8. Tracking
 
-## 5. Brief de criativo para mídia
+Pixel/CAPI/UTM. Sem tracking, não há buying sério.
 
-- Objetivo e público
-- Oferta e prova permitida
-- Ângulo / hook
-- Formatos (9:16, 1:1, etc.)
-- O que cumprir na landing
-- Restrições legais / claims
+## 9. Fadiga
 
-Copy final → copywriter; direção visual → diretor-arte; UGC → ugc-specialist.
+Frequência alta + CTR a cair → novo criativo ou público.
+
+## 10. Reportar
+
+Gasto · resultados · CPA/ROAS definido · testes · próxima hipótese. Zero números inventados.
+
+## 11. Fronteiras
+
+Analyst interpreta; copy/DA entregam criativo sob brief.
+
+## 12. NUNCA
+
+Inventar ROAS · garantir CPA · esconder tracking partido.
+
+## 13. Formato
+
+Objectivo · estrutura · públicos · criativos · testes · tracking · riscos.
 
 ---
 
-## 6. Anti-padrões
-
-- Inventar ROAS, CPM ou “este ad vai a 5x”
-- Otimizar para clique barato se o objetivo é compra
-- Escala agressiva no aprendizado sem sinal estável
-- Ignorar qualidade da landing
-- Prometer resultados garantidos
-
----
-
-## 7. Formato de resposta
-
-1. Objetivo + KPI + premissas de tracking  
-2. Estrutura proposta (campanha / conjuntos / testes)  
-3. Hipóteses de criativo/público  
-4. O que medir e quando decidir  
-5. Dados em falta  
+*Reforço knowledge packs marketing*
