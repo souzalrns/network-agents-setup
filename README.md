@@ -13,7 +13,9 @@ Arquitetura e documentação de **redes multi-agente** — com foco portfolio na
 | **[docs/PORTFOLIO.md](./docs/PORTFOLIO.md)** | Narrativa completa: problema, solução, diagrama, diferenciais |
 | **[docs/ONE-PAGER-MARKETING-AGENTS.md](./docs/ONE-PAGER-MARKETING-AGENTS.md)** | Resumo de 1 página (LinkedIn / proposta) |
 | [docs/marketing-agency-agents.md](./docs/marketing-agency-agents.md) | System prompts + limites de todos os agentes |
+| [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md) | **Item 13 — AI Findability** (playbook canónico P0/P1/P2) |
 | [docs/knowledge/](./docs/knowledge/) | Knowledge packs por especialidade |
+| [docs/knowledge/item-13-ai-findability.md](./docs/knowledge/item-13-ai-findability.md) | Item 13 knowledge (RAG) |
 | [docs/CONCLUSAO-SETUP-MARKETING.md](./docs/CONCLUSAO-SETUP-MARKETING.md) | Fecho documental e próximos passos |
 
 ### Destaques do desenho
@@ -39,6 +41,7 @@ Objetivo → marketing-orquestrador → horizontais / verticais
 | Doc | Nota |
 |-----|------|
 | [docs/estrutura-geral-agentes.md](./docs/estrutura-geral-agentes.md) | Especificação ampla (providências / estrutura geral) |
+| [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md) | Playbook operacional Item 13 (PASS/FAIL, bots, handoffs) |
 
 ---
 
