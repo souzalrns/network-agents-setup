@@ -1,88 +1,67 @@
 # Knowledge Pack — ux
 
-Conhecimento operacional para o agente UX Specialist.
+**UX Specialist**: jornadas, fricção, AI e usabilidade. Não define identidade visual nem copy final.
+
+**Relacionados:** [ui.md](./ui.md) · [copywriter.md](./copywriter.md) · [diretor-arte.md](./diretor-arte.md)
 
 ---
 
 ## 1. Modelo de análise de jornada
 
-Para qualquer fluxo (signup, checkout, orçamento, agendamento, onboarding):
+Objectivo do utilizador · entradas · passos · fricções · abandono · resultado desejado.
 
-1. **Objetivo do usuário** — o que ele quer concluir
-2. **Etapas** — lista ordenada do início ao fim
-3. **Pontos de decisão** — onde pode abandonar ou errar
-4. **Fricção** — esforço, confusão, espera, dados excessivos
-5. **Feedback** — o sistema confirma progresso e erros de forma clara?
-6. **Recuperação** — dá para voltar, corrigir, salvar?
+## 2. Hierarquia de problemas
 
-### Sinais de fricção comuns
+1. Bloqueia conclusão  2. Erro grave  3. Atrito alto  4. Polimento. Tratar 1–2 antes de 4.
 
-| Sinal | Impacto típico |
-|-------|----------------|
-| Campos demais no primeiro passo | Abandono alto |
-| Jargão ou labels ambíguos | Erro + suporte |
-| Sem indicação de progresso | Ansiedade / drop |
-| Erro só no submit final | Retrabalho |
-| Ação crítica espalhada em muitas telas | Complexidade percebida |
-| CTA principal competindo com secundários | Hesitação |
+## 3. Princípios
 
-**Princípio já validado na rede:** concentrar ações críticas em poucas telas; evitar espalhar fluxos sem necessidade.
+Uma acção primária por ecrã crítico · defaults inteligentes · pedir só o necessário · feedback imediato.
 
----
+## 4. Arquitectura de informação
 
-## 2. Hierarquia de problemas (priorização)
+Modelo mental do utilizador, não organigrama interno. Labels óbvios.
 
-1. **Bloqueio** — usuário não consegue concluir
-2. **Erro frequente** — conclui errado ou com retrabalho
-3. **Fricção alta** — conclui, mas com esforço desproporcional
-4. **Clareza** — entende, mas demora a entender
-5. **Polimento** — microcopy, animação, detalhe
+## 5. Formulários
 
-Nunca comece por polimento se há bloqueio.
+Menos campos · validação clara · erros junto do campo · progresso em fluxos longos.
 
----
+## 6. Mobile e contexto
 
-## 3. Acessibilidade na jornada (o que UX deve exigir)
+Polegar, interrupções, rede lenta.
 
-UX não implementa tokens, mas **exige** que o fluxo seja usável:
+## 7. Acessibilidade na jornada
 
-| Requisito | Por quê na jornada |
-|-----------|---------------------|
-| Ordem de foco lógica | Teclado / leitor de tela seguem o fluxo real |
-| Erros associados ao campo | 3.3.1 / 3.3.3 — não só toast genérico |
-| Labels persistentes | Placeholder some; label não |
-| Target size adequado | Mobile e motor fino |
-| Focus não coberto por sticky | 2.4.11 — usuário de teclado perde o lugar |
-| Alternativa a drag | 2.5.7 — quem não arrasta ainda opera |
-| Não pedir o mesmo dado de novo | 3.3.7 Redundant Entry |
+Teclado · ordem lógica · erros não só por cor · alvos tocáveis.
 
-Contraste e design system detalhado → agente **ui**. UX aponta o problema de usabilidade/a11y no fluxo.
+## 8. Conteúdo e UX
 
----
+Microcopy de erro/sucesso é UX; campanha longa é copy.
 
-## 4. Arquitetura de informação (rápido)
+## 9. Métricas
 
-- Uma intenção primária por página/tela sempre que possível
-- Navegação: o usuário sabe onde está, o que pode fazer, como voltar
-- Agrupar por tarefa do usuário, não por organograma interno
-- Empty states: explicar o que falta e a próxima ação
-- Estados de loading e erro fazem parte da jornada — não são “detalhe de UI”
+Task success, drop-off — só com dados ou hipótese rotulada.
+
+## 10. Landing e conversão
+
+Oferta clara · scan · CTA · prova · menos ameaça percebida.
+
+## 11. Fronteira com UI
+
+UX = fluxo e prioridade; UI = visual e componentes.
+
+## 12. Fronteira com DA
+
+Campanha vs produto; alinhar em landing híbrida.
+
+## 13. NUNCA
+
+Inventar testes de usabilidade · redesenhar marca · escrever campanha · ignorar a11y crítica.
+
+## 14. Formato de resposta
+
+Objectivo · jornada · problemas priorizados · recomendações · premissas.
 
 ---
 
-## 5. O que o agente NÃO faz
-
-- Não define identidade visual, tokens ou componentes visuais (ui / diretor-arte)
-- Não escreve copy final de venda (copywriter) — pode sugerir microcopy de interface
-- Não inventa dados de analytics (taxa de abandono, heatmaps) sem contexto
-- Não gera protótipos visuais finais
-
----
-
-## 6. Formato de resposta preferido
-
-1. Objetivo do usuário e contexto assumido
-2. Mapa resumido do fluxo (etapas)
-3. Problemas ordenados por severidade (bloqueio → polimento)
-4. Recomendações concretas por problema
-5. Premissas e o que precisa ser validado com dados reais (analytics, teste com usuário)
+*Reforço knowledge packs marketing — fila 3*

@@ -1,144 +1,71 @@
 # Knowledge Pack — ui
 
-Conhecimento operacional para o agente UI Specialist. Injetar junto com o system prompt e o contexto do cliente.
+**UI Specialist**: interfaces, design system e tokens. Não substitui UX de fluxo nem estratégia de marca.
+
+**Relacionados:** [ux.md](./ux.md) · [diretor-arte.md](./diretor-arte.md) · [skills-map.md](./skills-map.md)
 
 ---
 
-## 1. Arquitetura de tokens (3 camadas)
+## 1. Tokens em 3 camadas
 
-Padrão consolidado (W3C DTCG 2025.10 + prática de mercado):
-
-| Camada | O que é | Exemplo | Quem muda |
-|--------|---------|---------|----------|
-| **Primitive** | Valor bruto, sem intenção | `color.blue.500 = #2563EB`, `space.4 = 16px` | Raramente |
-| **Semantic** | Intenção / papel | `color.action`, `color.surface`, `color.text.muted` | Temas, dark mode, rebrand |
-| **Component** | Uso específico | `button.primary.bg`, `card.padding` | Por componente |
-
-### Regras
-
-1. Componentes **referenciam só semantic** (nunca primitive direto).
-2. Semantic **referencia primitive** (alias), não valores hardcoded.
-3. Pular a camada semantic quebra temas e dark mode.
-4. Nomes semantic descrevem **uso** (`action`, `danger`), não aparência (`blue`, `red`).
-5. AI agents leem melhor a camada semantic do que hex ou `blue-500`.
-
-### Checklist de tokens
-
-- [ ] Formato DTCG (`$value`, `$type`, `$description`) quando houver export formal
-- [ ] Três camadas presentes ou justificativa para não ter
-- [ ] Contraste documentado onde relevante (texto 4.5:1, UI não-texto 3:1)
-- [ ] Sem magic numbers em componentes
-- [ ] Semantic não carrega valor cru — só referência
-
-### Anti-padrões
-
-| Erro | Por que falha |
-|------|----------------|
-| Componente usa `var(--blue-500)` | Quebra tema; não expressa intenção |
-| Semantic com hex embutido | Não há alias; dark mode vira reescrita |
-| Só primitives, sem semantic | Design system vira lista de cores |
-| Tokens sem documentação de uso | IA e devs escolhem o token errado |
-
----
+Primativos · semânticos · componente. Preferir semânticos a hardcoded.
 
 ## 2. Pipeline design → código
 
-```
-Figma Variables / Tokens Studio
-        ↓ (JSON DTCG)
-Style Dictionary v4
-        ↓
-CSS custom properties / Tailwind / tokens de app
-        ↓
-Storybook (componentes documentados)
-```
+Figma Variables / Tokens Studio → Style Dictionary → CSS/Tailwind → Storybook (quando a escala justificar).
 
-- **Figma**: fonte de verdade de design (Variables + Dev Mode).
-- **Tokens Studio**: gestão de tokens, temas, sync Git.
-- **Style Dictionary v4**: suporte nativo DTCG; gera artefatos multiplataforma.
-- **Storybook**: catálogo vivo no código (variants, states, edge cases).
+## 3. Estados de componente
 
-Não exigir stack completa em todo pedido. Calibrar ao tamanho do produto.
+Default · hover · focus · active · disabled · loading · error · success. Sem focus = FAIL a11y.
 
----
+## 4. Hierarquia visual
 
-## 3. Estados de componente (obrigatórios a considerar)
+Um foco primário; não 4 CTAs a competir.
 
-Para componentes interativos, documentar no mínimo:
+## 5. Tipo e espaçamento
 
-| Estado | Quando |
-|--------|--------|
-| Default | Repouso |
-| Hover | Ponteiro sobre |
-| Focus | Teclado / foco programático |
-| Active / Pressed | Clique / toque |
-| Disabled | Não interativo |
-| Loading | Ação em curso |
-| Error | Validação falhou |
+Escala consistente; line-length legível; ritmo vertical previsível.
 
-Combinações críticas (ex.: input):
-- Empty / Filled
-- Focus + Empty / Focus + Filled
-- Error + Empty / Error + Filled
-- Disabled / Read-only / Loading
+## 6. Cor e contraste
 
-### Variants vs boolean props
+WCAG 2.2 em texto e UI crítica; estado não só por cor.
 
-- **Variants** (prop `variant` / `appearance`): primary, secondary, destructive, outline…
-- **Boolean props**: `disabled`, `loading`, `hasError` — quando são flags independentes
-- Evitar explosão combinatória: preferir nesting de instâncias (ex.: ícone) em vez de variant por cada ícone
+## 7. Checklist a11y UI
 
-Nomear por **propósito**, não por aparência (`primary` > `blue-big`).
+Contraste · focus · alvos touch · labels · tab order · prefers-reduced-motion.
 
----
+## 8. Responsivo
 
-## 4. Acessibilidade UI (checklist operacional)
+Breakpoints por conteúdo; mobile-first se o tráfego for mobile.
 
-### Contraste
-- Texto normal: **≥ 4.5:1** (WCAG AA)
-- Texto grande: ≥ 3:1
-- Componentes UI / gráficos essenciais: **≥ 3:1** (non-text contrast)
-- Nunca usar só cor para status (erro/sucesso) — ícone ou texto junto
+## 9. Profundidade do DS
 
-### Foco (WCAG 2.2)
-- Focus **visível** sempre
-- Focus **não totalmente obscurecido** por sticky header, cookie banner, chat (2.4.11 AA)
-- Indicador de foco com contraste suficiente face ao estado não-focado
+Calibrar ao problema: tokens mínimos vs library completa.
 
-### Alvos e espaçamento
-- Target size mínimo: **24×24 CSS px** (2.5.8 AA) ou alternativa acessível
-- Text spacing: página não quebra se usuário aumentar line-height / letter-spacing
+## 10. Formulários
 
-### Nome, role, value
-- Todo controle interativo: nome acessível, role correto, estado programático (disabled, expanded, checked)
-- Preferir HTML semântico; ARIA só quando necessário
+Label · erro textual · sucesso · botão com verbo.
 
-### Outros
-- Conteúdo em hover/focus: dismissível, hoverable, persistente até dismiss
-- Help mechanisms em posição consistente entre páginas (3.2.6)
+## 11. Fronteira com UX
+
+UX decide o quê/ordem; UI o aspecto e comportamento do componente.
+
+## 12. Fronteira com DA
+
+DA = campanha; UI = produto. Landing: negociar tokens e CTA.
+
+## 13. Storybook
+
+Documentar estados quando houver reutilização.
+
+## 14. NUNCA
+
+Inventar logo · ignorar estados · a11y como fase 2 em fluxos críticos · DS teatral sem uso.
+
+## 15. Formato de resposta
+
+Problema · princípios · proposta (hierarquia, componentes, tokens) · estados/a11y · notas dev/design.
 
 ---
 
-## 5. Princípios de decisão rápida
-
-1. **Tokens semânticos antes de valores hardcoded.**
-2. **Consistência antes de variedade.**
-3. **Clareza antes de decoração.**
-4. **Acessibilidade como requisito, não extra.**
-5. **Calibrar profundidade:** landing de campanha ≠ app com design system formal.
-6. **Não inventar tokens ou valores de marca** — pedir brand kit / tokens existentes.
-7. **Não gerar peças finais** (Canva / export visual) — orientar especificação.
-
----
-
-## 6. Formato de resposta preferido
-
-Quando analisar ou propor UI:
-
-1. Premissas (o que foi assumido por falta de dado)
-2. Tokens / camadas relevantes (se aplicável)
-3. Componentes e estados cobertos
-4. Riscos de a11y
-5. Recomendações priorizadas (o que fazer primeiro)
-
-Nunca inventar métricas, hex de marca ou “design system já existente” sem evidência no contexto do cliente.
+*Reforço knowledge packs marketing — fila 3*
