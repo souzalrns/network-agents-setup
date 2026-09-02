@@ -6,7 +6,15 @@ Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.
 
 ---
 
-## Inventário completo
+## Import da produção (2026-09-02)
+
+Cópia de trabalho em **[imported-from-production/](./imported-from-production/)** — marketing-base, a11y/SEO, comunicações, TDD, security/DB, radar opensource, padrões de erros de IA e addendum de orquestradores.
+
+Editar **aqui**. Produção permanece operacional.
+
+---
+
+## Inventário packs nativos do setup
 
 ### Discoverability e produto
 | Pack | Agente |
@@ -47,7 +55,7 @@ Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.
 | Pack | Uso |
 |------|-----|
 | [marketing-orquestrador.md](./marketing-orquestrador.md) | knowledge do orquestrador |
-| [orquestrador-playbook.md](./orquestrador-playbook.md) | **fluxos A–E + handoffs** |
+| [orquestrador-playbook.md](./orquestrador-playbook.md) | fluxos A–E + handoffs |
 | [imported-from-harnesses.md](./imported-from-harnesses.md) | regras multi-agente |
 | [skills-map.md](./skills-map.md) | skill → agente |
 | [vertical-client-context.md](./vertical-client-context.md) | ficha de cliente |
@@ -60,6 +68,8 @@ Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.
 |--------|--------|
 | Horizontais — prompt + knowledge | Completo |
 | Playbook do orquestrador | Feito |
+| Import produção (lote 1) | **Feito 2026-09-02** |
+| Skills `.claude` da produção | Pendente (lote 2) |
 | Verticais | Prompt + template de ficha |
 | Produção (`agent-network-mcp`) | **Intocada** |
 | Piloto real | Pendente |
