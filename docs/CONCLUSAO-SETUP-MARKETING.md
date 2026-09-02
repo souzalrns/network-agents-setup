@@ -8,47 +8,36 @@ Documentação de sistema da agência multi-agente (horizontais + verticais + or
 |------------|------|
 | Portfolio | [PORTFOLIO.md](./PORTFOLIO.md) |
 | One-pager | [ONE-PAGER-MARKETING-AGENTS.md](./ONE-PAGER-MARKETING-AGENTS.md) |
-| System prompts + limites | [marketing-agency-agents.md](./marketing-agency-agents.md) |
-| Playbook Item 13 | [item-13-ai-findability.md](./item-13-ai-findability.md) + [knowledge/ai-findability.md](./knowledge/ai-findability.md) |
+| System prompts | [marketing-agency-agents.md](./marketing-agency-agents.md) |
+| Playbook Item 13 | [item-13-ai-findability.md](./item-13-ai-findability.md) |
+| **T6 Ingest RAG** | [T6-INGEST-PIPELINE.md](./T6-INGEST-PIPELINE.md) |
 | Knowledge packs | [knowledge/](./knowledge/) |
-| Playbook orquestrador | [knowledge/orquestrador-playbook.md](./knowledge/orquestrador-playbook.md) |
-| Ficha cliente (verticais) | [knowledge/vertical-client-context.md](./knowledge/vertical-client-context.md) |
+| Ficha cliente | [knowledge/vertical-client-context.md](./knowledge/vertical-client-context.md) |
 
 ## Padrão de invocação
 
 ```text
-[SYSTEM]    docs/marketing-agency-agents.md  (papel)
-[KNOWLEDGE] docs/knowledge/<agente>.md  (+ item-13 / ai-findability se discoverability)
-[CLIENT]    vertical-client-context preenchido
-[TASK]      pedido concreto
+[SYSTEM]    marketing-agency-agents.md
+[KNOWLEDGE] knowledge/<agente>.md (+ item-13 se discoverability)
+[CLIENT]    vertical-client-context
+[TASK]      pedido
 ```
 
 ## Estado
 
-- **Knowledge packs:** horizontais + verticais + Item 13 reforçados.
-- **System prompts:** links Knowledge por papel.
-- **Runtime de produção:** fora deste repo (`agent-network-mcp`).
+- Knowledge packs horizontais + verticais + Item 13: **documentados**
+- Ownership rede Item 13: tech P0 + marketing P1 + skills (playbook §11)
+- **T6 pipeline:** especificado — implementação na rede (CI + Supabase)
+- Runtime MCP: repo separado
 
-## Knowledge (pós-reforço)
+## Próximos passos
 
-| Camada | Estado |
-|--------|--------|
-| Item 13 | Playbook + RAG + ownership setup e rede |
-| Horizontais | Packs operacionais completos |
-| Verticais | Packs + template CLIENT |
-| Runtime MCP | Repo separado |
+1. Implementar T6 na rede (dry-run → CI)
+2. Piloto CLIENT real
+3. Piloto Item 13 site live (lab vs canónico)
 
-## Próximos passos (opcional)
+## Ownership Item 13 (rede)
 
-1. Piloto com ficha CLIENT real.
-2. Piloto Item 13 em site live (lab vs canónico).
-3. Wiring skills / MCP no runtime.
-4. Pipeline de ingestão (hash/delta/purga/CI) — evitar chunks stale.
-
-## Item 13 — resumo
-
-**Setup (desenho):** `ai-visibility` lead ← `seo-specialist` P0 ← copy/content ← critic.
-**Rede (execução):** `produto-tech-transversal` (P0) + `marketing` (P1) + skills searchfit-seo / content / brand-review. Ver playbook §11.
-Bots default: Allow search/answer; Disallow GPTBot e Google-Extended.
+`produto-tech-transversal` (P0) + `marketing` (P1) + skills searchfit-seo / content / brand-review. Sem agent novo obrigatório.
 
 *LRNSdigital*
