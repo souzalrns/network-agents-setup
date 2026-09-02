@@ -1,8 +1,2 @@
-node_modules/
-dist/
-build/
-.env
-*.log
-.DS_Store
-coverage/
-.turbo/
+# T6 local hash state
+.ingest-state.json
