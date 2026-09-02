@@ -1,4 +1,3 @@
-<!-- COPIA de agent-network-mcp/.claude/skills/idea-refine/scripts/idea-refine.sh — 2026-09-02 — setup only -->
 #!/bin/bash
 set -e
 
