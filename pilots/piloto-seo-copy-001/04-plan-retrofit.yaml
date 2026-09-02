@@ -1,0 +1,19 @@
+# Retrofit: piloto 001 visto como Plan-Execute (já executado manualmente)
+plan_id: piloto-seo-copy-001
+created_at: "2026-09-03"
+goal: "Hub cidadania portuguesa netos — brief SEO + copy answer-first (executado)"
+status: done
+notes: "Execução manual pelo assistente; artefactos 00-03 na mesma pasta. Schema formal em docs/architecture/plan-execute/"
+steps_completed:
+  - id: "1"
+    action: seo_brief
+    output_artifact: pilots/piloto-seo-copy-001/01-seo-brief.md
+  - id: "2"
+    action: copy_answer_first
+    output_artifact: pilots/piloto-seo-copy-001/02-copy-answer-first.md
+  - id: "3"
+    action: verify_checklist
+    output_artifact: pilots/piloto-seo-copy-001/03-resultado-piloto.md
+verify:
+  human_gate: true
+  human_gate_when: "Revisão jurídica antes de publicar"

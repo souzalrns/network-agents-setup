@@ -1,0 +1,78 @@
+plan_id: piloto-seo-copy-002-netos
+created_at: "2026-09-03T00:00:00Z"
+goal: "Produzir brief SEO e copy answer-first para hub /cidadania-portuguesa/netos (ViannaLegal), alinhado ao Item 13, sem publicar em produção."
+
+context:
+  brand: ViannaLegal
+  audience: "Brasileiros netos de português de origem, a avaliar elegibilidade e próximos passos"
+  constraints:
+    - "Item 13: HTML real no lab, answer-first, entity, E-E-A-T, anti-canibalização"
+    - "Sem prometer aprovação jurídica ou prazos exactos de IRN"
+    - "Não tocar viannalegal.com.br nem agent-network-mcp"
+    - "Copy final exige revisão jurídica antes de qualquer publish"
+  knowledge_refs:
+    - docs/knowledge/imported-from-production/marketing-base.md
+    - docs/knowledge/imported-from-production/produto-tech-a11y-seo.md
+    - pilots/piloto-seo-copy-001/01-seo-brief.md
+
+steps:
+  - id: "1"
+    name: "Brief SEO hub netos"
+    action: seo_brief
+    inputs: [goal, context]
+    tools_allowed: [read_repo_file, web_search]
+    output_artifact: pilots/piloto-seo-copy-002/01-seo-brief.md
+    output_schema: SeoBrief
+    done_when:
+      - "intent_primary definido"
+      - "title, meta_description, h1 únicos"
+      - "h2_outline com bloco answer-first no topo"
+      - "faq com pelo menos 5 perguntas"
+      - "cannibalization_risks documentados (vs filhos, blog antigo, residência)"
+      - "item13_notes preenchidas"
+    on_fail: human
+    model_tier: executor
+
+  - id: "2"
+    name: "Copy answer-first"
+    action: copy_answer_first
+    inputs: [steps.1.output_artifact]
+    tools_allowed: [read_repo_file]
+    output_artifact: pilots/piloto-seo-copy-002/02-copy-answer-first.md
+    output_schema: CopyAnswerFirst
+    done_when:
+      - "parágrafo de resposta acima da dobra"
+      - "CTA primário único"
+      - "disclaimer jurídico presente"
+      - "sem claims de prazo garantido ou aprovação certa"
+      - "alinhado ao SeoBrief (H1 e FAQ)"
+    on_fail: replan
+    model_tier: executor
+
+  - id: "3"
+    name: "Critic Item 13 + copy bans"
+    action: critic_item13
+    inputs: [steps.1.output_artifact, steps.2.output_artifact]
+    tools_allowed: [read_repo_file]
+    output_artifact: pilots/piloto-seo-copy-002/03-critic-report.md
+    output_schema: CriticReport
+    done_when:
+      - "pass true ou gaps listados com severidade"
+      - "item13_score 1-5 justificado"
+      - "publish_ready false salvo gate humano jurídico"
+    on_fail: human
+    model_tier: verifier
+
+verify:
+  checks:
+    - "Artefactos 01-03 existem"
+    - "Nenhum path de produção alterado"
+    - "CriticReport.publish_ready implica human_gate"
+  human_gate: true
+  human_gate_when: "Antes de qualquer uso em lab público com claims jurídicos sensíveis ou merge para site"
+
+budget:
+  max_replans: 2
+  max_steps: 6
+
+status: draft
