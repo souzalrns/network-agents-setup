@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network-agents-setup.local/schemas/CopyAnswerFirst.schema.json",
+  "title": "CopyAnswerFirst",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hero",
+    "sections",
+    "faq_final",
+    "disclaimer",
+    "meta_title",
+    "meta_description"
+  ],
+  "properties": {
+    "hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["h1", "answer_paragraph", "cta"],
+      "properties": {
+        "h1": { "type": "string", "minLength": 1 },
+        "answer_paragraph": { "type": "string", "minLength": 40 },
+        "cta": { "type": "string", "minLength": 1 }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["heading", "body"],
+        "properties": {
+          "heading": { "type": "string", "minLength": 1 },
+          "body": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "faq_final": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["question", "answer"],
+        "properties": {
+          "question": { "type": "string", "minLength": 1 },
+          "answer": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "disclaimer": { "type": "string", "minLength": 20 },
+    "meta_title": { "type": "string", "minLength": 1, "maxLength": 70 },
+    "meta_description": { "type": "string", "minLength": 1, "maxLength": 160 }
+  }
+}

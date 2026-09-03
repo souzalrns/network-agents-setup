@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://network-agents-setup.local/schemas/Plan.schema.json",
+  "title": "PlanExecute",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["plan_id", "created_at", "goal", "context", "steps", "verify", "budget", "status"],
+  "properties": {
+    "plan_id": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "goal": { "type": "string", "minLength": 1 },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["brand", "audience", "constraints", "knowledge_refs"],
+      "properties": {
+        "brand": { "type": "string" },
+        "audience": { "type": "string" },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "knowledge_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "action",
+          "inputs",
+          "depends_on",
+          "tools_allowed",
+          "output_artifact",
+          "output_schema",
+          "done_when",
+          "on_fail",
+          "model_tier"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "action": { "type": "string" },
+          "inputs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "IDs de steps que devem estar done antes deste"
+          },
+          "tools_allowed": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "output_artifact": { "type": "string" },
+          "output_schema": {
+            "type": "string",
+            "enum": ["SeoBrief", "CopyAnswerFirst", "CriticReport"]
+          },
+          "done_when": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" }
+          },
+          "on_fail": {
+            "type": "string",
+            "enum": ["replan", "abort", "human"]
+          },
+          "model_tier": {
+            "type": "string",
+            "enum": ["planner", "executor", "verifier"]
+          }
+        }
+      }
+    },
+    "verify": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checks", "human_gate", "human_gate_when"],
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "human_gate": { "type": "boolean" },
+        "human_gate_when": { "type": "string" }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_replans", "max_steps"],
+      "properties": {
+        "max_replans": { "type": "integer", "minimum": 0 },
+        "max_steps": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "approved", "running", "done", "aborted"]
+    }
+  }
+}

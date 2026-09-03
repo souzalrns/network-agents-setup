@@ -20,6 +20,7 @@ steps:
     name: "Brief SEO hub netos"
     action: seo_brief
     inputs: [goal, context]
+    depends_on: []
     tools_allowed: [read_repo_file, web_search]
     output_artifact: pilots/piloto-seo-copy-002/01-seo-brief.md
     output_schema: SeoBrief
@@ -37,6 +38,7 @@ steps:
     name: "Copy answer-first"
     action: copy_answer_first
     inputs: [steps.1.output_artifact]
+    depends_on: ["1"]
     tools_allowed: [read_repo_file]
     output_artifact: pilots/piloto-seo-copy-002/02-copy-answer-first.md
     output_schema: CopyAnswerFirst
@@ -53,6 +55,7 @@ steps:
     name: "Critic Item 13 + copy bans"
     action: critic_item13
     inputs: [steps.1.output_artifact, steps.2.output_artifact]
+    depends_on: ["1", "2"]
     tools_allowed: [read_repo_file]
     output_artifact: pilots/piloto-seo-copy-002/03-critic-report.md
     output_schema: CriticReport

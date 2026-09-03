@@ -4,7 +4,11 @@ Padrão: **Planner** gera plano explícito → **Executor** corre passos com too
 
 | Ficheiro | Uso |
 |----------|-----|
-| `plan.schema.md` | Contrato dos campos do plano |
+| `plan.schema.md` | Contrato documental dos campos |
+| `schemas/Plan.schema.json` | Validação formal do plano (`depends_on` obrigatório) |
+| `schemas/SeoBrief.schema.json` | Output passo SEO |
+| `schemas/CopyAnswerFirst.schema.json` | Output passo copy |
+| `schemas/CriticReport.schema.json` | Output passo critic |
 | `examples/piloto-netos.plan.yaml` | Exemplo preenchido (hub netos) |
 | `../../pilots/piloto-seo-copy-001/` | Artefactos já executados (manual) |
 

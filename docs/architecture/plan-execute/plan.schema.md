@@ -7,6 +7,15 @@
 
 Contrato máquina-legível (e legível por humanos) entre **Planner** e **Executor**.
 
+## Validação formal
+
+| Artefacto | JSON Schema |
+|-----------|-------------|
+| Plano completo | [`schemas/Plan.schema.json`](./schemas/Plan.schema.json) |
+| SeoBrief | [`schemas/SeoBrief.schema.json`](./schemas/SeoBrief.schema.json) |
+| CopyAnswerFirst | [`schemas/CopyAnswerFirst.schema.json`](./schemas/CopyAnswerFirst.schema.json) |
+| CriticReport | [`schemas/CriticReport.schema.json`](./schemas/CriticReport.schema.json) |
+
 ## Schema (campos)
 
 ```yaml
@@ -22,11 +31,12 @@ context:
 steps:
   - id: string           # "1", "2", ...
     name: string
-    action: string       # identificador estável: seo_brief | copy_answer_first | critic_item13
+    action: string       # seo_brief | copy_answer_first | critic_item13
     inputs: [string]     # refs a goal, steps anteriores, knowledge
+    depends_on: [string] # IDs de steps que devem estar done antes (ex: ["1"])
     tools_allowed: [string]
     output_artifact: string  # path relativo esperado
-    output_schema: string    # nome do contrato de saída
+    output_schema: string    # SeoBrief | CopyAnswerFirst | CriticReport
     done_when: [string]      # critérios testáveis
     on_fail: replan | abort | human
     model_tier: planner | executor | verifier
@@ -43,6 +53,13 @@ budget:
 status: draft | approved | running | done | aborted
 ```
 
+### `depends_on`
+
+- Lista de `steps[].id` que têm de estar concluídos antes deste passo.
+- Passo inicial: `depends_on: []`.
+- Runtime: não iniciar o passo enquanto dependências ≠ done.
+- Complementa `inputs` (inputs = dados; depends_on = ordem/gate).
+
 ## Regras
 
 1. O **Planner** não escreve em produção nem chama tools destrutivas.
@@ -50,8 +67,11 @@ status: draft | approved | running | done | aborted
 3. Sem `done_when`, o passo é inválido.
 4. `human_gate: true` bloqueia publicação / git push / DNS.
 5. Replan só com evidência do passo falhado; respeitar `max_replans`.
+6. Todo passo (exceto o primeiro) deve declarar `depends_on` explícito.
 
 ## Output schemas de referência (marketing + Item 13)
+
+Ver JSON Schema em `schemas/`. Resumo:
 
 ### SeoBrief
 - intent_primary, queries, unique_promise
@@ -71,6 +91,6 @@ status: draft | approved | running | done | aborted
 
 ### CriticReport
 - pass: boolean
-- gaps[]
+- gaps[] (severity, message, field?)
 - item13_score: 1-5
 - publish_ready: boolean  # nunca true sem human_gate se jurídico
