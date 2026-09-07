@@ -1,0 +1,34 @@
+id: template-internal-brief
+version: 1
+deliverable_type: internal_brief
+objective: "(preencher)"
+
+budget:
+  max_steps: 6
+  max_replans: 1
+
+steps:
+  - id: gather
+    action: research
+    tools_allowed: [read_repo_file, web_search]
+    output_artifact: artifacts/01-context.md
+
+  - id: brief
+    action: internal_brief
+    depends_on: [gather]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/02-internal-brief.md
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [brief]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/03-hitl.json
+
+done_when:
+  - artifacts/02-internal-brief.md exists
+  - human_gate_resolved on hitl

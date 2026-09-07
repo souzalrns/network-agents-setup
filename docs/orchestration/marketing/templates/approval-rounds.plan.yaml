@@ -1,0 +1,67 @@
+# Até 3 rodadas de revisão criativa (padrão ASV reescrito)
+id: template-approval-rounds
+version: 1
+deliverable_type: approval_rounds
+objective: "(preencher — peça já existente em artifacts/00-draft.*)"
+
+budget:
+  max_steps: 12
+  max_replans: 3
+
+steps:
+  - id: review_r1
+    action: creative_review
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-review-r1.json
+
+  - id: hitl_r1
+    action: plan_approve
+    depends_on: [review_r1]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/02-hitl-r1.json
+
+  - id: revise_r2
+    action: copy_answer_first
+    depends_on: [hitl_r1]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/03-copy-r2.md
+    on_fail: human
+
+  - id: review_r2
+    action: creative_review
+    depends_on: [revise_r2]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/04-review-r2.json
+
+  - id: hitl_r2
+    action: plan_approve
+    depends_on: [review_r2]
+    human_gate:
+      level: step
+      kind: confirmation
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl-r2.json
+
+  - id: final_or_r3
+    action: creative_review
+    depends_on: [hitl_r2]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/06-review-final.json
+
+  - id: hitl_final
+    action: plan_approve
+    depends_on: [final_or_r3]
+    human_gate:
+      level: step
+      kind: confirmation
+      allow: [approve, reject]
+    tools_allowed: []
+    output_artifact: artifacts/07-hitl-final.json
+
+done_when:
+  - human_gate_resolved on hitl_final
