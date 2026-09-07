@@ -1,0 +1,63 @@
+# Template — seo_article (genérico)
+# Orquestrador de marketing preenche objective/audience; workers só nos steps.
+
+id: template-seo-article
+version: 1
+deliverable_type: seo_article
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 10
+  max_replans: 2
+
+steps:
+  - id: research
+    action: research
+    tools_allowed: [read_repo_file, web_search]
+    output_artifact: artifacts/01-research.md
+    on_fail: human
+
+  - id: seo_brief
+    action: seo_brief
+    depends_on: [research]
+    tools_allowed: [read_repo_file, web_search]
+    output_artifact: artifacts/02-seo-brief.json
+    output_schema: SeoBrief
+    # Item 13: campos no schema / notas obrigatórias no brief
+    on_fail: human
+
+  - id: copy
+    action: copy_answer_first
+    depends_on: [seo_brief]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/02-seo-brief.json]
+    output_artifact: artifacts/03-copy.md
+    output_schema: CopyAnswerFirst
+    on_fail: retry
+
+  - id: critic
+    action: critic_item13
+    depends_on: [copy]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/02-seo-brief.json, artifacts/03-copy.md]
+    output_artifact: artifacts/04-critic.json
+    output_schema: CriticReport
+    on_fail: human
+
+  - id: hitl_publish_decision
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl.json
+
+done_when:
+  - artifacts/02-seo-brief.json exists
+  - artifacts/03-copy.md exists
+  - artifacts/04-critic.json exists
+  - human_gate_resolved on hitl_publish_decision
+  - no external_publish without approve

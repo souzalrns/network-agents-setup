@@ -1,0 +1,60 @@
+# Template — social_pack (genérico)
+
+id: template-social-pack
+version: 1
+deliverable_type: social_pack
+objective: "(preencher)"
+channels: []  # ex. instagram, tiktok
+
+budget:
+  max_steps: 10
+  max_replans: 2
+
+steps:
+  - id: trends
+    action: trend_hunter
+    tools_allowed: [web_search, read_repo_file]
+    output_artifact: artifacts/01-trends.md
+    on_fail: human
+
+  - id: research
+    action: research
+    depends_on: [trends]
+    tools_allowed: [web_search, read_repo_file]
+    output_artifact: artifacts/02-research.md
+
+  - id: copy_social
+    action: copy_social
+    depends_on: [research]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/03-social-copy.md
+    on_fail: retry
+
+  - id: storytelling
+    action: storytelling
+    depends_on: [copy_social]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/04-story.md
+
+  - id: critic
+    action: critic
+    depends_on: [storytelling]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/05-critic.json
+    on_fail: human
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: confirmation
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/06-hitl.json
+
+done_when:
+  - artifacts/03-social-copy.md exists
+  - artifacts/05-critic.json exists
+  - human_gate_resolved on hitl
+  # publish em redes = sempre fora deste template sem approve explícito extra
