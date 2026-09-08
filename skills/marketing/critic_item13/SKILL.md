@@ -1,7 +1,7 @@
 ---
 name: critic_item13
 action: critic_item13
-version: 1
+version: 2
 vertical: marketing
 priority: P0
 item_13: true
@@ -11,61 +11,43 @@ item_13: true
 
 ## Quando usar
 
-- Step `action: critic_item13` (ou `critic` em peças discoverable) após copy/brief.
+- Apos copy/brief em pecas discoverable.
 
-## Não usar
+## Alvo de avaliacao
 
-- Para reescrever a peça inteira (devolver gaps; replan/copy corrige).
-- Para aprovar publish (humano no HITL).
+Avaliar citabilidade para **sistemas de IA em geral** (ChatGPT, Claude, Gemini, Perplexity, Copilot, AI overviews, RAG) — **nao** apenas visibilidade Google.
 
-## Inputs
-
-- Seo brief + copy (paths em `inputs`)
-- Playbook Item 13 e knowledge ai-findability
-- Rubrica: `docs/knowledge/marketing/creative-review-rubric.md` (dimensão Item 13 + resto se útil)
-
-## Tools
-
-Tipicamente só `read_repo_file`.
+SEO tecnico SERP e complementar; falhas so de ranking Google **nao** esgotam o Item 13.
 
 ## Processo
 
-1. Verificar alinhamento copy ↔ brief (intent, outline, unique promise).
-2. Checklist Item 13 (PASS/FAIL por item; adaptar ao playbook do repo):
-   - resposta citável cedo
+1. Alinhamento copy ↔ brief.
+2. Checklist Item 13 (PASS/FAIL):
+   - resposta citavel cedo
    - entidades claras
-   - FAQ ou equivalente estruturado
-   - headings úteis a extracção
-   - claims rastreáveis
-   - risco thin/canibalização se aplicável
-3. Blockers vs suggestions (blocker = impede `publish_ready`).
-4. Scores 1–5 se usares rubrica multi-dimensão.
-5. `publish_ready`: true **só** se blockers vazio e (se scores) média ≥ 4.
+   - FAQ ou equivalente
+   - headings uteis a extracao
+   - claims rastreaveis
+   - discurso multi-IA (nao reduzido indevidamente a um unico motor)
+   - thin/canibalizacao se aplicavel
+3. Blockers vs suggestions.
+4. `publish_ready`: true so sem blockers e media >= 4 se houver scores.
 
-## Saída (`CriticReport` / JSON)
+## Saida
 
 ```json
 {
   "publish_ready": false,
   "scores": {},
-  "item_13": {
-    "pass": [],
-    "fail": []
-  },
+  "item_13": { "pass": [], "fail": [] },
   "blockers": [],
   "suggestions": [],
   "summary": ""
 }
 ```
 
-## done_when
+## Anti-padroes
 
-- [ ] `publish_ready` boolean explícito
-- [ ] Pelo menos uma secção item_13 ou equivalenте fail/pass
-- [ ] Blockers acionáveis (o que mudar)
-
-## Anti-padrões
-
-- "Está bom" sem critérios
-- publish_ready true com fail Item 13 P0
-- Reescrever o artigo dentro do critic
+- Aprovar so porque "teria bom SEO Google"
+- publish_ready com fail Item 13 P0
+- Reescrever o artigo inteiro no critic

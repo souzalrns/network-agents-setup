@@ -1,7 +1,7 @@
 ---
 name: seo_brief
 action: seo_brief
-version: 1
+version: 2
 vertical: marketing
 priority: P0
 item_13: true
@@ -13,39 +13,49 @@ item_13: true
 
 - Step `action: seo_brief` (templates `seo_article`, `landing_copy`, `full_content_piece`).
 
-## Não usar
+## Nao usar
 
 - Escrever o artigo completo (→ `copy_answer_first`).
-- Auditoria técnica de URL live (→ `seo_tech_audit`).
+- Auditoria tecnica de URL live (→ `seo_tech_audit`).
+
+## Alvo de descoberta (obrigatorio ler)
+
+O brief **nao** e so "para o Google". Item 13 cobre **multi-IA**, incluindo de forma nao exclusiva:
+
+- Assistentes: **ChatGPT, Claude, Gemini, Copilot**, …
+- Resposta com fontes: **Perplexity** e similares
+- AI search / overviews (Google e outros)
+- Qualquer RAG/agent que recupere a peca
+
+SEO classico (intent, queries, outline) **permanece**; o bloco **item_13** e para **citabilidade e recomendacao por sistemas generativos**, nao so rankings SERP.
+
+Ver: `docs/knowledge/marketing/multi-ai-findability.md`.
 
 ## Inputs
 
 - Research artefact se `depends_on` incluir research
 - Objective, audience, constraints do plan
-- Knowledge Item 13: `docs/item-13-ai-findability.md`, `docs/knowledge/ai-findability.md` se existirem
+- Knowledge Item 13 + multi-ai-findability
 
 ## Tools
 
-Respeitar `tools_allowed` (ex. `read_repo_file`, `web_search`).
+Respeitar `tools_allowed`.
 
 ## Processo
 
-1. Definir **primary intent** (informational / commercial / navigational).
-2. Primary query + 3–8 secondary queries.
-3. Outline H1/H2 alinhado à intent (answer-first).
-4. Bloco **Item 13** (obrigatório):
+1. **Primary intent** (informational / commercial / navigational).
+2. Primary query + 3–8 secondary (linguagem natural como utilizadores perguntam a **assistentes e** a motores).
+3. Outline H1/H2 answer-first.
+4. Bloco **Item 13** (obrigatorio):
    - entidades nomeadas
-   - perguntas FAQ (3–5) que a peça deve responder de forma citável
-   - o que um sistema de IA deve conseguir extrair/recomendar
-   - riscos de thin/canibalização se conhecidos
-5. Unique promise (o que esta URL oferece que genéricos não).
-6. Schema sugerido (FAQPage, Article, …) se aplicável.
+   - FAQ 3–5 **citaveis** (pergunta como se fosse feita a um assistente)
+   - `ai_extractable_claims`: frases que GPT/Claude/Gemini/etc. possam reutilizar com fidelidade
+   - `structure_notes`: o que ajuda extracão multi-modelo (nao so snippet Google)
+   - riscos thin/canibalizacao / claims de "garantia de citacao"
+5. Unique promise.
+6. Schema sugerido (FAQPage, Article, …) se aplicavel.
 
-## Saída
-
-Preferir JSON alinhado a schema `SeoBrief` quando o plan o exigir.
-
-Campos mínimos:
+## Saida (minimo)
 
 ```json
 {
@@ -54,6 +64,7 @@ Campos mínimos:
   "secondary_queries": [],
   "outline": [],
   "unique_promise": "",
+  "discovery_targets": ["assistants", "ai_search", "classic_serp"],
   "item_13": {
     "entities": [],
     "faq": [],
@@ -66,16 +77,21 @@ Campos mínimos:
 }
 ```
 
+`discovery_targets` default: incluir assistants + ai_search; `classic_serp` se tambem houver objectivo de ranking tradicional.
+
 ## done_when
 
-- [ ] primary_query + intent preenchidos
-- [ ] outline com H1 implícito/explícito
-- [ ] `item_13` com FAQ ≥ 3 ou risks a explicar porque não
-- [ ] unique_promise não vazio
+- [ ] primary_query + intent
+- [ ] outline com resposta cedo
+- [ ] item_13 com FAQ >= 3 ou risks a explicar
+- [ ] unique_promise
+- [ ] linguagem do brief **nao** reduz Item 13 a "so Google" (salvo objective explicitamente SERP-only)
 
-## Anti-padrões
+## Anti-padroes
 
-- Outline genérico "Introdução / Desenvolvimento / Conclusão" sem intent
+- Tratar Item 13 como sinonimo de ranking Google
+- "Garantir aparecer no ChatGPT/Claude"
+- Outline generico sem intent
 - Item 13 omitido
-- Keyword stuffing como estratégia
-- Brief que já é o artigo completo
+- Keyword stuffing
+- Brief = artigo completo

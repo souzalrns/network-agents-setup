@@ -1,7 +1,7 @@
 ---
 name: copy_answer_first
 action: copy_answer_first
-version: 1
+version: 2
 vertical: marketing
 priority: P0
 ---
@@ -10,59 +10,28 @@ priority: P0
 
 ## Quando usar
 
-- Step `action: copy_answer_first` após `seo_brief` (ou brief equivalente).
+- Apos `seo_brief`.
 
-## Não usar
+## Descoberta
 
-- Pack só social (→ `copy_social`) salvo o plan diga explicitamente esta action.
-- Decisões de publish (→ HITL).
-
-## Inputs
-
-- `artifacts/...-seo-brief.json` (ou path em `inputs`)
-- Research se disponível
-- Brand kit / constraints do plan
-
-## Tools
-
-Só `tools_allowed` (em geral `read_repo_file`).
+Escrever para **humanos + assistentes/motores generativos** (GPT, Claude, Gemini, Perplexity, …), nao apenas para snippet de um unico buscador.
 
 ## Processo
 
-1. Ler o brief; não contradizer primary intent nem unique promise.
-2. **Resposta directa** nas primeiras linhas (answer-first).
-3. Desenvolver outline do brief; cada H2 deve entregar valor.
-4. Incorporar FAQs Item 13 como secções ou bloco FAQ claros.
-5. Claims verificáveis; se assumption, dizer.
-6. CTA só se o brief/objective pedirem; sem promessas ilegais.
-
-## Saída
-
-Markdown (tipicamente `artifacts/03-copy.md`):
-
-```markdown
-# {título alinhado ao H1}
-
-{resposta directa em 2–5 frases}
-
-## ...
-
-## FAQ
-### ...
-```
-
-Se `output_schema: CopyAnswerFirst`, incluir também campos estruturados exigidos pelo schema do repo.
+1. Respeitar brief (intent, unique promise, item_13).
+2. **Resposta directa** nas primeiras linhas.
+3. H2 com valor; FAQ citavel.
+4. Claims verificaveis; assumptions explicitas.
+5. Evitar promessas do tipo "vais aparecer no ChatGPT".
 
 ## done_when
 
-- [ ] Resposta útil antes do scroll longo
-- [ ] Secções batem com outline do brief (ou desvios justificados)
-- [ ] FAQ ou equivalente se o brief tinha item_13.faq
-- [ ] Sem inventar dados numéricos sem fonte
+- [ ] Resposta util cedo
+- [ ] FAQ se o brief tinha item_13.faq
+- [ ] Sem inventar dados
+- [ ] Tom multi-IA quando o tema e Findability
 
-## Anti-padrões
+## Anti-padroes
 
-- Intro "No mundo de hoje..." sem resposta
-- Ignorar o brief
-- Keyword stuffing
-- CTA agressivo não pedido
+- Intro vaga; ignorar brief; keyword stuffing
+- Reduzir tudo a "ranquear no Google" quando o objective e AI Findability

@@ -1,25 +1,15 @@
 # Item 13 vs orquestrador de marketing
 
-## Item 13 tem orquestrador próprio?
+## Item 13 tem orquestrador proprio?
 
-**Não.** O Item 13 (descoberta / recomendação por sistemas de IA + SEO “para máquinas”) **não** é uma vertical com orchestrator separado.
+**Nao.** E um conjunto de requisitos/checks dentro de pipelines de conteudo (`seo_brief`, `copy_*`, `critic_item13`).
 
-É um **conjunto de requisitos e checks** que correm **dentro** de pipelines de conteúdo — em especial:
+## Alvo de descoberta
 
-- `seo_brief`
-- `copy_answer_first`
-- `critic` (publish_ready / gaps Item 13)
+Item 13 = **AI Findability multi-sistema**: assistentes (ChatGPT, Claude, Gemini, Copilot, …), motores com resposta generativa (Perplexity, AI overviews) e RAG/agents — **nao** apenas rankings Google.
 
-Quem “orquestra” Item 13 hoje, no desenho do setup, é o **mesmo plan** de conteúdo (SEO → copy → critic → HITL), não um agent `item13_orchestrator`.
+SEO classico e complementar. Ver `docs/knowledge/marketing/multi-ai-findability.md`.
 
-| Peça | Estado típico no setup |
-|------|-------------------------|
-| Critérios Item 13 no brief/critic | método / schemas / piloto |
-| Orchestrator só Item 13 | **não existe de propósito** |
-| Orchestrator marketing (vertical) | **este pacote** |
+## Quem orquestra
 
----
-
-## Implicação
-
-Fazer o orquestrador de **marketing** agora é o passo certo: ele **inclui** Item 13 nos steps de conteúdo, em vez de um segundo cérebro paralelo.
+O **mesmo plan** de conteudo (SEO → copy → critic → HITL), nao um agent `item13_orchestrator`.
