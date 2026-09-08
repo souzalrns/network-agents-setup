@@ -5,7 +5,7 @@ Usar na action `creative_review` / critic criativo.
 ## Dimensões (1–5)
 
 1. **On-brief** — responde ao objective e audience  
-2. **Clareza** — mensagem principal óbvia em &lt;5s  
+2. **Clareza** — mensagem principal óbvia em menos de 5s  
 3. **Canal-fit** — formato adequado ao canal  
 4. **Brand** — tom/claims compatíveis com brand kit (se existir)  
 5. **Risco** — claims verificáveis; sem ToS/legal óbvio  
