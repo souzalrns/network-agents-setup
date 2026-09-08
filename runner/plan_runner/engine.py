@@ -15,7 +15,7 @@ from .models import Plan
 
 
 def load_plan(path: Path) -> Plan:
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    data = yaml.safe_load(path.read_text(encoding="utf-8-sig"))
     if not isinstance(data, dict):
         raise PlanError("plan root must be a mapping")
     plan = Plan.from_dict(data)
@@ -36,7 +36,10 @@ def load_status(out: Path) -> dict[str, Any] | None:
     p = _status_path(out)
     if not p.exists():
         return None
-    return json.loads(p.read_text(encoding="utf-8"))
+    return json.loads(p.read_text(encoding="utf-8-sig"))
+
+
+_RESUMABLE = frozenset({"paused_human_gate", "waiting_external", "running"})
 
 
 def run_plan(
@@ -59,9 +62,8 @@ def run_plan(
     run_id = f"run_{uuid4().hex[:10]}"
     out = out_dir or Path("pilots") / run_id
     if out.exists() and any(out.iterdir()):
-        # allow reuse only if status paused
         st = load_status(out)
-        if not st or st.get("state") not in {"paused_human_gate", "waiting_external"}:
+        if not st or st.get("state") not in _RESUMABLE:
             raise PlanError(f"out dir not empty and not resumable: {out}")
 
     out.mkdir(parents=True, exist_ok=True)
@@ -165,8 +167,9 @@ def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
     status = load_status(out_dir)
     if not status:
         raise PlanError("no status.json")
-    if status.get("state") not in {"paused_human_gate", "waiting_external"}:
-        raise PlanError(f"cannot resume from state {status.get('state')!r}")
+    state = status.get("state")
+    if state not in _RESUMABLE:
+        raise PlanError(f"cannot resume from state {state!r}")
 
     run_id = status["run_id"]
     log = EventLog(out_dir / "events.jsonl")
@@ -175,7 +178,15 @@ def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
     completed = set(status.get("completed") or [])
     mode = status.get("mode") or "stub"
 
-    if status.get("state") == "paused_human_gate":
+    # Crash recovery: state left as "running" mid-step — continue like waiting_external
+    if state == "running":
+        log.append(
+            "resume_after_interrupt",
+            run_id,
+            {"current_step": status.get("current_step"), "paused_at_step": status.get("paused_at_step")},
+        )
+
+    if state == "paused_human_gate":
         if decision not in {"approve", "reject", "edit"}:
             raise PlanError("decision must be approve|reject|edit")
         paused = status.get("paused_at_step")
@@ -189,7 +200,6 @@ def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
             status["state"] = "rejected"
             save_status(out_dir, status)
             return status
-        # approve/edit: mark gate step completed and continue
         if paused:
             completed.add(paused)
             step_gate = next(s for s in plan.steps if s.id == paused)
@@ -260,5 +270,6 @@ def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None
+    status.pop("paused_at_step", None)
     save_status(out_dir, status)
     return status
