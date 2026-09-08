@@ -1,25 +1,27 @@
-# Skills marketing — P0
+# Skills marketing
 
-Skills alinhadas às **actions** dos templates que o `plan_runner` já percorreu em stub.
+## P0
 
-| Pasta | action | Templates |
-|-------|--------|-----------|
-| [research](./research/SKILL.md) | `research` | seo_article, social_pack, internal_brief |
-| [seo_brief](./seo_brief/SKILL.md) | `seo_brief` | seo_article |
-| [copy_answer_first](./copy_answer_first/SKILL.md) | `copy_answer_first` | seo_article, approval revise |
-| [critic_item13](./critic_item13/SKILL.md) | `critic_item13` | seo_article |
-| [internal_brief](./internal_brief/SKILL.md) | `internal_brief` | internal_brief |
-| [creative_review](./creative_review/SKILL.md) | `creative_review` | approval_rounds |
+| Pasta | action |
+|-------|--------|
+| [research](./research/SKILL.md) | research |
+| [seo_brief](./seo_brief/SKILL.md) | seo_brief |
+| [copy_answer_first](./copy_answer_first/SKILL.md) | copy_answer_first |
+| [critic_item13](./critic_item13/SKILL.md) | critic_item13 |
+| [internal_brief](./internal_brief/SKILL.md) | internal_brief |
+| [creative_review](./creative_review/SKILL.md) | creative_review |
 
-## Uso com o runner
+## P1 (social_pack e adjacentes)
 
-- **stub:** não carrega estas skills (placeholders).
-- **external / worker real:** o executor deve ler `skills/marketing/<action>/SKILL.md` quando `steps[].action` corresponder.
+| Pasta | action |
+|-------|--------|
+| [trend_hunter](./trend_hunter/SKILL.md) | trend_hunter |
+| [copy_social](./copy_social/SKILL.md) | copy_social |
+| [storytelling](./storytelling/SKILL.md) | storytelling |
+| [critic](./critic/SKILL.md) | critic |
 
-## P1 (ainda não neste pacote)
+Ainda em falta (P1+): media_buyer, performance_analyst, ugc, influencer, editor_video, seo_tech_audit, status_report.
 
-`trend_hunter`, `copy_social`, `storytelling`, `media_buyer`, `performance_analyst`, `ugc`, `influencer`, `editor_video`, `seo_tech_audit`, `status_report`, …
+## Runner
 
-## Checklist
-
-Marca ING C2.1–C2.4 / B2.2–B2.3 no `docs/checklists/ITEM13-MARKETING-ROADMAP.md` quando validares com um worker real (não só stub).
+`external` resolve `skills/marketing/<action>/SKILL.md` e `agents/marketing/<action>.agent.md`.
