@@ -15,6 +15,11 @@ class StepResult:
         self.artifact = artifact
 
 
+def _read_json(path: Path) -> Any:
+    """PowerShell Set-Content -Encoding utf8 often writes BOM; accept utf-8-sig."""
+    return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
 def _write_stub_artifact(out_root: Path, step: Step) -> str | None:
     if not step.output_artifact:
         return None
@@ -82,7 +87,6 @@ def execute_external_request(out_root: Path, step: Step) -> StepResult:
         json.dumps(req, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
 
-    # Convenience copies for the worker
     if skill_path and skill_path.is_file():
         (pending / "SKILL.md").write_text(skill_path.read_text(encoding="utf-8"), encoding="utf-8")
     if agent_path and agent_path.is_file():
@@ -91,7 +95,7 @@ def execute_external_request(out_root: Path, step: Step) -> StepResult:
     result_path = pending / "result.json"
     if not result_path.exists():
         return StepResult(ok=False, detail="waiting_external")
-    data = json.loads(result_path.read_text(encoding="utf-8"))
+    data = _read_json(result_path)
     if not data.get("ok"):
         return StepResult(ok=False, detail=str(data.get("detail") or "external_failed"))
     if step.output_artifact and data.get("artifact_content") is not None:
