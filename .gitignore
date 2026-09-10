@@ -43,3 +43,9 @@ pilots/run-sqlite-final/
 Thumbs.db
 *.swp
 *~
+
+# === Python cache (qualquer diretorio) ===
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
