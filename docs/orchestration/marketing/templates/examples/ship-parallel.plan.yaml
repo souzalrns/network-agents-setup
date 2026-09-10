@@ -1,0 +1,55 @@
+# Exemplo: onda paralela de reviews antes do GO/NO-GO (estilo Addy /ship)
+# depends_on iguais => mesma wave no motor langgraph
+
+id: example-ship-parallel
+version: 1
+deliverable_type: ship_gate
+objective: "Validar mudanca com reviews paralelos e decisao GO/NO-GO"
+
+budget:
+  max_steps: 8
+  max_replans: 1
+
+steps:
+  - id: prepare
+    action: research
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-prepare.md
+
+  # Wave paralela (todos dependem so de prepare)
+  - id: code_review
+    action: research
+    depends_on: [prepare]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/02-code-review.md
+
+  - id: security_review
+    action: research
+    depends_on: [prepare]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/03-security-review.md
+
+  - id: test_review
+    action: research
+    depends_on: [prepare]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/04-test-review.md
+
+  - id: ship_decision
+    action: critic
+    depends_on: [code_review, security_review, test_review]
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/05-ship-decision.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [ship_decision]
+    human_gate:
+      level: step
+      kind: confirmation
+      allow: [approve, reject]
+    tools_allowed: []
+    output_artifact: artifacts/06-hitl.json
+
+done_when:
+  - human_gate_resolved on hitl

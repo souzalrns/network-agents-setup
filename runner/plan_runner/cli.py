@@ -15,21 +15,56 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("plan", type=Path)
     p_run.add_argument("--mode", choices=["dry-run", "stub", "external"], default="stub")
     p_run.add_argument("--out", type=Path, default=None, help="Output run directory")
+    p_run.add_argument(
+        "--engine",
+        choices=["native", "langgraph"],
+        default="native",
+        help="native = sequential plan_runner; langgraph = graph waves / LG when installed",
+    )
 
     p_res = sub.add_parser("resume", help="Resume a paused run")
     p_res.add_argument("out", type=Path, help="Run directory with status.json")
     p_res.add_argument("--decision", default="approve", help="approve|reject|edit")
 
+    p_compile = sub.add_parser("compile-graph", help="Show LangGraph wave compilation for a plan")
+    p_compile.add_argument("plan", type=Path)
+
     args = parser.parse_args(argv)
     try:
-        if args.cmd == "run":
-            result = run_plan(args.plan, mode=args.mode, out_dir=args.out)
+        if args.cmd == "compile-graph":
+            from .engine import load_plan
+            from .langgraph_compile import compile_report
+
+            plan = load_plan(args.plan)
+            result = compile_report(plan)
+        elif args.cmd == "run":
+            if args.engine == "langgraph":
+                from .langgraph_engine import run_plan_langgraph
+
+                result = run_plan_langgraph(args.plan, mode=args.mode, out_dir=args.out)
+            else:
+                result = run_plan(args.plan, mode=args.mode, out_dir=args.out)
         else:
-            result = resume_run(args.out, decision=args.decision)
+            st = None
+            try:
+                from .engine import load_status
+
+                st = load_status(args.out)
+            except Exception:
+                pass
+            if st and st.get("engine", "").startswith("langgraph"):
+                from .langgraph_engine import resume_plan_langgraph
+
+                result = resume_plan_langgraph(args.out, decision=args.decision)
+            else:
+                result = resume_run(args.out, decision=args.decision)
     except PlanError as e:
         print(f"error: {e}")
         return 1
     except FileNotFoundError as e:
+        print(f"error: {e}")
+        return 1
+    except ImportError as e:
         print(f"error: {e}")
         return 1
 
