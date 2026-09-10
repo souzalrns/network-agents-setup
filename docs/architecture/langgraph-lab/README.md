@@ -1,6 +1,6 @@
 # LangGraph Lab - motor de orquestracao do runner
 
-**Estado:** funcional end-to-end. Commitado em main. Testado com 9 testes automatizados.
+**Estado:** funcional end-to-end. Commitado em main. Testado com 13 testes automatizados (10 de fluxo + 3 de crash recovery).
 
 Este documento descreve a arquitetura do motor LangGraph usado pelo plan_runner para executar planos plan.yaml com:
 - Orquestracao por ondas paralelas (waves)
@@ -40,7 +40,8 @@ Diferencas do nativo:
 | Compilacao plan para waves | runner/plan_runner/langgraph_compile.py |
 | CLI | runner/plan_runner/cli.py |
 | Deps opcionais | runner/requirements-langgraph.txt |
-| Testes | runner/tests/test_langgraph_flow.py |
+| Testes de fluxo | runner/tests/test_langgraph_flow.py |
+| Testes de crash recovery | runner/tests/test_crash_recovery.py |
 | Template fan-out | docs/orchestration/marketing/templates/examples/ship-parallel.plan.yaml |
 
 ### Funcoes auxiliares
@@ -178,6 +179,44 @@ Isto garante que os steps concluidos em runs anteriores nao se perdem.
 
 ---
 
+## Crash recovery
+
+O motor suporta retomar apos morte do processo (crash, kill -9, falha de energia).
+
+### Estado persistente
+
+| Ficheiro | Papel |
+|----------|-------|
+| `status.json` | Estado corrente (`running`, `waiting_external`, `paused_human_gate`, `done`, `rejected`) |
+| `events.jsonl` | Log append-only de eventos; dedup via `has_event` |
+| `checkpoints.db` | Checkpoint LangGraph (SQLite, `SqliteSaver`) |
+
+### Como funciona
+
+Se o processo morre a meio de um step, o `status.json` fica com `state="running"`. No proximo `resume`:
+
+1. O motor le `status.json`
+2. Se `state == "running"`, emite `resume_after_interrupt` em `events.jsonl`
+3. Normaliza `state = "running"` e reexecuta os steps nao concluidos
+4. Steps ja em `completed` nao sao reexecutados (`has_event` evita eventos duplicados)
+
+O evento `resume_after_interrupt` e emitido tanto pelo engine legacy (`engine.py`) como pelo LangGraph (`langgraph_engine.py`) — paridade de observabilidade.
+
+### Cenarios cobertos por testes
+
+| Cenario | Teste | O que valida |
+|---------|-------|--------------|
+| Morte apos `run --mode external` | `test_crash_recovery_running_state_resumes` | Resume retoma; `resume_after_interrupt` e emitido |
+| Morte a meio da wave | `test_crash_recovery_preserves_completed` | `completed` e preservado; steps nao regridem |
+| `status.json` corrompido | `test_crash_recovery_corrupt_status_json` | `PlanError` claro; sem `JSONDecodeError` cru |
+
+### Corrupcao do status.json
+
+`load_status()` apanha `JSONDecodeError`/`UnicodeDecodeError` e devolve `None`. O `resume` converte isso em `PlanError("no status.json")`. O utilizador ve uma mensagem clara, nao um traceback.
+
+Sem esta proteccao, um `status.json` truncado (ex: disco cheio a meio de um `write_text`) fazia o CLI explodir com `json.decoder.JSONDecodeError` e stack trace interna — mascarando o problema real (estado corrompido) com ruido de implementacao.
+
+---
 ## Como testar
 
 ### Testes automatizados

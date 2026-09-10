@@ -1,4 +1,4 @@
-﻿"""Fixtures partilhadas para os testes do runner.
+"""Fixtures partilhadas para os testes do runner.
 
 Cada teste corre num diretorio temporario isolado.
 """
@@ -59,6 +59,21 @@ def _run_cli(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
         timeout=120,
     )
 
+def _load_status_safe(out_dir: Path) -> dict:
+    """Le status.json tolerando ficheiro ausente ou corrompido.
+
+    Fixtures de teste nao podem explodir com JSONDecodeError quando o
+    proprio teste corrompe o status.json de proposito. Nesses casos,
+    devolvemos {} e deixamos o teste validar o comportamento do motor.
+    """
+    status_file = out_dir / "status.json"
+    if not status_file.exists():
+        return {}
+    try:
+        return json.loads(status_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+
 
 @pytest.fixture
 def run_cli():
@@ -84,8 +99,7 @@ def run_plan(run_cli, plan_path: Path):
             "--mode", mode,
             "--out", str(out_dir),
         ])
-        status_file = out_dir / "status.json"
-        status = json.loads(status_file.read_text(encoding="utf-8")) if status_file.exists() else {}
+        status = _load_status_safe(out_dir)
         return proc, status
     return _run
 
@@ -99,8 +113,7 @@ def resume_plan(run_cli):
             str(out_dir),
             "--decision", decision,
         ])
-        status_file = out_dir / "status.json"
-        status = json.loads(status_file.read_text(encoding="utf-8")) if status_file.exists() else {}
+        status = _load_status_safe(out_dir)
         return proc, status
     return _resume
 
