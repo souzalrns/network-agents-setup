@@ -35,5 +35,21 @@ jobs:
           python -m pip install -r requirements-langgraph.txt
           python -m pip install pytest
 
-      - name: Run tests
-        run: python -m pytest tests/ -v
+      - name: Run tests with coverage
+        run: |
+          python -m pytest tests/ -v \
+            --cov=plan_runner \
+            --cov-report=term-missing
+
+      - name: Combine coverage data
+        run: python -m coverage combine
+
+      - name: Generate coverage XML
+        run: python -m coverage xml -o coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: runner/coverage.xml
+          flags: runner
+          fail_ci_if_error: false

@@ -14,6 +14,15 @@ from pathlib import Path
 import pytest
 
 
+# Ativa coverage em subprocessos.
+# O runner corre via subprocess.run(["python", "-m", "plan_runner", ...])
+# num processo filho. Sem COVERAGE_PROCESS_START, o coverage do pytest
+# nao ve nada do processo filho e reporta 0%.
+_coveragerc = Path(__file__).resolve().parent.parent / ".coveragerc"
+if _coveragerc.exists():
+    os.environ.setdefault("COVERAGE_PROCESS_START", str(_coveragerc))
+
+
 # Paths base
 RUNNER_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = RUNNER_DIR.parent

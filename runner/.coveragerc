@@ -1,0 +1,22 @@
+# Coverage para testes que correm o motor via subprocess.
+#
+# Os testes invocam "python -m plan_runner ..." num processo filho.
+# Sem "concurrency = multiprocessing" + COVERAGE_PROCESS_START (definido
+# em tests/conftest.py), o coverage do pytest mede 0%.
+#
+# "parallel = true" faz cada processo escrever um ficheiro separado
+# (.coverage.<host>.<pid>.<random>). O CI corre "coverage combine" no fim.
+
+[run]
+parallel = true
+concurrency = multiprocessing, thread
+source = plan_runner
+omit =
+    plan_runner/__main__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+show_missing = true
