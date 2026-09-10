@@ -47,4 +47,5 @@ jobs:
         with:
           files: runner/coverage.xml
           flags: runner
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
