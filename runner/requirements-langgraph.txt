@@ -1,3 +1,4 @@
-# Opcional — motor de grafos
+# Opcional - motor de grafos LangGraph
 -r requirements.txt
 langgraph>=0.2.0
+langgraph-checkpoint-sqlite>=3.0.0
