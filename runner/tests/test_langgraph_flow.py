@@ -251,3 +251,68 @@ def test_checkpoint_db_persists_completed(run_plan, tmp_run_dir: Path):
         assert len(tables) > 0, "checkpoints.db nao tem tabelas"
     finally:
         conn.close()
+
+
+# ============================================================
+# DECISION EDIT
+# ============================================================
+
+def test_resume_edit_with_payload(
+    run_plan, resume_plan, tmp_run_dir: Path
+):
+    """resume --decision edit com payload grava o payload no output_artifact."""
+    import json as _json
+
+    # 1. Run stub -> paused_human_gate
+    proc, status = run_plan(tmp_run_dir, mode="stub")
+    assert status.get("state") == "paused_human_gate"
+
+    # 2. Escrever payload num ficheiro (simula o uso real via --payload-file)
+    payload = {
+        "decision": "GO",
+        "notes": "aprovar com condicoes",
+        "reviewer": "cto",
+    }
+    payload_file = tmp_run_dir.parent / "payload-edit.json"
+    payload_file.write_text(
+        _json.dumps(payload, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    # 3. Correr resume com edit + payload-file
+    from tests.conftest import _run_cli
+    from tests.conftest import RUNNER_DIR
+    proc = _run_cli([
+        "resume",
+        str(tmp_run_dir),
+        "--decision", "edit",
+        "--payload-file", str(payload_file),
+    ], cwd=RUNNER_DIR)
+
+    assert proc.returncode == 0, f"resume edit falhou: {proc.stderr}"
+
+    # 4. Ler status.json atualizado
+    status_file = tmp_run_dir / "status.json"
+    status = _json.loads(status_file.read_text(encoding="utf-8"))
+    assert status.get("state") == "done"
+    assert status.get("decision") == "edit"
+
+    # 5. Verificar que o payload foi gravado no output_artifact do HITL
+    artifact = tmp_run_dir / "artifacts" / "06-hitl.json"
+    assert artifact.exists(), f"output_artifact nao existe: {artifact}"
+
+    conteudo = _json.loads(artifact.read_text(encoding="utf-8-sig"))
+    assert conteudo.get("decision") == "GO"
+    assert conteudo.get("notes") == "aprovar com condicoes"
+    assert conteudo.get("reviewer") == "cto"
+
+    # 6. Verificar que o evento human_gate_resolved tem has_payload=true
+    eventos_file = tmp_run_dir / "events.jsonl"
+    eventos = eventos_file.read_text(encoding="utf-8").splitlines()
+    resolvidos = [
+        _json.loads(e) for e in eventos
+        if e.strip() and "human_gate_resolved" in e
+    ]
+    assert len(resolvidos) == 1, f"esperado 1 evento, obtido {len(resolvidos)}"
+    assert resolvidos[0]["payload"].get("decision") == "edit"
+    assert resolvidos[0]["payload"].get("has_payload") is True

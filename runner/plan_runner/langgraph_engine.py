@@ -326,7 +326,7 @@ def _run_waves_fallback(
     return status
 
 
-def resume_plan_langgraph(out_dir: Path, decision: str) -> dict[str, Any]:
+def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = None) -> dict[str, Any]:
     """Resume a execuÃ§Ã£o usando o checkpoint real do LangGraph."""
 
     if decision not in {"approve", "reject", "edit"}:
@@ -438,7 +438,15 @@ def resume_plan_langgraph(out_dir: Path, decision: str) -> dict[str, Any]:
                     }
                 )
 
-                if decision_value not in {"approve", "reject", "edit"}:
+                # Aceita tanto string ("approve") como dict ({"decision": "edit", "payload": {...}})
+                if isinstance(decision_value, dict):
+                    edited_payload = decision_value.get("payload")
+                    decision_str = decision_value.get("decision", "approve")
+                else:
+                    edited_payload = None
+                    decision_str = decision_value
+
+                if decision_str not in {"approve", "reject", "edit"}:
                     raise PlanError("decision must be approve|reject|edit")
 
                 log.append(
@@ -446,12 +454,13 @@ def resume_plan_langgraph(out_dir: Path, decision: str) -> dict[str, Any]:
                     run_id,
                     {
                         "step_id": step.id,
-                        "decision": decision_value,
+                        "decision": decision_str,
+                        "has_payload": edited_payload is not None,
                     },
                     actor={"kind": "human", "id": "cli"},
                 )
 
-                if decision_value == "reject":
+                if decision_str == "reject":
                     return {
                         "error": f"{step.id}:rejected",
                         "log": [f"rejected:{step.id}"],
@@ -464,14 +473,15 @@ def resume_plan_langgraph(out_dir: Path, decision: str) -> dict[str, Any]:
                     p.parent.mkdir(parents=True, exist_ok=True)
 
                     if not p.exists():
+                        if edited_payload is not None:
+                            content_to_write = edited_payload
+                        else:
+                            content_to_write = {
+                                "decision": decision_str,
+                                "step_id": step.id,
+                            }
                         p.write_text(
-                            json.dumps(
-                                {
-                                    "decision": decision_value,
-                                    "step_id": step.id,
-                                },
-                                indent=2,
-                            ) + "\n",
+                            json.dumps(content_to_write, indent=2) + "\n",
                             encoding="utf-8",
                         )
 
@@ -561,8 +571,17 @@ def resume_plan_langgraph(out_dir: Path, decision: str) -> dict[str, Any]:
                 }
             }
 
+            if decision == "edit" and payload:
+                # Aceita BOM se existir (Set-Content -Encoding UTF8 do PowerShell adiciona BOM)
+                if payload.startswith("\ufeff"):
+                    payload = payload[1:]
+                payload_dict = json.loads(payload)
+                resume_value = {"decision": decision, "payload": payload_dict}
+            else:
+                resume_value = decision
+
             result = graph.invoke(
-                Command(resume=decision),
+                Command(resume=resume_value),
                 config,
             )
 

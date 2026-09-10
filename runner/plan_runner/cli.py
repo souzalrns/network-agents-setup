@@ -25,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     p_res = sub.add_parser("resume", help="Resume a paused run")
     p_res.add_argument("out", type=Path, help="Run directory with status.json")
     p_res.add_argument("--decision", default="approve", help="approve|reject|edit")
+    p_res.add_argument("--payload-file", type=Path, default=None, help="Ficheiro JSON com payload para edit (opcional)")
 
     p_compile = sub.add_parser("compile-graph", help="Show LangGraph wave compilation for a plan")
     p_compile.add_argument("plan", type=Path)
@@ -55,7 +56,12 @@ def main(argv: list[str] | None = None) -> int:
             if st and st.get("engine", "").startswith("langgraph"):
                 from .langgraph_engine import resume_plan_langgraph
 
-                result = resume_plan_langgraph(args.out, decision=args.decision)
+                payload = None
+                if args.payload_file:
+                    if not args.payload_file.exists():
+                        raise PlanError(f"payload file not found: {args.payload_file}")
+                    payload = args.payload_file.read_text(encoding="utf-8-sig")
+                result = resume_plan_langgraph(args.out, decision=args.decision, payload=payload)
             else:
                 result = resume_run(args.out, decision=args.decision)
     except PlanError as e:
