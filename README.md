@@ -4,6 +4,8 @@ Arquitetura e documentação de **redes multi-agente** — com foco portfolio na
 
 > **One-liner:** especialistas com limites claros + conhecimento operacional + playbook para marcas serem encontradas e recomendadas por IA.
 
+> **Motor de execucao:** [`runner/`](./runner/README.md) - `plan_runner`, um motor de planos YAML com HITL, crash recovery e external workers. 72 testes, 83% cobertura, CI + Codecov.
+
 ---
 
 ## Portfolio (começar aqui)
@@ -32,7 +34,7 @@ Objetivo → marketing-orquestrador → horizontais / verticais
          [KNOWLEDGE] + [CLIENT]
 ```
 
-**Estado:** documentação de sistema **completa**. Runtime de produção vive à parte (`agent-network-mcp`). Piloto live e wiring de skills = fase seguinte.
+**Estado:** documentação de sistema **completa**. Motor de execucao (`runner/`) operacional, com 72 testes e cobertura no CI. Runtime de produção vive à parte (`agent-network-mcp`). Wiring completo de skills no motor = fase seguinte.
 
 ---
 
