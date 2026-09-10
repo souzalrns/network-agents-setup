@@ -1,6 +1,8 @@
 # LangGraph Lab - motor de orquestracao do runner
 
-**Estado:** funcional end-to-end. Commitado em main. Testado com 13 testes automatizados (10 de fluxo + 3 de crash recovery).
+[![Coverage](https://codecov.io/gh/souzalrns/network-agents-setup/branch/main/graph/badge.svg?flag=runner)](https://codecov.io/gh/souzalrns/network-agents-setup)
+
+**Estado:** funcional end-to-end. Commitado em main. Testado com **51 testes automatizados** (13 de fluxo + 3 de crash recovery + 35 de cobertura). Cobertura: 83%.
 
 Este documento descreve a arquitetura do motor LangGraph usado pelo plan_runner para executar planos plan.yaml com:
 - Orquestracao por ondas paralelas (waves)
@@ -42,6 +44,12 @@ Diferencas do nativo:
 | Deps opcionais | runner/requirements-langgraph.txt |
 | Testes de fluxo | runner/tests/test_langgraph_flow.py |
 | Testes de crash recovery | runner/tests/test_crash_recovery.py |
+| Testes do engine native | runner/tests/test_engine_native.py |
+| Testes do engine external | runner/tests/test_engine_external.py |
+| Testes de executor | runner/tests/test_executor.py |
+| Testes de events | runner/tests/test_events.py |
+| Testes de skills | runner/tests/test_skills.py |
+| Testes de validation | runner/tests/test_validation.py |
 | Template fan-out | docs/orchestration/marketing/templates/examples/ship-parallel.plan.yaml |
 
 ### Funcoes auxiliares
@@ -217,6 +225,7 @@ O evento `resume_after_interrupt` e emitido tanto pelo engine legacy (`engine.py
 Sem esta proteccao, um `status.json` truncado (ex: disco cheio a meio de um `write_text`) fazia o CLI explodir com `json.decoder.JSONDecodeError` e stack trace interna — mascarando o problema real (estado corrompido) com ruido de implementacao.
 
 ---
+
 ## Como testar
 
 ### Testes automatizados
@@ -224,19 +233,29 @@ Sem esta proteccao, um `status.json` truncado (ex: disco cheio a meio de um `wri
     cd $env:USERPROFILE\Downloads\network-agents-setup\runner
     python -m pytest tests/ -v
 
-9 testes cobrem:
+51 testes cobrem:
 
-| Teste | O que valida |
-|-------|--------------|
-| test_no_bom_in_langgraph_engine | Sem BOM no ficheiro |
-| test_engine_module_imports | Imports (Annotated, merge_artifacts, _WaitExternal) |
-| test_run_stub_pauses_at_hitl | run --mode stub - paused_human_gate |
-| test_resume_approve_completes_plan | resume approve - done |
-| test_resume_reject_sets_rejected_state | resume reject - rejected |
-| test_run_external_waits_for_worker | run --mode external - waiting_external |
-| test_resume_external_accumulates_completed | completed acumulado apos resume |
-| test_external_full_cycle | Ciclo completo external (5 workers) - HITL - done |
-| test_checkpoint_db_persists_completed | checkpoints.db e SQLite valido |
+| Ficheiro | # Testes | O que valida |
+|----------|----------|--------------|
+| test_langgraph_flow.py | 10 | Fluxo end-to-end (stub, external, HITL, edit) |
+| test_crash_recovery.py | 3 | Crash recovery (3 cenarios) |
+| test_engine_native.py | 6 | Engine legacy --engine native |
+| test_engine_external.py | 6 | External mode, budget abort, failed |
+| test_executor.py | 9 | Stub artifacts + external ramos de erro |
+| test_events.py | 3 | has_event tolera ficheiro ausente |
+| test_skills.py | 7 | Resolucao de paths |
+| test_validation.py | 7 | graph.py validacao + HumanGate.from_raw |
+
+Cobertura por ficheiro (83% total):
+- models.py, __init__.py: 100%
+- events.py: 97%
+- graph.py: 96%
+- skills.py: 94%
+- langgraph_compile.py: 91%
+- executor.py: 90%
+- cli.py: 86%
+- engine.py: 83% (era 20%)
+- langgraph_engine.py: 72%
 
 ### Manualmente
 
@@ -261,7 +280,6 @@ Sem esta proteccao, um `status.json` truncado (ex: disco cheio a meio de um `wri
 | --decision edit tratado como approve | Semantico | Usar reject + re-run |
 | Steps reexecutados no resume (external) | Performance | Aceitavel (steps rapidos) |
 | Paralelismo logico por waves | Performance | LangGraph executa sequencialmente na wave |
-| Sem crash recovery testado explicitamente | Confiabilidade | Precisa de teste adicional |
 
 ---
 
@@ -345,7 +363,8 @@ Ou usar python com open em modo w com encoding utf-8 e newline vazio.
 | docs/orchestration/marketing/ | Orquestrador da vertical marketing |
 | docs/orchestration/marketing/templates/examples/ship-parallel.plan.yaml | Template fan-out |
 | runner/plan_runner/langgraph_engine.py | Codigo fonte |
-| runner/tests/test_langgraph_flow.py | Testes de integracao |
+| runner/tests/ | Suite de testes (51 testes) |
+| runner/.coveragerc | Configuracao de coverage (multiprocessing) |
 
 ---
 
