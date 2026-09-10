@@ -1,2 +1,45 @@
 # T6 local hash state
 .ingest-state.json
+
+# === Backups e lixo do runner ===
+runner/plan_runner/*.bak
+runner/plan_runner/*.autobackup
+runner/plan_runner/*.before_*
+runner/plan_runner/*.debug_backup
+runner/plan_runner/*.patch_backup
+runner/plan_runner/__pycache__/
+runner/*.pyc
+runner/edit_safe.py
+
+# === Pilots de diagnostico (efemeros) ===
+pilots/diag-*/
+pilots/debug-*.log
+pilots/stderr-*.log
+pilots/stdout-*.log
+pilots/run-sqlite-final-output.txt
+pilots/stderr-final.log
+pilots/stdout-final.log
+
+# === Runs de teste do runner (efemeros) ===
+pilots/run-crash-sim/
+pilots/run-ship-crash/
+pilots/run-ship-edit/
+pilots/run-ship-lg/
+pilots/run-ship-reject/
+pilots/run-ship-sqlite/
+pilots/run-ship-external/
+pilots/run-seo-stub/
+pilots/run-seo-external/
+pilots/run-seo-demo/
+pilots/run-approval-stub/
+pilots/run-brief-stub/
+pilots/run-social-stub/
+pilots/run-social-external/
+pilots/run-test-stderr/
+pilots/run-sqlite-final/
+
+# === Ficheiros do sistema ===
+.DS_Store
+Thumbs.db
+*.swp
+*~
