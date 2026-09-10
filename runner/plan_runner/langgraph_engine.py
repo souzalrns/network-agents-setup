@@ -358,6 +358,17 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
     plan = load_plan(plan_path)
     mode = status.get("mode") or "stub"
     log = EventLog(out_dir / "events.jsonl")
+    # Crash recovery: state left as "running" mid-step — continue like waiting_external.
+    # Mesmo evento do engine legacy (engine.py:183) para paridade de observabilidade.
+    if state == "running":
+        log.append(
+            "resume_after_interrupt",
+            run_id,
+            {
+                "current_step": status.get("current_step"),
+                "paused_at_step": status.get("paused_at_step"),
+            },
+        )
 
     # Reject nÃ£o precisa continuar o grafo.
     # Registramos a decisÃ£o e encerramos exatamente como o engine tradicional.

@@ -36,7 +36,12 @@ def load_status(out: Path) -> dict[str, Any] | None:
     p = _status_path(out)
     if not p.exists():
         return None
-    return json.loads(p.read_text(encoding="utf-8-sig"))
+    try:
+        return json.loads(p.read_text(encoding="utf-8-sig"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        # status.json corrompido -> tratar como ausente.
+        # O resume_run/resume_plan_langgraph ja convertem None em PlanError("no status.json").
+        return None
 
 
 _RESUMABLE = frozenset({"paused_human_gate", "waiting_external", "running"})
