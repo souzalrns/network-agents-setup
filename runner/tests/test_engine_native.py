@@ -9,11 +9,8 @@ Estes testes exercitam run_plan + resume_run + ramos do CLI.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-import pytest
-
-from tests.conftest import _run_cli, RUNNER_DIR
+from tests.conftest import RUNNER_DIR, _run_cli
 
 
 def _run(out_dir, plan_path, mode="stub", engine="native"):

@@ -10,8 +10,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 
 def _corrupt_status(status_file: Path) -> None:
     """Simula crash: reescreve status.json com state='running'."""
@@ -49,7 +47,7 @@ def test_crash_recovery_running_state_resumes(run_plan, resume_plan, tmp_run_dir
     events_file = tmp_run_dir / "events.jsonl"
     assert events_file.exists(), "events.jsonl nao existe"
     lines = events_file.read_text(encoding="utf-8").splitlines()
-    tipos = [json.loads(l)["type"] for l in lines if l.strip()]
+    tipos = [json.loads(line)["type"] for line in lines if line.strip()]
     assert "resume_after_interrupt" in tipos, (
         f"evento resume_after_interrupt em falta. Tipos: {tipos}"
     )
@@ -90,7 +88,7 @@ def test_crash_recovery_preserves_completed(
 
 def test_crash_recovery_corrupt_status_json(run_plan, tmp_run_dir: Path):
     """status.json corrompido nao pode causar JSONDecodeError cru."""
-    from tests.conftest import _run_cli, RUNNER_DIR
+    from tests.conftest import RUNNER_DIR, _run_cli
 
     proc, status = run_plan(tmp_run_dir, mode="external")
     assert status.get("state") == "waiting_external"

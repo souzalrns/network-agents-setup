@@ -12,11 +12,7 @@ Corre o CLI real (subprocess) para validar:
 """
 from __future__ import annotations
 
-import json
 from pathlib import Path
-
-import pytest
-
 
 # ============================================================
 # TESTES BASICOS
@@ -138,7 +134,7 @@ def test_run_external_waits_for_worker(run_plan, tmp_run_dir: Path):
 
     # pending_steps/prepare/ deve existir
     pending = tmp_run_dir / "pending_steps" / "prepare"
-    assert pending.exists(), f"pending_steps/prepare/ nao foi criado"
+    assert pending.exists(), "pending_steps/prepare/ nao foi criado"
     assert (pending / "request.json").exists(), "request.json nao foi criado"
 
 
@@ -280,8 +276,7 @@ def test_resume_edit_with_payload(
     )
 
     # 3. Correr resume com edit + payload-file
-    from tests.conftest import _run_cli
-    from tests.conftest import RUNNER_DIR
+    from tests.conftest import RUNNER_DIR, _run_cli
     proc = _run_cli([
         "resume",
         str(tmp_run_dir),

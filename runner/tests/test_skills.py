@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from plan_runner.skills import (
     read_text_if_exists,
     repo_root_from_out,

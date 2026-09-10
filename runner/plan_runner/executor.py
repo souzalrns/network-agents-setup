@@ -5,7 +5,12 @@ from pathlib import Path
 from typing import Any
 
 from .models import Step
-from .skills import read_text_if_exists, repo_root_from_out, resolve_agent_path, resolve_skill_path
+from .skills import (
+    read_text_if_exists,
+    repo_root_from_out,
+    resolve_agent_path,
+    resolve_skill_path,
+)
 
 
 class StepResult:

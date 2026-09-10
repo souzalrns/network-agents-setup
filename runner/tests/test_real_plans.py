@@ -16,12 +16,10 @@ quebrar os 51 testes existentes.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
-from tests.conftest import _run_cli, _load_status_safe, RUNNER_DIR
-
+from tests.conftest import RUNNER_DIR, _load_status_safe, _run_cli
 
 REPO_ROOT = RUNNER_DIR.parent
 TPL = REPO_ROOT / "docs" / "orchestration" / "marketing" / "templates"

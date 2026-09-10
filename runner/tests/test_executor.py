@@ -2,9 +2,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-import pytest
 
 from plan_runner.executor import execute_external_request, execute_stub
 from plan_runner.models import HumanGate, Step

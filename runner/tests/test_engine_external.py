@@ -8,9 +8,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
-from tests.conftest import _run_cli, RUNNER_DIR
+from tests.conftest import RUNNER_DIR, _run_cli
 
 
 def _write_plan(tmp_path: Path, body: str) -> Path:

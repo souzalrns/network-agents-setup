@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Compile plan.yaml topology into a LangGraph StateGraph (lab)."""
 
-from typing import Any, Annotated, TypedDict
 from operator import add
+from typing import Annotated, Any, TypedDict
 
-from .graph import PlanError, topo_order, validate_plan
+from .graph import PlanError, validate_plan
 from .models import Plan, Step
 
 

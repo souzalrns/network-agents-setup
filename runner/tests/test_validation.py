@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from plan_runner.engine import load_plan
-from plan_runner.graph import PlanError, topo_order
-from plan_runner.models import HumanGate, Plan, Step
+from plan_runner.graph import PlanError
+from plan_runner.models import HumanGate
 
 
 def _write_plan(tmp_path: Path, body: str) -> Path:

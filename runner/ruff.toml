@@ -1,0 +1,22 @@
+# Ruff configuration for plan_runner
+# https://docs.astral.sh/ruff/
+
+line-length = 100
+target-version = "py312"
+
+[lint]
+# Only rules that catch real bugs. Style-only rules are disabled to
+# avoid noise (the codebase has deliberate design choices like
+# catching broad exceptions in fallback paths).
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes (unused imports, undefined names)
+    "I",   # isort (import ordering)
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade (modernize syntax)
+]
+
+ignore = [
+    "E501",  # line too long (many explanatory comments exceed 100)
+    "E402",  # module import not at top (intentional in some tests)
+]

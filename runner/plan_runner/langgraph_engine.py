@@ -1,20 +1,22 @@
 from __future__ import annotations
 
-from langgraph.checkpoint.sqlite import SqliteSaver
 import json
 import shutil
 import sys
 import traceback
+from operator import add
 from pathlib import Path
 from typing import Annotated, Any, TypedDict
 from uuid import uuid4
-from operator import add
+
+from langgraph.checkpoint.sqlite import SqliteSaver
+
+from .engine import load_plan, load_status, save_status
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError
 from .langgraph_compile import build_graph, compile_report, parallel_groups
 from .models import Plan, Step
-from .engine import load_plan, load_status, save_status
 
 
 def merge_artifacts(left: dict | None, right: dict | None) -> dict:
@@ -409,7 +411,6 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
             error: str
             log: Annotated[list[str], add]
 
-        step_by_id = {s.id: s for s in plan.steps}
 
         def node_runner(step: Step, state: dict) -> dict:
             completed = list(state.get("completed") or [])
@@ -584,8 +585,7 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
 
             if decision == "edit" and payload:
                 # Aceita BOM se existir (Set-Content -Encoding UTF8 do PowerShell adiciona BOM)
-                if payload.startswith("\ufeff"):
-                    payload = payload[1:]
+                payload = payload.removeprefix("\ufeff")
                 payload_dict = json.loads(payload)
                 resume_value = {"decision": decision, "payload": payload_dict}
             else:
