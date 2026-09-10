@@ -54,7 +54,7 @@ class Plan:
     def from_dict(cls, data: dict[str, Any]) -> Plan:
         budget = data.get("budget") or {}
         steps: list[Step] = []
-        for s in data.get("steps”) or []:
+        for s in data.get("steps") or []:
             steps.append(
                 Step(
                     id=str(s["id"]),
