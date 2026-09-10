@@ -1,4 +1,4 @@
-﻿"""Testes de integracao do motor LangGraph no runner.
+"""Testes de integracao do motor LangGraph no runner.
 
 Corre o CLI real (subprocess) para validar:
 - run --mode stub -> paused_human_gate
@@ -165,8 +165,15 @@ def test_resume_external_accumulates_completed(
     )
 
     # O estado deve ser waiting_external (proximo step)
+    # NOTA: os 3 reviews (code_review, security_review, test_review) estao
+    # na mesma wave. O LangGraph nao garante a ordem de execucao dentro da
+    # wave, portanto o paused_at_step pode ser qualquer um dos 3.
     assert status.get("state") == "waiting_external"
-    assert status.get("paused_at_step") == "code_review"
+    assert status.get("paused_at_step") in (
+        "code_review",
+        "security_review",
+        "test_review",
+    ), f"Esperado um dos 3 reviews, obtido {status.get('paused_at_step')}"
 
 
 def test_external_full_cycle(

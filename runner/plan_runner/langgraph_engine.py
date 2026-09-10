@@ -66,19 +66,21 @@ def run_plan_langgraph(
         completed = list(state.get("completed") or [])
         if step.id in completed:
             return {}
-        log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph"})
+        if not log.has_event("step_started", run_id, step_id=step.id):
+            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph"})
 
         if step.human_gate:
             from langgraph.types import interrupt
 
-            log.append(
-                "human_gate_requested",
-                run_id,
-                {
-                    "step_id": step.id,
-                    "allow": step.human_gate.allow,
-                },
-            )
+            if not log.has_event("human_gate_requested", run_id, step_id=step.id):
+                log.append(
+                    "human_gate_requested",
+                    run_id,
+                    {
+                        "step_id": step.id,
+                        "allow": step.human_gate.allow,
+                    },
+                )
 
             decision = interrupt(
                 {
@@ -404,27 +406,29 @@ def resume_plan_langgraph(out_dir: Path, decision: str) -> dict[str, Any]:
             if step.id in completed:
                 return {}
 
-            log.append(
-                "step_started",
-                run_id,
-                {
-                    "step_id": step.id,
-                    "action": step.action,
-                    "engine": "langgraph",
-                },
-            )
+            if not log.has_event("step_started", run_id, step_id=step.id):
+                log.append(
+                    "step_started",
+                    run_id,
+                    {
+                        "step_id": step.id,
+                        "action": step.action,
+                        "engine": "langgraph",
+                    },
+                )
 
             if step.human_gate:
                 from langgraph.types import interrupt
 
-                log.append(
-                    "human_gate_requested",
-                    run_id,
-                    {
-                        "step_id": step.id,
-                        "allow": step.human_gate.allow,
-                    },
-                )
+                if not log.has_event("human_gate_requested", run_id, step_id=step.id):
+                    log.append(
+                        "human_gate_requested",
+                        run_id,
+                        {
+                            "step_id": step.id,
+                            "allow": step.human_gate.allow,
+                        },
+                    )
 
                 decision_value = interrupt(
                     {
