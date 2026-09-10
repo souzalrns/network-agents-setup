@@ -39,13 +39,8 @@ jobs:
         run: |
           python -m pytest tests/ -v \
             --cov=plan_runner \
-            --cov-report=term-missing
-
-      - name: Combine coverage data
-        run: python -m coverage combine
-
-      - name: Generate coverage XML
-        run: python -m coverage xml -o coverage.xml
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
