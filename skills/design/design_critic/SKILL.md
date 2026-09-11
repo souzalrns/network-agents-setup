@@ -1,7 +1,7 @@
 ---
 name: design_critic
 action: design_critic
-version: 1
+version: 2
 vertical: design
 priority: P0
 ---
@@ -10,15 +10,16 @@ priority: P0
 
 ## Quando usar
 
-- Após `ui_spec` (e idealmente `ux_flow`) antes de HITL.
+- Após `ui_spec` e, se existir no plan, após `ux_writing`, antes de HITL.
 
 ## Processo
 
-1. Verificar alinhamento UX ↔ UI.
-2. Tokens: há salto primitive→component ilegítimo?
+1. Alinhamento UX ↔ UI ↔ microcopy.
+2. Tokens: salto primitive→component ilegítimo?
 3. Estados cobertos vs edge states UX.
-4. A11y mínima.
-5. Scores 1–5 e blockers.
+4. UX writing: checklist pre-ship (erros com how, empty com CTA, sem culpa).
+5. A11y mínima.
+6. Scores 1–5 e blockers.
 
 Dimensões:
 
@@ -27,7 +28,8 @@ Dimensões:
 3. token_discipline
 4. component_states
 5. a11y
-6. risk (claims, legal UI)
+6. ux_writing_quality
+7. risk
 
 ## Saída JSON
 
@@ -46,5 +48,5 @@ Dimensões:
 ## Anti-padrões
 
 - Aprovar com blockers
-- Reescrever o pack inteiro sem scores
-- Confundir com critic de marketing/Item 13
+- Ignorar `03-ux-writing.md` quando o plan o inclui
+- Confundir com critic de marketing / AI Findability

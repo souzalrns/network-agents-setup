@@ -1,13 +1,13 @@
-# Demo — design flow com objective preenchido (lab)
+# Demo — design flow completo (lab)
 
 id: example-design-flow-demo
-version: 1
+version: 2
 deliverable_type: design_pack
-objective: "Desenhar o fluxo e a UI de um ecrã de lista de processos com estados vazio, loading e erro"
+objective: "Desenhar fluxo, UI e microcopy de uma lista de processos (vazio, loading, erro)"
 audience: "Advogados e paralegais em desktop, uso diário"
 
 budget:
-  max_steps: 8
+  max_steps: 10
   max_replans: 1
 
 steps:
@@ -25,12 +25,23 @@ steps:
     output_artifact: artifacts/02-ui-spec.md
     on_fail: human
 
-  - id: critic
-    action: design_critic
-    depends_on: [ui]
+  - id: copy_ui
+    action: ux_writing
+    depends_on: [ux, ui]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-ux-flow.md, artifacts/02-ui-spec.md]
-    output_artifact: artifacts/03-design-critic.json
+    output_artifact: artifacts/03-ux-writing.md
+    on_fail: human
+
+  - id: critic
+    action: design_critic
+    depends_on: [copy_ui]
+    tools_allowed: [read_repo_file]
+    inputs:
+      - artifacts/01-ux-flow.md
+      - artifacts/02-ui-spec.md
+      - artifacts/03-ux-writing.md
+    output_artifact: artifacts/04-design-critic.json
     on_fail: human
 
   - id: hitl
@@ -41,10 +52,11 @@ steps:
       kind: output_review
       allow: [approve, reject, edit]
     tools_allowed: []
-    output_artifact: artifacts/04-hitl.json
+    output_artifact: artifacts/05-hitl.json
 
 done_when:
   - artifacts/01-ux-flow.md exists
   - artifacts/02-ui-spec.md exists
-  - artifacts/03-design-critic.json exists
+  - artifacts/03-ux-writing.md exists
+  - artifacts/04-design-critic.json exists
   - human_gate_resolved on hitl

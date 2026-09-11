@@ -1,6 +1,4 @@
-# Knowledge pack — design (UX / UI / tokens)
-
-Ingestão operacional para agents `design.*` (L5 via `read_repo_file`).
+# Knowledge pack — design (UX / UI / writing / tokens)
 
 | Ficheiro | Uso |
 |----------|-----|
@@ -12,3 +10,5 @@ Ingestão operacional para agents `design.*` (L5 via `read_repo_file`).
 | `a11y-baseline.md` | acessibilidade mínima |
 | `design-system-anti-patterns.md` | o que evitar |
 | `handoff-ux-ui-dev.md` | contratos de handoff |
+| `ux-writing-principles.md` | voice & tone + mecânicas |
+| `ux-writing-examples.md` | robotic → human |
