@@ -14,11 +14,14 @@ def _tool_result(data: dict) -> dict:
 
 
 def main() -> int:
+    MCPServerClass = None
     try:
-        from mcp.server.fastmcp import FastMCP
+        # mcp 2.x
+        from mcp.server.mcpserver import MCPServer as MCPServerClass
     except ImportError:
         try:
-            from mcp.server.fastmcp import FastMCP  # type: ignore
+            # mcp 1.x (FastMCP was the old name)
+            from mcp.server.fastmcp import FastMCP as MCPServerClass  # type: ignore
         except ImportError:
             print(
                 json.dumps(
@@ -30,7 +33,7 @@ def main() -> int:
             )
             return 1
 
-    mcp = FastMCP("plan-runner")
+    mcp = MCPServerClass("plan-runner")
 
     @mcp.tool()
     def list_templates() -> str:
