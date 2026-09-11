@@ -1,0 +1,49 @@
+# Template — ugc_video_pack
+
+id: template-ugc-video-pack
+version: 1
+deliverable_type: ugc_video_pack
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 10
+  max_replans: 2
+
+steps:
+  - id: ugc
+    action: ugc_brief
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-ugc-brief.md
+    on_fail: human
+
+  - id: edit
+    action: video_edit_plan
+    depends_on: [ugc]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-ugc-brief.md]
+    output_artifact: artifacts/02-video-edit-plan.md
+    on_fail: human
+
+  - id: critic
+    action: critic
+    depends_on: [edit]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-ugc-brief.md, artifacts/02-video-edit-plan.md]
+    output_artifact: artifacts/03-critic.json
+    on_fail: human
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-ugc-brief.md exists
+  - artifacts/02-video-edit-plan.md exists
+  - human_gate_resolved on hitl

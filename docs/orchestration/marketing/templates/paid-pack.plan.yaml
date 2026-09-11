@@ -1,0 +1,50 @@
+# Template — paid_pack (media → creative → critic → HITL spend)
+
+id: template-paid-pack
+version: 1
+deliverable_type: paid_pack
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 8
+  max_replans: 2
+
+steps:
+  - id: media
+    action: media_plan
+    tools_allowed: [read_repo_file, web_search]
+    output_artifact: artifacts/01-media-plan.md
+    on_fail: human
+
+  - id: creative
+    action: ad_creative
+    depends_on: [media]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-media-plan.md]
+    output_artifact: artifacts/02-ad-creative.md
+    on_fail: human
+
+  - id: critic
+    action: critic
+    depends_on: [creative]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-media-plan.md, artifacts/02-ad-creative.md]
+    output_artifact: artifacts/03-critic.json
+    on_fail: human
+
+  - id: hitl_spend
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-media-plan.md exists
+  - artifacts/02-ad-creative.md exists
+  - human_gate_resolved on hitl_spend
+  - no ad_account_mutation without approve

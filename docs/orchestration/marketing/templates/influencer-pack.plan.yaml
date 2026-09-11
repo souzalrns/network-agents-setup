@@ -1,0 +1,40 @@
+# Template — influencer_pack
+
+id: template-influencer-pack
+version: 1
+deliverable_type: influencer_pack
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+  max_replans: 2
+
+steps:
+  - id: brief
+    action: influencer_brief
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-influencer-brief.md
+    on_fail: human
+
+  - id: critic
+    action: critic
+    depends_on: [brief]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-influencer-brief.md]
+    output_artifact: artifacts/02-critic.json
+    on_fail: human
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/03-hitl.json
+
+done_when:
+  - artifacts/01-influencer-brief.md exists
+  - human_gate_resolved on hitl
