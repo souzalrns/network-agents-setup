@@ -8,6 +8,8 @@ Arquitetura e documentação de **redes multi-agente** — com foco portfolio na
 
 ---
 
+> **Nota de nomenclatura:** "Item 13" e o identificador histórico interno. O nome canónico e **AI Visibility** (SEO + GEO + AEO + LLMO). Ver [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md).
+
 ## Portfolio (começar aqui)
 
 | Documento | Conteúdo |

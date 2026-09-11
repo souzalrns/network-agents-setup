@@ -1,5 +1,7 @@
 # Item 13 — AI Findability (playbook operacional)
 
+> **Nota de nomenclatura:** "Item 13" e o identificador histórico interno (vem de uma checklist de negócio). O nome canónico e **AI Visibility** (SEO + GEO + AEO + LLMO). Todas as referências a "Item 13" nesta documentação apontam para esse mesmo conceito.
+
 **Repo:** `network-agents-setup` · **Knowledge RAG:** [knowledge/item-13-ai-findability.md](./knowledge/item-13-ai-findability.md)  
 **Lead (setup):** `ai-visibility` · **Base técnica:** `seo-specialist` · **Conteúdo:** `copywriter` / `content-strategist` · **Local (opcional):** `geo-agent` · **Validação:** `critic-criativo` · **Disparo:** `marketing-orquestrador`
 

@@ -1,5 +1,7 @@
 # Checklist cronológico — Item 13 + Marketing
 
+> **Nota de nomenclatura:** "Item 13" e o identificador histórico interno (vem de uma checklist de negócio). O nome canónico e **AI Visibility** (SEO + GEO + AEO + LLMO). Todas as referências a "Item 13" nesta documentação apontam para esse mesmo conceito.
+
 **Objectivo:** não perder o fio. Ordem de execução sugerida.  
 **Âmbito:** setup lab (`network-agents-setup`). Produção MCP só com decisão explícita.  
 **Legenda de tipo**
