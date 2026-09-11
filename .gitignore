@@ -57,3 +57,5 @@ coverage.xml
 htmlcov/
 
 pilots/fase-m/
+
+pilots/run-design-stub/
