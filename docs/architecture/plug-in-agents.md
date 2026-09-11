@@ -158,7 +158,7 @@ Both are opt-in, both are per-client, and both are invoked through the same smal
 
 Under the hood, the runner calls small adapters that delegate to the respective Python libraries. If a library is missing or fails, the run continues without memory. Memory is never a hard dependency.
 
-**Implementation status:** not yet integrated. See `docs/initiatives/backlog.md` for tracking (`INIT-010`, `INIT-011`, `INIT-012`).
+**Implementation status:** not yet integrated. See [`memory-integration.md`](./memory-integration.md) for the technical contract, and `docs/initiatives/backlog.md` for tracking (`INIT-010`, `INIT-011`, `INIT-012`).
 
 ---
 
