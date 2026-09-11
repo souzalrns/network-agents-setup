@@ -1,0 +1,2 @@
+# Official MCP Python SDK (stdio server)
+mcp>=1.0.0
