@@ -1,0 +1,50 @@
+# Demo — design flow com objective preenchido (lab)
+
+id: example-design-flow-demo
+version: 1
+deliverable_type: design_pack
+objective: "Desenhar o fluxo e a UI de um ecrã de lista de processos com estados vazio, loading e erro"
+audience: "Advogados e paralegais em desktop, uso diário"
+
+budget:
+  max_steps: 8
+  max_replans: 1
+
+steps:
+  - id: ux
+    action: ux_flow
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-ux-flow.md
+    on_fail: human
+
+  - id: ui
+    action: ui_spec
+    depends_on: [ux]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-ux-flow.md]
+    output_artifact: artifacts/02-ui-spec.md
+    on_fail: human
+
+  - id: critic
+    action: design_critic
+    depends_on: [ui]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-ux-flow.md, artifacts/02-ui-spec.md]
+    output_artifact: artifacts/03-design-critic.json
+    on_fail: human
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-ux-flow.md exists
+  - artifacts/02-ui-spec.md exists
+  - artifacts/03-design-critic.json exists
+  - human_gate_resolved on hitl
