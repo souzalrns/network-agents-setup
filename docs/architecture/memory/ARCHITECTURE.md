@@ -6,6 +6,8 @@
 
 **Regra de ouro:** o modelo só vê fatias autorizadas; gravações estáveis (L3/L4/L5) não são auto-merge opacas.
 
+**Grounding:** [GROUNDING.md](./GROUNDING.md) — se o contexto não tiver o dado, **não inventar**.
+
 ---
 
 ## Camadas (L0–L6)
@@ -30,7 +32,7 @@ L6  RELATIONAL            grafo de entidades (opcional)
 | L5 | Knowledge | vector (+ keyword) multi-KB | ingest jobs | tool `retrieve_knowledge` |
 | L6 | Relational | graph store | extractors | tool `retrieve_graph` / hybrid |
 
-Detalhe operacional: [layers.md](./layers.md) · contratos: [contracts.md](./contracts.md) · scopes: [scopes.md](./scopes.md).
+Detalhe: [layers.md](./layers.md) · [contracts.md](./contracts.md) · [scopes.md](./scopes.md) · [rag-l5.md](./rag-l5.md).
 
 ---
 
@@ -43,59 +45,24 @@ Detalhe operacional: [layers.md](./layers.md) · contratos: [contracts.md](./con
 | L2 | Fonte de verdade de factos de negócio sem projeção |
 | L3 | Guardar PII ou secrets em skills |
 | L4 | Indexar PDFs de domínio inteiros |
-| L5 | Preferências (“o user gosta de tom X”) |
+| L5 | Preferências (“o user gosta de tom X”); status operacional de tools |
 | L6 | Substituir L5 no dia 1 sem necessidade multi-hop |
+
+**L5 ≠ banco de status.** Avaliações operacionais (integrado/rejeitado) vivem noutro registo; ver [GROUNDING.md](./GROUNDING.md).
 
 ---
 
 ## Fluxo genérico de um run
 
 ```text
-1. Load L0
+1. Load L0 (+ grounding directive)
 2. Optional recall L4 (scope: user | project | agent)
 3. Plan / step → action do registry
 4. Se procedural: load L3 (só a skill escolhida)
-5. Se precisa corpus: retrieve L5 (+ L6 se hybrid)
+5. Se precisa corpus: retrieve L5 (+ L6 se hybrid) — merge agent+global, minSimilarity
 6. Executar tools (L1)
 7. Append eventos L2 + artefactos
 8. Optional: skill_candidate (L3) ou memory_candidate (L4) → human_gate
 ```
 
----
-
-## Scopes (multi-tenant mental, genérico)
-
-```text
-global      framework, constitution, skills base
-org         opcional: políticas da organização
-project     knowledge KBs e decisões de projecto
-user        preferências e factos L4
-agent_role  allowlist de tools e KBs
-run         L2 episódico (plan_id / run_id)
-```
-
-Nenhum agent lê KB ou memória fora do scope permitido pelo plan / `tools_allowed`.
-
----
-
-## Implementação de referência (não obrigatória)
-
-| Camada | Opções ilustrativas |
-|--------|---------------------|
-| L2 | `events.jsonl`, Postgres, checkpoint estilo LangGraph |
-| L3 | `skills/**/SKILL.md` + registry de actions |
-| L4 | API remember/recall (Postgres, Cognee, Mem0, …) |
-| L5 | LlamaIndex / LightRAG / Haystack + Qdrant / pgvector |
-| L6 | Property graph, LightRAG graph, Cognee graph |
-
-O **contrato** é estável; o motor por baixo é plugável.
-
----
-
-## Fora de scope deste doc
-
-- Configuração de um cliente ou vertical concreto  
-- Escolha final de vendor  
-- Cutover de produção  
-
-Ver também: `docs/architecture/patterns-from-hermes/`, `patterns-from-rag/`, `patterns-from-orchestrators/MASTER-EXTRACTION.md`.
+Se L5/L4 devolverem vazio para o facto pedido → resposta **(b) não está no contexto**, nunca inventar.
