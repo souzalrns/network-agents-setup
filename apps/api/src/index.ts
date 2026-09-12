@@ -23,6 +23,7 @@ import {
 import { getGlobalLogger } from '@network-agents/observability';
 import { Pool } from 'pg';
 import { AGENT_CONFIGS } from '../../../config/agents.config';
+import { assertAuthConfig } from './middleware/auth';
 async function main() {
   const logger = getGlobalLogger();
   const publicMode = process.env.PUBLIC_MODE === 'true';
@@ -30,6 +31,11 @@ async function main() {
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development',
   });
+  // 0. Autenticação: falha cedo em produção sem API_KEY, em vez de servir aberto.
+  const authConfig = assertAuthConfig();
+  if (authConfig.warning) {
+    logger.warn(authConfig.warning);
+  }
   // 1. Database Pool
   const dbPool = new Pool({
     connectionString: process.env.DATABASE_URL,

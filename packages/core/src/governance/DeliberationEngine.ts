@@ -92,13 +92,20 @@ export class DeliberationEngine {
     };
     // Ajusta reversibilidade (quanto maior, menor o score)
     const adjustedReversibility = 10 - criteria.reversibility;
-    const score =
+    const weighted =
       criteria.impact * weights.impact +
       criteria.uncertainty * weights.uncertainty +
       criteria.risk * weights.risk +
       adjustedReversibility * weights.reversibility +
       criteria.cost * weights.cost +
       Math.min(criteria.dependencies, 10) * weights.dependencies;
+    // Os critérios são 0–10 e os pesos somam 1.0, logo `weighted` fica em 0–10.
+    // Os thresholds (20/50/75) estão em escala 0–100 — sem esta normalização
+    // nenhum input conseguia passar de 10 e TODA deliberação caía em
+    // 'operational' com requiresApproval=false, ou seja, o gate de aprovação
+    // humana nunca disparava (nem no pior caso: impacto 10, risco 10,
+    // irreversível, 10 dependências).
+    const score = weighted * 10;
     return Math.min(score, 100);
   }
   /**

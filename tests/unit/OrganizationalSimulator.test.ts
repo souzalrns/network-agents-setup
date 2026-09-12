@@ -2,8 +2,11 @@ import { describe, it, expect, vi } from 'vitest';
 import { OrganizationalSimulator } from '../../packages/core/src/simulation/OrganizationalSimulator';
 import { SelfAwareness } from '../../packages/core/src/observability/SelfAwareness';
 describe('OrganizationalSimulator', () => {
-  it('should create a scenario', () => {
+  it('should create a scenario', async () => {
     const awareness = new SelfAwareness({ updateInterval: 0 });
+    // createScenario() exige um estado inicial: sem este updateState()
+    // o SelfAwareness ainda não tem estado e o simulador lança.
+    await awareness.updateState();
     const simulator = new OrganizationalSimulator(awareness, {
       maxConcurrentSimulations: 5,
       defaultSteps: 50,

@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ArchitectureCouncil } from '../../packages/core/src/governance/ArchitectureCouncil';
 describe('ArchitectureCouncil', () => {
-  it('should submit and approve a proposal', () => {
+  // Nota: uma proposta de baixo impacto e de tipo não-sensível é auto-aprovada
+  // por design (ver o teste 'should auto-approve low impact proposals').
+  // Para verificar o estado 'pending' é preciso um tipo que exija revisão.
+  it('should leave proposals of review-required types pending', () => {
     const council = new ArchitectureCouncil({
       autoApproveThreshold: 80,
       requireReviewForTypes: ['architecture_change'],
@@ -9,7 +12,7 @@ describe('ArchitectureCouncil', () => {
     const proposal = council.submitProposal({
       title: 'Test Proposal',
       description: 'Test description',
-      type: 'new_capability',
+      type: 'architecture_change',
       impact: {
         complexity: 'low',
         cost: 'low',
