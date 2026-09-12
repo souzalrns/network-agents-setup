@@ -8,22 +8,28 @@ from . import tools_impl
 
 
 def main() -> int:
+    MCPServerClass = None
     try:
-        from mcp.server.fastmcp import FastMCP
+        # mcp 2.x
+        from mcp.server.mcpserver import MCPServer as MCPServerClass
     except ImportError:
-        print(
-            json.dumps(
-                {
-                    "error": "package 'mcp' not installed",
-                    "hint": "pip install -r requirements.txt  (from mcp/plan_runner)",
-                    "smoke_without_sdk": "python -m mcp_plan_runner.smoke",
-                }
-            ),
-            flush=True,
-        )
-        return 1
+        try:
+            # mcp 1.x (FastMCP was the old name)
+            from mcp.server.fastmcp import FastMCP as MCPServerClass  # type: ignore
+        except ImportError:
+            print(
+                json.dumps(
+                    {
+                        "error": "package 'mcp' not installed (neither MCPServer nor FastMCP found)",
+                        "hint": "pip install -r requirements.txt  (from mcp/plan_runner)",
+                        "smoke_without_sdk": "python -m mcp_plan_runner.smoke",
+                    }
+                ),
+                flush=True,
+            )
+            return 1
 
-    mcp = FastMCP("plan-runner")
+    mcp = MCPServerClass("plan-runner")
 
     @mcp.tool()
     def list_templates() -> str:
