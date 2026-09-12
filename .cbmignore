@@ -1,0 +1,5 @@
+﻿# False positives: runtime-registered callbacks not detectable as CALLS
+# - shutdown: process.on('SIGTERM', ...)
+# - send: React hook return value
+apps/api/src/index.ts
+apps/web/src/hooks/useWebSocket.ts
