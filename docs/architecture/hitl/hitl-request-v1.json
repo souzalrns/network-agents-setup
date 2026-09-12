@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/souzalrns/network-agents-setup/docs/architecture/hitl/hitl-request-v1.json",
+  "title": "HITL Request v1",
+  "description": "Shared contract between plan_runner (Python) and the Node platform (TypeScript). Both sides write and read this shape when a run pauses for human approval.",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "source",
+    "status",
+    "title",
+    "requested_at"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "hitl-request-v1"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique id. Format: 'hitl_<uuid>'.",
+      "pattern": "^hitl_[a-f0-9-]+$"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["plan_runner", "node_api"],
+      "description": "Which side created this request."
+    },
+    "run_id": {
+      "type": ["string", "null"],
+      "description": "plan_runner run id (e.g. 'run_5386e192fa'). Null for requests created directly via the Node API."
+    },
+    "plan_id": {
+      "type": ["string", "null"],
+      "description": "Plan id from the YAML (e.g. 'example-design-flow-demo')."
+    },
+    "step_id": {
+      "type": ["string", "null"],
+      "description": "Step id where the run paused (e.g. 'hitl')."
+    },
+    "agent_id": {
+      "type": ["string", "null"],
+      "description": "Agent or client id (e.g. 'viannalegal'). Used for filtering."
+    },
+    "domain": {
+      "type": ["string", "null"],
+      "description": "Business domain (e.g. 'legal', 'marketing', 'design')."
+    },
+    "category": {
+      "type": ["string", "null"],
+      "enum": ["financial", "legal", "medical", "architectural", "contractual", "strategic", "security", "approval", null],
+      "description": "Category of the decision. Optional; null if unknown."
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "default": "medium",
+      "description": "Priority. plan_runner defaults to 'medium' when not specified."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected", "expired", "cancelled"],
+      "description": "Current status. plan_runner uses 'pending' when paused; on resume it becomes 'approved' or 'rejected'. 'edit' is a decision (see 'response'), not a status."
+    },
+    "title": {
+      "type": "string",
+      "description": "Short human-readable title (e.g. 'Approve spend on paid-pack')."
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Longer explanation for the human reviewer."
+    },
+    "proposed_action": {
+      "type": ["string", "null"],
+      "description": "What the run wants to do next (e.g. 'publish', 'spend', 'merge')."
+    },
+    "allow": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["approve", "reject", "edit"] },
+      "default": ["approve", "reject"],
+      "description": "Which decisions the reviewer is allowed to give. plan_runner-specific; Node API defaults to ['approve', 'reject']."
+    },
+    "context": {
+      "type": "object",
+      "default": {},
+      "description": "Free-form context. plan_runner puts 'paused_at_step', 'completed', 'mode' here."
+    },
+    "alternatives": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Alternative actions considered. Optional; Node platform uses this, plan_runner usually leaves empty."
+    },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Known risks. Optional."
+    },
+    "impacts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "Known impacts. Optional."
+    },
+    "requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the request was created."
+    },
+    "expires_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp. Null means no expiry. plan_runner currently never sets this."
+    },
+    "responded_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of when the decision was made. Null while pending."
+    },
+    "response": {
+      "type": ["string", "null"],
+      "enum": ["approve", "reject", "edit", null],
+      "description": "The decision. 'edit' is only valid when 'allow' includes it."
+    },
+    "response_comment": {
+      "type": ["string", "null"],
+      "description": "Optional free-text comment from the reviewer."
+    },
+    "responder_id": {
+      "type": ["string", "null"],
+      "description": "Who responded (e.g. 'cli', 'user:luiz', 'system')."
+    },
+    "metadata": {
+      "type": "object",
+      "default": {},
+      "description": "Source-specific extras. Not interpreted by the other side."
+    }
+  },
+  "additionalProperties": false
+}
