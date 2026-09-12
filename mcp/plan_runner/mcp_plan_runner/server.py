@@ -3,37 +3,27 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 
 from . import tools_impl
 
 
-def _tool_result(data: dict) -> dict:
-    text = json.dumps(data, ensure_ascii=False, indent=2)
-    return {"content": [{"type": "text", "text": text}], "isError": not data.get("ok", True)}
-
-
 def main() -> int:
-    MCPServerClass = None
     try:
-        # mcp 2.x
-        from mcp.server.mcpserver import MCPServer as MCPServerClass
+        from mcp.server.fastmcp import FastMCP
     except ImportError:
-        try:
-            # mcp 1.x (FastMCP was the old name)
-            from mcp.server.fastmcp import FastMCP as MCPServerClass  # type: ignore
-        except ImportError:
-            print(
-                json.dumps(
-                    {
-                        "error": "package 'mcp' not installed",
-                        "hint": "pip install -r mcp/plan_runner/requirements.txt",
-                    }
-                )
-            )
-            return 1
+        print(
+            json.dumps(
+                {
+                    "error": "package 'mcp' not installed",
+                    "hint": "pip install -r requirements.txt  (from mcp/plan_runner)",
+                    "smoke_without_sdk": "python -m mcp_plan_runner.smoke",
+                }
+            ),
+            flush=True,
+        )
+        return 1
 
-    mcp = MCPServerClass("plan-runner")
+    mcp = FastMCP("plan-runner")
 
     @mcp.tool()
     def list_templates() -> str:

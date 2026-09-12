@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -19,10 +18,27 @@ def test_sanitize_blocks_outside(tmp_path, monkeypatch):
     (tmp_path / "ok.txt").write_text("x", encoding="utf-8")
     p = policy.sanitize_repo_path("ok.txt")
     assert p == (tmp_path / "ok.txt").resolve()
+    outside = tmp_path.parent / "other_secret.txt"
+    outside.write_text("no", encoding="utf-8")
     with pytest.raises(PermissionError):
-        policy.sanitize_repo_path(str(Path.cwd() / ".." / ".." / "etc" / "passwd"))
+        policy.sanitize_repo_path(str(outside))
+
+
+def test_moderate_allows_mutate_without_key(monkeypatch):
+    monkeypatch.setenv("PLAN_RUNNER_MCP_PROFILE", "moderate")
+    monkeypatch.delenv("PLAN_RUNNER_MCP_KEY", raising=False)
+    monkeypatch.delenv("PLAN_RUNNER_MCP_ALLOW_MUTATE", raising=False)
+    ctx = policy.authorize("run_plan")
+    assert ctx.authorized is True
+
+
+def test_strict_blocks_mutate_without_key(monkeypatch):
+    monkeypatch.setenv("PLAN_RUNNER_MCP_PROFILE", "strict")
+    monkeypatch.delenv("PLAN_RUNNER_MCP_KEY", raising=False)
+    monkeypatch.delenv("PLAN_RUNNER_MCP_ALLOW_MUTATE", raising=False)
+    ctx = policy.authorize("run_plan")
+    assert ctx.authorized is False
 
 
 def test_scopes_defined():
-    assert "run_plan" in policy.SCOPES
     assert policy.SCOPES["run_plan"] == "runner:plan:execute"

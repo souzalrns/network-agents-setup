@@ -30,7 +30,7 @@ def list_templates() -> dict:
         for p in sorted(base.rglob("*.plan.yaml")):
             found.append(str(p.relative_to(root)).replace("\\", "/"))
     audit({"tool": "list_templates", "ok": True, "count": len(found), "caller": auth.caller})
-    return {"ok": True, "templates": found}
+    return {"ok": True, "templates": found, "repo_root": str(root)}
 
 
 def get_status(out_dir: str) -> dict:
@@ -40,16 +40,14 @@ def get_status(out_dir: str) -> dict:
         return {"ok": False, "error": auth.reason}
     try:
         path = sanitize_repo_path(out_dir, must_exist=True)
-        status_file = path / "status.json" if path.is_dir() else path
-        if status_file.is_dir():
-            status_file = status_file / "status.json"
+        if path.is_file() and path.name == "status.json":
+            status_file = path
+        elif path.is_dir():
+            status_file = path / "status.json"
+        else:
+            status_file = path
         if not status_file.exists():
-            # allow out dir path
-            alt = path / "status.json"
-            if alt.exists():
-                status_file = alt
-            else:
-                raise FileNotFoundError(str(status_file))
+            raise FileNotFoundError(str(status_file))
         data = json.loads(status_file.read_text(encoding="utf-8-sig"))
         audit({"tool": "get_status", "ok": True, "out": str(path), "caller": auth.caller})
         return {"ok": True, "status": data}
@@ -71,8 +69,9 @@ def run_plan(plan: str, mode: str = "stub", out: str | None = None) -> dict:
         from plan_runner.engine import run_plan as engine_run
 
         plan_path = sanitize_repo_path(plan, must_exist=True)
-        out_dir = sanitize_repo_path(out) if out else None
-        if out_dir and not out_dir.exists():
+        out_dir = None
+        if out:
+            out_dir = sanitize_repo_path(out, must_exist=False)
             out_dir.mkdir(parents=True, exist_ok=True)
         result = engine_run(plan_path, mode=mode, out_dir=out_dir)
         audit(
@@ -83,6 +82,7 @@ def run_plan(plan: str, mode: str = "stub", out: str | None = None) -> dict:
                 "mode": mode,
                 "caller": auth.caller,
                 "profile": auth.profile,
+                "auth_reason": auth.reason,
             }
         )
         return {"ok": True, "result": result}

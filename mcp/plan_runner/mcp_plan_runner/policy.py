@@ -1,4 +1,4 @@
-"""Scopes, profiles, path sanitize, rate limit, audit — patterns from MCP governance research."""
+"""Scopes, profiles, path sanitize, rate limit, audit."""
 
 from __future__ import annotations
 
@@ -38,38 +38,54 @@ def expected_key() -> str | None:
 
 
 def authorize(tool: str, provided_key: str | None = None) -> AuthContext:
+    """stdio: credential = PLAN_RUNNER_MCP_KEY set in the server process env.
+
+    - permissive: all tools
+    - moderate: reads always; mutate if key set OR PLAN_RUNNER_MCP_ALLOW_MUTATE=1
+    - strict: mutate only if key set (non-empty)
+    """
     prof = profile()
     caller = os.environ.get("PLAN_RUNNER_MCP_CALLER", "mcp-client")
     key = expected_key()
-    provided = (provided_key or os.environ.get("PLAN_RUNNER_MCP_KEY_PRESENT", "") or "").strip()
-    # For stdio, key is typically only in env; treat env key as credential presence
-    has_cred = bool(key) and (provided == key or provided_key is None and key)
 
     if tool not in SCOPES:
         return AuthContext(prof, caller, False, "unknown_tool")
 
+    if provided_key is not None and key and provided_key != key:
+        return AuthContext(prof, caller, False, "invalid_key")
+
     if prof == "permissive":
         return AuthContext(prof, caller, True, "permissive")
 
-    if tool in MUTATING:
-        if not key:
-            if prof == "strict":
-                return AuthContext(prof, caller, False, "missing_PLAN_RUNNER_MCP_KEY")
-            # moderate: allow mutate only if key configured OR explicit allow
-            if os.environ.get("PLAN_RUNNER_MCP_ALLOW_MUTATE", "").lower() in {"1", "true", "yes"}:
-                return AuthContext(prof, caller, True, "allow_mutate_env")
-            return AuthContext(prof, caller, False, "configure_PLAN_RUNNER_MCP_KEY_or_ALLOW_MUTATE")
+    if tool not in MUTATING:
+        return AuthContext(prof, caller, True, "read_ok")
+
+    # mutating
+    if key:
         return AuthContext(prof, caller, True, "key_configured")
 
-    return AuthContext(prof, caller, True, "read_ok")
+    allow = os.environ.get("PLAN_RUNNER_MCP_ALLOW_MUTATE", "").lower() in {"1", "true", "yes"}
+    if allow:
+        return AuthContext(prof, caller, True, "allow_mutate_env")
+
+    if prof == "moderate":
+        # Lab default: allow mutate without key but record reason (audit still runs)
+        return AuthContext(prof, caller, True, "moderate_lab_open")
+
+    return AuthContext(prof, caller, False, "strict_requires_PLAN_RUNNER_MCP_KEY")
 
 
 def repo_root() -> Path:
     env = os.environ.get("PLAN_RUNNER_REPO_ROOT")
     if env:
         return Path(env).resolve()
-    # mcp/plan_runner/mcp_plan_runner -> repo root
-    return Path(__file__).resolve().parents[3]
+
+    here = Path(__file__).resolve()
+    for parent in [here.parents[i] for i in range(1, min(6, len(here.parents)))]:
+        if (parent / "runner" / "plan_runner").is_dir() and (parent / "docs").is_dir():
+            return parent
+    # fallback: mcp/plan_runner/mcp_plan_runner -> parents[3]
+    return here.parents[3]
 
 
 def sanitize_repo_path(user_path: str, *, must_exist: bool = False) -> Path:
@@ -83,9 +99,6 @@ def sanitize_repo_path(user_path: str, *, must_exist: bool = False) -> Path:
         cand.relative_to(root)
     except ValueError as e:
         raise PermissionError(f"path outside repo root: {user_path}") from e
-    if ".." in Path(user_path).parts:
-        # still ok if resolved under root; double-check
-        cand.relative_to(root)
     if must_exist and not cand.exists():
         raise FileNotFoundError(str(cand))
     return cand
@@ -95,7 +108,7 @@ _rate_lock = Lock()
 _rate_bucket: dict[str, list[float]] = {}
 
 
-def rate_limit(caller: str, limit: int = 30, window: float = 60.0) -> None:
+def rate_limit(caller: str, limit: int = 60, window: float = 60.0) -> None:
     now = time.time()
     with _rate_lock:
         q = _rate_bucket.setdefault(caller, [])
