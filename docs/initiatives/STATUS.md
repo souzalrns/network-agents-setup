@@ -9,6 +9,8 @@
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum | 1 dia | RAG funcional | Auditoria Claude |
+| **C6** | **Configurar `MCP_API_KEY` na Vercel** (`agent-network-mcp`) -- sem isto, `/api/mcp` devolve 503 no proximo deploy | 5 min | Operacao MCP | C5 |
+| **C7** | **16 vulnerabilidades Dependabot** no `agent-network-mcp` (1 critical, 8 high, 7 moderate) -- `npm audit` + revisao | 1-2h | Seguranca prod | C5 |
 
 ## 🟠 Alto (resolve problema real, valor claro)
 
@@ -181,9 +183,10 @@
 - Fechada: S1, S4, C1, B7, B8, B9 todos em Done
 
 ### Sessão 2 (1 dia)
-- S2 (testes do caminho crítico) — 2-3h
-- S3 (teste do runner no CI) — 1h
-- S5 (consistência) — 1h
+- C6 (MCP_API_KEY na Vercel) -- 5 min (URGENTE)
+- C7 (npm audit no agent-network-mcp) -- 1-2h
+- S3 (teste do runner no CI) -- 1h
+- S5 (consistencia) -- 1h
 
 ### Sessão 3 (1-2 dias)
 - S6 (`hitl.py`) — 1 dia
