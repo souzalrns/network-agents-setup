@@ -44,7 +44,6 @@
 | **B4** | **Agente gamedev** (GDD, loop, engine) | 3-5 dias | Nada | Nossa |
 | **B5** | **Hermes como runtime** (não interface) — worker para browser/vision | 1-2 dias | Nada | Nossa |
 | **B6** | **MiroFish para simulação** (repo isolado, AGPL — uso interno) | 1 dia | Nada | Nossa |
-| **B8** | **`patterns-from-codebase-memory`** — documentar o `codebase-memory-mcp` | 1h | Nada | Nossa |
 | **B9** | **`node-platform.md`** — documentar a plataforma Node (`HitlManager`, rotas, tools) | 2h | Nada | Nossa |
 
 ## ⏸️ Arquivado (não fazer agora)
@@ -160,6 +159,7 @@
 | **S8** | `.gitignore` sem regra Node/node_modules | secao Node/pnpm adicionada (node_modules, dist, .turbo, coverage) | `ae24b7b` |
 | **C1** | Fase 0.4 -- marcar A4/A5/A6 do `ITEM13-MARKETING-ROADMAP.md` com link do run | evidencia commitada em `pilots/evidence/`, links adicionados ao roadmap | `9994ea6` |
 | **B7** | `patterns-from-mcp` -- documentar o MCP server | tools-catalog + governance-pipeline + README com "Ficheiros deste pacote" | `3366faa` |
+| **B8** | `patterns-from-codebase-memory` -- documentar o codebase-memory-mcp | README + tools-catalog (15 tools) + evidence-tiers (Scout/Verify/Auditor) | `b7ef2f2` |
 
 ---
 
@@ -177,7 +177,7 @@
 ## Ordem sugerida (próximas 3 sessões)
 
 ### Sessão 1 (1-2h)
-- B8-B9 (documentar o que existe) — 2h
+- B9 (documentar o que existe) — 2h
 
 ### Sessão 2 (1 dia)
 - S2 (testes do caminho crítico) — 2-3h
