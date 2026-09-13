@@ -17,13 +17,13 @@
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **A1** | **Fase 1.1** — CI bloqueia se vitest falhar (`continue-on-error: false`) | 5 min | Rede de segurança | Auditoria Claude |
-| **A2** | **Fase 1.2** — testes do caminho crítico (Router, Planner, Executor, HitlManager) — ≥20 casos | 2-3h | Refactor seguro | Auditoria Claude |
-| **A3** | **Fase 1.3** — teste do runner no CI (5 templates dry-run + 1 stub) | 1h | Runner gate | Auditoria Claude |
-| **A4** | **Fase 1.4** — gerar e commitar `pnpm-lock.yaml` | 5 min | Builds reprodutíveis | Auditoria Claude |
-| **A5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner | 1h | Consistência | Auditoria Claude |
-| **A6** | **Fase A.2** — `runner/plan_runner/hitl.py` (lado Python do contrato v1) | 1 dia | HITL durável | Nosso |
-| **A7** | **Working memory** (`MEMORY.md` curado por cliente, ~1300 tokens) | 1 dia | Contexto sem RAG | Nossa |
+| **S1** | **Fase 1.1** — CI bloqueia se vitest falhar (`continue-on-error: false`) | 5 min | Rede de segurança | Auditoria Claude |
+| **S2** | **Fase 1.2** — testes do caminho crítico (Router, Planner, Executor, HitlManager) — ≥20 casos | 2-3h | Refactor seguro | Auditoria Claude |
+| **S3** | **Fase 1.3** — teste do runner no CI (5 templates dry-run + 1 stub) | 1h | Runner gate | Auditoria Claude |
+| **S4** | **Fase 1.4** — gerar e commitar `pnpm-lock.yaml` | 5 min | Builds reprodutíveis | Auditoria Claude |
+| **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner | 1h | Consistência | Auditoria Claude |
+| **S6** | **Fase A.2** — `runner/plan_runner/hitl.py` (lado Python do contrato v1) | 1 dia | HITL durável | Nosso |
+| **S7** | **Working memory** (`MEMORY.md` curado por cliente, ~1300 tokens) | 1 dia | Contexto sem RAG | Nossa |
 
 ## 🟡 Médio (valor claro, sem urgência)
 
@@ -167,19 +167,19 @@
 
 ### Sessão 1 (1-2h)
 - C1 (Fase 0.4) — 5 min
-- A1 (CI bloqueia vitest) — 5 min
-- A4 (`pnpm-lock.yaml`) — 5 min
+- S1 (CI bloqueia vitest) — 5 min
+- S4 (`pnpm-lock.yaml`) — 5 min
 - B7-B9 (documentar o que existe) — 2h
 
 ### Sessão 2 (1 dia)
-- A2 (testes do caminho crítico) — 2-3h
-- A3 (teste do runner no CI) — 1h
-- A5 (consistência) — 1h
+- S2 (testes do caminho crítico) — 2-3h
+- S3 (teste do runner no CI) — 1h
+- S5 (consistência) — 1h
 - C2 (modo external com erro explícito) — 1h
 
 ### Sessão 3 (1-2 dias)
-- A6 (`hitl.py`) — 1 dia
-- A7 (working memory) — 1 dia
+- S6 (`hitl.py`) — 1 dia
+- S7 (working memory) — 1 dia
 - M1 (session search) — 4h
 
 **Depois disto**: Fase 1 fechada. O motor tem rede de segurança.

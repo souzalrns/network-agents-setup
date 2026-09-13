@@ -98,7 +98,6 @@ jobs:
       - name: Testes unitários TypeScript (vitest)
         id: vitest
         run: pnpm exec vitest run tests/unit --reporter=verbose 2>&1 | tee /tmp/log-vitest.log
-        continue-on-error: true
 
       - name: Consistência STATUS ↔ código ↔ agents.config
         id: consistency
