@@ -8,8 +8,8 @@
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **C3** | **`auth.ts` fail-closed** também no `agent-network-mcp` (produção) | 30 min | Segurança prod | Auditoria Claude |
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum | 1 dia | RAG funcional | Auditoria Claude |
+| **C5** | **Auth do endpoint `app/api/mcp/route.js`** (`agent-network-mcp`) nao coberta por C3 | 30 min | Exposicao prod | C3 |
 
 ## 🟠 Alto (resolve problema real, valor claro)
 
@@ -160,6 +160,7 @@
 | **B8** | `patterns-from-codebase-memory` -- documentar o codebase-memory-mcp | README + tools-catalog (15 tools) + evidence-tiers (Scout/Verify/Auditor) | `b7ef2f2` |
 | **B9** | `node-platform.md` -- documentar a plataforma Node | apps/api + packages/core, boot sequence, HITL Node, auth fail-closed | `0231c5d` |
 | **C2** | Modo external falha silenciosamente se `--out` fora de `pilots/` | guard `_validate_out_dir` nos 2 engines; testes alinhados; 76 verdes | `33310bb` + `4ec1ccf` |
+| **C3** | `auth.ts` fail-closed tambem no `agent-network-mcp` | `session.js` `assertSecret()` (>=16 chars); login+5 endpoints devolvem 503 | `613c634` (agent-network-mcp) |
 
 ---
 
