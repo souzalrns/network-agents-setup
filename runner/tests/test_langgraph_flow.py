@@ -269,7 +269,7 @@ def test_resume_edit_with_payload(
         "notes": "aprovar com condicoes",
         "reviewer": "cto",
     }
-    payload_file = tmp_run_dir.parent / "payload-edit.json"
+    payload_file = tmp_run_dir / "payload-edit.json"
     payload_file.write_text(
         _json.dumps(payload, ensure_ascii=False),
         encoding="utf-8",
