@@ -1,0 +1,15 @@
+{
+  "run_id": "run_4889d61be0",
+  "plan_id": "template-seo-article",
+  "mode": "stub",
+  "state": "done",
+  "completed": [
+    "copy",
+    "critic",
+    "hitl_publish_decision",
+    "research",
+    "seo_brief"
+  ],
+  "current_step": null,
+  "paused_at_step": "hitl_publish_decision"
+}

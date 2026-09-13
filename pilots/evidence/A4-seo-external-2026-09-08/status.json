@@ -1,0 +1,14 @@
+{
+  "run_id": "run_c2d034a180",
+  "plan_id": "example-seo-article-demo",
+  "mode": "external",
+  "state": "done",
+  "completed": [
+    "copy",
+    "critic",
+    "hitl_publish_decision",
+    "research",
+    "seo_brief"
+  ],
+  "current_step": null
+}

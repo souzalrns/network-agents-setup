@@ -1,0 +1,14 @@
+{
+  "run_id": "run_f1b414cf73",
+  "plan_id": "template-seo-article",
+  "mode": "external",
+  "state": "done",
+  "completed": [
+    "copy",
+    "critic",
+    "hitl_publish_decision",
+    "research",
+    "seo_brief"
+  ],
+  "current_step": null
+}
