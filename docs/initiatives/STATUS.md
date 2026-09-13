@@ -9,7 +9,6 @@
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum | 1 dia | RAG funcional | Auditoria Claude |
-| **C6** | **Configurar `MCP_API_KEY` na Vercel** (`agent-network-mcp`) -- sem isto, `/api/mcp` devolve 503 no proximo deploy | 5 min | Operacao MCP | C5 |
 | **C7** | **16 vulnerabilidades Dependabot** no `agent-network-mcp` (1 critical, 8 high, 7 moderate) -- `npm audit` + revisao | 1-2h | Seguranca prod | C5 |
 
 ## 🟠 Alto (resolve problema real, valor claro)
@@ -163,6 +162,7 @@
 | **C2** | Modo external falha silenciosamente se `--out` fora de `pilots/` | guard `_validate_out_dir` nos 2 engines; testes alinhados; 76 verdes | `33310bb` + `4ec1ccf` |
 | **C3** | `auth.ts` fail-closed tambem no `agent-network-mcp` | `session.js` `assertSecret()` (>=16 chars); login+5 endpoints devolvem 503 | `613c634` (agent-network-mcp) |
 | **C5** | Auth do endpoint `app/api/mcp/route.js` (`agent-network-mcp`) | `withAuth()` com Bearer `MCP_API_KEY` (>=16 chars); fail-closed 503 sem env; constant-time compare | `69aec8c` (agent-network-mcp) |
+| **C6** | Configurar `MCP_API_KEY` na Vercel (`agent-network-mcp`) | Vercel Production; redeploy de 69aec8c; verificado: 401 sem header, 405 com header | Vercel `agent-network-mcp-oddn` |
 
 ---
 
