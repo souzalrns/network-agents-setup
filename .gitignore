@@ -63,3 +63,23 @@ pilots/run-design-stub/
 pilots/run-paid-stub/
 pilots/run-ugc-video-stub/
 pilots/run-influencer-stub/
+
+# === Node / pnpm (monorepo) ===
+# Regra sem barra inicial: apanha node_modules em qualquer nivel,
+# incluindo apps/*/node_modules e packages/*/node_modules.
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Build outputs dos workspaces
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Cache de ferramentas
+.turbo/
+.cache/
+.vitest/
+coverage/
