@@ -28,9 +28,9 @@ Ordem fixa: sem isto, Item 13 e marketing ficam soltos.
 | A1 | DOC | ✅ | Constitution / policy lab≠prod, least privilege, publish só HITL | Ficheiro de regras referenciado pelo orchestrator |
 | A2 | DOC | ✅ | Memória L0–L6 + contratos remember/recall/retrieve | `docs/architecture/memory/` presente e lido pela equipa |
 | A3 | DOC | ✅ | Orquestrador marketing + relação Item 13 (sem orchestrator Item 13 isolado) | `docs/orchestration/marketing/` + `item-13-and-marketing.md` |
-| A4 | DEV | ✅ | Runner plan-execute (dry-run / stub / external + HITL resume) | `runner/` executa template sem erro |
-| A5 | TEST | ✅ | `dry-run` no `seo-article.plan.yaml` | JSON com ordem de steps correcta |
-| A6 | TEST | ✅ | `stub` + `resume --decision approve` | `events.jsonl` + `status.json` state `done` |
+| A4 | DEV | ✅ | Runner plan-execute (dry-run / stub / external + HITL resume) | `runner/` executa template sem erro | ([evidencia](../../pilots/evidence/A4-seo-external-2026-09-08/))
+| A5 | TEST | ✅ | `dry-run` no `seo-article.plan.yaml` | JSON com ordem de steps correcta | ([evidencia](../../pilots/evidence/A5-A6-seo-stub-2026-09-07/))
+| A6 | TEST | ✅ | `stub` + `resume --decision approve` | `events.jsonl` + `status.json` state `done` | ([evidencia](../../pilots/evidence/A5-A6-seo-stub-2026-09-07/))
 
 **Estado esperado agora:** A1–A6 ✅ feitos e provados. A5–A6 validados na Fase M (5 templates dry-run + stub→HITL→resume, todos passaram). CI verde.
 
