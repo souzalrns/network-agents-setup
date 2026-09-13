@@ -13,6 +13,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 
 from .engine import load_plan, load_status, save_status
 from .events import EventLog
+from .engine import _validate_out_dir
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError
 from .langgraph_compile import build_graph, compile_report, parallel_groups
@@ -37,7 +38,7 @@ def run_plan_langgraph(
         return {"mode": "dry-run", **report, "order_flat": [s.id for w in parallel_groups(plan) for s in w]}
 
     run_id = f"run_{uuid4().hex[:10]}"
-    out = out_dir or Path("pilots") / run_id
+    out = _validate_out_dir(out_dir) if out_dir else Path("pilots") / run_id
     if out.exists() and any(out.iterdir()):
         st = load_status(out)
         if not st or st.get("state") not in {
@@ -329,6 +330,7 @@ def _run_waves_fallback(
 
 
 def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = None) -> dict[str, Any]:
+    out_dir = _validate_out_dir(out_dir)
     """Resume a execuÃ§Ã£o usando o checkpoint real do LangGraph."""
 
     if decision not in {"approve", "reject", "edit"}:

@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+from uuid import uuid4
 from pathlib import Path
 
 import pytest
@@ -50,9 +52,19 @@ def plan_path() -> Path:
 
 
 @pytest.fixture
-def tmp_run_dir(tmp_path: Path) -> Path:
-    """Diretorio temporario para um run isolado."""
-    return tmp_path / "run"
+def tmp_run_dir() -> Path:
+    """Diretorio temporario para um run isolado, dentro de pilots/.
+
+    O plan_runner exige que --out esteja sob <repo>/pilots/ (guard
+    _validate_out_dir em engine.py e langgraph_engine.py). Testes antigos
+    usavam tmp_path/run (fora do repo), o que quebrava o modo external.
+
+    Cleanup automatico no teardown.
+    """
+    root = REPO_ROOT / "pilots" / f"_pytest_{uuid4().hex[:8]}"
+    root.mkdir(parents=True, exist_ok=True)
+    yield root
+    shutil.rmtree(root, ignore_errors=True)
 
 
 def _run_cli(args: list[str], cwd: Path) -> subprocess.CompletedProcess:

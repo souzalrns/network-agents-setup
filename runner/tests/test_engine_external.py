@@ -44,7 +44,7 @@ def _status(out_dir):
 # run_plan: budget abort
 # ============================================================
 
-def test_native_run_aborts_when_budget_exceeded(tmp_path):
+def test_native_run_aborts_when_budget_exceeded(tmp_path, tmp_run_dir):
     """Plano com 2 steps e budget=1 -> aborted_budget no segundo step."""
     plan = _write_plan(tmp_path, """
 id: tiny
@@ -58,7 +58,7 @@ steps:
     action: do_b
     depends_on: [a]
 """)
-    out = tmp_path / "run"
+    out = tmp_run_dir
     proc = _run(out, plan, mode="stub")
     assert proc.returncode == 0, f"run falhou: {proc.stderr}"
 
@@ -72,7 +72,7 @@ steps:
 # run_plan: external waiting
 # ============================================================
 
-def test_native_external_waits_for_worker(tmp_path):
+def test_native_external_waits_for_worker(tmp_path, tmp_run_dir):
     """--mode external deve parar em waiting_external e criar pending_steps."""
     plan = _write_plan(tmp_path, """
 id: ext
@@ -81,7 +81,7 @@ steps:
   - id: prep
     action: prep
 """)
-    out = tmp_path / "run"
+    out = tmp_run_dir
     proc = _run(out, plan, mode="external")
     assert proc.returncode == 0, f"run falhou: {proc.stderr}"
 
@@ -98,7 +98,7 @@ steps:
 # run_plan: step failed (external ok=false)
 # ============================================================
 
-def test_native_external_step_fails(tmp_path):
+def test_native_external_step_fails(tmp_path, tmp_run_dir):
     """result.json com ok=false -> state=failed."""
     plan = _write_plan(tmp_path, """
 id: fail
@@ -107,7 +107,7 @@ steps:
   - id: prep
     action: prep
 """)
-    out = tmp_path / "run"
+    out = tmp_run_dir
 
     # 1. Run external -> waiting
     _run(out, plan, mode="external")
@@ -133,7 +133,7 @@ steps:
 # run_plan: plan_done sem HITL
 # ============================================================
 
-def test_native_run_completes_without_hitl(tmp_path):
+def test_native_run_completes_without_hitl(tmp_path, tmp_run_dir):
     """Plano sem human_gate corre ate ao fim -> state=done."""
     plan = _write_plan(tmp_path, """
 id: simple
@@ -145,7 +145,7 @@ steps:
     action: do_b
     depends_on: [a]
 """)
-    out = tmp_path / "run"
+    out = tmp_run_dir
     proc = _run(out, plan, mode="stub")
     assert proc.returncode == 0, f"run falhou: {proc.stderr}"
 
@@ -159,7 +159,7 @@ steps:
 # resume_run: external accumula e completa
 # ============================================================
 
-def test_native_resume_external_completes(tmp_path):
+def test_native_resume_external_completes(tmp_path, tmp_run_dir):
     """resume apos result.json preenchido -> done (sem HITL)."""
     plan = _write_plan(tmp_path, """
 id: ext2
@@ -168,7 +168,7 @@ steps:
   - id: prep
     action: prep
 """)
-    out = tmp_path / "run"
+    out = tmp_run_dir
 
     # 1. Run external -> waiting
     _run(out, plan, mode="external")
@@ -193,7 +193,7 @@ steps:
 # run sobre out_dir nao-resumivel -> PlanError
 # ============================================================
 
-def test_native_run_rejects_non_resumable_out_dir(tmp_path):
+def test_native_run_rejects_non_resumable_out_dir(tmp_path, tmp_run_dir):
     """Se out_dir tem estado terminal (done), novo run deve falhar."""
     plan = _write_plan(tmp_path, """
 id: reuse
@@ -202,7 +202,7 @@ steps:
   - id: a
     action: do_a
 """)
-    out = tmp_path / "run"
+    out = tmp_run_dir
 
     # 1. Primeiro run -> done
     _run(out, plan, mode="stub")

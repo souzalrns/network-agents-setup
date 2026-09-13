@@ -47,6 +47,27 @@ def load_status(out: Path) -> dict[str, Any] | None:
 _RESUMABLE = frozenset({"paused_human_gate", "waiting_external", "running"})
 
 
+def _validate_out_dir(out: Path) -> Path:
+    """Reject out dirs outside <repo>/pilots/.
+
+    Mode external derives repo_root from the out dir (see skills.repo_root_from_out).
+    Outside pilots/, that derivation silently returns the wrong root: skill_path and
+    agent_path come back as None, the external worker gets a blind request, and the
+    run stalls in waiting_external with no error. Validate upfront instead.
+    """
+    resolved = out.resolve()
+    repo_root = Path(__file__).resolve().parents[2]
+    pilots = (repo_root / "pilots").resolve()
+    try:
+        resolved.relative_to(pilots)
+    except ValueError:
+        raise PlanError(
+            f"--out must be inside {pilots} (got {resolved}). "
+            "Mode external derives repo_root from the out dir; paths outside pilots/ break it."
+        )
+    return resolved
+
+
 def run_plan(
     plan_path: Path,
     *,
@@ -65,7 +86,7 @@ def run_plan(
         }
 
     run_id = f"run_{uuid4().hex[:10]}"
-    out = out_dir or Path("pilots") / run_id
+    out = _validate_out_dir(out_dir) if out_dir else Path("pilots") / run_id
     if out.exists() and any(out.iterdir()):
         st = load_status(out)
         if not st or st.get("state") not in _RESUMABLE:
@@ -169,6 +190,7 @@ def run_plan(
 
 
 def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
+    out_dir = _validate_out_dir(out_dir)
     status = load_status(out_dir)
     if not status:
         raise PlanError("no status.json")

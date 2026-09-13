@@ -63,6 +63,7 @@ pilots/run-design-stub/
 pilots/run-paid-stub/
 pilots/run-ugc-video-stub/
 pilots/run-influencer-stub/
+pilots/_pytest_*/
 
 # === Node / pnpm (monorepo) ===
 # Regra sem barra inicial: apanha node_modules em qualquer nivel,

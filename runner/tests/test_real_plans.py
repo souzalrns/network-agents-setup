@@ -55,9 +55,9 @@ def test_real_plan_compile_graph(name, path, expected_hitl):
 
 
 @pytest.mark.parametrize("name,path,expected_hitl", REAL_PLANS, ids=[p[0] for p in REAL_PLANS])
-def test_real_plan_runs_and_pauses_at_hitl(name, path, expected_hitl, tmp_path):
+def test_real_plan_runs_and_pauses_at_hitl(name, path, expected_hitl, tmp_run_dir):
     """run --mode stub pausa no HITL correto."""
-    out = tmp_path / "run"
+    out = tmp_run_dir
     proc = _run_cli(
         ["run", str(path), "--engine", "langgraph", "--mode", "stub", "--out", str(out)],
         cwd=RUNNER_DIR,
@@ -72,9 +72,9 @@ def test_real_plan_runs_and_pauses_at_hitl(name, path, expected_hitl, tmp_path):
 
 
 @pytest.mark.parametrize("name,path,expected_hitl", REAL_PLANS, ids=[p[0] for p in REAL_PLANS])
-def test_real_plan_completed_matches_waves(name, path, expected_hitl, tmp_path):
+def test_real_plan_completed_matches_waves(name, path, expected_hitl, tmp_run_dir):
     """completed deve ser consistente com as waves antes do HITL."""
-    out = tmp_path / "run"
+    out = tmp_run_dir
 
     # 1. Obter as waves
     proc = _run_cli(["compile-graph", str(path)], cwd=RUNNER_DIR)
@@ -132,10 +132,10 @@ def test_ship_parallel_has_parallel_wave():
     )
 
 
-def test_approval_rounds_full_cycle_three_hitls(tmp_path):
+def test_approval_rounds_full_cycle_three_hitls(tmp_run_dir):
     """approval-rounds tem 3 HITLs em cadeia. 3 resumes devem levar a done."""
     path = TPL / "approval-rounds.plan.yaml"
-    out = tmp_path / "run"
+    out = tmp_run_dir
 
     # 1. Run -> pause em hitl_r1
     proc = _run_cli(
@@ -176,10 +176,10 @@ def test_approval_rounds_full_cycle_three_hitls(tmp_path):
     )
 
 
-def test_seo_article_demo_writes_artifacts(tmp_path):
+def test_seo_article_demo_writes_artifacts(tmp_run_dir):
     """seo-article-demo deve escrever os artefactos de cada step executado."""
     path = TPL / "examples" / "seo-article-demo.plan.yaml"
-    out = tmp_path / "run"
+    out = tmp_run_dir
 
     proc = _run_cli(
         ["run", str(path), "--engine", "langgraph", "--mode", "stub", "--out", str(out)],
