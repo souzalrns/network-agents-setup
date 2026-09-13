@@ -8,7 +8,6 @@
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **C1** | **Fase 0.4** — marcar A4/A5/A6 do `ITEM13-MARKETING-ROADMAP.md` como `[x]` com link do run | 5 min | Nada | Auditoria Claude |
 | **C2** | **Modo external do `plan_runner`** falha silenciosamente se `--out` fora de `pilots/` | 1h | Pilotos reais | `INIT-012` |
 | **C3** | **`auth.ts` fail-closed** também no `agent-network-mcp` (produção) | 30 min | Segurança prod | Auditoria Claude |
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum | 1 dia | RAG funcional | Auditoria Claude |
@@ -160,6 +159,7 @@
 | **S4** | `pnpm-lock.yaml` gerado e commitado | lockfileVersion 6.0, 10 workspaces, --frozen-lockfile validado | `6f70b3b` |
 | **S4b** | CI: install usa --frozen-lockfile e e gate | step install sem continue-on-error, comentarios limpos | `be139f4` |
 | **S8** | `.gitignore` sem regra Node/node_modules | secao Node/pnpm adicionada (node_modules, dist, .turbo, coverage) | `ae24b7b` |
+| **C1** | Fase 0.4 -- marcar A4/A5/A6 do `ITEM13-MARKETING-ROADMAP.md` com link do run | evidencia commitada em `pilots/evidence/`, links adicionados ao roadmap | `9994ea6` |
 
 ---
 
@@ -177,7 +177,6 @@
 ## Ordem sugerida (próximas 3 sessões)
 
 ### Sessão 1 (1-2h)
-- C1 (Fase 0.4) — 5 min
 - B7-B9 (documentar o que existe) — 2h
 
 ### Sessão 2 (1 dia)
