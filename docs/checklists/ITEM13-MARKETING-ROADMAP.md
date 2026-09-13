@@ -23,16 +23,16 @@ Marcações iniciais reflectem o estado **remoto GitHub** à data deste ficheiro
 
 Ordem fixa: sem isto, Item 13 e marketing ficam soltos.
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
-| A1 | DOC | Constitution / policy lab≠prod, least privilege, publish só HITL | Ficheiro de regras referenciado pelo orchestrator |
-| A2 | DOC | Memória L0–L6 + contratos remember/recall/retrieve | `docs/architecture/memory/` presente e lido pela equipa |
-| A3 | DOC | Orquestrador marketing + relação Item 13 (sem orchestrator Item 13 isolado) | `docs/orchestration/marketing/` + `item-13-and-marketing.md` |
-| A4 | DEV | Runner plan-execute (dry-run / stub / external + HITL resume) | `runner/` executa template sem erro |
-| A5 | TEST | `dry-run` no `seo-article.plan.yaml` | JSON com ordem de steps correcta |
-| A6 | TEST | `stub` + `resume --decision approve` | `events.jsonl` + `status.json` state `done` |
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
+| A1 | DOC | ✅ | Constitution / policy lab≠prod, least privilege, publish só HITL | Ficheiro de regras referenciado pelo orchestrator |
+| A2 | DOC | ✅ | Memória L0–L6 + contratos remember/recall/retrieve | `docs/architecture/memory/` presente e lido pela equipa |
+| A3 | DOC | ✅ | Orquestrador marketing + relação Item 13 (sem orchestrator Item 13 isolado) | `docs/orchestration/marketing/` + `item-13-and-marketing.md` |
+| A4 | DEV | ✅ | Runner plan-execute (dry-run / stub / external + HITL resume) | `runner/` executa template sem erro |
+| A5 | TEST | ✅ | `dry-run` no `seo-article.plan.yaml` | JSON com ordem de steps correcta |
+| A6 | TEST | ✅ | `stub` + `resume --decision approve` | `events.jsonl` + `status.json` state `done` |
 
-**Estado esperado agora:** A2–A3 `[~]`/`[x]` no remoto; A4 `[x]` código no remoto; A5–A6 `[ ]` até correres localmente após `git pull`.
+**Estado esperado agora:** A1–A6 ✅ feitos e provados. A5–A6 validados na Fase M (5 templates dry-run + stub→HITL→resume, todos passaram). CI verde.
 
 ---
 
@@ -51,8 +51,8 @@ Item 13 **não** é vertical própria: é **método + checks** dentro de conteú
 
 ## B1 — Documentação e regras (fechar ambiguidades)
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | B1.1 | DOC | Checklist PASS/FAIL Item 13 **uma página** (aceitação) | Lista numerada; critic mapeia 1:1 |
 | B1.2 | DOC | O que é P0 vs P1 vs P2 (prioridade de implementação em peças) | Tabela no playbook |
 | B1.3 | DOC | Regra: falha Item 13 → `on_fail` human vs block | Escrito no ORCHESTRATOR / template |
@@ -60,8 +60,8 @@ Item 13 **não** é vertical própria: é **método + checks** dentro de conteú
 
 ## B2 — Ingestão de conhecimento
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | B2.1 | ING | Pack L5: entidades, FAQ, citabilidade, schema markup, anti-padrões | Ficheiros em `docs/knowledge/` estáveis |
 | B2.2 | ING | Skill L3 `seo_brief` com triggers + done_when Item 13 | SKILL.md ou secção skill |
 | B2.3 | ING | Skill L3 `critic_item13` com rubrica PASS/FAIL | SKILL.md alinhada a B1.1 |
@@ -70,16 +70,16 @@ Item 13 **não** é vertical própria: é **método + checks** dentro de conteú
 
 ## B3 — Desenvolvimento
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | B3.1 | DEV | Validar JSON de SeoBrief/Critic no runner (schema check) | Step falha se schema inválido |
 | B3.2 | DEV | Mode `external`: request inclui bloco Item 13 obrigatório | `request.json` documenta campos |
 | B3.3 | DEV | (Opcional) action `seo_tech_audit` no path de página | Template ou step opcional |
 
 ## B4 — Teste e validação
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | B4.1 | TEST | Fixture: brief que **falha** Item 13 → critic `publish_ready: false` | Caso guardado em `pilots/` |
 | B4.2 | TEST | Fixture: brief/copy que **passa** Item 13 → ready true ou só P2 gaps | Caso guardado |
 | B4.3 | TEST | Stub run seo_article até HITL | events: step_finished × N + human_gate |
@@ -108,8 +108,8 @@ Tudo B1 + B2.1–B2.3 + B4.1–B4.3.
 
 ## C1 — Documentação e regras
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | C1.1 | DOC | Tabela deliverable_type → template completo (todos os tipos v1) | Secção 4 ORCHESTRATOR actualizada |
 | C1.2 | DOC | Matriz role → action → skill path | Uma linha por role core |
 | C1.3 | DOC | HITL matrix (draft / publish / spend / 3 rodadas) | Tabela única |
@@ -131,8 +131,8 @@ P1: trend_hunter, copy_social, storytelling, media_buyer, performance_analyst, u
 
 ## C2 — Ingestão de conhecimento (por ordem P0 → P1)
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | C2.1 | ING | Skill research | triggers, inputs, done_when, anti-padrões |
 | C2.2 | ING | Skill seo_brief | + link Item 13 pack |
 | C2.3 | ING | Skill copy_answer_first | |
@@ -145,8 +145,8 @@ P1: trend_hunter, copy_social, storytelling, media_buyer, performance_analyst, u
 
 ## C3 — Desenvolvimento
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | C3.1 | DEV | Templates YAML para P0 todos dry-run OK | plan_runner dry-run |
 | C3.2 | DEV | Templates P1: campaign_brief, performance_review, content_sprint_2w | ficheiros + registry |
 | C3.3 | DEV | Runner: schema validation opcional por output_schema | falha controlada |
@@ -157,8 +157,8 @@ P1: trend_hunter, copy_social, storytelling, media_buyer, performance_analyst, u
 
 ## C4 — Teste e validação
 
-| # | Tipo | Item | Critério de fecho |
-|---|------|------|-------------------|
+| # | Tipo | Estado | Item | Critério de fecho |
+|---|------|--------|------|-------------------|
 | C4.1 | TEST | dry-run todos templates P0 | exit 0 |
 | C4.2 | TEST | stub seo_article → HITL → resume approve → done | events completos |
 | C4.3 | TEST | stub social_pack → HITL | idem |
