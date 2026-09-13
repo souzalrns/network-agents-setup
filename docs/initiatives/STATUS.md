@@ -17,10 +17,8 @@
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **S1** | **Fase 1.1** — CI bloqueia se vitest falhar (`continue-on-error: false`) | 5 min | Rede de segurança | Auditoria Claude |
 | **S2** | **Fase 1.2** — testes do caminho crítico (Router, Planner, Executor, HitlManager) — ≥20 casos | 2-3h | Refactor seguro | Auditoria Claude |
 | **S3** | **Fase 1.3** — teste do runner no CI (5 templates dry-run + 1 stub) | 1h | Runner gate | Auditoria Claude |
-| **S4** | **Fase 1.4** — gerar e commitar `pnpm-lock.yaml` | 5 min | Builds reprodutíveis | Auditoria Claude |
 | **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner | 1h | Consistência | Auditoria Claude |
 | **S6** | **Fase A.2** — `runner/plan_runner/hitl.py` (lado Python do contrato v1) | 1 dia | HITL durável | Nosso |
 | **S7** | **Working memory** (`MEMORY.md` curado por cliente, ~1300 tokens) | 1 dia | Contexto sem RAG | Nossa |
@@ -152,6 +150,19 @@
 
 ---
 
+## Done
+
+> Itens fechados. Regra: nada e apagado sem ser feito; ao fechar, mover para aqui.
+
+| ID | Item | Fecho | Commit |
+|---|---|---|---|
+| **S1** | CI bloqueia se vitest falhar | vitest e gate no CI (sem continue-on-error) | `108314c` |
+| **S4** | `pnpm-lock.yaml` gerado e commitado | lockfileVersion 6.0, 10 workspaces, --frozen-lockfile validado | `6f70b3b` |
+| **S4b** | CI: install usa --frozen-lockfile e e gate | step install sem continue-on-error, comentarios limpos | `be139f4` |
+| **S8** | `.gitignore` sem regra Node/node_modules | secao Node/pnpm adicionada (node_modules, dist, .turbo, coverage) | `ae24b7b` |
+
+---
+
 ## Como usar este ficheiro
 
 - **Adicionar item**: nova linha na categoria correta
@@ -167,8 +178,6 @@
 
 ### Sessão 1 (1-2h)
 - C1 (Fase 0.4) — 5 min
-- S1 (CI bloqueia vitest) — 5 min
-- S4 (`pnpm-lock.yaml`) — 5 min
 - B7-B9 (documentar o que existe) — 2h
 
 ### Sessão 2 (1 dia)
