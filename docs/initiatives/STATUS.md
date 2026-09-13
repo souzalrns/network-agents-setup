@@ -64,6 +64,94 @@
 
 ---
 
+## 🔒 Segurança (checklist de 20 itens)
+
+> Origem: checklist externa (reel `_danielllcruz`)
+> Aplica-se sobretudo ao `agent-network-mcp` (produção)
+> Classificação: ✅ feito · ⚠️ parcial/verificar · ❌ falta · N/A não aplica
+
+| # | Item | Estado | Onde / Nota |
+|---|---|---|---|
+| 1 | Esconder API Keys | ✅ | `.env` + `.gitignore` |
+| 2 | Limpar secrets do git | ✅ | Nunca foi commitado secret |
+| 3 | Public Key DB | N/A | Não usas JWT próprio |
+| 4 | Ativar RLS | ⚠️ verificar | Postgres/Supabase — confirmar se RLS está ativo |
+| 5 | Criptografia de dados | ❌ | Dados sensíveis (processos jurídicos) em repouso |
+| 6 | Auth server-side | ✅ | `auth.ts` fail-closed (commit `1a3e613`) |
+| 7 | Restringir acessos (RBAC) | ❌ | Falta roles no `auth.ts` |
+| 8 | Bloquear Mass Assignment | ❌ | Zod valida, mas endpoints aceitam campos extra |
+| 9 | Proteger cookies | ⚠️ verificar | `httpOnly`/`secure`/`sameSite` |
+| 10 | Hash nas senhas | ✅ | Supabase Auth |
+| 11 | Rate limit | ❌ | Não existe |
+| 12 | Bot protection | ❌ | Não existe |
+| 13 | Queries parametrizadas | ✅ | Prisma faz automaticamente |
+| 14 | Validação dos inputs | ⚠️ | Zod (Node) + YAML (Python) |
+| 15 | Vazar conteúdo | ⚠️ | Mensagens de erro podem revelar stack traces |
+| 16 | Restringir uploads | ❌ | Produção tem `extrair-imagem` |
+| 17 | Trim respostas | ⚠️ | Depende — `plan_runner` devolve JSON estruturado |
+| 18 | Add security headers | ❌ | CSP, X-Frame-Options, etc. |
+| 19 | Forçar HTTPS | ✅ | Vercel faz por defeito |
+| 20 | Scam de dependências | ⚠️ | Dependabot? `audit-tools.yml` corre, mas não `npm audit` no CI |
+
+**Prioridade para produção (`agent-network-mcp`):**
+- 🔴 Rate limit (11), Bot protection (12), Security headers (18)
+- 🟠 RBAC (7), Cookies (9), Criptografia (5)
+- 🟡 Mass assignment (8), Trim (17), Dependências (20)
+
+---
+
+## 🧰 Harnesses multi-provider (2026)
+
+> Origem: reels `sebastianhardy_` (setembro 2026)
+> Contexto: 2026 é o ano dos harnesses multi-provider. Todos competem em "qualquer modelo, qualquer IDE, multi-agente".
+
+| Projeto | Stars | O que é | Relevância |
+|---|---|---|---|
+| **`deepseek-ai/deepseek-harness`** | 200k | MIT. "Everything is a plugin." Cresceu 54k em 10 dias | Alto — modelo de referência |
+| **`omnigent-ai/omnigent`** | 9k | Meta-harness: camada sobre Claude Code, Codex, Cursor, OpenCode, Pi | **Alto** — alinha com `plan_runner` (orquestra, não executa) |
+| **`lidge-jun/opencodex`** | 12k | Proxy universal: corre Gemini, Grok, DeepSeek, Ollama dentro do Codex CLI | **Alto** — resolve bloqueio DeepSeek no `agent-network-mcp` |
+| **`yc-software/qm`** | 14k | Harness multiplayer (Slack + browser) — "agentes que a equipa partilha" | Médio — referência para multi-user |
+| **`XiaomiMiMo/MiMo-Code`** | 13k | Terminal agent da Xiaomi | Baixo — sem caso de uso |
+| **`xai-org/grok-build`** | 26k | Harness xAI, Apache 2.0 | Médio — referência |
+| **`anywhere-labs/dsh-desktop`** | 21k | Desktop para DeepSeek Harness | Baixo — UI, sem dor |
+
+**`INIT-094: Avaliar harnesses multi-provider`**
+- `opencodex` → resolve bloqueio DeepSeek no `agent-network-mcp` (usa Claude Pro + Ollama + Gemini)
+- `omnigent` → modelo "camada sobre harnesses" que alinha com o teu `plan_runner`
+- Esforço: 1 dia de investigação
+- Valor: **alto** — resolve 2 problemas concretos
+
+---
+
+## 📦 `google/skills` — 132 manuais oficiais (Apache 2.0)
+
+> Origem: reels `99hud` (setembro 2026)
+> Repo: `github.com/google/skills` — oficial do Google, **19k estrelas**, Apache 2.0
+
+**O que contém:**
+- **132 manuais** para: Ads, Analytics, Gemini, Cloud, Firebase, BigQuery, GKE, etc.
+- **13 skills só de Google Ads** — incluindo `google-ads-api-account-diagnostics` (diagnostica contas: queda de conversão, verba travada, anúncio perdendo impressão)
+- **MCP oficial do Google Ads** — ligas o Claude à tua conta, perguntas em português
+- Skills escritas por quem fez a ferramenta
+
+**Aplicação no teu projeto:**
+- **`media_buyer`** (criado ontem) → usar as skills oficiais de Ads
+- **`ad_creative`** → idem
+- **`marketing`** → enriquecer knowledge packs
+
+**`INIT-093: Adoptar google/skills (132 skills oficiais, Apache 2.0)`**
+- Fonte: `github.com/google/skills`
+- Licença: **Apache 2.0** ✅ (uso comercial, sem contaminação)
+- Esforço: 1-2 dias (ingerir + adaptar ao modelo de `SKILL.md` do lab)
+- Valor: **alto** — skills oficiais, mantidas pelo Google
+
+---
+
+*Adicionado em: 2026-09-13*
+*Origem: screenshots de reels partilhados pelo utilizador*
+
+---
+
 ## Como usar este ficheiro
 
 - **Adicionar item**: nova linha na categoria correta
