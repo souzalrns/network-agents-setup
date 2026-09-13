@@ -5,13 +5,7 @@ em vez de deixar o modo external correr com repo_root errado.
 """
 from __future__ import annotations
 
-import subprocess
-import sys
-from pathlib import Path
-
-import pytest
-
-from tests.conftest import REPO_ROOT, RUNNER_DIR, PLAN_PATH, _run_cli
+from tests.conftest import PLAN_PATH, REPO_ROOT, RUNNER_DIR, _run_cli
 
 
 def test_run_rejects_out_outside_pilots(tmp_path):

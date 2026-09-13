@@ -9,8 +9,8 @@ import os
 import shutil
 import subprocess
 import sys
-from uuid import uuid4
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
