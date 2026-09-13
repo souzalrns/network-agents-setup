@@ -8,7 +8,6 @@
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **C2** | **Modo external do `plan_runner`** falha silenciosamente se `--out` fora de `pilots/` | 1h | Pilotos reais | `INIT-012` |
 | **C3** | **`auth.ts` fail-closed** também no `agent-network-mcp` (produção) | 30 min | Segurança prod | Auditoria Claude |
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum | 1 dia | RAG funcional | Auditoria Claude |
 
@@ -160,6 +159,7 @@
 | **B7** | `patterns-from-mcp` -- documentar o MCP server | tools-catalog + governance-pipeline + README com "Ficheiros deste pacote" | `3366faa` |
 | **B8** | `patterns-from-codebase-memory` -- documentar o codebase-memory-mcp | README + tools-catalog (15 tools) + evidence-tiers (Scout/Verify/Auditor) | `b7ef2f2` |
 | **B9** | `node-platform.md` -- documentar a plataforma Node | apps/api + packages/core, boot sequence, HITL Node, auth fail-closed | `0231c5d` |
+| **C2** | Modo external falha silenciosamente se `--out` fora de `pilots/` | guard `_validate_out_dir` nos 2 engines; testes alinhados; 76 verdes | `33310bb` + `4ec1ccf` |
 
 ---
 
@@ -183,7 +183,6 @@
 - S2 (testes do caminho crítico) — 2-3h
 - S3 (teste do runner no CI) — 1h
 - S5 (consistência) — 1h
-- C2 (modo external com erro explícito) — 1h
 
 ### Sessão 3 (1-2 dias)
 - S6 (`hitl.py`) — 1 dia
