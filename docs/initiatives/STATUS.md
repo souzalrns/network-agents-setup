@@ -194,3 +194,82 @@
 - M1 (session search) — 4h
 
 **Depois disto**: Fase 1 fechada. O motor tem rede de segurança.
+
+
+---
+
+## 📌 Sessão 2026-09-14 — adições completas
+
+### 🔧 Ferramentas (F1-F22)
+
+| ID | Item | Estado | Nota |
+|---|---|---|---|
+| F1 | `agent-skills` (Addy Osmani) | backlog | Skill pack Claude Code, `/plugin` manual |
+| F2 | `Graphify` | research | Grafo de código via MCP; avaliar vs `codebase-memory-mcp` |
+| F3 | `OmniRoute` | research | Gateway multi-provider (352); resolve bloqueio DeepSeek |
+| F4 | `Obscura` | backlog | Playwright alternativo (30MB vs 200MB RAM) |
+| F5 | Plugin segurança Anthropic | backlog | Audit multi-agente; alinha com checklist 20 |
+| F6 | `Caveman` | N/A | Já integrado no OmniRoute |
+| F7 | `Ruflo` | parked | 290 de 300 tools são stubs |
+| F8 | `gstack` | backlog | 23 ferramentas review/ship/QA (YC) |
+| F9 | `ScrapeGraphAI` | backlog | Scraping via linguagem natural (GDPR cuidado) |
+| F10 | Obsidian/Logseq | candidate | Working memory `.md` por cliente |
+| F11 | **SOUL.md** | research | Identidade de agente (identidade + personalidade + limites + contexto) |
+| F12 | **Soup** (fine-tuning) | **parked** | Fine-tuning LLM; **só após C5 (RAG alimentada)** |
+| F13 | **MarkItDown** (Microsoft) | candidate | Ingestão PDF/DOCX/XLSX/imagens → Markdown. MIT |
+| F14 | **Trafilatura** | candidate | Extração de sites (melhor que BeautifulSoup). Apache 2.0 |
+| F15 | **Andrej Karpathy Skills** | candidate | Guidelines Claude Code; reduz erros 41%→11% |
+| F16 | **Plugin segurança Anthropic** | candidate | (unificar com F5) |
+| F17 | **Obscura + obscura-mcp** | research | (unificar com F4) |
+| F18 | **Crawl4AI / Scrapling** | research | Crawling em profundidade |
+| F19 | **Frameworks financeiros open source** (Condor, QuantClaw, TradingAgents, ai-hedge-fund, qlib, ffn, pyfolio, TA-Lib) | research | Para B10/B12. Verificar licenças |
+| F20 | **World Monitor** (`koala73/worldmonitor`) | candidate | **AGPL-3.0** — usar via MCP/REST, **não integrar**. 500+ feeds, CII, financial radar |
+| F21 | **Finance News Aggregator** (`areed1192/finance-news-aggregator`) | candidate | 8 providers, `pip install fin-news` |
+| F22 | **Agente jornalístico** (horizontal) | **a desenhar** | Conteúdo para marketing + análise para investidor. Fontes: F20 + F21 |
+
+### 🟢 Agentes (B10-B14)
+
+| ID | Item | Estado | Nota |
+|---|---|---|---|
+| B10 | Agente de operação financeira | backlog | Fluxo de caixa, contas a pagar/receber, conciliação. Não é trading nem contabilidade |
+| B11 | Interface de avatar por agente | backlog | Representação visual (avatar, voz, presença) |
+| B12 | Agente de investimentos (separado de B10) | backlog | Análise, backtest, sem ordens |
+| B13 | Agente financeiro com análise de volatilidade | backlog | Liga F20 + F21 a B10 |
+| B14 | Ligação jornalismo → investidor | backlog | World Monitor → análise de volatilidade → alerta |
+
+### 🎨 Telas / UI (U1-U9)
+
+| ID | Item | Estado | Depende de |
+|---|---|---|---|
+| U1 | Tela 1 — Grafo de memória (Obsidian-style) | backlog | F10 |
+| U2 | Tela 2 — Avatares de agentes normais | backlog | B11 + S7 |
+| U3 | Tela 3 — Agentes financeiros | backlog | B10 |
+| U4 | Tela 4 — Integração/Dashboard | backlog | U1 + U2 + U3 |
+| U5 | Grafo de conexões entre agentes | backlog | — |
+| U6 | Avatar tipo "boneco" (2D/3D animado) | backlog | — |
+| U7 | Avatar do agente financeiro | backlog | B10 |
+| U8 | **JARVIS** (interface global unificada) | backlog | U1-U7 |
+| U9 | **VOS** (a definir) | backlog | Clarificar |
+
+### 🔴 Crítico (C5)
+
+| ID | Item | Estado | Nota |
+|---|---|---|---|
+| C5 | **Alimentar RAG continuamente** (T6 é stub) | **crítico** | Pré-requisito para F12, Fase O, S6 |
+
+### 📌 Dependências críticas
+
+| Item | Depende de |
+|---|---|
+| F12 (Soup) | C5 (RAG alimentada) |
+| U1 (Tela 1) | F10 (Obsidian) |
+| U2 (Tela 2) | B11 + S7 |
+| U3 (Tela 3) | B10 |
+| U4 (Tela 4) | U1 + U2 + U3 |
+| U8 (JARVIS) | U1-U7 |
+| B14 (jornalismo→investidor) | F20 + F21 + F22 + B12 |
+
+---
+
+*Adicionado em: 2026-09-14*
+*Origem: sessões múltiplas + auditorias externas*
