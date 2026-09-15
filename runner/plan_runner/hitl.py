@@ -32,7 +32,6 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-
 REQUESTS_FILE = "hitl-requests.jsonl"
 DECISIONS_FILE = "hitl-decisions.jsonl"
 

@@ -26,7 +26,6 @@ from plan_runner.hitl import (
     write_request,
 )
 
-
 # -- Schema loading -----------------------------------------------------------
 
 SCHEMA_PATH = (
@@ -165,7 +164,7 @@ def test_write_request_appends(tmp_path: Path):
     ]
     lines = (tmp_path / REQUESTS_FILE).read_text(encoding="utf-8").splitlines()
     assert len(lines) == 3
-    assert [json.loads(l)["id"] for l in lines] == ids
+    assert [json.loads(line)["id"] for line in lines] == ids
 
 
 def test_latest_request(tmp_path: Path):
