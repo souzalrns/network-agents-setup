@@ -3,13 +3,19 @@
 > Gerado em: 2026-09-13
 > Base: leitura do repo + cruzamento com sessões
 > Método: tudo o que foi discutido e não está feito, classificado
+>
+> **Regra de IDs:** itens fechados vão para a secção `## Done` — não são apagados.
+> IDs nunca são reciclados. O próximo ID livre na série C é **C8**.
+> O ID **C5** pertence ao item antigo (auth do `mcp/route.js`, já em `Done`).
+> O item "alimentar RAG" passa a ser **C8** (estava duplicado como C5).
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum | 1 dia | RAG funcional | Auditoria Claude |
+| **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum → **ver C8** (mesmo item, consolidado) | 1 dia | RAG funcional | Auditoria Claude |
 | **C7** | **16 vulnerabilidades Dependabot** no `agent-network-mcp` (1 critical, 8 high, 7 moderate) -- `npm audit` + revisao | 1-2h | Seguranca prod | C5 |
+| **C8** | **Alimentar RAG continuamente** (T6 é stub) — pré-requisito para F12, Fase O, S6 | 1 dia | RAG funcional | Nossa |
 
 ## 🟠 Alto (resolve problema real, valor claro)
 
@@ -170,7 +176,7 @@
 
 - **Adicionar item**: nova linha na categoria correta
 - **Mudar estado**: mover de 🔴 para 🟠, ou 🟠 para 🟢
-- **Fechar item**: apagar a linha (ou mover para uma secção "Done" no fim)
+- **Fechar item**: mover a linha para a secção `## Done` (nunca apagar)
 - **Reclassificar**: se um item ganha urgência, sobe de categoria
 
 **Regra**: nenhum item é apagado sem ser feito. Só muda de categoria.
@@ -195,7 +201,6 @@
 
 **Depois disto**: Fase 1 fechada. O motor tem rede de segurança.
 
-
 ---
 
 ## 📌 Sessão 2026-09-14 — adições completas
@@ -215,7 +220,7 @@
 | F9 | `ScrapeGraphAI` | backlog | Scraping via linguagem natural (GDPR cuidado) |
 | F10 | Obsidian/Logseq | candidate | Working memory `.md` por cliente |
 | F11 | **SOUL.md** | research | Identidade de agente (identidade + personalidade + limites + contexto) |
-| F12 | **Soup** (fine-tuning) | **parked** | Fine-tuning LLM; **só após C5 (RAG alimentada)** |
+| F12 | **Soup** (fine-tuning) | **parked** | Fine-tuning LLM; **só após C8 (RAG alimentada)** |
 | F13 | **MarkItDown** (Microsoft) | candidate | Ingestão PDF/DOCX/XLSX/imagens → Markdown. MIT |
 | F14 | **Trafilatura** | candidate | Extração de sites (melhor que BeautifulSoup). Apache 2.0 |
 | F15 | **Andrej Karpathy Skills** | candidate | Guidelines Claude Code; reduz erros 41%→11% |
@@ -251,17 +256,11 @@
 | U8 | **JARVIS** (interface global unificada) | backlog | U1-U7 |
 | U9 | **VOS** (a definir) | backlog | Clarificar |
 
-### 🔴 Crítico (C5)
-
-| ID | Item | Estado | Nota |
-|---|---|---|---|
-| C5 | **Alimentar RAG continuamente** (T6 é stub) | **crítico** | Pré-requisito para F12, Fase O, S6 |
-
 ### 📌 Dependências críticas
 
 | Item | Depende de |
 |---|---|
-| F12 (Soup) | C5 (RAG alimentada) |
+| F12 (Soup) | C8 (RAG alimentada) |
 | U1 (Tela 1) | F10 (Obsidian) |
 | U2 (Tela 2) | B11 + S7 |
 | U3 (Tela 3) | B10 |
