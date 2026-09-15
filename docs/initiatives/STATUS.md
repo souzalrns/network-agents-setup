@@ -8,13 +8,14 @@
 > IDs nunca são reciclados. O próximo ID livre na série C é **C8**.
 > O ID **C5** pertence ao item antigo (auth do `mcp/route.js`, já em `Done`).
 > O item "alimentar RAG" passa a ser **C8** (estava duplicado como C5).
+> O ID **S6** pertence ao módulo `hitl.py` (S6a, feito em `cdae963`+`3445229`).
+> A integração (S6b) passa a ser **S9**.
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum → **ver C8** (mesmo item, consolidado) | 1 dia | RAG funcional | Auditoria Claude |
-| **C7** | **16 vulnerabilidades Dependabot** no `agent-network-mcp` (1 critical, 8 high, 7 moderate) -- `npm audit` + revisao | 1-2h | Seguranca prod | C5 |
 | **C8** | **Alimentar RAG continuamente** (T6 é stub) — pré-requisito para F12, Fase O, S6 | 1 dia | RAG funcional | Nossa |
 
 ## 🟠 Alto (resolve problema real, valor claro)
@@ -24,8 +25,7 @@
 | **S2** | **Fase 1.2** — testes do caminho crítico (Router, Planner, Executor, HitlManager) — ≥20 casos | 2-3h | Refactor seguro | Auditoria Claude |
 | **S3** | **Fase 1.3** — teste do runner no CI (5 templates dry-run + 1 stub) | 1h | Runner gate | Auditoria Claude |
 | **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner | 1h | Consistência | Auditoria Claude |
-| **S6** | **Fase A.2** — `runner/plan_runner/hitl.py` (lado Python do contrato v1) | 1 dia | HITL durável | Nosso |
-| **S7** | **Working memory** (`MEMORY.md` curado por cliente, ~1300 tokens) | 1 dia | Contexto sem RAG | Nossa |
+| **S9** | **Fase A.2b** — integração do `hitl.py` em `engine.py`/`langgraph_engine.py`/`cli.py` (dupla-escrita; aditivo) | 3-4h | HITL durável | Nosso |
 
 ## 🟡 Médio (valor claro, sem urgência)
 
@@ -90,7 +90,7 @@
 | 17 | Trim respostas | ⚠️ | Depende — `plan_runner` devolve JSON estruturado |
 | 18 | Add security headers | ❌ | CSP, X-Frame-Options, etc. |
 | 19 | Forçar HTTPS | ✅ | Vercel faz por defeito |
-| 20 | Scam de dependências | ⚠️ | Dependabot? `audit-tools.yml` corre, mas não `npm audit` no CI |
+| 20 | Scam de dependências | ⚠️ | Dependabot ativo; `audit-tools.yml` corre |
 
 **Prioridade para produção (`agent-network-mcp`):**
 - 🔴 Rate limit (11), Bot protection (12), Security headers (18)
@@ -134,7 +134,7 @@
 - Skills escritas por quem fez a ferramenta
 
 **Aplicação no teu projeto:**
-- **`media_buyer`** (criado ontem) → usar as skills oficiais de Ads
+- **`media_buyer`** → usar as skills oficiais de Ads
 - **`ad_creative`** → idem
 - **`marketing`** → enriquecer knowledge packs
 
@@ -169,6 +169,9 @@
 | **C3** | `auth.ts` fail-closed tambem no `agent-network-mcp` | `session.js` `assertSecret()` (>=16 chars); login+5 endpoints devolvem 503 | `613c634` (agent-network-mcp) |
 | **C5** | Auth do endpoint `app/api/mcp/route.js` (`agent-network-mcp`) | `withAuth()` com Bearer `MCP_API_KEY` (>=16 chars); fail-closed 503 sem env; constant-time compare | `69aec8c` (agent-network-mcp) |
 | **C6** | Configurar `MCP_API_KEY` na Vercel (`agent-network-mcp`) | Vercel Production; redeploy de 69aec8c; verificado: 401 sem header, 405 com header | Vercel `agent-network-mcp-oddn` |
+| **S6a** | Fase A.2 — `runner/plan_runner/hitl.py` (lado Python do contrato v1) | módulo isolado + 15 testes de contrato; 105 verdes; aditivo (engine/cli intocados); S6b (integração) movido para S9 | `cdae963` + `3445229` |
+| **S7** | Working memory (`MEMORY.md` curado por cliente, ~1300 tokens) | `runner/plan_runner/working_memory.py` + 14 testes; convenção `memory/<client_id>/MEMORY.md`; limite suave 1300 tokens | `caabec6` |
+| **C7** | Vulnerabilidades Dependabot no `agent-network-mcp` (era 16, agora 6→0) | `npm audit` 6→0; `next` 15.5.23→16.3.5 (major, build verde); Dependabot 0 Open | `6482cd4` (agent-network-mcp) |
 
 ---
 
@@ -189,15 +192,11 @@
 - Fechada: S1, S4, C1, B7, B8, B9 todos em Done
 
 ### Sessão 2 (1 dia)
-- C6 (MCP_API_KEY na Vercel) -- 5 min (URGENTE)
-- C7 (npm audit no agent-network-mcp) -- 1-2h
-- S3 (teste do runner no CI) -- 1h
-- S5 (consistencia) -- 1h
+- Fechada: C6, C7 (MCP_API_KEY + audit)
 
 ### Sessão 3 (1-2 dias)
-- S6 (`hitl.py`) — 1 dia
-- S7 (working memory) — 1 dia
-- M1 (session search) — 4h
+- Fechada: S6a (`hitl.py`), S7 (working memory)
+- Pendente: C8d (`retrieve_knowledge`), S9 (integração `hitl.py`), C8a (`apply_reingest`)
 
 **Depois disto**: Fase 1 fechada. O motor tem rede de segurança.
 
@@ -272,3 +271,8 @@
 
 *Adicionado em: 2026-09-14*
 *Origem: sessões múltiplas + auditorias externas*
+
+---
+
+*Adicionado em: 2026-09-15*
+*Fecho: S6a, S7, C7. S9 criado (integração do `hitl.py`).*
