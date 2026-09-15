@@ -1,0 +1,34 @@
+name: keep-alive
+
+# Mantém o Supabase ativo (free tier pausa após 7 dias de inatividade).
+# Faz um GET real ao PostgREST (/rest/v1/) -- o /auth/v1/health NAO conta.
+# Corre a cada 3 dias (limite: 7). Custo zero em repo publico.
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'   # a cada 3 dias, às 06:00 UTC
+  workflow_dispatch:          # permite correr manualmente
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (PostgREST)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "keep-alive: SUPABASE_URL ou SUPABASE_ANON_KEY em falta"
+            exit 1
+          fi
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/keepalive?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "keep-alive failed: HTTP $code"
+            exit 1
+          fi
+          echo "keep-alive: Supabase respondeu (projeto ativo)"
