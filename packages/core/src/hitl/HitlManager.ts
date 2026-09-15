@@ -11,6 +11,7 @@ export class HitlManager extends EventEmitter {
   private pendingRequests: Map<string, HitlRequest> = new Map();
   private approvedRequests: Map<string, HitlRequest> = new Map();
   private rejectedRequests: Map<string, HitlRequest> = new Map();
+  private expiredRequests: Map<string, HitlRequest> = new Map();
   private checkpoints: Map<string, any> = new Map();
   private logger = getGlobalLogger();
   constructor(private options: { autoExpireMinutes?: number } = {}) {
@@ -67,7 +68,7 @@ export class HitlManager extends EventEmitter {
     responderId: string,
     comment?: string
   ): Promise<HitlRequest> {
-    const request = this.pendingRequests.get(requestId);
+    const request = this.getRequest(requestId);
     if (!request) {
       throw new Error(`Solicitação ${requestId} não encontrada`);
     }
@@ -90,7 +91,7 @@ export class HitlManager extends EventEmitter {
     responderId: string,
     comment?: string
   ): Promise<HitlRequest> {
-    const request = this.pendingRequests.get(requestId);
+    const request = this.getRequest(requestId);
     if (!request) {
       throw new Error(`Solicitação ${requestId} não encontrada`);
     }
@@ -119,7 +120,8 @@ export class HitlManager extends EventEmitter {
     return (
       this.pendingRequests.get(requestId) ||
       this.approvedRequests.get(requestId) ||
-      this.rejectedRequests.get(requestId)
+      this.rejectedRequests.get(requestId) ||
+      this.expiredRequests.get(requestId)
     );
   }
   isPending(requestId: string): boolean {
@@ -129,11 +131,11 @@ export class HitlManager extends EventEmitter {
     if (!request.expiresAt) return;
     const timeout = request.expiresAt.getTime() - Date.now();
     if (timeout <= 0) {
-      this.expireRequest(request.id);
+      void this.expireRequest(request.id);
       return;
     }
     setTimeout(() => {
-      this.expireRequest(request.id);
+      void this.expireRequest(request.id);
     }, timeout);
   }
   private async expireRequest(requestId: string): Promise<void> {
@@ -141,6 +143,7 @@ export class HitlManager extends EventEmitter {
     if (!request) return;
     request.status = HitlStatus.EXPIRED;
     this.pendingRequests.delete(requestId);
+    this.expiredRequests.set(requestId, request);
     this.emit('request-expired', request);
     this.logger.info('HITL request expired', { id: requestId });
   }
