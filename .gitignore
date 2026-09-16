@@ -84,3 +84,10 @@ out/
 .cache/
 .vitest/
 coverage/
+# === Secrets / env (NUNCA commitar) ===
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
