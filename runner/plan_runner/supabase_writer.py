@@ -2,23 +2,17 @@
 
 Design: docs/T6-INGEST-PIPELINE.md (secao 4: knowledge_sources + knowledge_chunks).
 
-Este modulo e ADITIVO. Nao substitui nada. Escreve nas tabelas
-knowledge_sources e knowledge_chunks, criadas via SQL no Supabase.
-
-Contrato:
+Este modulo e ADITIVO e escreve numa tabela EXCLUSIVA:
     - knowledge_sources: source_path (PK), content_hash, agent_id, priority,
       last_ingested_at, chunk_count, git_sha, size_bytes, updated_at
-    - knowledge_chunks: id, source_path (FK), content_hash, chunk_index,
+    - knowledge_chunks_t6: id, source_path (FK), content_hash, chunk_index,
       content, agent_id, kb, embedding vector(768), created_at, updated_at
+
+NAO usa a tabela `knowledge_chunks` do agent-network-mcp (schema diferente,
+projeto diferente). A separacao evita colisoes de schema e de dados.
 
 Le DATABASE_URL do ambiente (mesma que o Prisma usa).
 Sem ORM: usa psycopg directo (mais leve, sem migrations).
-
-Funcoes publicas:
-    - connect() -> connection
-    - upsert_source(...)
-    - replace_chunks(source_path, chunks)  # delete + insert (idempotente)
-    - purge_source(source_path)
 """
 from __future__ import annotations
 
@@ -106,7 +100,7 @@ def delete_chunks(conn: psycopg.Connection, source_path: str) -> int:
     """Apaga todos os chunks de um source_path. Devolve o numero apagado."""
     with conn.cursor() as cur:
         cur.execute(
-            "DELETE FROM knowledge_chunks WHERE source_path = %s",
+            "DELETE FROM knowledge_chunks_t6 WHERE source_path = %s",
             (source_path,),
         )
         return cur.rowcount
@@ -127,14 +121,12 @@ def insert_chunks(
         - content_hash: str
         - chunk_index: int
         - embedding: list[float] (768 dims)
-        - citation: dict (source, locator)
-        - metadata: dict (opcional)
     """
     if not chunks:
         return 0
 
     sql = """
-        INSERT INTO knowledge_chunks (
+        INSERT INTO knowledge_chunks_t6 (
             id, source_path, content_hash, chunk_index, content,
             agent_id, kb, embedding, created_at, updated_at
         ) VALUES (
@@ -206,7 +198,7 @@ def replace_chunks(
 
 
 def purge_source(conn: psycopg.Connection, source_path: str) -> int:
-    """Apaga um source e os seus chunks (por CASCADE). Devolve chunks apagados."""
+    """Apaga um source e os seus chunks. Devolve chunks apagados."""
     with conn:
         n = delete_chunks(conn, source_path)
         with conn.cursor() as cur:
@@ -222,10 +214,10 @@ def count_chunks(conn: psycopg.Connection, source_path: str | None = None) -> in
     with conn.cursor() as cur:
         if source_path:
             cur.execute(
-                "SELECT COUNT(*) FROM knowledge_chunks WHERE source_path = %s",
+                "SELECT COUNT(*) FROM knowledge_chunks_t6 WHERE source_path = %s",
                 (source_path,),
             )
         else:
-            cur.execute("SELECT COUNT(*) FROM knowledge_chunks")
+            cur.execute("SELECT COUNT(*) FROM knowledge_chunks_t6")
         row = cur.fetchone()
         return int(row[0]) if row else 0
