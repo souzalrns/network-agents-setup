@@ -151,3 +151,53 @@ model LegalDocument {
   @@index([type, jurisdiction, source])
   @@index([jurisdiction, tags])
 }
+// ===== T6 — Ingestão de knowledge (RAG L5) =====
+// Design: docs/T6-INGEST-PIPELINE.md secao 4 (Modelo de dados).
+// Aditivo: nao altera os modelos existentes.
+// Requer a extensao pgvector (ja usada por LegalDocument):
+//   CREATE EXTENSION IF NOT EXISTS vector;
+
+model KnowledgeSource {
+  sourcePath      String   @id @map("source_path")
+  contentHash     String   @map("content_hash")
+  agentId         String   @map("agent_id")
+  priority        String   @default("P1")
+  lastIngestedAt  DateTime @default(now()) @map("last_ingested_at")
+  chunkCount      Int      @default(0) @map("chunk_count")
+  gitSha          String?  @map("git_sha")
+  sizeBytes       Int?     @map("size_bytes")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  chunks          KnowledgeChunk[]
+
+  @@index([agentId, priority])
+  @@map("knowledge_sources")
+}
+
+model KnowledgeChunk {
+  id          String   @id @default(cuid())
+  sourcePath  String   @map("source_path")
+  contentHash String   @map("content_hash")
+  chunkIndex  Int      @map("chunk_index")
+  content     String   @db.Text
+  agentId     String   @map("agent_id")
+  kb          String   @default("marketing")
+  embedding   Unsupported("vector")?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  source      KnowledgeSource @relation(fields: [sourcePath], references: [sourcePath], onDelete: Cascade)
+
+  @@unique([sourcePath, chunkIndex])
+  @@index([kb, agentId])
+  @@index([contentHash])
+  @@map("knowledge_chunks")
+}
+
+model SystemInventory {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  gitSha    String?  @map("git_sha")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_inventory")
+}
