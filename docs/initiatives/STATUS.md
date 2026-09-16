@@ -10,21 +10,20 @@
 > O item "alimentar RAG" passa a ser **C8** (estava duplicado como C5).
 > O ID **S6** pertence ao módulo `hitl.py` (S6a, feito em `cdae963`+`3445229`).
 > A integração (S6b) passa a ser **S9**.
+> O ID **S2** está dividido: **S2a** (Python) feito; **S2b** (Node) feito em `4d14f8f`+`6c87b42`+`c468081`.
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **C4** | **T6 ingestão é stub** — 33 knowledge packs de marketing não estão em RAG nenhum → **ver C8** (mesmo item, consolidado) | 1 dia | RAG funcional | Auditoria Claude |
-| **C8** | **Alimentar RAG continuamente** (T6 é stub) — pré-requisito para F12, Fase O, S6 | 1 dia | RAG funcional | Nossa |
+| **C8** | **Alimentar RAG continuamente** (T6 é stub) — C8d + C8a-1 feitos; falta C8a-2 (embed), C8b (Supabase), C8c (workflow), C8e (McpKnowledge) | 1 dia | RAG funcional | Nossa |
 
 ## 🟠 Alto (resolve problema real, valor claro)
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
-| **S2** | **Fase 1.2** — testes do caminho crítico (Router, Planner, Executor, HitlManager) — ≥20 casos | 2-3h | Refactor seguro | Auditoria Claude |
-| **S3** | **Fase 1.3** — teste do runner no CI (5 templates dry-run + 1 stub) | 1h | Runner gate | Auditoria Claude |
-| **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner | 1h | Consistência | Auditoria Claude |
+| **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner (provavelmente já feito — `ci.yml` corre `validate:consistency`) | 1h | Consistência | Auditoria Claude |
 | **S9** | **Fase A.2b** — integração do `hitl.py` em `engine.py`/`langgraph_engine.py`/`cli.py` (dupla-escrita; aditivo) | 3-4h | HITL durável | Nosso |
 
 ## 🟡 Médio (valor claro, sem urgência)
@@ -172,6 +171,14 @@
 | **S6a** | Fase A.2 — `runner/plan_runner/hitl.py` (lado Python do contrato v1) | módulo isolado + 15 testes de contrato; 105 verdes; aditivo (engine/cli intocados); S6b (integração) movido para S9 | `cdae963` + `3445229` |
 | **S7** | Working memory (`MEMORY.md` curado por cliente, ~1300 tokens) | `runner/plan_runner/working_memory.py` + 14 testes; convenção `memory/<client_id>/MEMORY.md`; limite suave 1300 tokens | `caabec6` |
 | **C7** | Vulnerabilidades Dependabot no `agent-network-mcp` (era 16, agora 6→0) | `npm audit` 6→0; `next` 15.5.23→16.3.5 (major, build verde); Dependabot 0 Open | `6482cd4` (agent-network-mcp) |
+| **C8d** | Fase A.2 — `runner/plan_runner/knowledge.py` (L5 retrieve_knowledge) | `KnowledgeBackend` protocol + `NullKnowledge` + `MockKnowledge` + `retrieve_knowledge` + `grounding_block`; 18 testes; contrato `memory.retrieve_knowledge` | `4d6fac4` |
+| **keep-alive** | Manter Supabase ativo (free tier pausa após 7 dias) | `.github/workflows/keep-alive.yml`: GET `/rest/v1/keepalive` a cada 3 dias; ANON_KEY + RLS; fail-closed | `3634504` |
+| **C8a-1** | Fase A.2 — `runner/plan_runner/chunking.py` (T6 §6, markdown chunking) | `chunk_markdown()` por secções H2/H3; ~200-600 tokens; output compatível com `retrieve_knowledge` (C8d); 14 testes | `32a5881` |
+| **S3** | Teste do runner no CI (5 templates dry-run + 1 stub) | **Superado** — `test_real_plans.py` cobre 6 planos reais (compile-graph + run stub + HITL); corre no `runner-tests.yml` | (já existia) |
+| **S2a** | Testes do caminho crítico — lado Python (Executor, Engine, HITL) | **Já feito** — `test_executor.py` + `test_engine_native.py` + `test_engine_external.py` + `test_langgraph_flow.py` + `test_hitl_contract.py` | (já existia) |
+| **S2b-1** | Testes do caminho crítico — `HitlManager` (Node) | `tests/unit/HitlManager.test.ts`: 10 testes; **2 bugs corrigidos** em `HitlManager.ts` (`expireRequest` usava `request` indefinido; pedido expirado não era guardado) | `4d14f8f` |
+| **S2b-2** | Testes do caminho crítico — `Router` (Node) | `tests/unit/Router.test.ts`: 12 testes; sem bugs encontrados | `6c87b42` |
+| **S2b-3** | Testes do caminho crítico — `Planner` (Node) | `tests/unit/Planner.test.ts`: 10 testes; **1 bug corrigido** em `Planner.ts` (faltava `return {` — não compilava; `ci:typecheck` tem `continue-on-error`) | `c468081` |
 
 ---
 
@@ -195,10 +202,12 @@
 - Fechada: C6, C7 (MCP_API_KEY + audit)
 
 ### Sessão 3 (1-2 dias)
-- Fechada: S6a (`hitl.py`), S7 (working memory)
-- Pendente: C8d (`retrieve_knowledge`), S9 (integração `hitl.py`), C8a (`apply_reingest`)
+- Fechada: S6a (`hitl.py`), S7 (working memory), C8d (`knowledge.py`), C8a-1 (`chunking.py`), S3, S2a, S2b (HitlManager + Router + Planner)
 
-**Depois disto**: Fase 1 fechada. O motor tem rede de segurança.
+**Próximos passos:**
+- **STATUS.md** atualizado (esta sessão)
+- **Decidir embedder** (Ollama / Gemini / HuggingFace) → desbloqueia C8a-2
+- **S9** (integração `hitl.py`) ou **M1** (session search)
 
 ---
 
@@ -275,4 +284,4 @@
 ---
 
 *Adicionado em: 2026-09-15*
-*Fecho: S6a, S7, C7. S9 criado (integração do `hitl.py`).*
+*Fecho: S6a, S7, C7, C8d, C8a-1, keep-alive, S3, S2a, S2b (1, 2, 3). S9 criado (integração `hitl.py`).*
