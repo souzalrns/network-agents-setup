@@ -19,7 +19,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-
 # Limites (T6 secao 6: ~200-600 tokens). Aproximacao: 4 chars = 1 token.
 MAX_CHARS = 2400   # ~600 tokens
 MIN_CHARS = 200    # ~50 tokens; fragmentos menores juntam-se ao anterior
