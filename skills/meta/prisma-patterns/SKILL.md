@@ -4,6 +4,9 @@ action: prisma_patterns
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Armadilhas conhecidas do Prisma sobre PostgreSQL directo (sem Supabase) -- updateMany, transaccoes, migrations, soft-delete, connection pooling. Activar ao escrever ou rever codigo Prisma.
+requires: []
 ---
 
 # Skill — prisma-patterns
@@ -26,6 +29,10 @@ Trabalhar com Prisma directamente sobre PostgreSQL (sem Supabase por baixo).
 5. `@updatedAt` não dispara em `updateMany`/bulk writes — define `updatedAt: new Date()` manualmente nesses casos.
 6. `findUniqueOrThrow` não detecta soft-delete (linha existe, só está marcada) — usa `findFirstOrThrow` com `deletedAt: null` quando há soft delete no modelo.
 7. Em serverless (se algum endpoint correr assim), usar `connection_limit=1` com pooler externo, para não esgotar ligações.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
