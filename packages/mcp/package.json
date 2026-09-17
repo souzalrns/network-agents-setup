@@ -11,7 +11,7 @@
     "@network-agents/shared": "workspace:*",
     "pg": "^8.11.0",
     "express": "^4.18.2",
-    "@prisma/client": "^5.0.0"
+    "@prisma/client": "^7.10.0"
   },
   "devDependencies": {
     "@types/pg": "^8.10.0",
