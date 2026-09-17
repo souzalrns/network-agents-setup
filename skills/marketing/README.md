@@ -19,9 +19,8 @@
 | [copy_social](./copy_social/SKILL.md) | copy_social |
 | [storytelling](./storytelling/SKILL.md) | storytelling |
 | [critic](./critic/SKILL.md) | critic |
-| [transcript_analysis](./transcript_analysis/SKILL.md) | transcript_analysis |
 
-Ainda em falta (P1+): performance_analyst, seo_tech_audit, status_report.
+Ainda em falta (P1+): media_buyer, performance_analyst, ugc, influencer, editor_video, seo_tech_audit, status_report.
 
 ## Runner
 
