@@ -42,3 +42,18 @@ def test_strict_blocks_mutate_without_key(monkeypatch):
 
 def test_scopes_defined():
     assert policy.SCOPES["run_plan"] == "runner:plan:execute"
+
+
+def test_moderate_lab_open_warns(monkeypatch):
+    """SECURITY-AUDIT.md 2026-09-17 (LLM03/Excessive Agency): o caminho
+    moderate-sem-chave continua autorizado (ver test_moderate_allows_mutate_without_key,
+    que fixa esse comportamento), mas agora tem de emitir um aviso explicito --
+    mitigacao parcial, nao o fecho completo do achado.
+    """
+    monkeypatch.setenv("PLAN_RUNNER_MCP_PROFILE", "moderate")
+    monkeypatch.delenv("PLAN_RUNNER_MCP_KEY", raising=False)
+    monkeypatch.delenv("PLAN_RUNNER_MCP_ALLOW_MUTATE", raising=False)
+    with pytest.warns(UserWarning, match="moderate"):
+        ctx = policy.authorize("run_plan")
+    assert ctx.authorized is True
+    assert ctx.reason == "moderate_lab_open"
