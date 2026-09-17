@@ -4,6 +4,9 @@ action: mcp_patterns
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Boas praticas para tools de servidor MCP -- schema de input validado, erros estruturados, idempotencia. Activar ao construir ou alterar um servidor MCP.
+requires: []
 ---
 
 # Skill — mcp-patterns
@@ -22,6 +25,10 @@ Construir ou alterar um servidor MCP (ex.: com `mcp-handler` + Zod).
 2. Devolve erros estruturados que o modelo consiga interpretar, em vez de stack traces cruas.
 3. Prefere tools idempotentes, para retries serem seguros.
 4. Documenta rate limits/custo na própria descrição da tool, quando ela chama uma API externa.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
