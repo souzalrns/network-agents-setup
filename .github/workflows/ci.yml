@@ -118,7 +118,7 @@ jobs:
           steps.prisma_generate.outcome == 'failure' || steps.prisma_push.outcome == 'failure' ||
           steps.typecheck.outcome == 'failure' || steps.vitest.outcome == 'failure' ||
           steps.consistency.outcome == 'failure' || steps.smoke.outcome == 'failure'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('fs');
