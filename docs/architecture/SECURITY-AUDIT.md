@@ -38,13 +38,17 @@ Como não havia config de cliente MCP para o `mcpguard` escanear, revi o código
 - Log de auditoria em `audit.jsonl` para toda chamada de tool, com sucesso/falha e razão.
 - Transporte só `stdio` (`server.py`, `mcp.run(transport="stdio")`) — não está exposto pela rede por omissão, o que reduz bastante o risco real do achado abaixo.
 
-**Achado MEDIUM — `mcp/plan_runner/mcp_plan_runner/policy.py:73`** (mapeia a **OWASP LLM03 — Excessive Agency**)
+**Achado MEDIUM — `mcp/plan_runner/mcp_plan_runner/policy.py:73`** (mapeia a **OWASP LLM03 — Excessive Agency**) — **[MITIGADO PARCIALMENTE em 2026-09-17]**
 ```python
 if prof == "moderate":
     # Lab default: allow mutate without key but record reason (audit still runs)
     return AuthContext(prof, caller, True, "moderate_lab_open")
 ```
 O perfil por omissão (`PLAN_RUNNER_MCP_PROFILE`, default `"moderate"`) permite chamar `run_plan`/`resume_plan` — as duas tools que **executam código** via `plan_runner.engine` — **sem nenhuma chave de autenticação**, desde que `PLAN_RUNNER_MCP_KEY` não esteja definida. É um comportamento intencional e comentado como "lab default", não um bug escondido — mas se este servidor alguma vez correr fora de um contexto de laboratório local, isto é uma porta aberta para execução sem controlo. Mitigado parcialmente pelo transporte `stdio`-only.
+
+**Bloqueio real encontrado ao tentar corrigir isto:** existe um teste já existente (`test_moderate_allows_mutate_without_key`) que fixa `ctx.authorized is True` para este cenário exacto como comportamento **esperado** — ou seja, o teste valida a vulnerabilidade como correcta. Uma correcção real (chave obrigatória, ou mudar o default) quebraria esse teste de propósito. Por isso a correcção aplicada foi a opção sem esse conflito: `policy.py` agora emite um `warnings.warn()` + log em `stderr` sempre que este caminho é tomado, tornando-o ruidoso e impossível de ignorar silenciosamente — mas **o comportamento em si não mudou**: `moderate` sem chave continua a autorizar `run_plan`/`resume_plan`. Um teste novo, aditivo, confirma o aviso (`test_moderate_lab_open_warns`, em `mcp/plan_runner/tests/test_policy.py`).
+
+**Para fechar por completo** (não feito nesta tarefa, exige decisão humana): actualizar `test_moderate_allows_mutate_without_key` para reflectir o comportamento desejado (bloquear em vez de permitir), e só depois mudar `policy.py` para exigir chave também em `moderate`, ou mudar o default do perfil para `strict`.
 
 **Achado LOW — `tools_impl.py` (múltiplas linhas: 40, 55, 91, 118)** (roça **OWASP LLM02 — Sensitive Information Disclosure**)
 ```python
