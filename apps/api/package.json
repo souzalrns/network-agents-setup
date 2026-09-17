@@ -17,7 +17,7 @@
     "@network-agents/shared": "workspace:*",
     "express": "^4.18.0",
     "cors": "^2.8.5",
-    "helmet": "^7.0.0",
+    "helmet": "^8.3.0",
     "ws": "^8.14.0",
     "pg": "^8.11.0",
     "uuid": "^9.0.0"
