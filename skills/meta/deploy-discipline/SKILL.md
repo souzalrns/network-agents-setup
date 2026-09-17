@@ -4,6 +4,9 @@ action: deploy_discipline
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Confirmar health checks e o projecto/ambiente certo antes de confiar num deploy automatico. Activar antes de qualquer deploy ou edicao de env vars de producao.
+requires: []
 ---
 
 # Skill — deploy-discipline
@@ -21,6 +24,10 @@ Fazer ou confiar num deploy automático (ex.: Vercel).
 1. Plataformas como o Vercel já fazem deploy *rolling* por omissão (nova versão sobe, tráfego migra) — mas isso não substitui verificação própria.
 2. Confirma sempre que endpoints de *health check* existem antes de confiar num deploy automático.
 3. Nunca editar variáveis de ambiente de produção sem confirmar exactamente em qual projecto/ambiente estás — quando há vários projectos com nomes parecidos, o risco de editar o errado é real.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
