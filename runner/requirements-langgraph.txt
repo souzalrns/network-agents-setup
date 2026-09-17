@@ -1,5 +1,5 @@
 # Opcional - motor de grafos LangGraph
 -r requirements.txt
-langgraph>=0.2.0
+langgraph>=1.2.11
 langgraph-checkpoint-sqlite>=3.0.0
 pytest-cov>=5.0.0
