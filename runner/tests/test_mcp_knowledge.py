@@ -27,7 +27,6 @@ import pytest
 from plan_runner import mcp_knowledge
 from plan_runner.mcp_knowledge import McpKnowledge, McpKnowledgeError
 
-
 # ---------------------------------------------------------------------------
 # Fakes -- um por camada do transporte MCP
 # ---------------------------------------------------------------------------
