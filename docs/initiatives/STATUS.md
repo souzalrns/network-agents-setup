@@ -12,6 +12,8 @@
 > O ID **S2** está dividido: **S2a** (Python) feito; **S2b** (Node) feito.
 > **C8 está 5/6 feito:** C8a-1, C8a-2, C8b, C8c, C8d feitos; falta **C8e** (`McpKnowledge`).
 > **Tabela exclusiva:** `knowledge_chunks_t6` (NÃO partilhar com `agent-network-mcp`).
+> **Nova série de IDs `G` (Governança/Mapeamento), a partir de 2026-09-17:** próximo ID livre é **G6**.
+> Os 3 documentos de mapeamento (CORE-MAPPING, MCP-MAPPING, ROADMAP-GOVERNANCE) vivem em `docs/architecture/` — ver secção "Mapeamento" abaixo.
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
 
@@ -117,6 +119,26 @@ Aplicação: `media_buyer`, `ad_creative`, `marketing`.
 
 ---
 
+## 🗺️ Mapeamento (2026-09-17)
+
+Três documentos novos, produzidos por leitura directa dos ficheiros (não por inferência), em `docs/architecture/`:
+
+| Documento | Cobre | Resultado |
+|---|---|---|
+| `CORE-MAPPING.md` | 39 ficheiros `.ts` de `packages/core/src/` | 5 REAL, 19 INCOMPLETO, 14 MOCK, 1 BARREL |
+| `MCP-MAPPING.md` | 33 agentes de `lib/agents.js` (`agent-network-mcp`) | 13 Horizontal+genérico (setup), 5 Vertical+genérico com ingestão (setup), 9 Vertical+proprietário (fica no MCP), 2 Mistos (dividir), 2 casca por design (fica no MCP), 3 casca razão não documentada; 16 skills novas extraíveis |
+| `ROADMAP-GOVERNANCE.md` | Cronograma da camada de governança, integrando AGT (Microsoft) + o que falta construir | 8–12 sessões; gaps identificados: Delegation Graph, Action Receipts, Context Sync |
+
+### 🗺️ Próximos passos do mapeamento
+
+| ID | Item | Esforço | Bloqueia | Origem |
+|---|---|---|---|---|
+| **G1** | Fechar **C8e** (`McpKnowledge`) — ver secção 🔴 Crítico, já rastreado lá | 2-3h | RAG completo | (já existente, referenciado aqui) |
+| **G2** | Criar as **16 skills novas** de `skills/meta/` listadas no `MCP-MAPPING.md` (blocos genéricos extraídos de agentes verticais — Prisma, NestJS, React, API REST, tratamento de erros, SEO técnico, A11y, Vite env vars, escrita de artigos, React Native/Expo, PHI, Python, deploy, MCP/Zod, GitHub Actions, Objetivo→Plano→Teste→Execução→Revisão→Evidência) | 3-5 dias | Reuso horizontal | MCP-MAPPING |
+| **G3** | Migrar os **5 knowledge packs verticais com ingestão** (cardiologia, dermatologia, oftalmologia, direito-br-pt, imobiliario-digital) do MCP para o setup | 1-2 dias | Catálogo público | MCP-MAPPING |
+| **G4** | Limpar termos privados dos **13 agentes "Horizontal + genérico"** antes de os trazer para o setup (lista completa na secção 3.1 do `MCP-MAPPING.md`) | 1 dia | G2/G3 | MCP-MAPPING |
+| **G5** | Corrigir **2 achados não resolvidos** do `MCP-MAPPING.md`: `apps-produto` não está classificado em nenhuma das 6 secções de detalhe (só na tabela principal); coluna Privacidade de `hvac` diz "Proprietário" mas está agrupado em "casca por design" (genérico) — contradição entre colunas, precisa de decisão | 1h | Integridade do mapeamento | MCP-MAPPING |
+
 ## Done
 
 > Itens fechados. Regra: nada e apagado sem ser feito; ao fechar, mover para aqui.
@@ -149,6 +171,11 @@ Aplicação: `media_buyer`, `ad_creative`, `marketing`.
 | **C8b** | Schema Prisma T6 (Supabase) | `KnowledgeSource`, `KnowledgeChunk`, `SystemInventory`; tabelas criadas via SQL | `08f05cd` |
 | **C8a-2** | Pipeline de ingestão T6 | `embedder.py` (Gemini 768 dims) + `supabase_writer.py` + `ingest_apply.py`; tabela exclusiva `knowledge_chunks_t6`; **110 chunks** de 33 ficheiros | `c76e541` + `a6bd836` + `ceca890` |
 | **C8c** | Workflow `ingest-knowledge` com `--apply` | Apply real no push (secrets `DATABASE_URL` + `GEMINI_API_KEY` no GitHub) | `76d7aeb` |
+| **G-skill-1** | Skill `transcript_analysis` (genérica, `skills/marketing/`) | Dispatch→poll→leitura de datastore→recomendação, sem dado de produção | `skills/marketing/transcript_analysis/SKILL.md` |
+| **G-skill-2** | Agente `content_analyst` (`agents/marketing/`) | Liga ao skill acima | `agents/marketing/content_analyst.agent.md` |
+| **G-skill-3** | Skill `cheap-entity-extraction` (`skills/meta/`) | Técnica GLiNER2, genérica | `skills/meta/cheap-entity-extraction/SKILL.md` |
+| **G-skill-4** | Skill `skill-self-optimization` (`skills/meta/`) | Técnica SkillOpt (Microsoft Research), genérica | `skills/meta/skill-self-optimization/SKILL.md` |
+| **G-skill-5** | Skill `ai-code-review-checklist` (`skills/meta/`) | Checklist RLS/IDOR/segredos/onboarding, genérico | `skills/meta/ai-code-review-checklist/SKILL.md` |
 
 ---
 
@@ -248,6 +275,18 @@ Aplicação: `media_buyer`, `ad_creative`, `marketing`.
 *Origem: sessões múltiplas + auditorias externas*
 
 ---
+
+
+## 📊 Estado do mapeamento
+
+| Inventário | Contagem | Fonte |
+|---|---|---|
+| `packages/core/src/` (ficheiros `.ts`) | 39 | `CORE-MAPPING.md` |
+| `lib/agents.js` (`agent-network-mcp`) | 33 agentes | `MCP-MAPPING.md` |
+| `skills/` (`network-agents-setup`) | 50 (marketing 16, claude 26, design 4, meta 4) | Contagem directa via API, 2026-09-17 |
+| `agents/` (`network-agents-setup`) | 21 (marketing 16, design 4, meta 1) | Contagem directa via API, 2026-09-17 |
+
+*Nota: a contagem de `skills/` (50) e `agents/` (21) foi verificada directamente nesta sessão — os números "~40" e "~20" do pedido original eram estimativas; ficam substituídos pela contagem real.*
 
 *Adicionado em: 2026-09-16*
 *Fecho: C8a-1, C8a-2, C8b, C8c, C8d, keep-alive, S2b (1, 2, 3), S3, S6a, S7, C7. C8 está 5/6 — falta C8e.*
