@@ -14,14 +14,20 @@ Uso:
     python scripts/ingest_apply.py                # aplica tudo
     python scripts/ingest_apply.py --only docs/knowledge/ai-findability.md
     python scripts/ingest_apply.py --dry-run      # so mostra o que faria
+    python scripts/ingest_apply.py --max-chunks 20  # limita o orcamento de embeddings
 
 Le .env da raiz do repo (sem python-dotenv): GEMINI_API_KEY, DATABASE_URL.
+
+Rate limit do Gemini (HTTP 429, "quota exceeded" no tier gratuito):
+ver docs/architecture/RATE-LIMITS.md para o achado original e a
+estrategia de retry usada aqui.
 """
 from __future__ import annotations
 
 import argparse
 import os
 import sys
+import time
 from pathlib import Path
 
 # --- sys.path + .env (antes de qualquer import do runner) -------------------
@@ -54,7 +60,7 @@ _load_env(ROOT / ".env")
 # --- imports do runner (depois do sys.path) ---------------------------------
 
 from plan_runner.chunking import chunk_markdown  # noqa: E402
-from plan_runner.embedder import embed_text  # noqa: E402
+from plan_runner.embedder import EmbedderError, embed_text  # noqa: E402
 from plan_runner.supabase_writer import (  # noqa: E402
     connect,
     purge_source,
@@ -63,6 +69,46 @@ from plan_runner.supabase_writer import (  # noqa: E402
 
 # Importa o manifesto e helpers do ingest_delta (sem correr o main).
 from scripts.ingest_delta import MANIFEST, sha256_file  # noqa: E402
+
+
+# --- retry com backoff exponencial para o rate limit do Gemini --------------
+
+MAX_RETRIES_429 = 3
+BACKOFF_BASE_SECONDS = 2.0  # 2s, 4s, 8s
+
+
+class QuotaExhaustedError(RuntimeError):
+    """As 3 tentativas de retry ao HTTP 429 esgotaram-se sem sucesso."""
+
+
+def embed_with_retry(text: str) -> list[float]:
+    """Chama embed_text() com retry+backoff exponencial só para HTTP 429.
+
+    Outros erros (auth, timeout, dimensao errada) propagam-se de imediato --
+    não faz sentido repetir um erro que não é de quota. Segue o mesmo padrão
+    de exceção que embedder.py já usa (EmbedderError), sem tocar nesse
+    ficheiro.
+    """
+    last_error: EmbedderError | None = None
+    for attempt in range(1, MAX_RETRIES_429 + 1):
+        try:
+            return embed_text(text)
+        except EmbedderError as e:
+            is_429 = "HTTP 429" in str(e)
+            if not is_429:
+                raise  # erro diferente de quota -- não vale a pena repetir
+            last_error = e
+            if attempt < MAX_RETRIES_429:
+                wait = BACKOFF_BASE_SECONDS * (2 ** (attempt - 1))
+                print(
+                    f"  [429] quota Gemini excedida (tentativa {attempt}/"
+                    f"{MAX_RETRIES_429}) -- a aguardar {wait:.0f}s antes de repetir",
+                    file=sys.stderr,
+                )
+                time.sleep(wait)
+    raise QuotaExhaustedError(
+        f"Quota do Gemini esgotada após {MAX_RETRIES_429} tentativas: {last_error}"
+    )
 
 
 def _kb_for(agent_id: str) -> str:
@@ -76,7 +122,23 @@ def _kb_for(agent_id: str) -> str:
     return "global"
 
 
-def apply_one(rel: str, agent_id: str, priority: str, *, dry_run: bool) -> dict:
+class ChunkBudget:
+    """Orçamento global de chunks a embeddar nesta corrida (protege a quota)."""
+
+    def __init__(self, max_chunks: int):
+        self.max_chunks = max_chunks
+        self.used = 0
+
+    def remaining(self) -> int:
+        return max(0, self.max_chunks - self.used)
+
+    def exhausted(self) -> bool:
+        return self.used >= self.max_chunks
+
+
+def apply_one(
+    rel: str, agent_id: str, priority: str, *, dry_run: bool, budget: ChunkBudget
+) -> dict:
     """Processa um ficheiro: chunk + embed + write. Devolve contagens."""
     full = ROOT / rel
     if not full.is_file():
@@ -98,10 +160,25 @@ def apply_one(rel: str, agent_id: str, priority: str, *, dry_run: bool) -> dict:
     if dry_run:
         return {"action": "DRY", "chunks": len(chunks), "deleted": 0}
 
-    # Gera embeddings (768 dims) para cada chunk.
+    if budget.exhausted():
+        return {"action": "SKIPPED_QUOTA", "chunks": 0, "deleted": 0}
+
+    if len(chunks) > budget.remaining():
+        # Orçamento não chega para este ficheiro inteiro -- salta-o por
+        # completo em vez de o ingerir parcialmente (parcial seria pior:
+        # deixaria a fonte com metade dos chunks antigos, metade novos).
+        return {
+            "action": "SKIPPED_QUOTA",
+            "chunks": 0,
+            "deleted": 0,
+            "note": f"precisa de {len(chunks)} chunks, restam {budget.remaining()}",
+        }
+
+    # Gera embeddings (768 dims) para cada chunk, com retry a 429.
     for c in chunks:
-        c["embedding"] = embed_text(c["content"])
+        c["embedding"] = embed_with_retry(c["content"])
         c["content_hash"] = content_hash
+    budget.used += len(chunks)
 
     with connect() as conn:
         out = replace_chunks(
@@ -139,6 +216,12 @@ def main() -> int:
         action="store_true",
         help="Mostra o que faria, sem escrever.",
     )
+    parser.add_argument(
+        "--max-chunks",
+        type=int,
+        default=50,
+        help="Orcamento maximo de chunks a embeddar nesta corrida (protege a quota do Gemini). Default: 50.",
+    )
     args = parser.parse_args()
 
     targets = MANIFEST
@@ -152,25 +235,50 @@ def main() -> int:
     print(f"root: {ROOT}")
     print(f"mode: {'DRY-RUN' if args.dry_run else 'APPLY'}")
     print(f"targets: {len(targets)}")
+    print(f"max_chunks (orcamento desta corrida): {args.max_chunks}")
     print()
 
+    budget = ChunkBudget(args.max_chunks)
     total_chunks = 0
     total_deleted = 0
+    failures: list[tuple[str, str]] = []  # (path, motivo) -- para o resumo final
+
     for rel, agent_id, priority in targets:
         try:
-            out = apply_one(rel, agent_id, priority, dry_run=args.dry_run)
-        except Exception as e:
+            out = apply_one(rel, agent_id, priority, dry_run=args.dry_run, budget=budget)
+        except QuotaExhaustedError as e:
+            # Esgotou o retry a 429: para este ficheiro, reporta, e CONTINUA
+            # para o proximo -- nao aborta a corrida inteira (pedido explicito).
             print(f"ERROR  {rel}: {e}", file=sys.stderr)
-            return 1
+            failures.append((rel, str(e)))
+            continue
+        except Exception as e:
+            # Qualquer outro erro (auth, ligacao, etc.) tambem nao aborta a
+            # corrida -- regista e segue para o proximo ficheiro.
+            print(f"ERROR  {rel}: {e}", file=sys.stderr)
+            failures.append((rel, str(e)))
+            continue
+
+        note = f"  ({out['note']})" if out.get("note") else ""
         print(
-            f"{out['action']:8}  {priority:3}  {rel}  "
-            f"chunks={out['chunks']} deleted={out['deleted']}"
+            f"{out['action']:14}  {priority:3}  {rel}  "
+            f"chunks={out['chunks']} deleted={out['deleted']}{note}"
         )
         total_chunks += out["chunks"]
         total_deleted += out["deleted"]
 
     print()
-    print(f"TOTAL: chunks={total_chunks} deleted={total_deleted}")
+    print(f"TOTAL: chunks={total_chunks} deleted={total_deleted} orcamento_usado={budget.used}/{budget.max_chunks}")
+
+    if failures:
+        print()
+        print(f"=== {len(failures)} FICHEIRO(S) COM ERRO (ver acima para detalhe) ===")
+        for rel, motivo in failures:
+            print(f"  FALHOU  {rel}: {motivo[:150]}")
+        # Reporta falha (exit != 0) mas só depois de ter tentado todos os
+        # ficheiros -- não abortou o workflow a meio.
+        return 1
+
     return 0
 
 
