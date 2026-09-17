@@ -4,6 +4,9 @@ action: article_writing
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Escrita de artigos -- comecar pelo concreto, frases directas, nunca inventar factos ou casos. Activar ao escrever conteudo editorial.
+requires: []
 ---
 
 # Skill — article-writing
@@ -22,6 +25,10 @@ Escrever artigos de blog/conteúdo editorial.
 2. Usa frases directas.
 3. Prova em vez de adjectivos.
 4. Nunca inventes factos, credibilidade ou casos que não existem.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
