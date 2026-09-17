@@ -2,7 +2,7 @@
 
 Documenta a **plataforma Node** do monorepo: a API Express (`apps/api/`) e o pacote core (`packages/core/`). Distinta do motor Python (`runner/plan_runner/`) e do MCP governado (`mcp/plan_runner/`).
 
-**Nota de maturidade:** o README do repo avisa que "alguns módulos podem conter stubs; tratar antes de produção". Este documento descreve o que existe hoje, não o que está pronto para produção.
+**Nota de maturidade:** o README do repo aponta para [`CORE-MAPPING.md`](./CORE-MAPPING.md) para o estado exacto de cada módulo (REAL/INCOMPLETO/MOCK) — 39 ficheiros mapeados por leitura directa: 5 REAL, 19 INCOMPLETO, 14 MOCK, 1 BARREL. Este documento descreve o que existe hoje (estrutura, boot sequence, contratos), não o que está pronto para produção — para isso, ver a classificação em `CORE-MAPPING.md` módulo a módulo.
 
 ---
 
@@ -20,15 +20,22 @@ Documenta a **plataforma Node** do monorepo: a API Express (`apps/api/`) e o pac
 
 ### `packages/core/` (parcial — os módulos que importam para esta doc)
 
-| Pasta | Módulos |
-|-------|---------|
-| `orchestrator/` | `Orchestrator`, `Router`, `Planner`, `Executor`, `ReflectionEngine`, `DeliberationOrch.` |
-| `governance/` | `TrustManager`, `TrustOrchestrator`, `Councils`, `DeliberationEngine`, `ArchitectureCouncil`, `CompletenessValidator`, `DocumentationGovernance`, `IngestionOrchestrator` |
-| `hitl/` | `HitlManager` |
-| `llm/` | `LLMService` |
-| `observability/` | `MetricsDashboard`, `SelfAwareness` |
-| `security/` | `SecurityManager` |
-| `agents/` | `AgentFactory`, `HorizontalAgents` |
+Estado de cada módulo confirmado em [`CORE-MAPPING.md`](./CORE-MAPPING.md) (REAL = faz o que promete sem depender de persistência; INCOMPLETO = lógica real, mas guarda tudo em `Map` volátil; MOCK = tem simulação/placeholder explícito):
+
+| Pasta | Módulos | Estado (ver CORE-MAPPING.md) |
+|-------|---------|---|
+| `orchestrator/` | `Orchestrator` | MOCK |
+| | `Router`, `Planner`, `Executor` | **REAL** |
+| | `ReflectionEngine`, `DeliberationOrch.` | INCOMPLETO |
+| `governance/` | `DeliberationEngine` | **REAL** |
+| | `TrustManager`, `TrustOrchestrator`, `Councils`, `ArchitectureCouncil`, `DocumentationGovernance` | INCOMPLETO |
+| | `CompletenessValidator`, `IngestionOrchestrator` | MOCK |
+| `hitl/` | `HitlManager` | INCOMPLETO |
+| `llm/` | `LLMService` | **REAL** |
+| `observability/` | `MetricsDashboard`, `SelfAwareness` | INCOMPLETO |
+| `security/` | `SecurityManager` | MOCK |
+| `agents/` | `AgentFactory` | INCOMPLETO |
+| | `HorizontalAgents` | MOCK |
 
 Outros módulos (`economy/`, `evolution/`, `immunity/`, `simulation/`, `opportunity/`, `products/`, `domains/`, `search/`, `ux/`, `compliance/`, `data/`, `knowledge/`, `operations/`, `infrastructure/`, `development/`) existem mas não são o foco desta doc.
 
@@ -143,7 +150,7 @@ Dois motores, dois papéis:
 | **Transporte** | HTTP + WebSocket | CLI + (via MCP) stdio |
 | **Contrato** | `HitlRequest` / `HitlStatus` / `HitlPriority` / `HitlCategory` (em `@network-agents/shared`) | Pendente — o contrato v1 define o formato de ficheiro/eventos que ambos os lados partilham |
 
-**Estado actual:** o `HitlManager` Node existe e está montado na API. O lado Python (`hitl.py`) ainda não existe (é **S6** no `docs/initiatives/STATUS.md`). O contrato v1 está definido em `docs/architecture/hitl/`.
+**Estado actual (corrigido 2026-09-17):** o `HitlManager` Node existe e está montado na API — classificado **INCOMPLETO** em `CORE-MAPPING.md` (lógica funcional, estado em `Map` volátil). O lado Python (`runner/plan_runner/hitl.py`, contrato v1) **já existe** — é **S6a**, fechado no `docs/initiatives/STATUS.md` (módulo isolado + 15 testes). O que falta é a **integração** desse módulo em `engine.py`/`langgraph_engine.py`/`cli.py` — isso é **S9**, ainda por fazer. *(Este documento dizia antes que o `hitl.py` "ainda não existe" — estava desactualizado; corrigido aqui.)*
 
 ---
 
@@ -170,4 +177,6 @@ Dois motores, dois papéis:
 - `docs/architecture/hitl/` — contrato HITL v1
 - `docs/architecture/plan-execute/` — schema do plano
 - `docs/architecture/patterns-from-mcp/` — MCP server governado (Python)
-- `docs/initiatives/STATUS.md` — S6 (HitlManager Python)
+- [`docs/architecture/CORE-MAPPING.md`](./CORE-MAPPING.md) — estado REAL/INCOMPLETO/MOCK de todos os 39 ficheiros de `packages/core/`
+- [`docs/architecture/GOVERNANCE.md`](./GOVERNANCE.md) — visão consolidada da camada de governança (7 destes módulos fazem parte dela)
+- `docs/initiatives/STATUS.md` — S6a (feito, `hitl.py` existe) e S9 (por fazer, integração)
