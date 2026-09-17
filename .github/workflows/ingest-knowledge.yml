@@ -8,6 +8,10 @@ on:
       - "scripts/ingest_delta.py"
   workflow_dispatch:
 
+concurrency:
+  group: ingest-knowledge-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   delta:
     runs-on: ubuntu-latest
