@@ -4,6 +4,9 @@ action: react_patterns
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Padroes React para estado derivado, waterfalls, listas longas e acessibilidade basica. Activar ao escrever ou rever componentes React web.
+requires: []
 ---
 
 # Skill — react-patterns
@@ -24,6 +27,10 @@ Escrever ou rever componentes React (web).
 4. Todo `<input>` precisa de label associado (`htmlFor`/`id`).
 5. Todo elemento clicável custom precisa de `role` e suporte a teclado — não só `onClick` num `<div>`.
 6. Cuidado com *Cumulative Layout Shift* em imagens sem `width`/`height` definidos — afecta Core Web Vitals.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
