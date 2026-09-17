@@ -4,6 +4,9 @@ action: github_actions_ops
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Diagnostico de falhas de workflow do GitHub Actions -- distinguir falha transitoria de erro de logica. Activar ao investigar um run que falhou.
+requires: []
 ---
 
 # Skill — github-actions-ops
@@ -20,6 +23,10 @@ Diagnosticar uma falha de workflow do GitHub Actions.
 
 1. Antes de assumir que um workflow falhou por erro de lógica, verifica se foi falha transitória — um *rerun* costuma resolver.
 2. Logs detalhados de steps ficam em blob storage (não na API do GitHub) — quando precisares de depurar a fundo, pode ser preciso correr localmente em vez de tentar ler o log completo via API.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
