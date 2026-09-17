@@ -13,9 +13,11 @@ Mapeamento dos 33 agentes de `lib/agents.js`, por 3 eixos: **amplitude** (horizo
 | Horizontal + genérico (inclui 7 "de processo") | 13 | Setup (com limpeza) |
 | Vertical + genérico, com ingestão | 5 | Setup (migrar) |
 | Vertical + genérico, casca (razão não documentada) | 3 | Futuro (ingerir) |
-| Vertical + genérico, casca por design | 2 | MCP (manter) |
-| Vertical + proprietário | 9 | MCP 🔒 |
+| Vertical, casca por design (privacidade mista) | 2 | MCP (manter) |
+| Vertical + proprietário | 10 | MCP 🔒 |
 | Mistos | 2 | Setup + MCP (dividir) |
+
+*(G5: "Vertical + proprietário" corrigido de 9 para 10 — faltava `apps-produto`. "Vertical + genérico, casca por design" renomeado para "Vertical, casca por design (privacidade mista)" — tinha 1 agente proprietário (`hvac`) e 1 misto (`refrigeracao-hvac`), nunca foi "genérico" para os dois.)*
 
 Os 7 "de processo" **não são um grupo à parte** — são o subconjunto de "Horizontal + genérico" cuja origem provável é um repo público (ECC/superpowers) em vez de processo desenhado de raiz. Contam uma vez só, dentro dos 13.
 
@@ -101,20 +103,22 @@ Os 7 "de processo" **não são um grupo à parte** — são o subconjunto de "Ho
 | engenharia-eletrica-hidraulica | Ingerir normas |
 | investimentos-brasil | Ingerir dados B3 |
 
-### 3.4 Vertical + genérico, casca por design — 2
+### 3.4 Vertical, casca por design — 2 (privacidade varia por agente)
 
-**Ficam no MCP.** São roteamento/triagem, não conteúdo — e o texto de ambos diz isso explicitamente.
+**Ficam no MCP.** São roteamento/triagem, não conteúdo — e o texto de ambos diz isso explicitamente. *Correcção G5: esta secção chamava-se "Vertical + genérico", mas isso estava errado para o `hvac` — a coluna Privacidade da tabela principal já dizia "Proprietário" para ele, e o texto confirma (nomeia "TermoExpert", geografia e marca reais). A secção agora reflecte a privacidade real de cada um, em vez de assumir "genérico" para os dois.*
 
-| Agente | Porquê |
-|---|---|
-| hvac (comercial) | Tem uma "matriz de roteamento" explícita — decide orçamento/triagem, encaminha o resto |
-| refrigeracao-hvac | Diz explicitamente "consultar via RAG" — sabe onde procurar, não tem o valor; e espera know-how humano ainda não capturado |
+| Agente | Privacidade | Porquê |
+|---|---|---|
+| hvac (comercial) | **Proprietário** | Tem uma "matriz de roteamento" explícita — decide orçamento/triagem, encaminha o resto. Nomeia negócio real (TermoExpert) e contexto real (Porto/Gaia, identidade visual) |
+| refrigeracao-hvac | Misto (ver 3.6) | Diz explicitamente "consultar via RAG" — sabe onde procurar, não tem o valor; e espera know-how humano ainda não capturado |
 
-### 3.5 Vertical + proprietário — 9
+### 3.5 Vertical + proprietário — 10
 
 **Ficam no MCP.** Têm dado privado.
 
-mesaflow, viannalegal, sst, construtora, pladur, reformas, canidelo, cursos-formacoes, eletrodomesticos.
+mesaflow, viannalegal, sst, construtora, pladur, reformas, canidelo, cursos-formacoes, eletrodomesticos, **apps-produto**.
+
+*(Correcção G5: `apps-produto` estava ausente desta lista — não constava em nenhuma das 6 secções de detalhe, só na tabela principal. Confirmado por leitura do texto em `lib/agents.js`: nomeia produtos reais (MesaFlow, Alivia), preço real (R$34,90), contagem real de ecrãs de protótipo — é proprietário sem ambiguidade.)*
 
 ### 3.6 Mistos — 2
 
@@ -173,10 +177,10 @@ Técnicas presas dentro de agentes verticais que podem virar skills horizontais.
 
 | Categoria | Quantos |
 |---|---|
-| Vertical + proprietário | 9 |
-| Casca por design | 2 |
+| Vertical + proprietário | 10 |
+| Casca por design (privacidade mista, ver 3.4) | 2 |
 
-**Total: 11 agentes.**
+**Total: 12 agentes.** *(G5: era 11 — faltava `apps-produto` na contagem de proprietários.)*
 
 ### O que fica para depois
 
