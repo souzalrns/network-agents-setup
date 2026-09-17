@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import time
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -69,7 +71,23 @@ def authorize(tool: str, provided_key: str | None = None) -> AuthContext:
         return AuthContext(prof, caller, True, "allow_mutate_env")
 
     if prof == "moderate":
-        # Lab default: allow mutate without key but record reason (audit still runs)
+        # Lab default: allow mutate without key but record reason (audit still runs).
+        # SECURITY-AUDIT.md (2026-09-17, LLM03/Excessive Agency): esta e uma mitigacao
+        # PARCIAL do achado -- torna o caminho visivel, nao remove o caminho. O default
+        # continua a permitir execucao sem chave neste perfil; ver o relatorio para o
+        # fecho completo, que exige mudar um teste existente que fixa este comportamento
+        # como esperado (test_moderate_allows_mutate_without_key).
+        warnings.warn(
+            f"PLAN_RUNNER_MCP_PROFILE=moderate: tool '{tool}' mutating sem "
+            "PLAN_RUNNER_MCP_KEY definida. So aceitavel em laboratorio local "
+            "(transporte stdio). Nunca expor este perfil fora disso.",
+            category=UserWarning,
+            stacklevel=2,
+        )
+        print(
+            f"[SECURITY] moderate_lab_open: {tool} autorizado sem chave (caller={caller})",
+            file=sys.stderr,
+        )
         return AuthContext(prof, caller, True, "moderate_lab_open")
 
     return AuthContext(prof, caller, False, "strict_requires_PLAN_RUNNER_MCP_KEY")
