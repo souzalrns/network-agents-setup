@@ -10,17 +10,14 @@
 > O item "alimentar RAG" é **C8** (estava duplicado como C5).
 > O ID **S6** pertence ao módulo `hitl.py` (S6a, feito). A integração (S6b) é **S9**.
 > O ID **S2** está dividido: **S2a** (Python) feito; **S2b** (Node) feito.
-> **C8 está 5/6 feito:** C8a-1, C8a-2, C8b, C8c, C8d feitos; falta **C8e** (`McpKnowledge`).
+> **C8 fechado (6/6):** C8a-1, C8a-2, C8b, C8c, C8d, C8e feitos. RAG alimentado (110 chunks) + retrieve via MCP (`McpKnowledge`) + pipeline completo (markdown → chunk → embed → Supabase → retrieve).
 > **Tabela exclusiva:** `knowledge_chunks_t6` (NÃO partilhar com `agent-network-mcp`).
 > **Nova série de IDs `G` (Governança/Mapeamento), a partir de 2026-09-17:** próximo ID livre é **G6**.
 > Os 3 documentos de mapeamento (CORE-MAPPING, MCP-MAPPING, ROADMAP-GOVERNANCE) vivem em `docs/architecture/` — ver secção "Mapeamento" abaixo.
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
 
-| ID | Item | Esforço | Bloqueia | Origem |
-|---|---|---|---|---|
-| **C8** | **Alimentar RAG continuamente** (T6) — 5/6 feito; falta **C8e** (`McpKnowledge`) | 2-3h | RAG completo | Nossa |
-| **C8e** | **`McpKnowledge`** — backend que chama o `agent-network-mcp` via HTTP | 2-3h | RAG completo | Nossa |
+*(nada crítico pendente de momento — C8/C8e fechados, ver `## Done`)*
 
 ## 🟠 Alto (resolve problema real, valor claro)
 
@@ -170,6 +167,8 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 | **S2b-3** | `Planner` (Node) | 10 testes; **1 bug corrigido** (faltava `return {`) | `c468081` |
 | **C8b** | Schema Prisma T6 (Supabase) | `KnowledgeSource`, `KnowledgeChunk`, `SystemInventory`; tabelas criadas via SQL | `08f05cd` |
 | **C8a-2** | Pipeline de ingestão T6 | `embedder.py` (Gemini 768 dims) + `supabase_writer.py` + `ingest_apply.py`; tabela exclusiva `knowledge_chunks_t6`; **110 chunks** de 33 ficheiros | `c76e541` + `a6bd836` + `ceca890` |
+| **C8e** | `McpKnowledge` (backend Python que chama o `agent-network-mcp`) | `retrieveKnowledgeHits()` em `lib/knowledge.js` (aditiva); tool `retrieve_knowledge` em `route.js` (9.ª tool); `mcp_knowledge.py` + 13 testes; `mcp==1.30.0` em `requirements.txt`; 2 bugs reais apanhados ao testar contra servidor MCP real (`streamable_http_client` devolve triplo; erros de rede em `BaseExceptionGroup`) | `8858b35` (mcp_knowledge.py) + `e5e0384` (testes) + `577a33b` (requirements.txt) + `ffe5a60` (knowledge.js, agent-network-mcp) + `7c4d85e` (route.js, agent-network-mcp) |
+| **C8** | **Alimentar RAG continuamente (T6) — fechado 6/6** | Todos os sub-itens concluídos (C8a-1, C8a-2, C8b, C8c, C8d, C8e). C8 fechado. RAG alimentado (110 chunks) + retrieve via MCP (`McpKnowledge`) + pipeline completo (markdown → chunk → embed → Supabase → retrieve). | ver sub-itens acima |
 | **C8c** | Workflow `ingest-knowledge` com `--apply` | Apply real no push (secrets `DATABASE_URL` + `GEMINI_API_KEY` no GitHub) | `76d7aeb` |
 | **G-skill-1** | Skill `transcript_analysis` (genérica, `skills/marketing/`) | Dispatch→poll→leitura de datastore→recomendação, sem dado de produção | `skills/marketing/transcript_analysis/SKILL.md` |
 | **G-skill-2** | Agente `content_analyst` (`agents/marketing/`) | Liga ao skill acima | `agents/marketing/content_analyst.agent.md` |
