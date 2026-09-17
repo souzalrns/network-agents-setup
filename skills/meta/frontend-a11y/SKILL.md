@@ -4,6 +4,9 @@ action: frontend_a11y
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Acessibilidade basica de frontend -- labels, role/teclado em elementos custom, dimensoes de imagem. Activar ao escrever ou rever markup/componentes.
+requires: []
 ---
 
 # Skill — frontend-a11y
@@ -21,6 +24,10 @@ Escrever ou rever markup/componentes de frontend.
 1. Todo `<input>` precisa de label associado (`htmlFor`/`id`).
 2. Elementos interactivos custom precisam de `role` e suporte a teclado — não só `onClick` num elemento não-semântico.
 3. Cuidado com *Cumulative Layout Shift* em imagens sem `width`/`height` definidos — afecta Core Web Vitals (e por sua vez SEO).
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
