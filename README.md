@@ -1,10 +1,42 @@
 # Network Agents Setup
 
-Arquitetura e documentação de **redes multi-agente** — com foco portfolio na **agência de marketing** (papéis, knowledge packs, AI Findability).
+**Núcleo do sistema** — motor de execução + governança + capacidades horizontais + RAG. Os verticais (agentes específicos de negócio/domínio) ligam-se como plug-in a partir do `agent-network-mcp`.
 
-> **One-liner:** especialistas com limites claros + conhecimento operacional + playbook para marcas serem encontradas e recomendadas por IA.
+> **Mudança de escopo (2026-09-17):** este repo deixou de ser só o laboratório de método para se tornar o núcleo do produto. Ver [`docs/architecture/ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) para a visão completa e o antes/depois.
 
-> **Motor de execucao:** [`runner/`](./runner/README.md) - `plan_runner`, um motor de planos YAML com HITL, crash recovery e external workers. 72 testes, 83% cobertura, CI + Codecov.
+> **Motor de execucao:** [`runner/`](./runner/README.md) — `plan_runner`, um motor de planos YAML com HITL, crash recovery e external workers.
+
+---
+
+## O que é este repo
+
+Não é a produção a servir clientes directamente — é onde se desenha, testa e depois liga (plug-in) os verticais. Contém 4 camadas, todas domain-agnostic:
+
+| Camada | Onde vive | Tecnologia |
+|---|---|---|
+| **Motor** | [`runner/`](./runner/) | Python (`plan_runner`) |
+| **Governança** | [`packages/core/`](./packages/core/) | TypeScript |
+| **Horizontais** | [`skills/`](./skills/) + [`agents/`](./agents/) | Markdown |
+| **RAG** | Supabase + Gemini (chamado a partir daqui) | pgvector + embeddings |
+
+Os **verticais** (agentes por negócio/domínio) não vivem aqui — vêm do `agent-network-mcp` como plug-in. Ver [`docs/architecture/ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) secções 1–4 para o detalhe da relação setup ↔ MCP.
+
+## Estado actual
+
+**Feito:**
+- RAG fechado (C8, 6/6): 110 chunks de 33 ficheiros ingeridos; pipeline completo markdown → chunk → embed (Gemini, 768 dims) → Supabase → retrieve via MCP.
+- Governança mapeada por inteiro: 39 ficheiros em `packages/core/` — 5 REAL, 19 INCOMPLETO, 14 MOCK, 1 BARREL.
+- Horizontais: 50 skills + 21 agentes já no setup.
+- 3 documentos de mapeamento produzidos por leitura directa dos ficheiros: `CORE-MAPPING.md`, `MCP-MAPPING.md`, `ROADMAP-GOVERNANCE.md`.
+
+**Falta:**
+- Migrar 5 knowledge packs verticais com ingestão (do MCP para o setup).
+- Limpar termos privados dos 13 horizontais ainda no MCP, antes de os trazer.
+- Integração do `hitl.py` em `engine.py`/`langgraph_engine.py`/`cli.py`.
+- Governança: construir o que falta além do que uma ferramenta externa (Microsoft Agent Governance Toolkit) cobre — Delegation Graph, Action Receipts, Context Sync.
+- Integração dessa ferramenta de governança no `agent-network-mcp` e no `plan_runner`.
+
+Detalhe completo e actualizado: [`docs/initiatives/STATUS.md`](./docs/initiatives/STATUS.md).
 
 ---
 
@@ -36,8 +68,6 @@ Objetivo → marketing-orquestrador → horizontais / verticais
          [KNOWLEDGE] + [CLIENT]
 ```
 
-**Estado:** documentação de sistema **completa**. Motor de execucao (`runner/`) operacional, com 72 testes e cobertura no CI. Runtime de produção vive à parte (`agent-network-mcp`). Wiring completo de skills no motor = fase seguinte.
-
 ---
 
 ## Outra documentação no repo
@@ -52,13 +82,14 @@ Objetivo → marketing-orquestrador → horizontais / verticais
 
 ## Plataforma (código / infra — monorepo)
 
-> Alguns módulos podem conter stubs; ver nota de maturidade abaixo antes de uso em produção.
+> Alguns módulos podem conter stubs; ver [`docs/architecture/CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) para o mapeamento exacto de que está REAL, INCOMPLETO ou MOCK antes de usar em produção.
 
 ### Estrutura
 
 ```
-network-agents/
-├── packages/
+network-agents-setup/
+├── runner/            # motor (plan_runner, Python)
+├── packages/          # governança + infra (TypeScript)
 │   ├── core/
 │   ├── memory/
 │   ├── mcp/
@@ -66,6 +97,10 @@ network-agents/
 │   ├── websocket/
 │   ├── langgraph/
 │   └── shared/
+├── skills/            # horizontais (marketing, claude, design, meta)
+├── agents/            # horizontais (marketing, design, meta)
+├── docs/
+│   └── architecture/  # ECOSYSTEM, CORE-MAPPING, MCP-MAPPING, governance/
 ├── apps/api/
 ├── config/
 ├── tests/
@@ -78,6 +113,7 @@ network-agents/
 - pnpm 8+
 - PostgreSQL 16+
 - Redis 7+
+- Python 3.10+ (para o `runner/`)
 
 ### Instalação
 
@@ -94,11 +130,40 @@ MIT
 
 ---
 
+## Como usar (motor `plan_runner`)
+
+Quickstart real (ver [`runner/README.md`](./runner/README.md) para a referência completa de CLI):
+
+```bash
+cd runner
+
+# 1. Instalar (motor nativo, mínimo)
+pip install -r requirements.txt
+
+# 2. Instalar (com engine LangGraph — recomendado)
+pip install -r requirements-langgraph.txt
+
+# 3. Correr um plano de exemplo
+python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml --mode stub --out ../pilots/demo
+```
+
+Depois de correr, ver `../pilots/demo/status.json` (estado final), `events.jsonl` (log completo) e `artifacts/` (o que foi gerado).
+
+---
+
 ## Nota de maturidade
 
 - **Documentação da agência multi-agente (portfolio):** pronta para partilha e testes com o padrão `[SYSTEM]+[KNOWLEDGE]+[CLIENT]+[TASK]`.
-- **Código da plataforma neste repo:** pode incluir stubs — tratar antes de produção.
-- **Produção operacional de agentes:** repo separado `agent-network-mcp`.
+- **Código da plataforma neste repo:** inclui módulos MOCK/INCOMPLETO — ver [`CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) antes de assumir que algo está pronto para produção.
+- **Verticais (agentes por negócio/domínio):** vivem no repo plug-in `agent-network-mcp` — ver [`MCP-MAPPING.md`](./docs/architecture/MCP-MAPPING.md).
+
+## Referências
+
+- [`docs/architecture/ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) — visão geral do ecossistema, a ler primeiro
+- [`docs/architecture/CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) — os 39 ficheiros de `packages/core/`
+- [`docs/architecture/MCP-MAPPING.md`](./docs/architecture/MCP-MAPPING.md) — os 33 agentes do `agent-network-mcp`
+- [`docs/architecture/governance/ROADMAP-GOVERNANCE.md`](./docs/architecture/governance/ROADMAP-GOVERNANCE.md) — cronograma da camada de governança
+- [`docs/initiatives/STATUS.md`](./docs/initiatives/STATUS.md) — pendências consolidadas, o que está feito e o que falta
 
 ---
 
