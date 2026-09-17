@@ -4,6 +4,9 @@ action: error_handling
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Tratamento de erros -- falhar rapido, erros tipados, separar mensagem de utilizador de mensagem de developer. Activar ao escrever ou rever blocos try/catch.
+requires: []
 ---
 
 # Skill — error-handling
@@ -22,6 +25,10 @@ Escrever ou rever tratamento de erros em qualquer camada de código.
 2. Usa erros como classes tipadas em vez de strings soltas.
 3. Mensagem para o utilizador ≠ mensagem para o developer — mostra texto amigável ao utilizador final, regista o contexto completo no servidor.
 4. Documenta cada código de erro que um cliente da API pode receber.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
