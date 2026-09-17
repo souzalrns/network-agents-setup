@@ -15,7 +15,7 @@
     "@network-agents/websocket": "workspace:*",
     "@network-agents/langgraph": "workspace:*",
     "@network-agents/shared": "workspace:*",
-    "express": "^4.18.0",
+    "express": "^5.2.1",
     "cors": "^2.8.5",
     "helmet": "^7.0.0",
     "ws": "^8.14.0",
@@ -23,7 +23,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/express": "^4.17.0",
+    "@types/express": "^5.0.6",
     "@types/cors": "^2.8.0",
     "@types/ws": "^8.5.0",
     "@types/pg": "^8.10.0",
