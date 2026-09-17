@@ -4,6 +4,9 @@ action: rest_api_design
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Convencoes de desenho de API REST -- recursos no plural, sub-recursos, versionamento. Activar ao desenhar ou rever endpoints.
+requires: []
 ---
 
 # Skill — rest-api-design
@@ -21,6 +24,10 @@ Desenhar ou rever endpoints de uma API REST.
 1. Recursos como substantivos no plural, `kebab-case` (`/api/v1/reservas`, não `/api/v1/getReserva`).
 2. Sub-recursos para relações (`/api/v1/reservas/:id/itens`).
 3. Versiona a API desde já (`/v1/`) para poderes evoluir sem quebrar clientes existentes.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
