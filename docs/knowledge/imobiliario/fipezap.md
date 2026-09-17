@@ -18,6 +18,8 @@ Referência oficial do mercado imobiliário brasileiro (FIPE + Grupo ZAP):
 
 ## Ferramentas de scraping (uso pontual, com moderação)
 
+**⚠️ Custo — requer aprovação explícita antes de usar.** As duas ferramentas abaixo são pagas por evento. Regra geral do projecto: nada pago é chamado sem aprovação prévia — manter em tier gratuito por omissão (pesquisa web directa, não scraping) até essa aprovação existir.
+
 Duas ferramentas Apify identificadas para dados pontuais de imóveis (pagas por evento, ~$0,005/imóvel):
 
 | Ferramenta | Cobertura | Taxa de sucesso observada |
