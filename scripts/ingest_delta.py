@@ -63,6 +63,11 @@ MANIFEST: list[tuple[str, str, str]] = [
     ("docs/knowledge/producao-audiovisual-cliente.md", "marketing", "P1"),
     ("docs/knowledge/tiktok-shop-cliente.md", "marketing", "P1"),
     ("docs/T6-INGEST-PIPELINE.md", "produto-tech-transversal", "P2"),
+    ("docs/knowledge/saude/cardiologia.md", "saude", "P1"),
+    ("docs/knowledge/saude/dermatologia.md", "saude", "P1"),
+    ("docs/knowledge/saude/oftalmologia.md", "saude", "P1"),
+    ("docs/knowledge/legal/direito-br-pt.md", "legal", "P1"),
+    ("docs/knowledge/imobiliario/fipezap.md", "imobiliario", "P1"),
 ]
 
 
