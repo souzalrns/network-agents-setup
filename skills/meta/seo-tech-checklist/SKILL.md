@@ -4,6 +4,9 @@ action: seo_tech_checklist
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Checklist de SEO tecnico -- rastreabilidade, indexabilidade, intencao de pesquisa por pagina. Activar ao rever ou planear SEO de um site.
+requires: []
 ---
 
 # Skill — seo-tech-checklist
@@ -23,6 +26,10 @@ Rever ou planear SEO técnico de um site.
 3. Cada página deve ter uma intenção de pesquisa primária clara — evita páginas a competir pela mesma keyword.
 4. Corrige sempre bloqueadores técnicos antes de optimizar conteúdo; prioriza sinais de qualidade a longo prazo em vez de padrões manipulativos (keyword stuffing, conteúdo fino duplicado).
 5. Ao propores novo schema markup ou mudanças de metadata, valida que fica consistente com o que já existe no site.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
