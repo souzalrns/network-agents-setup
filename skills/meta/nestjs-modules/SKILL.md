@@ -4,6 +4,9 @@ action: nestjs_modules
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Onde colocar codigo novo num projecto NestJS -- modulos por dominio, logica transversal em common/, configuracao validada. Activar ao decidir estrutura de pastas NestJS.
+requires: []
 ---
 
 # Skill — nestjs-modules
@@ -21,6 +24,10 @@ Decidir onde colocar código novo num projecto NestJS.
 1. Organiza por módulos de domínio (ex.: `modules/reservas`, `modules/pedidos`), cada um com `controller`, `service`, `module` e `dto/` próprios.
 2. Lógica transversal (filters, guards, interceptors, pipes) vai em `common/`.
 3. Configuração validada fica em `config/`.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
