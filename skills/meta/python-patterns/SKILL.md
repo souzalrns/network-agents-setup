@@ -4,6 +4,9 @@ action: python_patterns
 version: 1
 role: meta_technique
 priority: P1
+description: >-
+  Codigo Python legivel, com type hints e docstrings em calculo de dominio. Activar ao escrever codigo Python, sobretudo com calculo de engenharia.
+requires: []
 ---
 
 # Skill — python-patterns
@@ -21,6 +24,10 @@ Escrever código Python, sobretudo com cálculo de engenharia/domínio.
 1. Código legível antes de código esperto — nomes claros, funções pequenas e com type hints.
 2. Prefere list/dict comprehensions simples a loops manuais, quando não perdem legibilidade.
 3. Docstrings nas funções que fazem cálculo de domínio, para se recuperar o raciocínio depois sem ter de o reconstruir.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
