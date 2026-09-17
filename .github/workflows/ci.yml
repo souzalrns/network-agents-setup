@@ -17,6 +17,10 @@ name: CI
     branches: [main]
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  checks: write  # necessario para o passo "Publicar logs" (github.rest.checks.create)
+
 jobs:
   test:
     runs-on: ubuntu-latest
