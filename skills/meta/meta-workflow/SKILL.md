@@ -4,6 +4,9 @@ action: meta_workflow
 version: 1
 role: meta_technique
 priority: P0
+description: >-
+  Disciplina de processo (Objetivo->Plano->Teste->Execucao->Revisao->Evidencia) para qualquer tarefa nao-trivial de codigo. Activar antes de tocar em qualquer ficheiro.
+requires: []
 ---
 
 # Skill — meta-workflow
@@ -25,6 +28,10 @@ Qualquer tarefa não-trivial que envolva escrever ou alterar código — antes d
 4. **Execução** — implementa.
 5. **Revisão** — relê o que fizeste.
 6. **Evidência** — corre o comando de verificação NESTA sessão e mostra o output completo. "Devia funcionar" não é prova.
+
+## Enforcement Note
+
+Advisory -- esta skill orienta, nao aplica. Nada no runner ou no agente valida mecanicamente que estas praticas foram seguidas; a conformidade depende de quem aplica a skill.
 
 ## Done When
 
