@@ -5,6 +5,7 @@
 **Status:** vision document
 **Scope:** architectural context, not implementation
 **Last updated:** 2026-09-10
+**Update note (2026-09-17):** the setup ↔ MCP relationship described in this document is now the concrete, current architecture, not just a future vision. See [`ECOSYSTEM.md`](./ECOSYSTEM.md) for the full setup↔MCP relationship, [`MCP-MAPPING.md`](./MCP-MAPPING.md) for what the 33 agents in `agent-network-mcp` actually are, and [`GOVERNANCE.md`](./GOVERNANCE.md) for the governance layer this document did not originally cover.
 
 ---
 
@@ -60,6 +61,8 @@ A plug-in agent platform has three distinct layers. Each has a different owner, 
 
 It is deliberately domain-agnostic. Any plan, from any layer, can be executed by it.
 
+**Note (2026-09-17):** this layer now has a distinct governance sub-component, `packages/core/` (TypeScript), which did not exist as a named concern when this document was first written. It decides whether an action is allowed (policy), who is asking (identity), and provides the audit trail for compliance. See [`GOVERNANCE.md`](./GOVERNANCE.md) for what exists there today (1 REAL, 3 INCOMPLETO, 3 MOCK module, per [`CORE-MAPPING.md`](./CORE-MAPPING.md)) and what is still missing (Delegation Graph, Action Receipts, Context Sync).
+
 ### Layer 2 - Agents (plug-in)
 
 A plug-in agent is the opposite: it is **domain-specific and client-specific**. It knows the client's brand, tone, constraints, and history.
@@ -71,6 +74,8 @@ A plug-in agent is not a separate program. It is a **combination of three things
 - a set of allowed horizontals
 
 Because it is only a combination - not a fork of the engine - a new client can be onboarded by creating a directory of plans and a memory namespace. No new code.
+
+**Note (2026-09-17):** today's concrete instantiation of this layer is the `agent-network-mcp` repo, which plugs in as a single source of vertical agents rather than one repo per client, as this section originally envisioned. Out of its 33 agents, 13 are actually horizontal (candidates to migrate into this repo — see [`MCP-MAPPING.md`](./MCP-MAPPING.md) section 3.1) and the remaining 20 are genuine verticals that stay plugged in from there. This is a pragmatic simplification of the per-client-repo vision described above, not a contradiction of it — see [`ECOSYSTEM.md`](./ECOSYSTEM.md) section 3 for the full reasoning.
 
 ### Layer 3 - Horizontals
 
@@ -191,14 +196,17 @@ If in doubt, it belongs in the client's repo. Moving something from private to p
 **Done (in this repo):**
 
 - `plan_runner` engine (native + langgraph)
-- Human-in-the-loop (approve / reject / edit)
+- Human-in-the-loop (approve / reject / edit) — Python side (`hitl.py`, contract v1) now exists too, isolated module + 15 tests (S6a); not yet wired into `engine.py`/`langgraph_engine.py`/`cli.py` (that is S9, pending)
 - Crash recovery (3 scenarios tested)
 - External workers (`--mode external`)
 - 6 real plans validated end-to-end
-- 72 tests, ~83% coverage
+- 72 tests, ~83% coverage *(note: `runner/README.md` currently states 51 tests for the runner specifically — the two figures haven't been reconciled; flagged, not resolved, here)*
 - CI: lint (ruff) + tests + coverage (Codecov)
 - Release workflow (tag -> GitHub Release)
 - This vision document
+- **RAG pipeline closed (C8, 2026-09-17):** 110 chunks from 33 files ingested, full pipeline markdown → chunk → embed (Gemini, 768 dims) → Supabase → retrieve via MCP
+- **3 mapping documents** produced by direct file reading: [`CORE-MAPPING.md`](./CORE-MAPPING.md) (39 files in `packages/core/`), [`MCP-MAPPING.md`](./MCP-MAPPING.md) (33 agents in `agent-network-mcp`), [`governance/ROADMAP-GOVERNANCE.md`](./governance/ROADMAP-GOVERNANCE.md) (governance rollout plan)
+- **Governance layer mapped:** 39 files in `packages/core/` classified as 5 REAL, 19 INCOMPLETO, 14 MOCK, 1 BARREL — see [`GOVERNANCE.md`](./GOVERNANCE.md)
 
 **Planned (see `docs/initiatives/backlog.md` for tracking):**
 
@@ -231,10 +239,10 @@ For the backlog and what is being built next, see `docs/initiatives/backlog.md`.
 
 **Plug-in agents** descrevem como o `plan_runner` encaixa numa plataforma com três camadas:
 
-1. **Orquestração** — o motor (este repo), corre planos, aplica gates, grava auditoria.
-2. **Agentes plug-in** — específicos por cliente, vivem no repo do cliente, contêm apenas planos + memória + regras.
+1. **Orquestração** — o motor (este repo), corre planos, aplica gates, grava auditoria. Inclui hoje uma sub-camada de **governança** (`packages/core/`) que não existia quando este documento foi escrito — ver [`GOVERNANCE.md`](./GOVERNANCE.md).
+2. **Agentes plug-in** — específicos por cliente/domínio. Hoje instanciados concretamente pelo `agent-network-mcp` (33 agentes: 13 horizontais a migrar para aqui, 20 verticais genuínos que ficam lá) — ver [`MCP-MAPPING.md`](./MCP-MAPPING.md).
 3. **Horizontais** — capacidades partilhadas (marketing, SEO, revisão), vivem uma vez, beneficiam todos.
 
-**Memória é opcional.** LightRAG responde a "o que sabemos"; Cognee responde a "o que fizemos". Ambos isolados por `--client-id`. Nenhum é dependência obrigatória — o motor funciona sem memória.
+**Memória é opcional.** LightRAG responde a "o que sabemos"; Cognee responde a "o que fizemos". Ambos isolados por `--client-id`. Nenhum é dependência obrigatória — o motor funciona sem memória. *(Nota: isto é um desenho ainda não implementado — ver `memory-integration.md` — distinto do RAG já construído e fechado, Supabase + Gemini, C8.)*
 
-**Público vs privado**: motor e horizontais são públicos; agentes plug-in e dados de cliente são privados por desenho.
+**Público vs privado**: motor, governança e horizontais são públicos (vivem neste repo, o "núcleo"); agentes plug-in (verticais) e dados de cliente são privados por desenho — hoje concentrados no `agent-network-mcp`. Visão completa da relação setup ↔ MCP: [`ECOSYSTEM.md`](./ECOSYSTEM.md).
