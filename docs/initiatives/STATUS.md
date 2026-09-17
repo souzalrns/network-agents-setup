@@ -253,3 +253,4 @@ Aplicação: `media_buyer`, `ad_creative`, `marketing`.
 *Fecho: C8a-1, C8a-2, C8b, C8c, C8d, keep-alive, S2b (1, 2, 3), S3, S6a, S7, C7. C8 está 5/6 — falta C8e.*
 *Tabela exclusiva `knowledge_chunks_t6` (não partilha com agent-network-mcp).*
 *110 chunks de 33 ficheiros de conhecimento no Supabase.*
+<!-- test: ingest apply -->
