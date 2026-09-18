@@ -11,6 +11,7 @@ import yaml
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
+from .knowledge_wiring import inject_knowledge_context
 from .models import Plan
 
 
@@ -126,6 +127,7 @@ def run_plan(
             {"step_id": step.id, "action": step.action, "tools_allowed": step.tools_allowed},
             actor={"kind": "system", "id": "plan_runner"},
         )
+        inject_knowledge_context(out, step, log, run_id)
 
         if step.human_gate:
             log.append(
@@ -258,6 +260,7 @@ def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
         status["current_step"] = step.id
         save_status(out_dir, status)
         log.append("step_started", run_id, {"step_id": step.id, "action": step.action})
+        inject_knowledge_context(out_dir, step, log, run_id)
 
         if step.human_gate:
             log.append(
