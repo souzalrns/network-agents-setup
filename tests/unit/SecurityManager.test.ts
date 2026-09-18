@@ -46,3 +46,29 @@ describe('SecurityManager', () => {
     expect(result.score).toBeLessThanOrEqual(100);
   });
 });
+
+describe('SecurityManager — password hash (CodeQL #5)', () => {
+  it('should hash the password with bcrypt, not plain sha256', () => {
+    const manager = new SecurityManager();
+    const user = manager.registerUser('bcrypt@test.com', 'Bcrypt User', 'correct-password');
+    // bcrypt hashes always start with $2a$/$2b$/$2y$ and are ~60 chars.
+    expect(user.passwordHash).toBeDefined();
+    expect(user.passwordHash).toMatch(/^\$2[aby]\$/);
+    expect(user.passwordHash).not.toBe('correct-password');
+  });
+
+  it('should log in with the correct password', async () => {
+    const manager = new SecurityManager();
+    manager.registerUser('login-ok@test.com', 'Login OK', 'correct-password');
+    const session = await manager.login('login-ok@test.com', 'correct-password');
+    expect(session.token).toBeDefined();
+  });
+
+  it('should reject login with an incorrect password', async () => {
+    const manager = new SecurityManager();
+    manager.registerUser('login-bad@test.com', 'Login Bad', 'correct-password');
+    await expect(
+      manager.login('login-bad@test.com', 'wrong-password')
+    ).rejects.toThrow('Invalid credentials');
+  });
+});
