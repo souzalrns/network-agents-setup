@@ -15,6 +15,7 @@ from .engine import _validate_out_dir, load_plan, load_status, save_status
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError
+from .knowledge_wiring import inject_knowledge_context
 from .langgraph_compile import build_graph, compile_report, parallel_groups
 from .models import Plan, Step
 
@@ -70,6 +71,7 @@ def run_plan_langgraph(
             return {}
         if not log.has_event("step_started", run_id, step_id=step.id):
             log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph"})
+            inject_knowledge_context(out, step, log, run_id)
 
         if step.human_gate:
             from langgraph.types import interrupt
@@ -290,6 +292,7 @@ def _run_waves_fallback(
             status["current_step"] = step.id
             save_status(out, status)
             log.append("step_started", run_id, {"step_id": step.id, "action": step.action})
+            inject_knowledge_context(out, step, log, run_id)
 
             if step.human_gate:
                 log.append("human_gate_requested", run_id, {"step_id": step.id})
@@ -429,6 +432,7 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
                         "engine": "langgraph",
                     },
                 )
+                inject_knowledge_context(out_dir, step, log, run_id)
 
             if step.human_gate:
                 from langgraph.types import interrupt
