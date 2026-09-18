@@ -40,3 +40,21 @@ Isto confirma a ressalva já escrita acima, agora como facto observado, não hip
 - Não abandona a meio — processa o que consegue e reporta claramente o resto.
 
 **O que continua por resolver:** confirmar se a quota do Gemini em uso é diária, e se sim, esperar a renovação (ou pedir upgrade do tier) é a única solução real — nenhuma mudança de código neste repositório resolve uma quota diária esgotada.
+
+
+## Confirmado: é DIÁRIA e por minuto (as duas, não uma ou outra)
+
+Pesquisa directa na documentação oficial (`ai.google.dev/gemini-api/docs/rate-limits`) confirma: o Gemini mede uso em **3 dimensões simultâneas** — RPM (pedidos/minuto), TPM (tokens/minuto), e **RPD (pedidos/dia)**. Qualquer uma das três, ao ser excedida, devolve `429 RESOURCE_EXHAUSTED` — o texto do erro não distingue qual das três foi violada.
+
+**Números concretos do tier gratuito para `gemini-embedding-001`** (fonte: documentação de terceiros que replica a tabela oficial da AI Studio, consistente com a estrutura confirmada em `ai.google.dev`):
+
+| Tier | RPM | TPM | RPD |
+|---|---|---|---|
+| Free | 100 | 30.000 | **1.000** |
+| Tier 1 (billing activado) | 3.000 | 1.000.000 | sem limite diário publicado |
+
+**Confirmado também:** a quota RPD **reset à meia-noite Pacific Time** (não UTC, não hora local Lisboa) — isto explica por que os runs continuaram a falhar ao longo de toda uma tarde/noite europeia: se o limite diário (1.000 pedidos) foi excedido de manhã (hora de Lisboa), só recupera depois da meia-noite da Califórnia, que em UTC+1 (Lisboa, horário de verão) só chega às ~09:00 do dia seguinte.
+
+**Implicação directa para este pipeline:** com 39 ficheiros no `MANIFEST`, cada um a gerar vários chunks (cada chunk = 1 pedido de embedding), um único run "aplicar tudo do zero" pode facilmente aproximar-se ou ultrapassar os 1.000 pedidos/dia do tier gratuito — sem sequer contar a repetição de vários runs no mesmo dia (como aconteceu). O `--max-chunks` (default 50) já adicionado ajuda a não gastar tudo de uma vez, mas **não aumenta o tecto diário** — só o retry/backoff resolve o RPM/TPM (curto prazo); o RPD só se resolve esperando o reset (meia-noite Pacific) ou fazendo upgrade a Tier 1 (activar billing).
+
+**Fonte:** [ai.google.dev/gemini-api/docs/rate-limits](https://ai.google.dev/gemini-api/docs/rate-limits) (estrutura RPM/TPM/RPD, reset à meia-noite Pacific — confirmado directamente na documentação oficial). Os números exactos de RPM/TPM/RPD do tier gratuito citados na tabela acima vêm de uma fonte secundária que reproduz a tabela da AI Studio; a documentação oficial da Google não publica um número único fixo no texto da página (varia por projecto) — recomenda-se confirmar o valor exacto activo directamente em AI Studio > Rate Limits antes de dimensionar qualquer solução em torno destes números.
