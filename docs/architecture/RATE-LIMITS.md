@@ -25,3 +25,18 @@ O pedido original também levantava "considerar correr só em `workflow_dispatch
 ## Limite conhecido, não resolvido
 
 Mesmo com retry, **3 tentativas com backoff de poucos segundos não resolve uma quota diária/mensal esgotada** — só resolve limitação de taxa por minuto/segundo. Se o esgotamento for de quota mais longa (diária), o retry vai esgotar-se na mesma e o `--max-chunks` é a única protecção real disponível hoje. Não há, neste momento, visibilidade sobre qual tipo de quota (por minuto vs. diária) foi de facto excedida — o texto do erro Gemini (`"You exceeded your current quota"`) não distingue isso.
+
+
+## Verificação pós-correcção (2026-09-17, 23:17)
+
+**A correcção não resolveu o problema.** Os runs disparados pelos próprios commits da correcção (`d721a93` — `ingest_apply.py`; `5fb5f1c` — este documento) **continuam a falhar** no mesmo step, "Apply delta (embed + Supabase)".
+
+Isto confirma a ressalva já escrita acima, agora como facto observado, não hipótese: retry com poucos segundos de backoff só ajuda contra limite de taxa por minuto/segundo — se a quota excedida for de âmbito diário, as 3 tentativas esgotam-se todas na mesma janela de indisponibilidade.
+
+**O que a correcção já aplicada faz de facto, mesmo sem resolver isto:**
+- Evita que runs simultâneos piorem o esgotamento (`concurrency`).
+- Evita gastar retries a torto e a direito além do necessário (só re-tenta em 429).
+- Limita o dano por corrida (`--max-chunks`).
+- Não abandona a meio — processa o que consegue e reporta claramente o resto.
+
+**O que continua por resolver:** confirmar se a quota do Gemini em uso é diária, e se sim, esperar a renovação (ou pedir upgrade do tier) é a única solução real — nenhuma mudança de código neste repositório resolve uma quota diária esgotada.
