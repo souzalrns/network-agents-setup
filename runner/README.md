@@ -56,7 +56,7 @@ After the run, look at:
   - `--mode external` writes `pending_steps/<step>/request.json`
   - Waits for `<step>/result.json` from any worker (LLM, human, script)
 - **Quality**
-  - 51 tests, 83% coverage
+  - 167 tests, 87% coverage (confirmed 2026-09-17 by running pytest directly, not carried over from an older count)
   - CI on every push (GitHub Actions)
   - Coverage reported to Codecov
   - Release workflow (tag v* -> GitHub Release)
@@ -160,7 +160,7 @@ Quickstart (3 comandos):
 2. `pip install -r requirements-langgraph.txt`
 3. `python -m plan_runner run <plan.yaml> --out <dir>`
 
-O motor tem **51 testes**, **83% de cobertura**, corre em CI a cada push, e suporta dois motores: `native` (sequencial) e `langgraph` (grafo com checkpoints reais).
+O motor tem **167 testes**, **87% de cobertura** (confirmado em 2026-09-17 a correr o pytest directamente — os números antigos, 51/83%, estavam desactualizados), corre em CI a cada push, e suporta dois motores: `native` (sequencial) e `langgraph` (grafo com checkpoints reais).
 
 ---
 
