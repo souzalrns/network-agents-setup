@@ -1,5 +1,7 @@
 # STATUS — network-agents-setup (PCU)
 
+> **⚠️ Ficheiro histórico, parado em 18/08/2026.** A fonte actual deste repo é [`docs/initiatives/STATUS.md`](./initiatives/STATUS.md) (última actualização: 2026-09-18, trabalho de mapeamento/governança/segurança). O Supabase `system_inventory`/`pendencias_negocio` mencionado abaixo também está desactualizado (verificado 12-18/08/2026) — **não é mais actual do que este ficheiro**, ao contrário do que a nota original sugeria. Ver [`docs/architecture/BOOTSTRAP.md`](./architecture/BOOTSTRAP.md) para o mapa completo de onde está cada fonte de verdade.
+>
 > Última atualização: 18/08/2026. Este arquivo existe para responder uma pergunta em
 > segundos, sem reabrir o histórico de conversas: **o que deste repo está real e
 > funcionando, o que está só desenhado, e qual camada (pública/genérica aqui vs.
