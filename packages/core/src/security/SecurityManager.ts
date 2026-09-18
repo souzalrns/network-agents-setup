@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { getGlobalLogger } from '@network-agents/observability';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 export interface User {
   id: string;
   email: string;
@@ -11,6 +12,9 @@ export interface User {
   mfaSecret?: string;
   createdAt: Date;
   lastLogin?: Date;
+  /** CodeQL #5: hash bcrypt da senha. Opcional para não quebrar nenhum literal
+   *  `User` já existente que não o forneça; registerUser() define-o sempre. */
+  passwordHash?: string;
 }
 export interface Session {
   id: string;
@@ -63,8 +67,7 @@ export class SecurityManager extends EventEmitter {
     if (existing) {
       throw new Error('User already exists');
     }
-    // Em produção, o hash seria persistido em um banco de credenciais separado.
-    this.hashPassword(password);
+    const passwordHash = this.hashPassword(password);
     const user: User = {
       id: `user_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       email,
@@ -73,8 +76,11 @@ export class SecurityManager extends EventEmitter {
       permissions: ['read'],
       mfaEnabled: false,
       createdAt: new Date(),
+      passwordHash,
     };
-    // Armazena senha hash (em produção, em banco separado)
+    // CodeQL #5: o hash já não é descartado -- fica no próprio User (Map em
+    // memória, ver CORE-MAPPING.md "INCOMPLETO"; persistência é gap separado,
+    // não coberto por esta correcção).
     this.users.set(user.id, user);
     this.logger.info(`[SecurityManager] User registered: ${email}`);
     this.emit('user:registered', user);
@@ -98,7 +104,7 @@ export class SecurityManager extends EventEmitter {
     }
     // Verifica senha (simplificado)
     // Em produção, verificar hash
-    if (!this.verifyPassword(password)) {
+    if (!this.verifyPassword(password, user.passwordHash)) {
       this.logSecurityEvent({
         type: 'login',
         userId: user.id,
@@ -483,14 +489,20 @@ export class SecurityManager extends EventEmitter {
    * Hash de senha (simplificado)
    */
   private hashPassword(password: string): string {
-    return crypto.createHash('sha256').update(password).digest('hex');
+    // CodeQL #5 (js/insufficient-password-hash): sha256 puro sem salt era
+    // eficientemente quebrável (rainbow tables). bcrypt aplica salt automático
+    // e é deliberadamente lento (custo computacional ajustável).
+    return bcrypt.hashSync(password, 10);
   }
   /**
    * Verifica senha (simplificado)
    */
-  private verifyPassword(_password: string): boolean {
-    // Em produção, verificar contra hash armazenado
-    return true;
+  private verifyPassword(password: string, storedHash?: string): boolean {
+    // CodeQL #5: comparação real contra o hash armazenado, em vez de sempre
+    // `true`. Sem hash guardado (utilizador nunca registado com senha, ou
+    // dado legado) -- falha fechado, nunca autoriza.
+    if (!storedHash) return false;
+    return bcrypt.compareSync(password, storedHash);
   }
   /**
    * Cria sessão
