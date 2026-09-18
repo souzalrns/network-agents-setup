@@ -1,5 +1,7 @@
 # Status — pendências consolidadas
 
+> **⚠️ Verificar a secção "📋 Prompts pendentes" no início de cada sessão.** Vários prompts já pedidos ficaram sem execução completa e sem registo — ver essa secção antes de assumir que algo está feito.
+
 > Gerado em: 2026-09-13
 > Base: leitura do repo + cruzamento com sessões
 > Método: tudo o que foi discutido e não está feito, classificado
@@ -14,6 +16,15 @@
 > **Tabela exclusiva:** `knowledge_chunks_t6` (NÃO partilhar com `agent-network-mcp`).
 > **Nova série de IDs `G` (Governança/Mapeamento), a partir de 2026-09-17:** próximo ID livre é **G6**.
 > Os 3 documentos de mapeamento (CORE-MAPPING, MCP-MAPPING, ROADMAP-GOVERNANCE) vivem em `docs/architecture/` — ver secção "Mapeamento" abaixo.
+
+## 📋 Prompts pendentes
+
+Prompts já pedidos nesta sessão que ficaram sem execução completa e não tinham sido registados até agora.
+
+| ID | Descrição | Estado | Prioridade | Dependência |
+|---|---|---|---|---|
+| **B2b** | Rodar o `security_auditor` (B2) por completo no `network-agents-setup` — as 8 ferramentas (Bandit, Semgrep, Gitleaks, OSV-Scanner, mcpguard, offsec-ai, Trivy, detect-secrets), não só as ~5 já corridas | Não feito | 🔴 Alta | B2 (feito, ver Done) |
+| **B2c** | Integrar os resultados da auditoria B2/B2b — decidir o que entra no backlog real (Crítico/Alto/Médio) em vez de ficar só documentado em `SECURITY-AUDIT.md`/`SECURITY-AUDIT-FULL.md` | Parcial (2 achados do CodeQL já corrigidos; os da auditoria B2 original, não) | 🟡 Média | B2b |
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
 
@@ -43,7 +54,6 @@
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **B1** | **Fase 6 (Claude)** — expansão para 2.º domínio (agents + skills + templates + wiring) | 1 semana | Nada | Auditoria Claude |
-| **B2** | **Agente de cibersegurança** (defensivo, NIST + OWASP isolado) | 2-3 dias | Nada | Nossa |
 | **B3** | **Agente de trading** (simulação only, sem ordens) | 3-5 dias | Nada | Nossa |
 | **B4** | **Agente gamedev** (GDD, loop, engine) | 3-5 dias | Nada | Nossa |
 | **B5** | **Hermes como runtime** (não interface) — worker para browser/vision | 1-2 dias | Nada | Nossa |
@@ -143,6 +153,7 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 | ID | Item | Fecho | Commit |
 |---|---|---|---|
 | **S1** | CI bloqueia se vitest falhar | vitest e gate no CI | `108314c` |
+| **B2** | Agente de cibersegurança (`security_auditor` + skill `security-audit` + `SECURITY.md`) | Defensivo, isolado, referencia OWASP LLM Top 10 2026/NIST AI RMF/MITRE ATLAS/MAESTRO | ver commits de `docs/architecture/SECURITY.md`, `skills/meta/security-audit/`, `agents/meta/security_auditor.agent.md` |
 | **S4** | `pnpm-lock.yaml` gerado e commitado | lockfileVersion 6.0, 10 workspaces | `6f70b3b` |
 | **S4b** | CI: install usa --frozen-lockfile | step install sem continue-on-error | `be139f4` |
 | **S8** | `.gitignore` sem regra Node/node_modules | secao Node/pnpm adicionada | `ae24b7b` |
