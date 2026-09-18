@@ -8,13 +8,14 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@network-agents/shared": "workspace:*",
+    "@network-agents/mcp": "workspace:*",
     "@network-agents/memory": "workspace:*",
     "@network-agents/observability": "workspace:*",
-    "@network-agents/mcp": "workspace:*"
+    "@network-agents/shared": "workspace:*",
+    "bcryptjs": "^3.0.3"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
   }
 }
