@@ -1,5 +1,24 @@
 # Fase 4 — Síntese final: matriz, arquitectura, decisão S7, roadmap
 
+## Executive Summary
+
+**A pergunta original era: estamos a construir memória que já existe, e pior? A resposta, com evidência, é: parcialmente sim, parcialmente não — e a acção certa não é adoptar nenhuma das 9 ferramentas avaliadas agora.**
+
+1. **O que já construímos (L5 — RAG) não é inferior por natureza** — é chunking+embedding+vector search, a mesma coisa que qualquer uma das ferramentas avaliadas faz na base. O problema real do L5 não é "devia ser outra ferramenta" — é que **está desligado da execução** (S9, confirmado por leitura directa do código: `retrieve_knowledge` nunca é chamado). Corrigir isso custa zero e vale mais do que trocar de ferramenta.
+
+2. **A recomendação original do "deep" (adoptar dsh-long-memory + Graphiti + MELD) está refutada, item a item, com prova:**
+   - `dsh-long-memory` — real, bem construído, **mas é um plugin do DeepSeek Harness, não uma biblioteca instalável aqui**. "Adoptar" significaria reescrever o padrão em Python, não `npm install`.
+   - `Graphiti` — real, maduro, **mas exige Neo4j + OpenAI como dependências obrigatórias por omissão** (não opcionais) e teve uma **CVE de injecção via prompt injection** (2026-32247) que o documento original nunca mencionou.
+   - `MELD` — é um **paper/protocolo, sem implementação de referência pública** (confirmei e corrigi um engano meu próprio a meio da auditoria) — não há nada para "adoptar", só para reimplementar do zero.
+
+   Recomendar estas 3 sem verificar isto seria exactamente o erro que a regra do documento original pedia para evitar: confiar em benchmark e popularidade em vez de código.
+
+3. **O que falta (L4 — memória semântica, Delegation Graph, Context Sync) não tem substituto externo directo** para o desenho já existente neste repo (o `scope.kind: user|project|agent|org` do contrato L4 é específico, ninguém de fora encaixa sem adaptação pesada). Aqui sim há trabalho novo a construir — mas é pequeno e bem definido, não uma reescrita.
+
+4. **Veredicto:** não adoptar nada agora. Ordem de prioridade real: **(1) ligar o L5 já feito → (2) construir L4 in-house, pequeno e alinhado ao contrato já desenhado → (3) só considerar grafo/federação externos quando houver um caso de uso real, não antes.** Isto não é "não construir nada" nem "construir tudo" — é fechar o que já está feito antes de decidir o resto.
+
+---
+
 Fecha a auditoria de memória/conhecimento/federação (`FASE1`, `FASE2`, `FASE3`). Toda a decisão abaixo é explícita — nada fica "por decidir" sem razão técnica declarada.
 
 ## 1. Matriz de decisão (NATIVO / FORTE / PARCIAL / AUSENTE / NÃO VERIFICADO)
