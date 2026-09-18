@@ -1,7 +1,7 @@
 # AGENTS.md — Network Agents Setup
 
-Repo de **lab/metodo** multi-agente (marketing + design + Item 13 + plan-execute).  
-Producao MCP: repo separado `agent-network-mcp` — nao misturar sem decisao explicita.
+**Núcleo do produto** (motor + governança + horizontais + RAG) — não é lab/método, correcção de 2026-09-18 (ver `docs/architecture/ECOSYSTEM.md`). Marketing + design + Item 13 + plan-execute continuam a viver aqui.  
+Producao MCP: repo separado `agent-network-mcp` — traz os **verticais** (agentes proprietários, 20 dos 33). Os **horizontais** (13 dos 33) já foram migrados para cá (G2: 16 skills, G4: 13 agentes, ver `docs/architecture/MCP-MAPPING.md`) — a regra já não é "não misturar sem decisão explícita", é "horizontais migram para cá, verticais ficam lá", decisão já tomada e executada.
 
 ## Skill orchestration
 
@@ -32,6 +32,10 @@ Producao MCP: repo separado `agent-network-mcp` — nao misturar sem decisao exp
 | `skills/design/` | UX / UI / writing |
 | `skills/meta/` | Orquestracao de descoberta |
 | CLI `npx skills` (addyosmani) | Engenharia no IDE — paralelo, nao substitui este repo |
+
+## Credenciais
+
+Não há secrets manager configurado neste repo. Uma sessão nova precisa de `GITHUB_TOKEN` (ou equivalente) fornecido explicitamente no ambiente para operações de API do GitHub — não assumir que existe um token guardado de sessão anterior, e não ir procurar um em histórico de conversas antigas (risco de token obsoleto/de escopo largo demais). Pedir ao utilizador se precisar.
 
 ## Runner
 
