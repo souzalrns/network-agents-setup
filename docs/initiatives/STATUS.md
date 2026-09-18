@@ -292,3 +292,30 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 *Tabela exclusiva `knowledge_chunks_t6` (não partilha com agent-network-mcp).*
 *110 chunks de 33 ficheiros de conhecimento no Supabase.*
 <!-- test: ingest apply -->
+
+
+## 📋 Resumo do dia 2026-09-17
+
+**C8 fechado (6/6):** RAG alimentado (110 chunks, 33 ficheiros) + retrieve via MCP (`McpKnowledge`, C8e) — pipeline completo markdown → chunk → embed → Supabase → retrieve.
+
+**Mapeamento completo, 3 documentos** (por leitura directa dos ficheiros, não inferência): `CORE-MAPPING.md` (39 ficheiros de `packages/core/`, 5 REAL/19 INCOMPLETO/14 MOCK/1 BARREL), `MCP-MAPPING.md` (33 agentes do `agent-network-mcp`), `governance/ROADMAP-GOVERNANCE.md` (cronograma de governança, verificação externa do AGT/AgentMesh).
+
+**G2 — 16 skills novas em `skills/meta/`** extraídas dos agentes verticais (Prisma, NestJS, React, API REST, error handling, SEO técnico, a11y, Vite, article writing, React Native, PHI, Python, deploy, MCP patterns, GitHub Actions, meta-workflow).
+
+**G3 — 5 knowledge packs verticais migrados** para `docs/knowledge/` (cardiologia, dermatologia, oftalmologia, direito-br-pt, fipezap), termos privados removidos.
+
+**G4 — 13 agentes horizontais migrados** de `agent-network-mcp` para `agents/<domínio>/`, termos privados genericizados (2 achados extra: um Supabase project ID real e uma métrica de negócio real, ambos removidos).
+
+**B2 — Agente de segurança criado e usado**: `security_auditor` (defensivo, não ofensivo) + skill `security-audit` (OWASP LLM Top 10 2026, NIST AI RMF, MITRE ATLAS, MAESTRO) + `SECURITY.md`. Primeira auditoria real corrida (`SECURITY-AUDIT.md`) — achado real corrigido parcialmente (`mcp/plan_runner/policy.py:73`, aviso adicionado; fecho completo bloqueado por um teste existente que fixa o comportamento inseguro como esperado).
+
+**Causa raiz do `ingest-knowledge` confirmada e parcialmente corrigida:** HTTP 429 do Gemini (quota excedida), não o conteúdo dos commits. Corrigido: retry+backoff exponencial + `--max-chunks` em `ingest_apply.py`, `concurrency`+`cancel-in-progress` no workflow. **Ainda falha** mesmo após a correcção (confirmado nos runs mais recentes, 23:16–23:17) — consistente com quota diária esgotada, não só por minuto; o retry de segundos não resolve esse caso. Ver `RATE-LIMITS.md`.
+
+**Dependabot:** `ignore` de major version updates adicionado aos 6 blocos de `.github/dependabot.yml` (21 PRs abertos incluíam majors perigosos — langgraph 0.x→1.x, `@prisma/client` 5→7, TypeScript 5→7, `@types/node` 20→26). Não fecha os PRs já abertos, só impede novos.
+
+**CodeQL — 2 alertas de `missing-workflow-permissions` fechados** (`ci.yml`, `runner-tests.yml`, `keep-alive.yml`, `ingest-knowledge.yml` — os 4 receberam `permissions:` explícito, mínimo necessário por workflow). **2 alertas reais ainda abertos, não corrigidos** (fora do âmbito desta tarefa, exigem autorização para tocar em `packages/core/`):
+- `#5` — `packages/core/src/security/SecurityManager.ts:486` — hash de password com SHA-256 sem salt (`js/insufficient-password-hash`). Correcção proposta: bcrypt/Argon2 + corrigir `verifyPassword()` (que hoje devolve sempre `true`, ignorando o hash).
+- `#6` — `packages/scripts/src/docs/generate-agents-doc.ts:85` — escaping incompleto ao gerar tabela Markdown (`js/incomplete-sanitization`). Risco real baixo (dados internos, não input externo). Correcção proposta: escapar `\` antes de `|`.
+
+**Números de teste corrigidos:** `README.md` (raiz) já não tinha o número errado (removido numa tarefa anterior). `runner/README.md` tinha "51 testes, 83% cobertura" — confirmado por `pytest` real: **167 testes, todos a passar, 87% de cobertura**. Corrigido.
+
+*Nota: os números "skills/ = 50" e "agents/ = 21" registados acima (bloco de 2026-09-16) estão desactualizados pelo trabalho de hoje (G2 +16 skills, G4 +13 agentes, B2 +1 agente) — não recalculados nesta tarefa, fica como pendência de inventário.*
