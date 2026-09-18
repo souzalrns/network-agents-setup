@@ -19,6 +19,16 @@ interface AgentRow {
   description: string;
 }
 
+/**
+ * Escapa uma string para uso seguro dentro de uma célula de tabela Markdown.
+ * A ordem importa: escapar a barra invertida PRIMEIRO, senão um `\` que já
+ * exista no texto interfere com o escaping do `|` feito a seguir (achado
+ * CodeQL #6, js/incomplete-sanitization).
+ */
+function escapeMdCell(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
+}
+
 function parseAgents(source: string): AgentRow[] {
   const agents: AgentRow[] = [];
   // Blocos { id: '...', ... }
@@ -82,7 +92,7 @@ function generate(): string {
     md += `| ID | Visibilidade | Domínio | Descrição |\n`;
     md += `|----|--------------|---------|-----------|\n`;
     for (const a of byLayer[layer]) {
-      md += `| \`${a.id}\` | ${a.visibility} | ${a.domain || '—'} | ${a.description.replace(/\|/g, '\\|')} |\n`;
+      md += `| \`${a.id}\` | ${a.visibility} | ${a.domain || '—'} | ${escapeMdCell(a.description)} |\n`;
     }
     md += '\n';
   }
@@ -102,4 +112,4 @@ if (require.main === module) {
   main();
 }
 
-export { generate, parseAgents };
+export { generate, parseAgents, escapeMdCell };
