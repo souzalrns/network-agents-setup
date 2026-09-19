@@ -3,8 +3,12 @@ import fs from 'fs/promises';
 import path from 'path';
 export function createFilesystemTools(basePath: string): MCPTool[] {
   const safePath = (filePath: string): string => {
-    const resolved = path.resolve(basePath, filePath);
-    if (!resolved.startsWith(basePath)) throw new Error(`Access denied: ${filePath}`);
+    const base = path.resolve(basePath);
+    const resolved = path.resolve(base, filePath);
+    const rel = path.relative(base, resolved);
+    if (rel === '..' || rel.startsWith('..' + path.sep) || path.isAbsolute(rel)) {
+      throw new Error(`Path traversal blocked: "${filePath}" resolves outside "${base}"`);
+    }
     return resolved;
   };
   return [

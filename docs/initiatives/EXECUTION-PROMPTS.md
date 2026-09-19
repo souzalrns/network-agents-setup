@@ -13,7 +13,7 @@ Depois de todo o documento estar escrito (Grupos A-J), foi feita uma passagem de
 
 **Achados adicionais encontrados durante esta verificação, fora do escopo dos 6 erros reportados — não corrigidos, a decidir depois:** (a) a linha do item F12/I11 ("ex. os 108 itens dos grupos A-H") está ela própria incorrecta — A-H somam 91, não 108 — mas não fazia parte dos 6 erros pedidos; (b) o item **G5** do `STATUS.md` ("2 achados não resolvidos do MCP-MAPPING.md") não tem nenhum item correspondente nos Grupos A-J deste documento — pode ser uma lacuna real de cobertura, a confirmar antes de assumir que "nenhum item do STATUS.md ficou de fora" (frase final da Contagem final).
 
-**Adenda em 2026-09-19 (depois desta verificação, item novo, não um erro):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens, total do documento passa de 108 para **109**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
+**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. Total do documento passa de 108 para **110**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
 
 ---
 
@@ -115,6 +115,8 @@ Aplicar às três tools do ficheiro (`read_file`, `write_file`, `list_directory`
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo A: "path traversal em filesystem.ts corrigido, 3 testes novos, 0 regressões" + commit. Nota em `AUDIT-TOOLS-MCP.md` secção 3.
+
+> **Status em 2026-09-19: DONE.** Guarda corrigida nas 3 tools de `filesystem.ts`. Teste `tests/unit/filesystem.test.ts` (2 testes, não 3 — via `createFilesystemTools`/interface pública, `resolveSafePath` não existe como função exportada, ver nota abaixo) escrito antes da correção (falhou, provando o bug), passou depois. Suite completa: 91 testes, 0 falhas. Nota em `AUDIT-TOOLS-MCP.md` secção 3. Achados à parte durante a Fase 3 (não bloquearam o fecho, ambos pré-existentes, não causados por esta correção): 2 ficheiros de teste falharam a **carregar** (não a testes falhados) por causas distintas — `tests/integration/ExecutionFlow.test.ts` por `prisma generate` em falta pós-`pnpm install` (registado como **D8**); `tests/e2e/api.test.ts` por `supertest` não resolver (não registado como item novo, fora do escopo pedido para esta sessão).
 
 ---
 
@@ -1017,7 +1019,26 @@ Mover para Done, grupo D.
 
 ---
 
-*(Fim do Grupo D — 7/7 itens.)*
+### D8 — Documentar/automatizar `prisma generate` pós-install
+
+**Quem:** Claude
+**Origem:** STATUS.md item B10 (achado durante A3, 2026-09-19) — Prisma Client não é gerado automaticamente por `pnpm install`, faz `tests/integration/ExecutionFlow.test.ts` falhar a carregar (`Cannot find module '.prisma/client/default'`)
+
+**Fase 1 — Análise e Verificação**
+Confirmar se existe algum hook (`postinstall`, `prepare`) que já devesse correr `prisma generate` e não está a correr, ou se este passo nunca esteve automatizado.
+
+**Fase 2 — Execução**
+Adicionar script `postinstall` (ou equivalente por workspace) que corra `prisma generate` depois de `pnpm install`. Documentar o passo manual em `README.md`/`BOOTSTRAP.md` como fallback para quem não puder correr o hook.
+
+**Fase 3 — Teste e Validação**
+`pnpm install` limpo (`node_modules` apagado) seguido de `pnpm vitest run` — confirmar que `tests/integration/ExecutionFlow.test.ts` carrega sem o erro `.prisma/client/default`, sem passo manual.
+
+**Fase 4 — Atualização de Status**
+Mover B10 para Done em STATUS.md.
+
+---
+
+*(Fim do Grupo D — 8/8 itens.)*
 
 ---
 
@@ -2158,7 +2179,7 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## Contagem final
 
-A(22) + B(13) + C(7) + D(7) + E(7) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **109 itens** (102 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22 acrescentado em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
+A(22) + B(13) + C(7) + D(8) + E(7) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **110 itens** (103 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22 e D8 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
 
