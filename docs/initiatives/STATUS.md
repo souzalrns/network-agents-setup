@@ -48,6 +48,7 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | **M5** | **Fase 3 (Claude)** — mover ~14 módulos sem consumidor para `packages/experimental/` | 3-5 dias | Clareza | Auditoria Claude |
 | **M6** | **Fase 4 (Claude)** — GeminiProvider (custo zero) + Planner com scope/unknowns/pre_mortem/not_doing | 2-3 dias | Custo zero | Auditoria Claude |
 | **M7** | **Fase 5 (Claude)** — piloto real de marketing (`seo-article` em modo external com caso real) | 1 semana | Prova de valor | Auditoria Claude |
+| **M8** | **Vulnerabilidades Dependabot** (9 alertas reportados no push do commit `2d03b4b`: 3 críticas + 1 alta — todas em dependências de dev, `vitest`/`vite`/`esbuild`/`launch-editor`; 5 moderadas incluindo 2× `uuid`, único pacote de produção, prioridade dentro deste item). Ver [github.com/souzalrns/network-agents-setup/security/dependabot](https://github.com/souzalrns/network-agents-setup/security/dependabot) | 1h | Nada | Novo (2026-09-19) |
 
 ## 🟢 Baixo (nice to have)
 

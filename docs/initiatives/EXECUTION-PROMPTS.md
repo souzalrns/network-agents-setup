@@ -13,6 +13,8 @@ Depois de todo o documento estar escrito (Grupos A-J), foi feita uma passagem de
 
 **Achados adicionais encontrados durante esta verificação, fora do escopo dos 6 erros reportados — não corrigidos, a decidir depois:** (a) a linha do item F12/I11 ("ex. os 108 itens dos grupos A-H") está ela própria incorrecta — A-H somam 91, não 108 — mas não fazia parte dos 6 erros pedidos; (b) o item **G5** do `STATUS.md` ("2 achados não resolvidos do MCP-MAPPING.md") não tem nenhum item correspondente nos Grupos A-J deste documento — pode ser uma lacuna real de cobertura, a confirmar antes de assumir que "nenhum item do STATUS.md ficou de fora" (frase final da Contagem final).
 
+**Adenda em 2026-09-19 (depois desta verificação, item novo, não um erro):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens, total do documento passa de 108 para **109**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
+
 ---
 
 Par deste ficheiro: `docs/initiatives/STATUS.md` (estado) + todas as auditorias em `docs/architecture/*-audit/` (achados). Cada item abaixo é um prompt autocontido — pode ser dado a uma sessão Claude Code futura sem contexto prévio desta conversa.
@@ -458,7 +460,26 @@ Mover para Done, fechar o alerta #6 (o #5 — `verifyPassword` — já está fec
 
 ---
 
-*(Fim do Grupo A — 21/21 itens.)*
+### A22 — Vulnerabilidades Dependabot pós-push (9 alertas)
+
+**Quem:** Claude + Desenvolvedor
+**Origem:** STATUS.md item M8 (GitHub Dependabot, reportado no push do commit `2d03b4b`, 2026-09-19)
+
+**Fase 1 — Análise e Verificação**
+Abrir `github.com/souzalrns/network-agents-setup/security/dependabot` e confirmar, alerta a alerta, a lista actual: 3 críticas (`vitest`), 1 alta (`vite`), 5 moderadas (`vite`, `uuid` ×2, `launch-editor`, `esbuild`, `vitest`) — confirmar que a contagem e os pacotes batem com o que o GitHub mostra agora (pode ter mudado desde o push). Confirmar quais são `devDependencies` (via `package.json`/`pnpm-lock.yaml`) vs. dependência real de produção — `uuid`, usado em `apps/api`, é o único caso a confirmar com atenção.
+
+**Fase 2 — Execução**
+Para as 8 de dev (`vitest`, `vite`, `esbuild`, `launch-editor`): `pnpm update` para a versão corrigida (confirmar changelog de breaking changes antes, mesmo sendo dev). Para `uuid` (produção, prioridade): confirmar a versão corrigida pelo advisory, verificar se é major bump com breaking changes (ex. mudança CommonJS→ESM entre v8/v9), actualizar `apps/api` conforme necessário.
+
+**Fase 3 — Teste e Validação**
+Rodar a suite de testes completa (`vitest`) depois do bump — nenhuma regressão. Rodar os testes/integração de `apps/api` especificamente para confirmar que a troca de `uuid` não quebra nenhum ID gerado/consumido. Confirmar em `github.com/souzalrns/network-agents-setup/security/dependabot` que os 9 alertas fecham (0 abertos).
+
+**Fase 4 — Atualização de Status**
+Mover M8 para Done em STATUS.md. Nota: "9 alertas Dependabot resolvidos em [data] — 8 dev via pnpm update, 1 prod (uuid) com teste de regressão em apps/api".
+
+---
+
+*(Fim do Grupo A — 22/22 itens.)*
 
 ---
 
@@ -2137,7 +2158,7 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## Contagem final
 
-A(21) + B(13) + C(7) + D(7) + E(7) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **108 itens** (101 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — ver correção nº3 do errata), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
+A(22) + B(13) + C(7) + D(7) + E(7) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **109 itens** (102 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22 acrescentado em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
 
