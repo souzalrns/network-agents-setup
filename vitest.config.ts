@@ -15,6 +15,7 @@ export default defineConfig({
       '@network-agents/observability': pkg('observability'),
       '@network-agents/memory': pkg('memory'),
       '@network-agents/mcp': pkg('mcp'),
+      '@network-agents/websocket': pkg('websocket'),
       '@network-agents/core': pkg('core'),
       '@network-agents/langgraph': pkg('langgraph'),
     },

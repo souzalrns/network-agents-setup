@@ -16,6 +16,7 @@
 
 import { MCPTool } from '../ToolRegistry';
 import { prisma } from './db';
+import { toClientError } from '../../util/sanitizeError';
 
 // Amostra fixa usada só quando a base ainda não tem NENHUM documento BR ingerido (ex.:
 // antes da primeira `pnpm ingest` rodar) — para o agente não receber "0 resultados" e
@@ -113,7 +114,7 @@ export function createBrazilianLawTools(): MCPTool[] {
             metadata: { count: documents.length, source: 'database' },
           };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Erro na busca de legislação BR: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'na busca de legislação') }], isError: true };
         }
       },
     },
@@ -142,7 +143,7 @@ export function createBrazilianLawTools(): MCPTool[] {
 
           return { content: [{ type: 'text', text: JSON.stringify(document, null, 2) }] };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Erro ao buscar lei BR: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'ao obter lei') }], isError: true };
         }
       },
     },

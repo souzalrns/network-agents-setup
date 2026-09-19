@@ -36,4 +36,14 @@ describe('filesystem tools — guarda de path traversal', () => {
     expect(result.isError).toBeUndefined();
     expect(result.content[0].text).toBe('hello');
   });
+
+  it('erro real (ficheiro inexistente) não expõe o caminho absoluto do disco (A18)', async () => {
+    const tools = createFilesystemTools(base);
+    const readFile = tools.find((t) => t.name === 'read_file')!;
+    const result: any = await readFile.execute({ path: 'nao-existe.txt' });
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe('Erro ao ler ficheiro');
+    expect(result.content[0].text).not.toMatch(/ENOENT/);
+    expect(result.content[0].text).not.toContain(base);
+  });
 });

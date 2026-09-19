@@ -13,7 +13,9 @@ Depois de todo o documento estar escrito (Grupos A-J), foi feita uma passagem de
 
 **Achados adicionais encontrados durante esta verificação, fora do escopo dos 6 erros reportados — não corrigidos, a decidir depois:** (a) a linha do item F12/I11 ("ex. os 108 itens dos grupos A-H") está ela própria incorrecta — A-H somam 91, não 108 — mas não fazia parte dos 6 erros pedidos; (b) o item **G5** do `STATUS.md` ("2 achados não resolvidos do MCP-MAPPING.md") não tem nenhum item correspondente nos Grupos A-J deste documento — pode ser uma lacuna real de cobertura, a confirmar antes de assumir que "nenhum item do STATUS.md ficou de fora" (frase final da Contagem final).
 
-**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. **E8**/**E9** foram acrescentados (achados durante a execução real do A2: `knowledge_sources` sem script de criação versionado; tabela `knowledge_log` não documentada) — Grupo E passa de 7 para 9 itens. **D9** foi acrescentado (achado durante a execução real do A7: suite do runner demora 12min, concentrados em 2 ficheiros lentos, fácil de confundir com bloqueio) — Grupo D passa de 8 para 9 itens. Total do documento passa de 108 para **113**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
+**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. **E8**/**E9** foram acrescentados (achados durante a execução real do A2: `knowledge_sources` sem script de criação versionado; tabela `knowledge_log` não documentada) — Grupo E passa de 7 para 9 itens. **D9** foi acrescentado (achado durante a execução real do A7: suite do runner demora 12min, concentrados em 2 ficheiros lentos, fácil de confundir com bloqueio) — Grupo D passa de 8 para 9 itens. **D10** foi acrescentado (achado durante a execução real do A18: 5 itens desta sessão — C6, A1, A21, A14, A18 — revelaram-se diferentes do plano ao verificar; proposta de auditoria de escopo preventiva) — Grupo D passa de 9 para 10 itens. **A23** foi acrescentado (achado durante a execução real do A20: `cors()` totalmente aberto, contradição real com o CORP do helmet) — Grupo A passa de 22 para 23 itens. Total do documento passa de 108 para **115**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
+
+**AVISO (acrescentado em 2026-09-19, depois do A18):** este documento foi escrito a partir do `STATUS.md`, que por sua vez cita documentos de mapeamento mantidos em sessões anteriores. **ANTES de executar qualquer item, revalidar contra o código real** — a Fase 1 de cada item já manda fazer isto, mas vale o aviso explícito: vários itens (**C6, A1, A21, A14, A18**) revelaram-se diferentes do descrito ao verificar, nalguns casos por o achado já ter sido resolvido antes do documento ser escrito, noutros por o escopo real ser muito maior ou menor do que o brief presumia. Ver **B14/D10** para a proposta de auditoria preventiva de todos os itens restantes.
 
 ---
 
@@ -157,6 +159,8 @@ Teste: `http_request({url: 'http://169.254.169.254/'})` é bloqueado antes do fe
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo A. Nota em `AUDIT-TOOLS-MCP.md` secção 2.
+
+> **Status em 2026-09-19: DONE — com desvio importante do plano original, confirmado antes de codificar.** `ssrf-req-filter` **não funciona** com o `fetch` global do Node — devolve um `http.Agent` clássico, mas o `fetch` global (undici) não aceita `agent`, só `dispatcher`; confirmado empiricamente (`agent.createConnection` nunca chamado). Solução real: `packages/mcp/src/tools/built-in/SsrfGuard.ts` (novo) — `createSsrfSafeDispatcher()`, um `undici.Agent` com `connect` customizado via `buildConnector`, que resolve o hostname uma vez, valida o IP (`ipaddr.js`, fail-closed em IP não-parseável — mais estrito que o `ssrf-req-filter`, que trata isso como seguro) e liga directamente ao IP validado (fecha a janela de DNS-rebinding). `http_request` passa a usar `fetch` do `undici` explicitamente (não o global), com validação de esquema, `redirect: 'manual'` + throw em 3xx, timeout 5s via `AbortController`. Achado técnico à parte: o `undici` embrulha erros de ligação em `TypeError('fetch failed', {cause})` — a mensagem real fica em `error.cause`, não em `error.message`. `tests/unit/SsrfGuard.test.ts` (10 testes, classificação de IP incluindo `::ffff:127.0.0.1` e fronteira RFC1918) + `tests/unit/web.test.ts` (+8 testes de integração: esquemas, IPs internos reais, redirect, timeout, caso legítimo). Suite completa: 124/124 (subiu de 106).
 
 ---
 
@@ -333,6 +337,8 @@ Teste: payload com campo extra não declarado (ex. `{name: "x", isAdmin: true}`)
 **Fase 4 — Atualização de Status**
 Mover para Done.
 
+> **VERIFICADO em 2026-09-19: N/A neste repo.** Zod não existe em nenhum `package.json` deste repo (`network-agents-setup`) — grep exaustivo por `z.object(`/`from 'zod'`/`"zod"` em `apps/api/src`, `packages/mcp/src` e todos os `package.json`, zero resultados. O Zod real está no `agent-network-mcp` (`app/api/mcp/route.js`), não como `z.object(...).strict()` directo — os schemas são um `shape` passado a `server.tool()` do `mcp-handler`, embrulhado internamente em `z.object(shape)` (modo `"strip"` por omissão). Fica registado como **S12** (STATUS.md), para uma sessão dedicada a esse repo separado.
+
 ---
 
 ### A15 — Flags de cookie
@@ -409,6 +415,8 @@ Teste: provocar erro real (query malformada) e confirmar que a resposta ao clien
 **Fase 4 — Atualização de Status**
 Mover para Done.
 
+> **Status em 2026-09-19: DONE — escopo real 7× maior que o brief.** Fase 1 encontrou 29 sítios em 11 ficheiros (não 4): `packages/mcp/src/{client/MCPClient.ts, tools/ToolExecutor.ts, tools/built-in/{database,filesystem,web}.ts, tools/legal/{portuguese-law,brazilian-law}.ts}` (13 sítios) + `apps/api/src/{middleware/errorHandler.ts, controllers/{ChatController,HitlController}.ts, websocket.ts}` (16 sítios). Achado importante: `ChatController`/`HitlController`/`websocket.ts` fazem catch próprio e respondem directamente — nunca chegam ao `errorHandler.ts` central, que só apanha erros não tratados. Correcção: 2 helpers `toClientError(error, context)` (mesma assinatura, `packages/mcp/src/util/sanitizeError.ts` via `console.error`, `apps/api/src/utils/sanitizeError.ts` via logger de `@network-agents/observability`) aplicados nos 29 sítios. Excluídos deliberadamente 2 logs internos genuínos (`MCPClient.ts:19` `console.error`, `index.ts` `logger.error` ×3) — não são client-facing. Cuidado tomado em `web.ts`: as mensagens seguras já desenhadas no A5 (SSRF bloqueado, esquema não permitido, redirect bloqueado, timeout) **não foram generalizadas** — só o fallback genuinamente desconhecido passa por `toClientError`. Gap de infra encontrado e corrigido en passant: `vitest.config.ts` nunca tinha alias para `@network-agents/websocket` (impedia testar `apps/api/src/websocket.ts` de todo). 21 testes novos (`sanitizeError.test.ts`, `mcp-tools-errors.test.ts`, `api-errors.test.ts` + 1 adicionado a `filesystem.test.ts` e a `web.test.ts` cada). Suite completa: 145/145 (subiu de 124). Nota em `AUDIT-SECURITY-2026.md` (tabela OWASP, LLM02).
+
 ---
 
 ### A19 — Restringir uploads
@@ -446,6 +454,27 @@ Configurar CSP/X-Frame-Options/etc. explicitamente.
 
 **Fase 4 — Atualização de Status**
 Mover para Done.
+
+> **Status em 2026-09-19: DONE — verificado, já estava activo, 1 ajuste real aplicado (mesmo padrão do A21).** `helmet()` já estava configurado em `apps/api/src/server.ts:24`, confirmado por leitura e empiricamente (12 headers reais, incluindo CSP/X-Frame-Options/HSTS) — o checklist item 18 ("❌") estava desactualizado. Ajuste real encontrado e aplicado: `crossOriginResourcePolicy` do helmet (omissão `'same-origin'`) contradizia o `cors()` totalmente aberto na linha seguinte — corrigido para `'cross-origin'`, alinhado com a intenção já expressa pelo CORS aberto. CSP/HSTS/X-Frame-Options não foram tocados (já bons). Teste novo `tests/unit/server-security-headers.test.ts` (servidor real local, sem `supertest`) confirma o header correcto + os restantes intactos. Suite completa: 146/146. **S13** registado para o CORS em si (aceita qualquer origem — fora do escopo deste item, requer decisão humana sobre origens legítimas). Nota em `AUDIT-SECURITY-2026.md` (tabela OWASP).
+
+---
+
+### A23 — Restringir CORS a origens conhecidas
+
+**Quem:** Claude + Desenvolvedor
+**Origem:** STATUS.md item S13 (achado durante A20, 2026-09-19) — `apps/api/src/server.ts:25`, `app.use(cors())` sem opções, aceita qualquer origem; contradição detectada com o CORP do helmet (agora `cross-origin`, ver A20)
+
+**Fase 1 — Análise e Verificação**
+Confirmar com o Desenvolvedor: que origens (domínios de frontend) devem legitimamente poder chamar esta API? Sem esta resposta, não há lista para configurar.
+
+**Fase 2 — Execução**
+Claude aplica `cors({ origin: [...origens confirmadas], credentials: true se aplicável })` assim que a lista existir. Não implementar uma lista adivinhada.
+
+**Fase 3 — Teste e Validação**
+Teste: pedido com `Origin` na lista → `Access-Control-Allow-Origin` presente e correcto. Pedido com `Origin` fora da lista → header ausente/pedido rejeitado pelo browser. Suite completa.
+
+**Fase 4 — Atualização de Status**
+Mover S13 para Done em STATUS.md.
 
 ---
 
@@ -491,7 +520,7 @@ Mover M8 para Done em STATUS.md. Nota: "9 alertas Dependabot resolvidos em [data
 
 ---
 
-*(Fim do Grupo A — 22/22 itens.)*
+*(Fim do Grupo A — 23/23 itens.)*
 
 ---
 
@@ -1071,7 +1100,26 @@ Mover B13 para Done em STATUS.md.
 
 ---
 
-*(Fim do Grupo D — 9/9 itens.)*
+### D10 — Auditoria de escopo do `EXECUTION-PROMPTS.md`
+
+**Quem:** Claude
+**Origem:** STATUS.md item B14 (achado durante A18, 2026-09-19) — 5 itens desta sessão (C6, A1, A21, A14, A18) revelaram-se diferentes do descrito ao serem verificados contra o código real, antes de qualquer edição
+
+**Fase 1 — Análise e Verificação**
+Reler todo o documento, item a item. Para cada item ainda pendente (não Done), confirmar por leitura directa do código/`git log` se o achado original ainda é válido, já foi resolvido, ou nunca foi como descrito — mesma disciplina já aplicada item a item nesta sessão, mas feita de uma vez, antecipadamente, em vez de descoberta ad-hoc a meio da execução de cada um.
+
+**Fase 2 — Execução**
+Marcar cada item revalidado com uma nota curta ("confirmado válido em [data]" / "N/A, ver nota" / "escopo ajustado, ver nota") — sem alterar o texto original do item, só anotar, mesma disciplina de errata já usada no documento.
+
+**Fase 3 — Teste e Validação**
+Nenhum item por executar fica sem essa nota de revalidação. Contagem final: quantos itens eram falsas pendências (já resolvidos/N/A) vs. quantos continuam genuinamente pendentes.
+
+**Fase 4 — Atualização de Status**
+Mover B14 para Done em STATUS.md, com o resultado da contagem.
+
+---
+
+*(Fim do Grupo D — 10/10 itens.)*
 
 ---
 
@@ -2250,7 +2298,7 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## Contagem final
 
-A(22) + B(13) + C(7) + D(9) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **113 itens** (106 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, D8, D9, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
+A(23) + B(13) + C(7) + D(10) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **115 itens** (108 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, A23, D8, D9, D10, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
 

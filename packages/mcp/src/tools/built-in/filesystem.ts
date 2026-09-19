@@ -1,6 +1,7 @@
 import { MCPTool } from '../ToolRegistry';
 import fs from 'fs/promises';
 import path from 'path';
+import { toClientError } from '../../util/sanitizeError';
 export function createFilesystemTools(basePath: string): MCPTool[] {
   const safePath = (filePath: string): string => {
     const base = path.resolve(basePath);
@@ -28,7 +29,7 @@ export function createFilesystemTools(basePath: string): MCPTool[] {
           const content = await fs.readFile(safePath(filePath), encoding as BufferEncoding);
           return { content: [{ type: 'text', text: content }], metadata: { size: content.length } };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Error: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'ao ler ficheiro') }], isError: true };
         }
       },
     },
@@ -51,7 +52,7 @@ export function createFilesystemTools(basePath: string): MCPTool[] {
           await fs.writeFile(fullPath, content, encoding as BufferEncoding);
           return { content: [{ type: 'text', text: `File written: ${filePath}` }] };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Error: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'ao escrever ficheiro') }], isError: true };
         }
       },
     },
@@ -81,7 +82,7 @@ export function createFilesystemTools(basePath: string): MCPTool[] {
           await list(fullPath);
           return { content: [{ type: 'text', text: JSON.stringify(entries, null, 2) }], metadata: { count: entries.length } };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Error: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'ao listar directório') }], isError: true };
         }
       },
     },

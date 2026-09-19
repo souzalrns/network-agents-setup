@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Orchestrator } from '@network-agents/core';
 import { ExecutionService } from '../services/ExecutionService';
 import { v4 as uuidv4 } from 'uuid';
+import { toClientError } from '../utils/sanitizeError';
 export class ChatController {
   constructor(
     private orchestrator: Orchestrator,
@@ -34,7 +35,7 @@ export class ChatController {
       res.status(500).json({
         executionId,
         status: 'failed',
-        errors: [error.message],
+        errors: [toClientError(error, 'ao processar pedido de chat')],
       });
     }
   }
@@ -74,11 +75,11 @@ export class ChatController {
           onStepComplete: (step, result) => sendEvent('step-complete', { step, result }),
           onStepError: (error) => sendEvent('step-error', error),
           onComplete: (result) => sendEvent('complete', result),
-          onError: (error) => sendEvent('error', { message: error.message }),
+          onError: (error) => sendEvent('error', { message: toClientError(error, 'ao processar pedido de chat') }),
         }
       );
     } catch (error: any) {
-      sendEvent('error', { message: error.message });
+      sendEvent('error', { message: toClientError(error, 'ao processar pedido de chat') });
     } finally {
       res.end();
     }

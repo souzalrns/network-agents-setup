@@ -9,6 +9,7 @@
 
 import { MCPTool } from '../ToolRegistry';
 import { prisma } from './db';
+import { toClientError } from '../../util/sanitizeError';
 
 const SIMULATED_PT_LAWS = [
   {
@@ -93,7 +94,7 @@ export function createPortugueseLawTools(): MCPTool[] {
             metadata: { count: documents.length, source: 'database' },
           };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Erro na busca de legislação PT: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'na busca de legislação') }], isError: true };
         }
       },
     },
@@ -122,7 +123,7 @@ export function createPortugueseLawTools(): MCPTool[] {
 
           return { content: [{ type: 'text', text: JSON.stringify(document, null, 2) }] };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Erro ao buscar lei PT: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'ao obter lei') }], isError: true };
         }
       },
     },

@@ -1,5 +1,6 @@
 import { ToolRegistry, MCPTool, MCPToolResult } from './ToolRegistry';
 import { authorize, rateLimit, audit, hashParamsForAudit } from './ToolPolicy';
+import { toClientError } from '../util/sanitizeError';
 
 export interface ExecutionContext {
   caller?: string;
@@ -50,7 +51,7 @@ export class ToolExecutor {
         allowed: false,
         reason: 'execution_error',
       });
-      return { content: [{ type: 'text', text: `Error: ${error.message}` }], isError: true };
+      return { content: [{ type: 'text', text: toClientError(error, 'ao executar a tool') }], isError: true };
     }
   }
   private validateParams(tool: MCPTool, params: Record<string, any>): void {

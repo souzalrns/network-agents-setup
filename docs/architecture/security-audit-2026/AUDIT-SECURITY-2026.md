@@ -56,7 +56,7 @@ Confirmado: a linha `database-url: postgresql://network:network123@postgres:5432
 | Risco | Estado após auditoria original | Estado após esta extensão |
 |---|---|---|
 | LLM01 Prompt Injection | Coberto (genérico) | Sem mudança — scan estático só, runtime por implementar |
-| LLM02 Sensitive Info Disclosure | Coberto | Achado mais grave confirmado (`k8s/secrets.yaml` valor literal) |
+| LLM02 Sensitive Info Disclosure | Coberto | Achado mais grave confirmado (`k8s/secrets.yaml` valor literal). **RESOLVIDO em 2026-09-19 (A18)**: 29 sítios de leakage de `error.message` cru (stack traces, IPs internos, paths, mensagens de driver de BD/Prisma) em 11 ficheiros — `packages/mcp/src/**` (7 ficheiros) e `apps/api/src/**` (4 ficheiros, incluindo `websocket.ts`/`ChatController`/`HitlController`, que fazem catch próprio e nunca chegam ao `errorHandler.ts` central). Corrigidos via 2 helpers `toClientError(error, context)` (um por pacote, mesma assinatura) — nomeiam a operação ao cliente, nunca o detalhe; log interno completo preservado. Escopo real era 7× o estimado no brief original (que citava só 4 ficheiros). Testado: 21 testes novos, suite completa 145/145. Ver `EXECUTION-PROMPTS.md` A18. |
 | LLM03 Excessive Agency | Confirmado | Sem mudança |
 | LLM04 Supply Chain | Inconclusivo | Parcialmente resolvido (JS); Python **estruturalmente inverificável sem lockfile** |
 | LLM05 Data/Model Poisoning | Não coberto | Modelo de ameaça mapeado, risco pequeno mas real |
@@ -65,6 +65,8 @@ Confirmado: a linha `database-url: postgresql://network:network123@postgres:5432
 | LLM08 Hidden Context Exposure | Não coberto | Sem achado novo — mesma raiz que LLM03 |
 | LLM09 Vector/Embedding Weaknesses | Não coberto | **Gap concreto e acionável: falta RLS** |
 | LLM10 Improper Output Handling | Coberto, limpo | Sem mudança |
+
+**A20 verificado 2026-09-19** — `helmet()` já estava activo em `apps/api/src/server.ts:24` com 12 headers (CSP/X-Frame-Options/HSTS/etc.), confirmado por leitura e empiricamente (pedido real, servidor local). Contradiz o checklist item 18 ("❌"), desactualizado. Ajuste aplicado: `crossOriginResourcePolicy` para `'cross-origin'` (o omissão `'same-origin'` do helmet contradizia o `cors()` aberto logo a seguir). **S13** registado para o CORS em si (aceita qualquer origem, decisão humana necessária sobre quais origens são legítimas).
 
 **Honestidade:** pesquisa de fontes primárias não substitui scanner a correr. LLM04/06/09 ganharam recomendação concreta; LLM05/07/08 continuam sem qualquer ferramenta ou teste, só análise manual.
 

@@ -21,7 +21,10 @@ export function createServer(
   executionService: ExecutionService
 ) {
   const app = express();
-  app.use(helmet());
+  // crossOriginResourcePolicy: 'same-origin' (omissão do helmet) contradiz o
+  // cors() aberto logo a seguir -- browsers bloqueiam a leitura cross-origin
+  // mesmo com CORS a permitir, silenciosamente. Ver EXECUTION-PROMPTS.md A20/S13.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cors());
   app.use(express.json({ limit: '10mb' }));
   app.use(loggingMiddleware);

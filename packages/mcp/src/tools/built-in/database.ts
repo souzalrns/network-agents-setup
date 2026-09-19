@@ -1,5 +1,6 @@
 import { MCPTool } from '../ToolRegistry';
 import { Pool } from 'pg';
+import { toClientError } from '../../util/sanitizeError';
 export function createDatabaseTools(pool: Pool): MCPTool[] {
   return [
     {
@@ -21,7 +22,7 @@ export function createDatabaseTools(pool: Pool): MCPTool[] {
             metadata: { rowCount: result.rowCount },
           };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Database error: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'na consulta à base de dados') }], isError: true };
         }
       },
     },
@@ -47,7 +48,7 @@ export function createDatabaseTools(pool: Pool): MCPTool[] {
           }
           return { content: [{ type: 'text', text: JSON.stringify(schema, null, 2) }] };
         } catch (error: any) {
-          return { content: [{ type: 'text', text: `Schema error: ${error.message}` }], isError: true };
+          return { content: [{ type: 'text', text: toClientError(error, 'ao obter o schema da base de dados') }], isError: true };
         }
       },
     },

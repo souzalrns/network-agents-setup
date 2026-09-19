@@ -1,4 +1,5 @@
 import { MCPTool, MCPToolResult, MCPClient as IMCPClient } from '../types/mcp';
+import { toClientError } from '../util/sanitizeError';
 export class MCPClient implements IMCPClient {
   private serverUrl: string | null = null;
   private tools: MCPTool[] = [];
@@ -40,7 +41,7 @@ export class MCPClient implements IMCPClient {
       return (await response.json()) as MCPToolResult;
     } catch (error: any) {
       return {
-        content: [{ type: 'text', text: `MCP error: ${error.message}` }],
+        content: [{ type: 'text', text: toClientError(error, 'ao comunicar com o servidor MCP') }],
         isError: true,
       };
     }

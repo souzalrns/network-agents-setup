@@ -37,6 +37,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner (provavelmente já feito — `ci.yml` corre `validate:consistency`) | 1h | Consistência | Auditoria Claude |
 | **S9** | **Fase A.2b** — integração do `hitl.py` em `engine.py`/`langgraph_engine.py`/`cli.py` (dupla-escrita; aditivo) | 3-4h | HITL durável | Nosso |
 | **S11** | **A8/C2 — Propagar identidade real (caller/providedKey) para o `ToolExecutor` desde `MCPServer.ts`/`MCPClient.ts`.** Sem isto, o C1 autoriza com `caller='unknown'` por omissão — inútil em produção. | 1-2 dias | Torna o C1 útil de facto | Novo (2026-09-19, achado durante C1) |
+| **S12** | **A14 no `agent-network-mcp`: adicionar validação estrita aos schemas Zod do `mcp-handler`.** `app/api/mcp/route.js` define schemas como `shape` passados a `server.tool()`; por omissão o Zod usa modo `"strip"` (remove chaves desconhecidas). Objectivo: modo `"strict"` (rejeitar) — via opção do `mcp-handler` se existir, ou `z.object(shape).strict().parse(args)` dentro de cada handler. Repo: `agent-network-mcp` (separado). Ver checklist de 20 itens acima. | 1 dia | Fecha A14 de facto | Novo (2026-09-19, achado durante A14) |
+| **S13** | **Restringir CORS a origens conhecidas.** `apps/api/src/server.ts:25` — `app.use(cors())` sem opções, aceita qualquer origem. Contradição detectada no A20: CORP do helmet (agora `cross-origin`) + CORS totalmente aberto. Acção: definir lista de origens legítimas (frontend próprio?), aplicar `{ origin: [...] }` no `cors()`. Requer decisão humana: que origens são legítimas? Ver `EXECUTION-PROMPTS.md` A20. | 2-4h | Fecha o gap real de CORS | Novo (2026-09-19, achado durante A20) |
 
 ## 🟡 Médio (valor claro, sem urgência)
 
@@ -64,6 +66,7 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | **B11** | **Criar script de criação para `knowledge_sources`** — hoje só existe `scripts/create_t6_chunks_table.sql` (cria `knowledge_chunks_t6`, referencia `knowledge_sources` via FK mas não a cria); `knowledge_sources` existe no Supabase mas foi criada manualmente, fora do repo/controlo de versões | 1h | Nada | Novo (2026-09-19, achado durante A2) |
 | **B12** | **Investigar `knowledge_log`** — tabela descoberta durante o A2 (já tem RLS + policy `anon_deny`, mesmo padrão de `knowledge_chunks`), mas sem documentação no repo: quem escreve nela, com que propósito, e porque não aparece em nenhum ficheiro deste projecto | 2h | Nada | Novo (2026-09-19, achado durante A2) |
 | **B13** | **Isolar testes lentos da suite unitária do runner** — `tests/test_crash_recovery.py`/`tests/test_real_plans.py` não estão bloqueados (ambos passam), mas são responsáveis pela maior parte dos 12 minutos da suite completa (172 testes), lentidão fácil de confundir com bloqueio sob um timeout curto (achado durante A7). Mover para marca `@pytest.mark.integration` (ou pasta própria) e excluir por omissão do `pytest` rápido | 15 min | Nada | Novo (2026-09-19, achado durante A7) |
+| **B14** | **Auditoria de escopo do `EXECUTION-PROMPTS.md`** — revalidar todos os itens restantes contra o código real antes de executar. 5 itens desta sessão revelaram-se diferentes do plano ao verificar (C6 redundante, A1 já resolvido antes de escrito, A21 já corrigido em commit anterior, A14 N/A neste repo, A18 com 7× o escopo real). Objectivo: eliminar falsas pendências do plano antes de continuarem a consumir sessões futuras | 1-2h | Nada | Novo (2026-09-19, achado durante A18) |
 
 ## ⏸️ Arquivado (não fazer agora)
 
@@ -93,17 +96,17 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | 5 | Criptografia de dados | ❌ | Dados sensíveis em repouso |
 | 6 | Auth server-side | ✅ | `auth.ts` fail-closed |
 | 7 | Restringir acessos (RBAC) | ❌ | Falta roles |
-| 8 | Bloquear Mass Assignment | ❌ | Zod valida, mas aceita campos extra |
+| 8 | Bloquear Mass Assignment | ❌ | Zod valida, mas aceita campos extra. *(2026-09-19: A14 — VERIFICADO: N/A neste repo. Zod não existe em nenhum package.json. Aplica-se ao `agent-network-mcp` (ver S12).)* |
 | 9 | Proteger cookies | ⚠️ verificar | `httpOnly`/`secure`/`sameSite` |
 | 10 | Hash nas senhas | ✅ | Supabase Auth |
 | 11 | Rate limit | ❌ | Não existe |
 | 12 | Bot protection | ❌ | Não existe |
 | 13 | Queries parametrizadas | ✅ | Prisma + psycopg |
 | 14 | Validação dos inputs | ⚠️ | Zod (Node) + YAML (Python) |
-| 15 | Vazar conteúdo | ⚠️ | Mensagens de erro podem revelar stack traces |
+| 15 | Vazar conteúdo | ✅ | Mensagens de erro podem revelar stack traces. *(2026-09-19: A18 — RESOLVIDO. 29 sítios em 11 ficheiros corrigidos via helpers `toClientError` — escopo real 7× o estimado no brief (citava 4 ficheiros). Ver `AUDIT-SECURITY-2026.md` LLM02 e `EXECUTION-PROMPTS.md` A18.)* |
 | 16 | Restringir uploads | ❌ | Produção tem `extrair-imagem` |
 | 17 | Trim respostas | ⚠️ | Depende |
-| 18 | Add security headers | ❌ | CSP, X-Frame-Options, etc. |
+| 18 | Add security headers | ✅ | CSP, X-Frame-Options, etc. *(2026-09-19: A20 — VERIFICADO: `helmet()` já estava activo em `apps/api/src/server.ts:24` com 12 headers, incluindo CSP/X-Frame-Options/HSTS — este item estava desactualizado. Ajuste real aplicado: `crossOriginResourcePolicy` para `'cross-origin'` (o omissão `'same-origin'` contradizia o `cors()` aberto). S13 registado para o CORS em si. Ver `AUDIT-SECURITY-2026.md` e `EXECUTION-PROMPTS.md` A20/S13.)* |
 | 19 | Forçar HTTPS | ✅ | Vercel faz por defeito |
 | 20 | Scam de dependências | ⚠️ | Dependabot ativo |
 
@@ -396,7 +399,7 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 **Achados mais importantes desta ronda:**
 - **HITL (S9):** `runner/plan_runner/hitl.py` existe e tem testes, mas **zero** ligação a `engine.py`/`langgraph_engine.py`/`cli.py` — confirmado por busca de código. M2 (TS) e M3 (teste end-to-end) dependem de S9, que continua por fazer.
 - **RAG/L5 (S10):** ao contrário do que a pergunta presumia, **já não está desligado** — `knowledge_wiring.py` liga-o de facto a `engine.py`. Falta só propagação: apenas 1 dos 12 templates de plano usa o bloco `knowledge:`.
-- **Tools/MCP:** verificação linha-a-linha confirma `packages/mcp/ToolExecutor.ts`/`MCPServer.ts` sem qualquer autorização/autenticação — e nenhuma biblioteca externa madura (FastMCP, mcp-agent) resolve isto por nós; a correcção é portar o pipeline já testado em `mcp/plan_runner/policy.py` (Python) para TypeScript. *(2026-09-19: path traversal de `filesystem.ts` (A3), regex DoS de `scrape_webpage` (A6) e falta de autorização em `ToolExecutor.ts` (C1, via `ToolPolicy.ts` novo) RESOLVIDOS; SSRF de `http_request` e autenticação HTTP de `MCPServer.ts` continuam pendentes — ver `tools-mcp-audit/AUDIT-TOOLS-MCP.md` secções 2/3/4 e `EXECUTION-PROMPTS.md` A3/A6/C1.)*
+- **Tools/MCP:** verificação linha-a-linha confirma `packages/mcp/ToolExecutor.ts`/`MCPServer.ts` sem qualquer autorização/autenticação — e nenhuma biblioteca externa madura (FastMCP, mcp-agent) resolve isto por nós; a correcção é portar o pipeline já testado em `mcp/plan_runner/policy.py` (Python) para TypeScript. *(2026-09-19: path traversal de `filesystem.ts` (A3), regex DoS de `scrape_webpage` (A6), falta de autorização em `ToolExecutor.ts` (C1, via `ToolPolicy.ts` novo) e SSRF de `http_request` (A5, via `SsrfGuard.ts` novo — `ssrf-req-filter` revelou-se incompatível com o `fetch` global, ver nota na secção 2) RESOLVIDOS; autenticação HTTP de `MCPServer.ts` continua pendente — ver `tools-mcp-audit/AUDIT-TOOLS-MCP.md` secções 2/3/4 e `EXECUTION-PROMPTS.md` A3/A5/A6/C1.)*
 - **Segurança:** 3 achados novos e acionáveis — senha `network123` **hardcoded** (não placeholder) em `k8s/secrets.yaml`; `knowledge_chunks_t6` **sem Row Level Security**, qualquer código com `DATABASE_URL` lê/escreve chunks de qualquer agente; e o lado Python **não tem lockfile nenhum**, tornando o supply chain estruturalmente inverificável mesmo com rede livre (não é só bloqueio de sandbox). *(2026-09-19: item da senha `network123` resolvido do lado do repo — senha real rotacionada pelo Desenvolvedor fora do repo, no Supabase, durante esta sessão; ver `security-audit-2026/AUDIT-SECURITY-2026.md` secção 7 e `EXECUTION-PROMPTS.md` itens A1/A1b. RLS de `knowledge_chunks_t6` também RESOLVIDO — activado + policy `anon_deny`, aplicado directamente no Supabase; ver secção 6 e `EXECUTION-PROMPTS.md` item A2.)*
 - **Evaluation/Custo:** `model_tier` (planner/executor/verifier) é só schema, zero implementação — mesma classe de "campo morto" que `budget_max_replans`. LiteLLM Router+Budget Manager recomendado (ADOPT) para fechar o gap de Unbounded Consumption (LLM06).
 - **Observability:** correcção a `GOV-FASE1.md` — o lado TypeScript **não está ausente**, existe (`packages/observability/Tracer.ts`), mas é uma reimplementação manual com um **bug real** (`traceId`/`spanId` trocados) e memory leak, usada num único ponto do código. Recomenda-se substituir pelo SDK oficial OpenTelemetry.

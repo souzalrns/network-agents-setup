@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { HitlManager } from '@network-agents/core';
+import { toClientError } from '../utils/sanitizeError';
 export class HitlController {
   constructor(private hitlManager: HitlManager) {}
   async listPending(req: Request, res: Response): Promise<void> {
@@ -27,7 +28,7 @@ export class HitlController {
       const request = await this.hitlManager.approveRequest(id, responderId, comment);
       res.json(request);
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: toClientError(error, 'ao aprovar pedido') });
     }
   }
   async rejectRequest(req: Request, res: Response): Promise<void> {
@@ -41,7 +42,7 @@ export class HitlController {
       const request = await this.hitlManager.rejectRequest(id, responderId, comment);
       res.json(request);
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: toClientError(error, 'ao rejeitar pedido') });
     }
   }
   async getCheckpoint(req: Request, res: Response): Promise<void> {

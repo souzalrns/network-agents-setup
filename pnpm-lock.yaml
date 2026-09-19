@@ -20,6 +20,9 @@ importers:
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
+      undici:
+        specifier: ^8.10.2
+        version: 8.10.2
       vitest:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.43)
@@ -146,9 +149,15 @@ importers:
       express:
         specifier: ^4.22.3
         version: 4.22.3
+      ipaddr.js:
+        specifier: ^2.5.0
+        version: 2.5.0
       pg:
         specifier: ^8.11.0
         version: 8.23.0
+      undici:
+        specifier: ^8.10.2
+        version: 8.10.2
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
@@ -1664,6 +1673,11 @@ packages:
     engines: {node: '>= 0.10'}
     dev: false
 
+  /ipaddr.js@2.5.0:
+    resolution: {integrity: sha512-aq+t5NAc+cS6rZQQVWC2x98CPqGtKKTMDd4Gaodv0wShnItdKg/51djkGJ1hqH+Oy0ivDftCbSLCQob8zso01w==}
+    engines: {node: '>= 10'}
+    dev: false
+
   /is-stream@3.0.0:
     resolution: {integrity: sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -2377,6 +2391,10 @@ packages:
     resolution: {integrity: sha512-RYONW2MeafgYlkVOKYKkA/Ag7BmXqgIWCa8t1m0JcxrQg9pI9lEqRhAOruOBCbAohOa/gkCF+iPi9hrgvTzu6Q==}
     engines: {node: '>=20.18.1'}
     dev: false
+
+  /undici@8.10.2:
+    resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
+    engines: {node: '>=22.19.0'}
 
   /unpipe@1.0.0:
     resolution: {integrity: sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ==}

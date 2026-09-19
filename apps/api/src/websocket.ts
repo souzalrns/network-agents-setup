@@ -6,6 +6,7 @@ import { AgentFactory } from '@network-agents/core';
 import { ExecutionService } from './services/ExecutionService';
 import { getGlobalLogger } from '@network-agents/observability';
 import { randomUUID } from 'crypto';
+import { toClientError } from './utils/sanitizeError';
 export function setupWebSocket(
   server: Server,
   orchestrator: Orchestrator,
@@ -25,7 +26,7 @@ export function setupWebSocket(
       });
       callback(result);
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao processar mensagem de chat') });
     }
   });
   wsServer.on('chat:stream', async (data: any) => {
@@ -74,7 +75,7 @@ export function setupWebSocket(
               id: randomUUID(),
               type: 'event',
               action: 'execution:error',
-              payload: { executionId, error: error.message },
+              payload: { executionId, error: toClientError(error, 'ao processar mensagem de chat') },
               timestamp: new Date(),
             });
           },
@@ -85,7 +86,7 @@ export function setupWebSocket(
         id: randomUUID(),
         type: 'event',
         action: 'execution:error',
-        payload: { executionId, error: error.message },
+        payload: { executionId, error: toClientError(error, 'ao processar mensagem de chat') },
         timestamp: new Date(),
       });
     }
@@ -112,13 +113,13 @@ export function setupWebSocket(
           id: randomUUID(),
           type: 'event',
           action: 'execution:failed',
-          payload: { executionId, error: error.message },
+          payload: { executionId, error: toClientError(error, 'ao executar pedido') },
           timestamp: new Date(),
         });
       });
       callback({ executionId });
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao iniciar execução') });
     }
   });
   // HITL
@@ -127,7 +128,7 @@ export function setupWebSocket(
       const pending = hitlManager.getPendingRequests(data.domain);
       callback(pending);
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao listar pedidos HITL') });
     }
   });
   wsServer.on('hitl:approve', async (data: any, callback: any) => {
@@ -142,7 +143,7 @@ export function setupWebSocket(
       });
       callback(request);
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao aprovar pedido HITL') });
     }
   });
   wsServer.on('hitl:reject', async (data: any, callback: any) => {
@@ -157,7 +158,7 @@ export function setupWebSocket(
       });
       callback(request);
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao rejeitar pedido HITL') });
     }
   });
   // Agent
@@ -169,7 +170,7 @@ export function setupWebSocket(
       }
       callback(agents);
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao listar agentes') });
     }
   });
   // System
@@ -191,7 +192,7 @@ export function setupWebSocket(
       });
       callback(metrics);
     } catch (error: any) {
-      callback(null, { error: error.message });
+      callback(null, { error: toClientError(error, 'ao obter métricas') });
     }
   });
   logger.info('WebSocket handlers registered');
