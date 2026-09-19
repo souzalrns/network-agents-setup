@@ -13,7 +13,7 @@ Depois de todo o documento estar escrito (Grupos A-J), foi feita uma passagem de
 
 **Achados adicionais encontrados durante esta verificação, fora do escopo dos 6 erros reportados — não corrigidos, a decidir depois:** (a) a linha do item F12/I11 ("ex. os 108 itens dos grupos A-H") está ela própria incorrecta — A-H somam 91, não 108 — mas não fazia parte dos 6 erros pedidos; (b) o item **G5** do `STATUS.md` ("2 achados não resolvidos do MCP-MAPPING.md") não tem nenhum item correspondente nos Grupos A-J deste documento — pode ser uma lacuna real de cobertura, a confirmar antes de assumir que "nenhum item do STATUS.md ficou de fora" (frase final da Contagem final).
 
-**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. Total do documento passa de 108 para **110**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
+**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. **E8**/**E9** foram acrescentados (achados durante a execução real do A2: `knowledge_sources` sem script de criação versionado; tabela `knowledge_log` não documentada) — Grupo E passa de 7 para 9 itens. Total do documento passa de 108 para **112**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
 
 ---
 
@@ -85,6 +85,8 @@ Escrever teste de integração: autenticado como agente A, tentar `SELECT` um ch
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo A. Nota em `AUDIT-SECURITY-2026.md` secção 6.
+
+> **Status em 2026-09-19: DONE.** Investigação real (Fase 1) revelou que o desenho original da migration estava errado em 3 pontos: (1) `agent-network-mcp` nunca toca `knowledge_chunks_t6` — usa `knowledge_chunks` num Supabase/projecto diferente, confirmado por `supabase_writer.py` e por zero ocorrências de `_t6` naquele repo; (2) o writer (`supabase_writer.py`) autentica como role `postgres` (`SELECT current_user, rolbypassrls` → `('postgres', True)`) — **BYPASSRLS**, logo nenhuma policy o afecta, tornando desnecessária qualquer policy `TO service_role`; (3) `knowledge_sources` existe e também precisava da mesma correcção (nunca tinha script de criação versionado — ver **E8**). Migration final, replicando o padrão já em uso em `knowledge_chunks`/`knowledge_log` (achada durante a investigação — ver **E9**): `scripts/migrations/enable_rls_knowledge_tables.sql` — `ENABLE ROW LEVEL SECURITY` + policy `*_anon_deny TO anon USING (false)` em `knowledge_chunks_t6` e `knowledge_sources`, sem isolamento por agente (modelo de identidade inexistente). Aplicado no Supabase pelo Desenvolvedor em 2026-09-19; verificado por query directa — as 4 tabelas `knowledge_*` têm agora `rowsecurity = true`. Nota em `AUDIT-SECURITY-2026.md` secção 6.
 
 ---
 
@@ -1178,7 +1180,45 @@ Mover INIT-093 para Done (piloto) ou registar decisão de não expandir além do
 
 ---
 
-*(Fim do Grupo E — 7/7 itens.)*
+### E8 — Criar script de criação para `knowledge_sources`
+
+**Quem:** Claude
+**Origem:** STATUS.md item B11 (achado durante A2, 2026-09-19) — `knowledge_sources` existe no Supabase mas nunca foi criada por nenhum script versionado; `scripts/create_t6_chunks_table.sql` só a referencia via FK (`REFERENCES knowledge_sources(source_path)`), presume que já existe
+
+**Fase 1 — Análise e Verificação**
+Confirmar, por leitura de `packages/memory/prisma/schema.prisma` (modelo `KnowledgeSource`, `@@map("knowledge_sources")`) e de `runner/plan_runner/supabase_writer.py` (`upsert_source`), o schema exacto de colunas hoje em uso — não assumir, confirmar contra o real (colunas já identificadas nesta sessão: `source_path` PK, `content_hash`, `agent_id`, `priority`, `last_ingested_at`, `chunk_count`, `git_sha`, `size_bytes`, `updated_at`).
+
+**Fase 2 — Execução**
+Escrever `scripts/create_knowledge_sources_table.sql` (`CREATE TABLE IF NOT EXISTS`, idempotente, mesmo estilo de `create_t6_chunks_table.sql`) com essas colunas. Actualizar `scripts/create_t6_chunks_table.sql` para referenciar/chamar este novo script primeiro (ordem de dependência: `knowledge_sources` antes de `knowledge_chunks_t6`, por causa da FK).
+
+**Fase 3 — Teste e Validação**
+Rodar o script novo contra uma base de teste vazia (não a produção), confirmar que a tabela fica idêntica (mesmas colunas/tipos) à que já existe em produção — comparar via `\d knowledge_sources` ou equivalente.
+
+**Fase 4 — Atualização de Status**
+Mover B11 para Done em STATUS.md.
+
+---
+
+### E9 — Investigar `knowledge_log`
+
+**Quem:** Claude + Desenvolvedor
+**Origem:** STATUS.md item B12 (achado durante A2, 2026-09-19) — tabela descoberta ao confirmar o padrão de RLS já aplicado a `knowledge_chunks`/`knowledge_log` (ambas já tinham policy `..._anon_deny`), mas `knowledge_log` não aparece em nenhum ficheiro deste repo
+
+**Fase 1 — Análise e Verificação**
+Desenvolvedor confirma no Supabase (SQL Editor, já que Claude não tem acesso à `DATABASE_URL` real neste ambiente) o schema de `knowledge_log` (colunas, tamanho, data do registo mais antigo/mais recente). Claude faz busca exaustiva por "knowledge_log" em `network-agents-setup` e `agent-network-mcp` (ambos já clonados nesta sessão) para confirmar que não é escrita por código destes dois repos.
+
+**Fase 2 — Execução**
+Se a origem não for nenhum dos 2 repos: Desenvolvedor verifica se é escrita manual (SQL Editor), por outro projecto/repo fora desta rede, ou resíduo de uma migração antiga. Documentar a origem real, ou marcar explicitamente como "origem desconhecida, a monitorizar" se não for possível determinar.
+
+**Fase 3 — Teste e Validação**
+Documento curto com a origem confirmada (ou a ausência de resposta, registada como tal) — não deixar como pergunta em aberto sem registo.
+
+**Fase 4 — Atualização de Status**
+Mover B12 para Done em STATUS.md, com a origem documentada (ou "origem desconhecida" formalmente registado, não esquecido).
+
+---
+
+*(Fim do Grupo E — 9/9 itens.)*
 
 ---
 
@@ -2179,7 +2219,7 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## Contagem final
 
-A(22) + B(13) + C(7) + D(8) + E(7) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **110 itens** (103 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22 e D8 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
+A(22) + B(13) + C(7) + D(8) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **112 itens** (105 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, D8, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
 

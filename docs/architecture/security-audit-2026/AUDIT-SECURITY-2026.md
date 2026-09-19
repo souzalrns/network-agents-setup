@@ -41,6 +41,8 @@ Sem achado novo — aponta para a mesma lacuna já conhecida (LLM03, `ToolExecut
 
 **Classificação:** ADOPT — adicionar políticas RLS chaveadas por `agent_id`/`kb`; é uma mudança pequena (`CREATE POLICY`) sobre um schema que já tem as colunas certas.
 
+> **RESOLVIDO em 2026-09-19 — RLS activado em `knowledge_chunks_t6` e `knowledge_sources`, replicando o padrão já aplicado a `knowledge_chunks` e `knowledge_log` (policy `*_anon_deny` TO anon USING false). O writer (`supabase_writer.py`, role `postgres` + BYPASSRLS) não é afectado. Sem isolamento por agente (modelo de identidade inexistente). Ver `EXECUTION-PROMPTS.md` A2.**
+
 ## 7. Secrets management — achado mais grave do que a caracterização original
 
 Confirmado: a linha `database-url: postgresql://network:network123@postgres:5432/network_agents` em `k8s/secrets.yaml` é um **valor literal hardcoded**, nem sequer um placeholder `${...}` como a linha irmã (`openai-api-key: ${OPENAI_API_KEY}`) já usa — inconsistência dentro do próprio ficheiro.

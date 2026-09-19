@@ -60,6 +60,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | **B5** | **Hermes como runtime** (não interface) — worker para browser/vision | 1-2 dias | Nada | Nossa |
 | **B6** | **MiroFish para simulação** (repo isolado, AGPL — uso interno) | 1 dia | Nada | Nossa |
 | **B10** | **Documentar/automatizar `prisma generate`** — passo em falta depois de `pnpm install`; sem ele `.prisma/client/default` não existe e testes com Prisma falham a carregar (achado durante A3: `tests/integration/ExecutionFlow.test.ts`) | 0.5h | Nada | Novo (2026-09-19, achado durante A3) |
+| **B11** | **Criar script de criação para `knowledge_sources`** — hoje só existe `scripts/create_t6_chunks_table.sql` (cria `knowledge_chunks_t6`, referencia `knowledge_sources` via FK mas não a cria); `knowledge_sources` existe no Supabase mas foi criada manualmente, fora do repo/controlo de versões | 1h | Nada | Novo (2026-09-19, achado durante A2) |
+| **B12** | **Investigar `knowledge_log`** — tabela descoberta durante o A2 (já tem RLS + policy `anon_deny`, mesmo padrão de `knowledge_chunks`), mas sem documentação no repo: quem escreve nela, com que propósito, e porque não aparece em nenhum ficheiro deste projecto | 2h | Nada | Novo (2026-09-19, achado durante A2) |
 
 ## ⏸️ Arquivado (não fazer agora)
 
@@ -85,7 +87,7 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | 1 | Esconder API Keys | ✅ | `.env` + `.gitignore` (protegido) |
 | 2 | Limpar secrets do git | ✅ | Nunca foi commitado secret |
 | 3 | Public Key DB | N/A | Não usas JWT próprio |
-| 4 | Ativar RLS | ✅ | `knowledge_chunks` tem policy `anon_deny` (verificado 2026-09-16) |
+| 4 | Ativar RLS | ✅ | `knowledge_chunks` tem policy `anon_deny` (verificado 2026-09-16); `knowledge_chunks_t6`/`knowledge_sources` (T6, este repo) RLS activado + policy `anon_deny` em 2026-09-19 (A2, ver `AUDIT-SECURITY-2026.md` secção 6) |
 | 5 | Criptografia de dados | ❌ | Dados sensíveis em repouso |
 | 6 | Auth server-side | ✅ | `auth.ts` fail-closed |
 | 7 | Restringir acessos (RBAC) | ❌ | Falta roles |
@@ -393,7 +395,7 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 - **HITL (S9):** `runner/plan_runner/hitl.py` existe e tem testes, mas **zero** ligação a `engine.py`/`langgraph_engine.py`/`cli.py` — confirmado por busca de código. M2 (TS) e M3 (teste end-to-end) dependem de S9, que continua por fazer.
 - **RAG/L5 (S10):** ao contrário do que a pergunta presumia, **já não está desligado** — `knowledge_wiring.py` liga-o de facto a `engine.py`. Falta só propagação: apenas 1 dos 12 templates de plano usa o bloco `knowledge:`.
 - **Tools/MCP:** verificação linha-a-linha confirma `packages/mcp/ToolExecutor.ts`/`MCPServer.ts` sem qualquer autorização/autenticação — e nenhuma biblioteca externa madura (FastMCP, mcp-agent) resolve isto por nós; a correcção é portar o pipeline já testado em `mcp/plan_runner/policy.py` (Python) para TypeScript.
-- **Segurança:** 3 achados novos e acionáveis — senha `network123` **hardcoded** (não placeholder) em `k8s/secrets.yaml`; `knowledge_chunks_t6` **sem Row Level Security**, qualquer código com `DATABASE_URL` lê/escreve chunks de qualquer agente; e o lado Python **não tem lockfile nenhum**, tornando o supply chain estruturalmente inverificável mesmo com rede livre (não é só bloqueio de sandbox). *(2026-09-19: item da senha `network123` resolvido do lado do repo — senha real rotacionada pelo Desenvolvedor fora do repo, no Supabase, durante esta sessão; ver `security-audit-2026/AUDIT-SECURITY-2026.md` secção 7 e `EXECUTION-PROMPTS.md` itens A1/A1b.)*
+- **Segurança:** 3 achados novos e acionáveis — senha `network123` **hardcoded** (não placeholder) em `k8s/secrets.yaml`; `knowledge_chunks_t6` **sem Row Level Security**, qualquer código com `DATABASE_URL` lê/escreve chunks de qualquer agente; e o lado Python **não tem lockfile nenhum**, tornando o supply chain estruturalmente inverificável mesmo com rede livre (não é só bloqueio de sandbox). *(2026-09-19: item da senha `network123` resolvido do lado do repo — senha real rotacionada pelo Desenvolvedor fora do repo, no Supabase, durante esta sessão; ver `security-audit-2026/AUDIT-SECURITY-2026.md` secção 7 e `EXECUTION-PROMPTS.md` itens A1/A1b. RLS de `knowledge_chunks_t6` também RESOLVIDO — activado + policy `anon_deny`, aplicado directamente no Supabase; ver secção 6 e `EXECUTION-PROMPTS.md` item A2.)*
 - **Evaluation/Custo:** `model_tier` (planner/executor/verifier) é só schema, zero implementação — mesma classe de "campo morto" que `budget_max_replans`. LiteLLM Router+Budget Manager recomendado (ADOPT) para fechar o gap de Unbounded Consumption (LLM06).
 - **Observability:** correcção a `GOV-FASE1.md` — o lado TypeScript **não está ausente**, existe (`packages/observability/Tracer.ts`), mas é uma reimplementação manual com um **bug real** (`traceId`/`spanId` trocados) e memory leak, usada num único ponto do código. Recomenda-se substituir pelo SDK oficial OpenTelemetry.
 - **Bootstrap:** `AGENTS.md` (raiz) e `docs/generated/AGENTS.md` nunca foram indexados em `BOOTSTRAP.md`; o segundo está desactualizado ("22 agentes", real são 24).
