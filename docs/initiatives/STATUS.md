@@ -331,3 +331,84 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 **Números de teste corrigidos:** `README.md` (raiz) já não tinha o número errado (removido numa tarefa anterior). `runner/README.md` tinha "51 testes, 83% cobertura" — confirmado por `pytest` real: **167 testes, todos a passar, 87% de cobertura**. Corrigido.
 
 *Nota: os números "skills/ = 50" e "agents/ = 21" registados acima (bloco de 2026-09-16) estão desactualizados pelo trabalho de hoje (G2 +16 skills, G4 +13 agentes, B2 +1 agente) — não recalculados nesta tarefa, fica como pendência de inventário.*
+
+
+## 📋 Resumo do dia 2026-09-18 (auditoria de agentes, Fase 1)
+
+**Auditoria de Agentes iniciada** (`docs/architecture/agents-audit/`), mesma disciplina de Master Plan/Governança/Memória (código real > README). Escopo desta fase: Agent Frameworks + Multi-Agent Architectures + Runtime/Execution Engine + Planning.
+
+**Achado de arrancada:** `docs/architecture/patterns-from-orchestrators/` já cobria 8 frameworks (LangGraph, Agno, Timbal, CrewAI, PydanticAI, Mastra, AG2, Haystack) com 18 padrões extraídos (O01–O18) — não refeito. A Fase 1 cobriu só o que faltava: **Microsoft Agent Framework, Google ADK, OpenAI Agents SDK, LlamaIndex (agentes/workflows), DSPy, smolagents**, 1 auditoria completa por framework via subagentes paralelos, código real verificado (não marketing). Ver `agents-audit/FASE1-AGENTES.md` (síntese) e `agents-audit/deep/*.md` (detalhe por framework).
+
+**Classificação final: os 6 são EXTRACT** (nenhum ADOPT/ADAPT) — todos são frameworks opinativos completos, incompatíveis com a regra de não substituir o runtime Plan-Execute/MCP próprio por um framework externo. 33 padrões novos extraídos (O26–O58), destaque para **O48** (`BootstrapFewShot` do DSPy — gerar traces reais do próprio agente, filtrar por métrica, usar como few-shot; aplicável directamente com o `events.jsonl` já existente).
+
+**Achado decisivo (corrigido após primeira entrega — faltava auditar o próprio repo primeiro, como `GOV-FASE1`/`FASE1-MEMORIA` fizeram):** este repo já tem **dois runtimes de agentes**, não zero. TypeScript (`packages/core/src/orchestrator/`): `Router.ts`/`Planner.ts`/`Executor.ts` são **REAL** (`Planner.ts` chama LLM de facto para escolher agentes e decompor em passos), mas `Orchestrator.ts` que devia ligar os três é **MOCK** — peças reais, desligadas. Python (`runner/plan_runner/`): motor "native" sequencial sem LLM-planning nem checkpoint; motor "langgraph" (opt-in) já tem **checkpoint real via `SqliteSaver`** e **execução paralela por ondas** — o padrão O03 de `patterns-from-orchestrators` já está implementado em código, não é só "a estudar". `budget_max_replans` existe no schema do plano e nunca é lido em lado nenhum — campo morto. HITL `edit` só tem efeito real no motor `langgraph` (via `--payload-file`), não no motor `native` (aceite mas ignorado). "Multi-agente" hoje é, na prática, um humano/Claude a resolver `pending_steps/request.json` → `result.json` manualmente — não há chamada agente→agente automática em lado nenhum. Ver `agents-audit/FASE1-AGENTES.md` secção 1.
+
+**Achado que cruza com `GOV-FASE1.md`:** o Google ADK teve o mesmo bug que o nosso `HitlManager.ts` tem hoje (recusa humana não bloqueava a tool, corrigido só recentemente) — e esta fase encontrou o paralelo ainda mais próximo, no próprio `runner/plan_runner/`: o motor `native` aceita a decisão `edit` sem lhe dar efeito. Confirma que o padrão de enforcement no boundary (O26/O34) precisa de disciplina própria, não vem "grátis" nem das implementações de referência das grandes empresas.
+
+**Achado de processo (fora do escopo técnico, mas registado por pedido explícito):** a queixa de "falta de direcionamento/planejamento — algo que defina escopo, desmembre em fases, execute uma a uma" foi investigada. Já existe `agents/meta/planejador.agent.md` (Fast-Path/Full Cycle) e `agents/meta/arquitetura-agentes.agent.md`, mas **nenhum cobre o papel de PMO/Project Director** (gestão de portfólio de iniciativas, não de uma tarefa). É lacuna real de arquitectura organizacional, não resolvida por nenhum dos 14 frameworks já auditados (8 de `patterns-from-orchestrators` + 6 desta fase) — nenhum se propõe a ser um PMO. Decisão pendente humana.
+
+**Pendente:** Fase 2 (Skills/Tool Use/MCP/Communication — verificar sobreposição com `patterns-from-hermes/`/`patterns-from-mcp/` antes de nova pesquisa) e Fase 3 (Coding/Research agents, Evaluation, Testing).
+
+
+## 📋 Resumo do dia 2026-09-18 (auditoria de agentes, Fase 2)
+
+**Fase 2 concluída** (`agents-audit/FASE2-AGENTES.md`). Escopo: Tool Use + Agent Communication (A2A/ACP) + ecossistema MCP sob perspectiva de agentes. Skills (2.7) e Observability (2.11) **não foram refeitos** — já cobertos por `patterns-from-hermes/` (ciclo de vida candidate→active→patched→archived) e por `memory/FASE3-MEMORIA.md` secção 5 (Langfuse, OpenTelemetry, RAGAS), respectivamente.
+
+**Achado interno (Tool Use), por leitura directa, sem pesquisa externa:** a tool MCP `run_plan` só invoca o motor "native" do `plan_runner` (nunca o motor "langgraph", que tem checkpoint real e execução paralela — achado da Fase 1); e `resume_plan` só aceita `approve|reject`, não `edit` (que o motor langgraph já suporta via `--payload-file`). A superfície MCP exposta é mais estreita do que a capacidade real do runtime por baixo.
+
+**Agent Communication:** ACP (IBM/BeeAI) está **morto** — arquivado desde ago/2025, fundido no A2A. A2A (Google→Linux Foundation→Agentic AI Foundation, ago/2026) é maduro (25,6k★, spec 1.0, 6 SDKs oficiais, adoptado de facto por Google ADK e Microsoft Agent Framework) mas classificado **REFERENCE**, não ADOPT — resolve comunicação entre agentes de organizações diferentes, um problema que o PCU não tem hoje (o `pending_steps/request.json` → `result.json` é IPC dentro da mesma confiança, não cross-org). Achado extra: a alegação de "OpenAI Agents SDK suporta A2A", repetida por vários blogs, foi **contradita** por verificação directa (issues #472/#1374 fechadas sem PR).
+
+**Ecossistema MCP — achado mais importante desta fase:** verificado por leitura de código que `mcp-agent` (lastmile-ai, ~8.5k★, a implementação de referência mais citada dos padrões "Building Effective Agents" da Anthropic) **também não verifica scope/capacidade antes de chamar uma tool** — a mesma lacuna que `packages/mcp/ToolExecutor.ts` tem hoje (`GOV-FASE1.md`). Confirma que não existe framework cliente maduro que resolva isto por nós; a correção continua a ser interna (portar o pipeline sanitize→auth→rate→scope→execute→audit já testado em `mcp/plan_runner/policy.py`). Achado à parte, fora do conhecimento base do modelo (verificado por fetch directo, recomenda-se confirmação humana): a spec MCP oficial já avançou para **2026-07-28**, que deprecia Sampling/Roots/Logging e Dynamic Client Registration.
+
+**11 novos padrões (O59–O69)**, destaque para O66 (agente-como-servidor MCP, confirmado em 3 implementações independentes — Microsoft Agent Framework, mcp-agent, FastMCP — elevado a **ADOPT como princípio de desenho**, não como dependência).
+
+**Pendente (à data):** Fase 3 (Coding/Research agents, Evaluation, Testing, Agentes especializados por domínio) — **concluída ainda no mesmo dia, ver bloco seguinte.**
+
+
+## 📋 Resumo do dia 2026-09-18/19 (auditoria de agentes, Fases 3-6 — CONCLUÍDA)
+
+**Auditoria de Agentes concluída de ponta a ponta.** Fases 3-5 (Knowledge/Ingestion, Evaluation+Testing, Coding/Research Agents + Agentes Especializados) e Fase 6 (síntese final) executadas em sequência, sem pausa para confirmação, a pedido explícito. Ficheiros: `agents-audit/FASE3-AGENTES.md`, `FASE4-AGENTES.md`, `FASE5-AGENTES.md`, e a síntese **`agents-audit/AUDIT-AGENTS.md`**.
+
+**Achado central da síntese final:** o mesmo padrão — peças reais e funcionais, desligadas umas das outras — repetiu-se em **5 fases diferentes**, sem ter sido procurado deliberadamente: `Orchestrator.ts` MOCK apesar de Router/Planner/Executor REAL (Fase 1); superfície MCP mais estreita que o runtime (Fase 2); `yt-dlp`/`faster-whisper` já em produção mas nunca ligados ao RAG (Fase 3); `budget_max_replans` como campo morto (Fase 1); `AgentConfig` sem campo `profile` apesar do exercício de extração já ter sido feito manualmente em `MCP-MAPPING.md` (Fase 5). Conclusão da síntese: o trabalho de maior retorno imediato é ligar peças já construídas, não adotar mais nenhum dos ~45 projetos avaliados nas 5 fases — nenhum foi classificado ADOPT/ADAPT como substituto de runtime.
+
+**Achados por fase:**
+- **Fase 3 (Knowledge/Ingestion):** recomendação mínima = Crawl4AI (web) + MarkItDown (documentos) + gitingest (GitHub código). `yt-dlp`+`faster-whisper` já existem no repo irmão, só falta ligação.
+- **Fase 4 (Evaluation/Testing):** DeepEval classificado **ADOPT** (nativo pytest, local via Ollama, cobre trajetória de tool-use). Pendência da auditoria de memória sobre o Ragas **resolvida** — o projeto existe e tem métricas de agente reais.
+- **Fase 5 (Coding Agents):** achado de metodologia — `OpenHands/OpenHands` (88.401★, citado na auditoria de memória) **já não é o runtime do agente**, é hoje uma app Electron de controlo; o loop real vive em `OpenHands/software-agent-sdk`, só 1.134★. SWE-agent classificado **ADAPT** (windowed editor com 2x SWE-Bench comprovado). Confirmado por código: `config/agents.config.ts` continua uma lista plana de 24 agentes, sem campo `profile` — a recomendação central da revisão de arquitetura discutida no início desta auditoria ainda não tem nenhuma implementação.
+
+**Fecho da queixa de "falta de direcionamento/planejamento" que abriu esta auditoria:** confirmado na síntese final (secção 10) que nenhum dos ~45 projetos auditados resolve isto — não é lacuna técnica, é decisão humana de arquitetura organizacional (PMO/Project Director), já registada como tal desde a Fase 1.
+
+**Nada commitado ainda** — todos os ficheiros estão no working tree do clone local (`C:\Users\souza\Claude Code\network-agents-setup`), sessão sem push configurado (clone anónimo/read-only).
+
+
+## 📋 Resumo do dia 2026-09-19 — Ronda de auditorias adicionais (Ingestion, Tools/MCP, Orchestration, Security, Evaluation, Observability) + validação cruzada de 7 recomendações anteriores
+
+**6 novos domínios de auditoria + 1 documento de validação cruzada**, todos em pastas próprias sob `docs/architecture/`: `ingestion-audit/`, `tools-mcp-audit/`, `orchestration-audit/`, `security-audit-2026/`, `evaluation-audit/`, `observability-audit/`, `meta-validation/`. Metodologia igual às anteriores — código real > README, verificação directa antes de qualquer classificação.
+
+**Achado transversal desta ronda (confirma e estende o padrão já visto na auditoria de Agentes):** validei as 7 "recomendações supostamente exageradas" pedidas (Governança/AGT, HITL/contrato-v1, 33-agentes, 50-skills, Bootstrap/CLAUDE.md, Segurança/B2, RAG/L5) e **nenhuma delas era, de facto, exagerada** — as auditorias anteriores já eram precisas e auto-críticas. O padrão real, repetido em quase todas as 7: peças reais e bem desenhadas, que ficaram por ligar/indexar/regenerar depois de prontas.
+
+**Achados mais importantes desta ronda:**
+- **HITL (S9):** `runner/plan_runner/hitl.py` existe e tem testes, mas **zero** ligação a `engine.py`/`langgraph_engine.py`/`cli.py` — confirmado por busca de código. M2 (TS) e M3 (teste end-to-end) dependem de S9, que continua por fazer.
+- **RAG/L5 (S10):** ao contrário do que a pergunta presumia, **já não está desligado** — `knowledge_wiring.py` liga-o de facto a `engine.py`. Falta só propagação: apenas 1 dos 12 templates de plano usa o bloco `knowledge:`.
+- **Tools/MCP:** verificação linha-a-linha confirma `packages/mcp/ToolExecutor.ts`/`MCPServer.ts` sem qualquer autorização/autenticação — e nenhuma biblioteca externa madura (FastMCP, mcp-agent) resolve isto por nós; a correcção é portar o pipeline já testado em `mcp/plan_runner/policy.py` (Python) para TypeScript.
+- **Segurança:** 3 achados novos e acionáveis — senha `network123` **hardcoded** (não placeholder) em `k8s/secrets.yaml`; `knowledge_chunks_t6` **sem Row Level Security**, qualquer código com `DATABASE_URL` lê/escreve chunks de qualquer agente; e o lado Python **não tem lockfile nenhum**, tornando o supply chain estruturalmente inverificável mesmo com rede livre (não é só bloqueio de sandbox). *(2026-09-19: item da senha `network123` resolvido do lado do repo — senha real rotacionada pelo Desenvolvedor fora do repo, no Supabase, durante esta sessão; ver `security-audit-2026/AUDIT-SECURITY-2026.md` secção 7 e `EXECUTION-PROMPTS.md` itens A1/A1b.)*
+- **Evaluation/Custo:** `model_tier` (planner/executor/verifier) é só schema, zero implementação — mesma classe de "campo morto" que `budget_max_replans`. LiteLLM Router+Budget Manager recomendado (ADOPT) para fechar o gap de Unbounded Consumption (LLM06).
+- **Observability:** correcção a `GOV-FASE1.md` — o lado TypeScript **não está ausente**, existe (`packages/observability/Tracer.ts`), mas é uma reimplementação manual com um **bug real** (`traceId`/`spanId` trocados) e memory leak, usada num único ponto do código. Recomenda-se substituir pelo SDK oficial OpenTelemetry.
+- **Bootstrap:** `AGENTS.md` (raiz) e `docs/generated/AGENTS.md` nunca foram indexados em `BOOTSTRAP.md`; o segundo está desactualizado ("22 agentes", real são 24).
+
+**Nada commitado, nada corrigido no código** — esta ronda é só auditoria/descoberta, como as anteriores. As correcções concretas (S9, RLS, lockfile Python, `Tracer.ts`, indexação do `BOOTSTRAP.md`) ficam registadas para decisão humana.
+
+
+## 📋 Resumo do dia 2026-09-19 (parte 2) — Refeitura em padrão ouro de Ingestão/Tools-MCP/Orquestração + correção de um erro de 4 documentos
+
+A pedido explícito do utilizador (as 3 auditorias acima tinham sido feitas por consolidação/citação, não por pesquisa externa nova — diferente do rigor das outras). Refeitas uma a uma com subagentes de pesquisa dedicados e leitura de código própria, sem reaproveitar texto anterior.
+
+**Ingestão:** pipeline interno (989 linhas) lido por completo. CVEs reais encontrados em Crawl4AI (4 advisories 2026, uma delas CVSS 9.6), Firecrawl (2 SSRF históricos), MarkItDown (RCE via pdfminer.six + zip bomb aberto sem fix), Docling (RCE via PyYAML, mitigável por versão), gitingest (issue de segurança aberta — vazamento de PAT — e projeto órfão há 13+ meses, revisto de ADOPT para **ADAPT com reservas**), yt-dlp (16 CVEs reais catalogados, incluindo um CVSS 8.8, todos condicionais a flags perigosas).
+
+**Tools/MCP:** leitura completa de todos os ficheiros de `packages/mcp/src/`. **3 achados novos e graves, não vistos antes:** `query_database` executa qualquer SQL do agente sem restrição (mesma classe de falha que descontinuou o servidor Postgres oficial da Anthropic); `http_request` sem proteção SSRF nenhuma (3 CVEs reais citados como precedente); `filesystem.ts` com bug clássico de path traversal — **cuja correção já existe no lado Python do mesmo repo** (`policy.py:sanitize_repo_path`), só nunca foi replicada para TypeScript.
+
+**Orquestração — o achado mais importante desta sessão inteira:** `Orchestrator.ts` (TypeScript) **não é mock**. Confirmado por leitura completa (480 linhas): liga Router→Planner→Executor de facto, com lógica real de segurança/deliberação/orçamento, e há um entry point real e completo (`apps/api/src/index.ts`) que o instancia com os 24 agentes de `config/agents.config.ts`, tools MCP reais, Postgres, OpenAI. **Isto corrige um erro repetido em `CORE-MAPPING.md` → `GOV-FASE1.md` → toda a auditoria de Agentes (Fase 1, síntese final) → várias entradas deste STATUS.md.** A formulação correta: o código é real dos dois lados (TS e Python); a diferença é de maturidade **operacional** — Python tem 167 testes que correm de facto, TS tem código real nunca validado a correr contra infraestrutura verdadeira (Postgres/OpenAI), e um teste de integração (`ExecutionFlow.test.ts`) com um bug de assinatura de construtor (5 argumentos passados, 6 exigidos) ainda por confirmar se mascara alguma falha. Achado relacionado: `SecurityManager.verifyPassword()` já foi corrigido (bcrypt real) desde 17/09 às 21:18 — `GOV-FASE1.md`, escrito no dia seguinte, citou a versão antiga (sempre `true`) sem reverificar.
+
+**Lição registada explicitamente nos documentos corrigidos:** nem a documentação interna deste repo (`CORE-MAPPING.md`) é imune a precisar de verificação directa antes de ser citada como facto — a mesma disciplina "código > README" aplica-se a "código > documento de mapeamento do próprio repo".
+
+Documentos com errata visível adicionada (não apagados, corrigidos com nota no topo): `agents-audit/FASE1-AGENTES.md`, `agents-audit/AUDIT-AGENTS.md`. Documento com reescrita completa: `orchestration-audit/AUDIT-ORCHESTRATION.md`.

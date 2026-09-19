@@ -1,3 +1,6 @@
+# NOTA: este ficheiro assume que o pipeline de deploy faz substituição
+# de ${...} (envsubst/Helm/Kustomize) antes do kubectl apply.
+# Ver EXECUTION-PROMPTS.md A1 — TODO: confirmar o pipeline real.
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -21,7 +24,10 @@ spec:
         - name: POSTGRES_USER
           value: network
         - name: POSTGRES_PASSWORD
-          value: network123
+          valueFrom:
+            secretKeyRef:
+              name: network-agents-secrets
+              key: postgres-password
         - name: POSTGRES_DB
           value: network_agents
         ports:
