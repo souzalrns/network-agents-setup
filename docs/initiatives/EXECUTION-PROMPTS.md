@@ -13,7 +13,7 @@ Depois de todo o documento estar escrito (Grupos A-J), foi feita uma passagem de
 
 **Achados adicionais encontrados durante esta verificação, fora do escopo dos 6 erros reportados — não corrigidos, a decidir depois:** (a) a linha do item F12/I11 ("ex. os 108 itens dos grupos A-H") está ela própria incorrecta — A-H somam 91, não 108 — mas não fazia parte dos 6 erros pedidos; (b) o item **G5** do `STATUS.md` ("2 achados não resolvidos do MCP-MAPPING.md") não tem nenhum item correspondente nos Grupos A-J deste documento — pode ser uma lacuna real de cobertura, a confirmar antes de assumir que "nenhum item do STATUS.md ficou de fora" (frase final da Contagem final).
 
-**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. **E8**/**E9** foram acrescentados (achados durante a execução real do A2: `knowledge_sources` sem script de criação versionado; tabela `knowledge_log` não documentada) — Grupo E passa de 7 para 9 itens. Total do documento passa de 108 para **112**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
+**Adenda em 2026-09-19 (depois desta verificação, itens novos, não erros):** **A22** foi acrescentado (vulnerabilidades Dependabot reportadas no push do commit `2d03b4b`) — Grupo A passa de 21 para 22 itens. **D8** foi acrescentado (achado durante a execução real do A3: `prisma generate` em falta pós-install) — Grupo D passa de 7 para 8 itens. **E8**/**E9** foram acrescentados (achados durante a execução real do A2: `knowledge_sources` sem script de criação versionado; tabela `knowledge_log` não documentada) — Grupo E passa de 7 para 9 itens. **D9** foi acrescentado (achado durante a execução real do A7: suite do runner demora 12min, concentrados em 2 ficheiros lentos, fácil de confundir com bloqueio) — Grupo D passa de 8 para 9 itens. Total do documento passa de 108 para **113**. Consistente com a metodologia acima: cada mudança de contagem fica registada aqui, nunca só silenciosamente no número final.
 
 ---
 
@@ -177,6 +177,8 @@ Teste com `selector` contendo meta-caracteres de regex (ex. `"(a|a)*"`) confirma
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo A.
 
+> **Status em 2026-09-19: DONE.** `cheerio` adicionado como dependência de `packages/mcp`. Extracção de título/matches trocada para `cheerio.load(html)` + `$(selector).text()`/`$('title').text()` — `selector` nunca mais interpolado em `RegExp`. Teste novo `tests/unit/web.test.ts` (3 testes: selector com meta-caracteres não quebra; selector válido extrai conteúdo real; sem selector devolve só título) — 3/3 passou. Suite completa: 94/94 testes que correm passam (subiu de 91 para 94), 0 regressões. Nota em `AUDIT-TOOLS-MCP.md` secção 2 (SSRF de `http_request` continua pendente, ver A4/A5).
+
 ---
 
 ### A7 — `embedder.py`: Gemini key por header
@@ -195,6 +197,8 @@ Teste de integração real (1 chamada) contra a API do Gemini confirmando respos
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo A.
+
+> **Status em 2026-09-19: DONE.** Guarda trocada para `headers={"x-goog-api-key": key}`. `test_embedder.py` actualizado (2 dos 8 testes tinham `fake_post` com assinatura estrita sem `headers=` — corrigidos para reflectir o novo comportamento, não o antigo). Confirmado por chamada real contra a API Gemini: 768 dimensões, sem erro. Suite completa do runner (`pytest`, 172 testes): **172/172 passou, 0 regressões** — achado à parte durante esta verificação: `test_crash_recovery.py`/`test_real_plans.py` demoram a maior parte dos 12 minutos da suite (não estão bloqueados, só são lentos ao ponto de parecer presos com um timeout curto) — ver **D9**.
 
 ---
 
@@ -462,6 +466,10 @@ Re-rodar o scan CodeQL, confirmar que o alerta específico fecha. Teste unitári
 **Fase 4 — Atualização de Status**
 Mover para Done, fechar o alerta #6 (o #5 — `verifyPassword` — já está fechado, confirmado nesta sessão).
 
+> **Status em 2026-09-19: DONE — sem Fase 2, não havia nada para corrigir.** `escapeMdCell()` já escapava backslash antes de pipe correctamente desde o commit `a828bf2` (2026-09-17 21:17), 2 dias antes desta sessão e antes do próprio `EXECUTION-PROMPTS.md` ter sido escrito — mesmo padrão do **C6** (item já resolvido, documento nunca revalidado). Verificado empiricamente (6 casos, incluindo `\|` e `path\to|file`) e por `git log`. Único gap real: o commit prometia "testable" mas não tinha teste — confirmado que `tests/unit/generate-agents-doc.test.ts` já o tem (`describe('escapeMdCell — CodeQL #6 ...')`, 4 testes, 4/4 a passar), por isso nem esse teste precisou de ser escrito de novo. Nota em `STATUS.md`, resumo 2026-09-17 (linha do alerta #6).
+
+**Alerta geral (padrão recorrente, 3ª ocorrência nesta sessão — C6, A1, A21):** pelo menos 3 itens deste documento descreviam como pendente algo que o código já tinha resolvido antes do documento ser escrito. Fase 1 de todo item já manda "reconfirmar por leitura directa antes de executar" — mas vale registar explicitamente: **antes de assumir Fase 2 necessária em qualquer item futuro deste documento, confirmar por `git log -- <ficheiro>` se já não há um commit posterior à Origem citada que resolva o mesmo achado.** Um "achado real" pode ter sido corrigido depois de documentado e antes de ser lido de novo — a data da Origem não é garantia de estado actual.
+
 ---
 
 ### A22 — Vulnerabilidades Dependabot pós-push (9 alertas)
@@ -524,6 +532,8 @@ Rodar o teste ANTES da correcção e registar se passa ou falha (confirma ou ref
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo B. Registar em `AUDIT-ORCHESTRATION.md` secção 3 se o teste passava ou falhava antes da correcção — é um dado novo que a auditoria não pôde confirmar por falta de `node_modules`.
+
+> **Status em 2026-09-19: DONE (correcção); verificação por execução pendente.** 2 bugs corrigidos: (a) `mockHitl` como 6º argumento; (b) `vi` em falta no import de `vitest` (achado durante a correcção, não estava no achado original — o ficheiro usava `vi.fn()` 6 vezes sem o importar, com `globals: false` no `vitest.config.ts`). `tsc --noEmit` (config equivalente ao `tsconfig.typecheck.json`, estendida para cobrir `tests/`) confirma zero erros no ficheiro — os únicos erros restantes são no `packages/memory/src/*`, todos `Module '@prisma/client' has no exported member 'PrismaClient'`, o mesmo bloqueio pré-existente de **B10/D8**. Não foi possível correr o teste de facto (mesma razão) — a hipótese da auditoria ("passava por acaso, sem invocar `hitlManager`") continua NOT VERIFIED, a confirmar quando B10/D8 fechar. Nota em `AUDIT-ORCHESTRATION.md` secção 3.
 
 ---
 
@@ -1040,7 +1050,26 @@ Mover B10 para Done em STATUS.md.
 
 ---
 
-*(Fim do Grupo D — 8/8 itens.)*
+### D9 — Isolar testes lentos da suite unitária do runner
+
+**Quem:** Claude
+**Origem:** STATUS.md item B13 (achado durante A7, 2026-09-19) — `tests/test_crash_recovery.py`/`tests/test_real_plans.py` não bloqueiam (correram e passaram, 172/172), mas a suite completa do runner demora 741s (12m21s), quase todo esse tempo concentrado nestes 2 ficheiros; fácil de confundir com um teste preso quando se usa um timeout curto
+
+**Fase 1 — Análise e Verificação**
+Confirmar, por perfilagem simples (`pytest --durations=10`), quais os testes individuais mais lentos dentro destes 2 ficheiros, e a causa (sleeps reais, retries, espera de infra simulada) antes de decidir marcá-los.
+
+**Fase 2 — Execução**
+Marcar os testes lentos com `@pytest.mark.integration` (registar a marca em `pytest.ini`/`pyproject.toml` para não gerar warning). Configurar `addopts = "-m 'not integration'"` como omissão, com um alvo separado (`pytest -m integration` ou script `test:integration`) para os correr explicitamente.
+
+**Fase 3 — Teste e Validação**
+`pytest` (sem flags) corre em segundos, não minutos, e exclui os marcados. `pytest -m integration` continua a correr os mesmos testes e continuam a passar (172/172, incluindo os marcados).
+
+**Fase 4 — Atualização de Status**
+Mover B13 para Done em STATUS.md.
+
+---
+
+*(Fim do Grupo D — 9/9 itens.)*
 
 ---
 
@@ -2219,7 +2248,7 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## Contagem final
 
-A(22) + B(13) + C(7) + D(8) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **112 itens** (105 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, D8, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
+A(22) + B(13) + C(7) + D(9) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **113 itens** (106 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, D8, D9, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
 

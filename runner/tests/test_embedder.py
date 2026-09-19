@@ -59,8 +59,9 @@ def test_embed_whitespace_returns_empty(monkeypatch):
 def test_embed_calls_gemini_with_correct_payload(monkeypatch):
     captured = {}
 
-    def fake_post(url, *, params=None, json=None, timeout=None):
+    def fake_post(url, *, headers=None, params=None, json=None, timeout=None):
         captured["url"] = url
+        captured["headers"] = headers
         captured["params"] = params
         captured["json"] = json
         return _FakeResponse(200, _valid_payload())
@@ -69,7 +70,8 @@ def test_embed_calls_gemini_with_correct_payload(monkeypatch):
     out = embedder.embed_text("ola mundo")
 
     assert len(out) == 768
-    assert captured["params"] == {"key": "fake-key-for-tests"}
+    assert captured["headers"] == {"x-goog-api-key": "fake-key-for-tests"}
+    assert captured["params"] is None
     assert captured["json"]["model"] == "models/gemini-embedding-001"
     assert captured["json"]["outputDimensionality"] == 768
     assert captured["json"]["content"]["parts"][0]["text"] == "ola mundo"
@@ -112,7 +114,7 @@ def test_embed_batch_returns_list_of_embeddings(monkeypatch):
 def test_embed_truncates_oversized_text(monkeypatch):
     captured = {}
 
-    def fake_post(url, *, params=None, json=None, timeout=None):
+    def fake_post(url, *, headers=None, params=None, json=None, timeout=None):
         captured["json"] = json
         return _FakeResponse(200, _valid_payload())
 

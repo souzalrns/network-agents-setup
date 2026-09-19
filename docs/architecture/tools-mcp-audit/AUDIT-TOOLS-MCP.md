@@ -49,6 +49,8 @@
 
 Para `scrape_webpage`: interpolar `selector` (vindo do agente) numa `RegExp` construída em runtime é uma instância de **CWE-1333 (Regex DoS)** — não encontrei um CVE nomeado exatamente nesta forma em MCP (**NOT VERIFIED** como incidente documentado), mas a correção (trocar regex por parser DOM real, `cheerio`, `selector` passado como argumento de query CSS nunca interpolado em padrão) é de baixo risco e alto retorno.
 
+> **RESOLVIDO em 2026-09-19 (apenas a parte de `scrape_webpage`/regex — o SSRF de `http_request` continua pendente, ver A4/A5) — `web.ts` passa a usar `cheerio.load(html)` + `$(selector).text()`/`$('title').text()`, `selector` nunca mais interpolado em `RegExp`. Testado com selector contendo meta-caracteres de regex (`"(a|a)*"`, tratado como query CSS, não quebra) e selector válido (`"p"`, extrai conteúdo real). Suite completa: 94/94 testes que correm passam, 0 regressões. Ver `EXECUTION-PROMPTS.md` A6.**
+
 **Classificação: BUILD (prioridade 2 — potencialmente tão grave quanto o SQL num ambiente cloud, onde SSRF pode expor endpoints de metadata/credenciais IAM, mas tipicamente exige um passo adicional de exploração).**
 
 **Regra adicional confirmada pela pesquisa:** nunca seguir redirects HTTP automaticamente numa tool de fetch exposta a agente — um alvo aprovado pode responder `302` para um alvo interno, contornando qualquer validação feita só sobre a URL original.

@@ -1,3 +1,4 @@
+import * as cheerio from 'cheerio';
 import { MCPTool } from '../ToolRegistry';
 export function createWebTools(): MCPTool[] {
   return [
@@ -47,10 +48,13 @@ export function createWebTools(): MCPTool[] {
         try {
           const response = await fetch(url, { headers: { 'User-Agent': 'MCP-Agent/1.0' } });
           const html = await response.text();
-          const result: any = { url, title: html.match(/<title>(.*?)<\/title>/)?.[1] || 'No title', contentLength: html.length };
+          const $ = cheerio.load(html);
+          const result: any = { url, title: $('title').text() || 'No title', contentLength: html.length };
           if (selector) {
-            const matches = html.match(new RegExp(`<${selector}>(.*?)</${selector}>`, 'gs'));
-            result.matches = matches || [];
+            const matches = $(selector)
+              .map((_, el) => $(el).text())
+              .get();
+            result.matches = matches;
           }
           return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
         } catch (error: any) {

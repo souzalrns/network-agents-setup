@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Orchestrator } from '../../packages/core/src/orchestrator/Orchestrator';
 import { Router } from '../../packages/core/src/orchestrator/Router';
 import { Planner } from '../../packages/core/src/orchestrator/Planner';
@@ -36,7 +36,8 @@ describe('Execution Flow Integration', () => {
       router,
       planner,
       executor,
-      memory as any
+      memory as any,
+      mockHitl as any
     );
     const result = await orchestrator.processRequest('Test request', { domain: 'business' });
     expect(result).toBeDefined();

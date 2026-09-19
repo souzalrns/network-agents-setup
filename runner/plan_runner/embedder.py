@@ -76,7 +76,7 @@ def embed_text(text: str, *, timeout: float = 30.0) -> list[float]:
     try:
         r = httpx.post(
             GEMINI_URL,
-            params={"key": key},
+            headers={"x-goog-api-key": key},
             json=body,
             timeout=timeout,
         )
