@@ -772,6 +772,8 @@ Portar a mesma matriz de casos que `test_policy.py` (Python) já cobre: perfil `
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo C. Nota em `AUDIT-TOOLS-MCP.md` secção 4 e em `GOV-FASE1.md` (o achado original desta lacuna).
 
+> **Status em 2026-09-19: DONE.** Discrepâncias reais entre o brief e `policy.py` (assinaturas, SCOPES de outras tools, perfis mais granulares — ver relatório da Fase 1 na conversa) — resultado é um **desenho novo inspirado no padrão**, não um porte 1:1. `packages/mcp/src/tools/ToolPolicy.ts` (novo): `authorize()`/`rateLimit()`/`audit()`, SCOPES próprio para as 6 tools reais, 7 razões replicadas fielmente do Python. Perfil por omissão `strict` (decisão consciente, diferente do `moderate` do Python — fail-closed). Integrado em `ToolExecutor.executeTool()` com 3º parâmetro novo `context: {caller?, providedKey?}` (não existia nenhum conceito de caller/key antes). `tests/unit/ToolPolicy.test.ts` novo (12 testes, cobre os 7 reasons + rate-limit + audit) — 12/12. Suite completa: 106/106 (subiu de 94). Nota em `AUDIT-TOOLS-MCP.md` secção 4 e `GOV-FASE1.md` (secção 2b). `MCPServer.ts`/`MCPClient.ts` (autenticação HTTP/transporte) continuam pendentes — ver C2.
+
 ---
 
 ### C2 — Decisão TS vs. Python MCP

@@ -85,6 +85,8 @@ Ressalva não verificada: se o servidor permitir criação de symlinks dentro de
 
 **Confirmado por pesquisa externa (não repetida em detalhe aqui, ver histórico desta sessão):** nem FastMCP nem `mcp-agent` (a implementação mais citada dos padrões "Building Effective Agents" da Anthropic) resolvem isto por nós — `Agent.call_tool()` do `mcp-agent` também não verifica scope antes de invocar.
 
+> **RESOLVIDO em 2026-09-19 — pipeline `authorize→rateLimit→execute→audit` portado (desenho novo, inspirado no padrão, não porte 1:1 — ver nota abaixo) de `policy.py` (Python) para `ToolPolicy.ts` (TypeScript), integrado em `ToolExecutor.executeTool()`. SCOPES desenhado de novo para as 6 tools reais deste lado (`read_file`/`write_file`/`list_directory`/`http_request`/`scrape_webpage`/`query_database`) — o SCOPES do Python cobre tools completamente diferentes (`list_templates`/`get_status`/`run_plan`/`resume_plan`, do `plan_runner`), não havia nada para portar 1:1 aí. 7 razões de negação/permissão replicadas fielmente (`unknown_tool`, `invalid_key`, `permissive`, `read_ok`, `key_configured`, `allow_mutate_env`, `moderate_lab_open`, `strict_requires_key`). Diferença deliberada: perfil por omissão é `strict` (fail-closed), não `moderate` como no Python. Testado: `tests/unit/ToolPolicy.test.ts` (12 testes) + suite completa (106/106 testes que correm, subiu de 94). `MCPServer.ts` (autenticação HTTP) e `MCPClient.ts` (nunca envia auth) continuam pendentes — ver C2. Ver `EXECUTION-PROMPTS.md` C1.**
+
 ## 5. Prioridade de correção consolidada
 
 1. **`query_database`** — impacto: controlo total da base de dados subjacente; precedente directo (servidor oficial da Anthropic descontinuado por isto).
