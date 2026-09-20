@@ -10,6 +10,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.slow  # B13/D9: simula crash via subprocess real, custo alto
+
 
 def _corrupt_status(status_file: Path) -> None:
     """Simula crash: reescreve status.json com state='running'."""

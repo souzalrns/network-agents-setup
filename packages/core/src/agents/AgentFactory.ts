@@ -17,6 +17,7 @@ export class AgentFactory {
       capabilities: [],
       systemPrompt: config.systemPrompt,
       tools: config.tools || [],
+      profile: config.profile,
     };
     this.agents.set(config.id, agent);
     console.log(`[REGISTER] Agent ${config.id} loaded (layer: ${config.layer})`);
@@ -36,4 +37,21 @@ export class AgentFactory {
   getAgentsByVisibility(visibility: Agent['visibility']): Agent[] {
     return this.getAllAgents().filter((a) => a.visibility === visibility);
   }
+}
+
+/**
+ * F1: resolve o `systemPrompt` (ou `description`, na falta dele) de um agente
+ * substituindo placeholders `{{chave}}` pelos valores do `profile`. Permite
+ * que o mesmo agente registado produza saídas diferenciadas por perfil
+ * (jurisdição, framework, especialidade...) sem precisar de uma entrada
+ * separada em `AGENT_CONFIGS` por variante.
+ */
+export function resolveAgentPrompt(agent: Agent, profile?: Record<string, unknown>): string {
+  const template = agent.systemPrompt ?? agent.description;
+  const effectiveProfile = profile ?? agent.profile;
+  if (!effectiveProfile) return template;
+  return Object.entries(effectiveProfile).reduce(
+    (text, [key, value]) => text.split(`{{${key}}}`).join(String(value)),
+    template
+  );
 }

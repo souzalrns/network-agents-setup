@@ -9,6 +9,8 @@ export interface Agent {
   systemPrompt?: string;
   tools?: string[];
   dependencies?: string[];
+  /** F1: variação configurável (jurisdição, framework, especialidade...) sem multiplicar agentes. */
+  profile?: Record<string, unknown>;
 }
 export interface AgentConfig {
   id: string;
@@ -18,6 +20,7 @@ export interface AgentConfig {
   description: string;
   systemPrompt?: string;
   tools?: string[];
+  profile?: Record<string, unknown>;
 }
 export interface AgentResponse {
   agentId: string;

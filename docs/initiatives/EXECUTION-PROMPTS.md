@@ -580,6 +580,8 @@ Mover para Done, grupo B. Registar em `AUDIT-ORCHESTRATION.md` secção 3 se o t
 
 > **Status em 2026-09-19: DONE (correcção); verificação por execução pendente.** 2 bugs corrigidos: (a) `mockHitl` como 6º argumento; (b) `vi` em falta no import de `vitest` (achado durante a correcção, não estava no achado original — o ficheiro usava `vi.fn()` 6 vezes sem o importar, com `globals: false` no `vitest.config.ts`). `tsc --noEmit` (config equivalente ao `tsconfig.typecheck.json`, estendida para cobrir `tests/`) confirma zero erros no ficheiro — os únicos erros restantes são no `packages/memory/src/*`, todos `Module '@prisma/client' has no exported member 'PrismaClient'`, o mesmo bloqueio pré-existente de **B10/D8**. Não foi possível correr o teste de facto (mesma razão) — a hipótese da auditoria ("passava por acaso, sem invocar `hitlManager`") continua NOT VERIFIED, a confirmar quando B10/D8 fechar. Nota em `AUDIT-ORCHESTRATION.md` secção 3.
 
+> **Actualização em 2026-09-20 (B10/D8 fechado, ver B17 em `STATUS.md`): hipótese REFUTADA.** `prisma generate` corrido, o teste finalmente carregou e correu — e o teste **invoca `hitlManager` a sério** (`DeliberationOrchestrator.deliberate()` chama `requestApproval()` de facto). Não "passava por acaso sem invocar" — nunca tinha sequer chegado a correr. O `mockHitl.requestApproval: vi.fn()` sem valor resolvido causava `Cannot read properties of undefined (reading 'id')` em `DeliberationOrchestrator.ts:121`; corrigido com `.mockResolvedValue({ id: 'hitl-test-id' })`. `ExecutionFlow.test.ts` passa 1/1 agora.
+
 ---
 
 ### B3 — Correr `apps/api` contra Postgres/OpenAI reais
@@ -1146,6 +1148,8 @@ Marcar os testes lentos com `@pytest.mark.integration` (registar a marca em `pyt
 **Fase 4 — Atualização de Status**
 Mover B13 para Done em STATUS.md.
 
+> **Status em 2026-09-20: DONE.** Fase 1 (Regra 5, discrepância): `pytest --durations=15` mostra que a assunção original (e a da Série F que retomou este item) de que `test_embedder.py`/`test_knowledge.py` seriam os lentos **estava errada** — nem aparecem no top 15. Os lentos reais são `test_real_plans.py` (6 dos 10 mais lentos, até 55s), `test_langgraph_flow.py` (4 dos 10 mais lentos, até 37s) e `test_crash_recovery.py` (20s) — todos correm o CLI real via subprocess. Marcador chamado `slow` (não `integration`, como este item original pedia — a instrução mais recente da Série F já dizia `slow`, seguida por ser a mais próxima no tempo). `runner/pytest.ini` novo (não existia `pytest.ini`/`pyproject.toml` em lado nenhum do repo antes). Os 3 ficheiros inteiros marcados via `pytestmark` a nível de módulo (não teste a teste — mais simples, aceita incluir 1-2 testes rápidos como `test_no_bom_in_langgraph_engine`). `pytest` (omissão): 151/151, 1m51s (era 8-13 min). `pytest -m slow`: 34/34, 6m06s. 151+34=185 — cobertura total preservada.
+
 ---
 
 ### D10 — Auditoria de escopo do `EXECUTION-PROMPTS.md`
@@ -1376,6 +1380,8 @@ O mesmo agente responde de forma diferenciada consoante o `profile` passado — 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo F. Fecha a lacuna "Agent × Profile" identificada desde a discussão inicial desta auditoria.
 
+> **Status em 2026-09-20: DONE (parcial), com discrepância registada.** Fase 1: `config/agents.config.ts` (170 linhas, integral) confirma 24 agentes, sem `profile`; `agent.ts` (29 linhas, integral) confirma o tipo sem o campo. **Discrepância (Regra 5):** antes de "fundir" `civil-law-br`/`civil-law-pt`, grep confirmou 4 ficheiros dependentes dos 2 IDs exactos — `SpecialtyManager.ts:78`, `bootstrap.ts:86-87`, `legal-agents.ts:32-33` (já deriva jurisdição do ID via lookup table manual) e `check-consistency.ts:295-296` (valida a string literal `id: 'civil-law-br'` — parte de `validate:consistency`, corrido depois da alteração: **28/28 OK**). Fundir as 2 entradas numa só, como o brief literal pedia, quebraria isto sem tocar nos 4 ficheiros — fora do escopo deste item per a própria instrução de não remover sem confirmar dependências. **Resolução:** `profile?: Record<string, unknown>` adicionado a `AgentConfig`/`Agent`; `resolveAgentPrompt(agent, profile)` novo em `AgentFactory.ts` (interpola `{{chave}}`); os 2 IDs mantidos, mas agora com `profile: {jurisdiction: 'BR'|'PT'}` real + `systemPrompt` partilhado (a duplicação de texto desapareceu, a de registo fica para quando `legal-agents.ts` for actualizado a par). 5 testes novos em `AgentFactory.test.ts` (saída distinta e correcta por profile; sem profile devolve o template; propagação no `registerAgent()`; caso real `civil-law-br/pt`; não-regressão dos 24 agentes). Nota em `agents-audit/FASE5-AGENTES.md` Parte B.
+
 ---
 
 ### F2 — Confirmar migração G2 (16 skills)
@@ -1458,6 +1464,8 @@ Ler `BOOTSTRAP.md` do início ao fim e confirmar que aponta para todo ficheiro d
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo F.
 
+> **Status em 2026-09-20: DONE.** Fase 1 confirmada (56 linhas, integral) — linha 52 do próprio `BOOTSTRAP.md` já auto-documentava o gap ("Gap conhecido, ainda não corrigido"). `AGENTS.md` (raiz, 46 linhas, integral) e `docs/generated/AGENTS.md` (63 linhas, integral) lidos para escrever descrições precisas. 2 entradas adicionadas à tabela, linha do "gap conhecido" removida (resolvida, não só anotada). Nota: `docs/generated/AGENTS.md` ainda diz "Total: 22" à data desta indexação — sinalizado inline, a corrigir pelo F6.
+
 ---
 
 ### F6 — Rodar `pnpm docs:agents`
@@ -1477,6 +1485,8 @@ Contagem no ficheiro gerado bate com `config/agents.config.ts` real.
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo F.
+
+> **Status em 2026-09-20: DONE, incluindo correcção de uma regressão que eu próprio introduzi no F1.** Fase 1: `docs/generated/AGENTS.md:8` confirmava "Total: 22"; real = 24. **Achado grave descoberto ao correr o gerador:** `generate-agents-doc.ts` usava uma regex lazy (`/\{\s*id:\s*['"]([^'"]+)['"][\s\S]*?\}/g`) para extrair blocos de agente — parava no primeiro `}` que encontrasse. O `profile: { jurisdiction: ... }` aninhado que o F1 acabou de adicionar a `civil-law-br`/`civil-law-pt` tem o seu próprio `}`; a regex parava aí, e um comentário `//` que o F1 também adicionou antes de `id:` impedia a regex de sequer reconhecer o início do bloco de `civil-law-br`. Resultado: o gerador escrevia **23 agentes**, silenciosamente a menos um, sem erro — pior do que o "22" desactualizado que já lá estava, porque parecia ter corrigido a contagem quando na verdade estava errado de forma diferente. **Corrigido:** `parseAgents()` reescrito com contagem de chavetas balanceada (`splitTopLevelBlocks()`, ignora chavetas dentro de strings), insensível a comentários e a objectos aninhados. 3 testes novos em `generate-agents-doc.test.ts`: reproduz o caso exacto que partia (com `profile` aninhado + comentário); não-regressão para agentes simples; e os 24 agentes reais de `config/agents.config.ts` (inclui `civil-law-br`/`civil-law-pt` — falhava antes da correcção, confirmado por execução do teste antes de corrigir). `pnpm --filter @network-agents/scripts docs:agents` corrido de facto — `docs/generated/AGENTS.md` agora diz "Total: 24", `civil-law-br` presente, contagens por camada/visibilidade batem (5+4+15=24, 9+15=24). Suite completa: 177/177 TS, 0 regressões.
 
 ---
 
@@ -1553,6 +1563,8 @@ Actualizar para `pnpm@8.15.9` (mesma série major, já testado nesta sessão via
 
 **Fase 4 — Atualização de Status**
 Mover B15/F10 para Done.
+
+> **Status em 2026-09-20: DONE.** `package.json` (raiz) actualizado para `pnpm@8.15.9`. `corepack pnpm --version` confirma `8.15.9` resolvido automaticamente a partir do `packageManager`. `corepack pnpm install --frozen-lockfile` correu sem `ERR_INVALID_THIS`, sem reescrever `pnpm-lock.yaml` (`lockfileVersion` continua `'6.0'`, diff = 0 linhas). Bónus: o `postinstall: "prisma generate"` do B10/D8 disparou automaticamente durante este `install`, confirmando essa automação a funcionar de ponta a ponta. Suite completa: 178/178 TS (só falta `api.test.ts`, por falta de `supertest` — ver B18, não relacionado).
 
 ---
 

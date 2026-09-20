@@ -21,7 +21,11 @@ describe('Execution Flow Integration', () => {
       chat: vi.fn().mockResolvedValue({ content: 'Test response' }),
     };
     const mockHitl = {
-      requestApproval: vi.fn(),
+      // B10/D8: sem valor resolvido, DeliberationOrchestrator.deliberate()
+      // (linha 121) faz `hitlRequest.id` sobre `undefined` -- este teste
+      // nunca tinha corrido antes (bloqueado por falta de `prisma generate`),
+      // por isso este gap no mock nunca tinha sido exercitado.
+      requestApproval: vi.fn().mockResolvedValue({ id: 'hitl-test-id' }),
       getRequest: vi.fn(),
     };
     const planner = new Planner(mockAgentFactory as any, mockLLM as any);

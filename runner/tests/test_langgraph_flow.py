@@ -14,6 +14,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.slow  # B13/D9: corre o CLI real via subprocess, custo alto
+
 # ============================================================
 # TESTES BASICOS
 # ============================================================

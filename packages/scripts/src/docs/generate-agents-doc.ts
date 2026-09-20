@@ -29,14 +29,61 @@ function escapeMdCell(s: string): string {
   return s.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 }
 
+/**
+ * Extrai as strings dos objectos literais de topo de nível de um array
+ * `[ {...}, {...} ]` -- contagem de chavetas balanceada, não regex lazy.
+ *
+ * F1 (2026-09-20) introduziu campos com objectos aninhados (`profile: {...}`)
+ * dentro de um agente -- a regex lazy antiga (`[\s\S]*?\}`) parava no
+ * primeiro `}` que encontrasse (o do aninhado), truncando ou perdendo o
+ * bloco. Comentários `//` antes do `id:` (também introduzidos pelo F1) eram
+ * um segundo problema: a regex exigia `id:` logo a seguir a `{`. Esta versão
+ * ignora ambos: percorre carácter a carácter, ignora chavetas dentro de
+ * strings, e só corta o bloco quando a profundidade volta a 0.
+ */
+function splitTopLevelBlocks(source: string): string[] {
+  // Não usar o primeiro `[` do ficheiro -- `AgentConfig[]` (anotação de tipo)
+  // aparece antes do array literal e tem o seu próprio `[]` vazio, que faria
+  // o scan terminar de imediato. `=` seguido de `[` é o array real.
+  const arrayMatch = source.match(/=\s*\[/);
+  const arrayStart = arrayMatch ? arrayMatch.index! + arrayMatch[0].length - 1 : -1;
+  if (arrayStart === -1) return [];
+  const blocks: string[] = [];
+  let depth = 0;
+  let blockStart = -1;
+  let inString: '"' | "'" | '`' | null = null;
+  for (let i = arrayStart; i < source.length; i++) {
+    const ch = source[i];
+    const prev = source[i - 1];
+    if (inString) {
+      if (ch === inString && prev !== '\\') inString = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      inString = ch;
+      continue;
+    }
+    if (ch === '{') {
+      if (depth === 0) blockStart = i;
+      depth++;
+    } else if (ch === '}') {
+      depth--;
+      if (depth === 0 && blockStart !== -1) {
+        blocks.push(source.slice(blockStart, i + 1));
+        blockStart = -1;
+      }
+    } else if (ch === ']' && depth === 0) {
+      break;
+    }
+  }
+  return blocks;
+}
+
 function parseAgents(source: string): AgentRow[] {
   const agents: AgentRow[] = [];
-  // Blocos { id: '...', ... }
-  const blockRe = /\{\s*id:\s*['"]([^'"]+)['"][\s\S]*?\}/g;
-  let m: RegExpExecArray | null;
-  while ((m = blockRe.exec(source)) !== null) {
-    const block = m[0];
-    const id = m[1];
+  for (const block of splitTopLevelBlocks(source)) {
+    const id = block.match(/id:\s*['"]([^'"]+)['"]/)?.[1];
+    if (!id) continue;
     const layer = block.match(/layer:\s*['"]([^'"]+)['"]/)?.[1] || '?';
     const visibility = block.match(/visibility:\s*['"]([^'"]+)['"]/)?.[1] || '?';
     const domain = block.match(/domain:\s*['"]([^'"]+)['"]/)?.[1];

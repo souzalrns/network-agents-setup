@@ -3,31 +3,22 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:agents`
 >
-> Gerado em: 2026-08-19
+> Gerado em: 2026-09-20
 > Fonte: `config/agents.config.ts`
-> Total: **22** agentes
+> Total: **24** agentes
 
 ## Resumo por camada
 
 | Camada | Quantidade |
 |--------|------------:|
-| meta | 4 |
 | horizontal | 5 |
-| vertical | 13 |
+| meta | 4 |
+| vertical | 15 |
 
 ## Por visibilidade
 
-- **public**: 8
-- **private**: 14
-
-## Camada `meta`
-
-| ID | Visibilidade | Domínio | Descrição |
-|----|--------------|---------|-----------|
-| `orchestrator-general` | public | — | Ponto de entrada de todas as demandas, roteia para o domínio correto. |
-| `domain-router` | public | — | Identifica se a demanda é de Software, Medicina, Marketing, Construção, Direito, etc. |
-| `context-manager` | public | — | Mantém o histórico e estado da conversa/projeto. |
-| `task-planner` | public | — | Quebra demandas complexas em subtarefas. |
+- **public**: 9
+- **private**: 15
 
 ## Camada `horizontal`
 
@@ -38,6 +29,15 @@
 | `documentation-agent` | public | — | Gera textos, relatórios e documentação. |
 | `methodology-legal` | public | — | Raciocínio jurídico genérico (fato × direito, hermenêutica). |
 | `legal-research` | public | legal | Busca legislação, jurisprudência e doutrina com filtro por país. |
+
+## Camada `meta`
+
+| ID | Visibilidade | Domínio | Descrição |
+|----|--------------|---------|-----------|
+| `orchestrator-general` | public | — | Ponto de entrada de todas as demandas, roteia para o domínio correto. |
+| `domain-router` | public | — | Identifica se a demanda é de Software, Medicina, Marketing, Construção, Direito, etc. |
+| `context-manager` | public | — | Mantém o histórico e estado da conversa/projeto. |
+| `task-planner` | public | — | Quebra demandas complexas em subtarefas. |
 
 ## Camada `vertical`
 

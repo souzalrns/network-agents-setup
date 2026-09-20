@@ -147,11 +147,18 @@ export const AGENT_CONFIGS: AgentConfig[] = [
     description: 'Recebe a questão, identifica a jurisdição, decompõe o problema.',
   },
   {
+    // F1: profile substitui a duplicação de texto entre civil-law-br/-pt --
+    // mesmo systemPrompt-template, só o profile muda. IDs mantidos (não
+    // fundidos numa única entrada): SpecialtyManager.ts, bootstrap.ts,
+    // legal-agents.ts e check-consistency.ts referenciam estes 2 IDs
+    // directamente -- fundir exigia alterar os 4, fora do escopo deste item.
     id: 'civil-law-br',
     layer: 'vertical',
     visibility: 'private',
     domain: 'legal',
     description: 'Direito Civil Brasileiro (contratos, responsabilidade civil, família).',
+    systemPrompt: 'Direito Civil {{jurisdiction_label}} (contratos, responsabilidade civil, família).',
+    profile: { jurisdiction: 'BR', jurisdiction_label: 'Brasileiro' },
   },
   {
     id: 'civil-law-pt',
@@ -159,6 +166,8 @@ export const AGENT_CONFIGS: AgentConfig[] = [
     visibility: 'private',
     domain: 'legal',
     description: 'Direito Civil Português (contratos, responsabilidade civil, família).',
+    systemPrompt: 'Direito Civil {{jurisdiction_label}} (contratos, responsabilidade civil, família).',
+    profile: { jurisdiction: 'PT', jurisdiction_label: 'Português' },
   },
   {
     id: 'legal-research',

@@ -21,6 +21,8 @@ import pytest
 
 from tests.conftest import RUNNER_DIR, _load_status_safe, _run_cli
 
+pytestmark = pytest.mark.slow  # B13/D9: corre planos reais via CLI, é o maior custo da suite
+
 REPO_ROOT = RUNNER_DIR.parent
 TPL = REPO_ROOT / "docs" / "orchestration" / "marketing" / "templates"
 
