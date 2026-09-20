@@ -29,7 +29,11 @@ Este documento é escrito em fases (grupos), cada uma numa sessão de escrita pr
 
 ---
 
-## GRUPO A — Segurança (21 itens)
+## GRUPO A — Segurança (23 itens)
+
+> **Nota de contagem (2026-09-19, achado durante o B14/D10):** o cabeçalho dizia "21 itens", desactualizado desde o A22/A23 — corrigido para 23, já batia com o fecho do grupo e a Contagem final.
+>
+> **Revalidação de escopo (B14/D10, 2026-09-19):** os itens ainda pendentes deste grupo (A4, A9-A13, A16-A17) foram confirmados **REAL** (escopo correcto) por leitura directa do código. A15 e A19 foram reclassificados **DIFERENTE**/**N/A** — ver notas nos próprios itens e `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
 ### A1 — Rotacionar senha hardcoded + placeholder consistente
 
@@ -343,6 +347,8 @@ Mover para Done.
 
 ### A15 — Flags de cookie
 
+> **Revalidado em 2026-09-19 (B14/D10): DIFERENTE.** Não existe nenhuma configuração de sessão/cookie neste repo — grep exaustivo em `apps/api/src` por `httpOnly`/`secure`/`sameSite`/cookie, zero resultados. A autenticação é 100% via header `x-api-key` (`middleware/auth.ts`), sem cookie nenhum. Não há nada para "ajustar" tal como o item descreve — precisa de decisão humana (desenhar sessão por cookie de raiz, ou fechar como N/A). Ver `AUDIT-SCOPE-2026-09-19.md`.
+
 **Quem:** Claude + Desenvolvedor
 **Origem:** STATUS.md, checklist item 9
 
@@ -420,6 +426,8 @@ Mover para Done.
 ---
 
 ### A19 — Restringir uploads
+
+> **Revalidado em 2026-09-19 (B14/D10): N/A neste repo.** `extrair-imagem` não existe em `network-agents-setup` — existe como workflow do GitHub Actions em `agent-network-mcp/.github/workflows/extrair-imagem.yml`, um repo diferente. STATUS.md já dava a pista ("**Produção** tem `extrair-imagem`" — "Produção" = `agent-network-mcp`). Este item não tem alvo neste repo tal como escrito. Ver `AUDIT-SCOPE-2026-09-19.md`.
 
 **Quem:** Claude
 **Origem:** STATUS.md, checklist item 16
@@ -525,6 +533,8 @@ Mover M8 para Done em STATUS.md. Nota: "9 alertas Dependabot resolvidos em [data
 ---
 
 ## GRUPO B — Fiação interna / HITL / validação de execução real (13 itens)
+
+> **Revalidação de escopo (B14/D10, 2026-09-19):** todos os 8 itens ainda pendentes (B1, B3-B9) confirmados **REAL** (escopo correcto, nada resolvido entretanto) por leitura directa do código. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
 ### B1 — Ligar `hitl.py` aos engines *(= S9)*
 
@@ -784,6 +794,8 @@ Mover M6 para Done.
 
 ## GRUPO C — Governança / MCP / Autorização (7 itens)
 
+> **Revalidação de escopo (B14/D10, 2026-09-19):** C2-C5 confirmados **REAL**. C7 reclassificado **JÁ FEITO** (ver nota no próprio item). C6 mantém-se como já discutido na errata do topo (revalidação genuína, não pendência falsa). Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
+
 ### C1 — Portar pipeline de `policy.py` para `ToolExecutor.ts`
 
 **Quem:** Claude
@@ -902,6 +914,8 @@ Já está em Done — só adicionar nota de "revalidado em [data]" se a suite pa
 
 ### C7 — Resolver contradições `MCP-MAPPING.md`
 
+> **Revalidado em 2026-09-19 (B14/D10): JÁ FEITO.** `MCP-MAPPING.md` já tem as 2 correcções aplicadas e visíveis no próprio texto ("Correcção G5", linhas 20/108/183 do documento): `apps-produto` já está na secção 3.5, `hvac` já está reclassificado, contagem já corrigida para 12. Só falta actualizar `STATUS.md` (item G5, ainda marcado pendente) para Done. Mesmo padrão do C6/A1/A21/A20. Ver `AUDIT-SCOPE-2026-09-19.md`.
+
 **Quem:** Claude
 **Origem:** STATUS.md item G5
 
@@ -923,9 +937,15 @@ Mover G5 para Done (se ainda não estiver).
 
 ---
 
-## GRUPO D — Qualidade / Observabilidade / Custo / Avaliação (7 itens)
+## GRUPO D — Qualidade / Observabilidade / Custo / Avaliação (10 itens)
+
+> **Nota de contagem (2026-09-19, achado durante o B14/D10):** o cabeçalho dizia "7 itens", desactualizado desde o D8/D9/D10 — corrigido para 10, já batia com o fecho do grupo e a Contagem final.
+>
+> **Revalidação de escopo (B14/D10, 2026-09-19):** D2-D7 confirmados **REAL**. D1 reclassificado **DIFERENTE** (ver nota no próprio item — o bug descrito não existe, mas há um memory leak real). Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
 ### D1 — `Tracer.ts` → SDK OTel oficial
+
+> **Revalidado em 2026-09-19 (B14/D10): DIFERENTE.** O bug de assinatura descrito ("`exportTrace(traceSpanId)` recebe `spanId`, espera `traceId`") **não existe** — `exportTrace(traceId: string)` está correcto (usa `this.traces.get(traceId)`, um Map chaveado por traceId). Mas o memory leak **é real**: `this.traces`/`this.currentSpans` nunca têm entradas removidas em lado nenhum do ficheiro — cresce sem limite. A rescrita continua necessária, só a razão exacta é diferente da descrita. Ver `AUDIT-SCOPE-2026-09-19.md`.
 
 **Quem:** Claude
 **Origem:** `observability-audit/AUDIT-OBSERVABILITY.md` secção 1
@@ -1123,7 +1143,11 @@ Mover B14 para Done em STATUS.md, com o resultado da contagem.
 
 ---
 
-## GRUPO E — Ingestão / Conhecimento (7 itens)
+## GRUPO E — Ingestão / Conhecimento (9 itens)
+
+> **Nota de contagem (2026-09-19, achado durante o B14/D10):** o cabeçalho dizia "7 itens", desactualizado desde o E8/E9 — corrigido para 9, já batia com o fecho do grupo e a Contagem final.
+>
+> **Revalidação de escopo (B14/D10, 2026-09-19):** E1-E7 confirmados **REAL** — pesquisa já feita (`AUDIT-INGESTION.md`), adopção de código continua pendente para todos. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
 ### E1 — Adotar Crawl4AI + Trafilatura
 
@@ -1303,6 +1327,8 @@ Mover B12 para Done em STATUS.md, com a origem documentada (ou "origem desconhec
 
 ## GRUPO F — Skills / Arquitetura de Agentes / Infra transversal (9 itens)
 
+> **Revalidação de escopo (B14/D10, 2026-09-19):** F1, F5-F9 confirmados **REAL**. F2, F3, F4 reclassificados **JÁ FEITO** (ver nota em cada um). Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
+
 ### F1 — `AgentConfig.profile`
 
 **Quem:** Claude
@@ -1324,6 +1350,8 @@ Mover para Done, grupo F. Fecha a lacuna "Agent × Profile" identificada desde a
 
 ### F2 — Confirmar migração G2 (16 skills)
 
+> **Revalidado em 2026-09-19 (B14/D10): JÁ FEITO.** `skills/meta/` tem 21 pastas, mas as 16 esperadas estão todas lá, mapeadas 1:1 por nome (`prisma-patterns`, `nestjs-modules`, `react-patterns`, `rest-api-design`, `error-handling`, `seo-tech-checklist`, `frontend-a11y`, `vite-env-vars`, `article-writing`, `react-native-expo`, `health-data-classification`=PHI, `python-patterns`, `deploy-discipline`, `mcp-patterns`, `github-actions-ops`, `meta-workflow`), mais 5 extra não previstas. Migração feita; só a contagem no plano ficou desactualizada. Ver `AUDIT-SCOPE-2026-09-19.md`.
+
 **Quem:** Claude
 **Origem:** STATUS.md item G2 (série de mapeamento G1-G5, marcado feito no resumo de 09-17, nunca recontado desde então) — **nota de nomenclatura:** este "G2" é do `STATUS.md`, não tem relação com o "GRUPO G2" (Gamedev) deste documento, ver correção nº5 do errata
 
@@ -1343,6 +1371,8 @@ Confirmar G2 em Done com a contagem real, ou reabrir se incompleto.
 
 ### F3 — Confirmar migração G3 (5 knowledge packs)
 
+> **Revalidado em 2026-09-19 (B14/D10): JÁ FEITO.** Os 5 packs esperados existem, exactamente: `docs/knowledge/saude/{cardiologia,dermatologia,oftalmologia}.md` (3), `docs/knowledge/legal/direito-br-pt.md` (1), `docs/knowledge/imobiliario/fipezap.md` (1). (`docs/knowledge/` tem outros `.md` à parte, não relacionados com o G3.) Ver `AUDIT-SCOPE-2026-09-19.md`.
+
 **Quem:** Claude
 **Origem:** STATUS.md item G3 (série de mapeamento G1-G5) — **nota de nomenclatura:** não confundir com o "GRUPO G3" (Sistema de Avatar) deste documento, ver correção nº5 do errata
 
@@ -1361,6 +1391,8 @@ Confirmar G3 em Done, ou reabrir se algum termo privado for encontrado.
 ---
 
 ### F4 — Confirmar migração G4 (13 agentes horizontais)
+
+> **Revalidado em 2026-09-19 (B14/D10): JÁ FEITO.** `agents/` tem 35 agentes reais (`*.agent.md`) em 8 subpastas de domínio — muito mais que os 13 originalmente migrados. Migração confirmada feita. Ver `AUDIT-SCOPE-2026-09-19.md`.
 
 **Quem:** Claude
 **Origem:** STATUS.md item G4 (série de mapeamento G1-G5) — **nota de nomenclatura:** não confundir com o "GRUPO G4" (Grafo de memória) deste documento, ver correção nº5 do errata
@@ -1480,6 +1512,8 @@ Mover B5 para Done ou DEFER conforme o resultado.
 ---
 
 ## GRUPO G1 — Agente(s) Financeiro(s) (cluster único, 14 itens)
+
+> **Revalidação de escopo (B14/D10, 2026-09-19):** grupo confirmado **REAL** — nada implementado ainda (esperado, é trabalho futuro). G3.1 tem a sua dependência (`working_memory.py`/S7) confirmada satisfeita. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md` (nota de honestidade sobre profundidade de verificação dos Grupos G-J).
 
 > **Nota de nomenclatura (correção nº5 do errata):** este "G1" é numeração interna deste documento (Grupos G1-G4 = Financeiro/Gamedev/Avatar/Memória). Não confundir com o item "G1" do `STATUS.md` (série de mapeamento G1-G5, que trata de fechar C8e — ver C6).
 
@@ -1759,6 +1793,8 @@ Mover o cluster G1 inteiro para Done com a aprovação registada. Qualquer expan
 
 ## GRUPO G2 — Agente de Gamedev (4 itens)
 
+> **Revalidação de escopo (B14/D10, 2026-09-19):** confirmado **REAL** — nada implementado (esperado). Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
+
 > **Nota de nomenclatura:** não confundir com o item "G2" do `STATUS.md` (16 skills migradas — ver F2).
 
 ### G2.1 — Pesquisa padrão ouro (GDD, engine, loop)
@@ -1843,6 +1879,8 @@ Mover B4 para Done.
 
 ## GRUPO G3 — Sistema de Avatar genérico (3 itens)
 
+> **Revalidação de escopo (B14/D10, 2026-09-19):** confirmado **REAL** — nada implementado. Dependência do G3.1 (`working_memory.py`/S7) confirmada satisfeita. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
+
 > **Nota de nomenclatura:** não confundir com o item "G3" do `STATUS.md` (5 knowledge packs migrados — ver F3).
 
 ### G3.1 — Pesquisa/desenho da infra de avatar
@@ -1909,6 +1947,8 @@ Mover U6 para Done.
 
 ## GRUPO G4 — Grafo de memória (2 itens)
 
+> **Revalidação de escopo (B14/D10, 2026-09-19):** confirmado **REAL** — decisão G4.1 (Obsidian vs. Logseq) continua por tomar. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
+
 > **Nota de nomenclatura:** não confundir com o item "G4" do `STATUS.md` (13 agentes horizontais migrados — ver F4).
 
 ### G4.1 — Decidir Obsidian vs. Logseq *(= F10)*
@@ -1954,6 +1994,8 @@ Mover U1 para Done.
 ---
 
 ## GRUPO H — Integração final (4 itens, só depois de G1+G3+G4 existirem)
+
+> **Revalidação de escopo (B14/D10, 2026-09-19):** confirmado **REAL** — nenhum dos pré-requisitos (G1/G3/G4) está fechado, portanto nada aqui pode ter começado. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
 ### H1 — Dashboard/integração *(= U4)*
 
@@ -2038,6 +2080,8 @@ Mesma nota de H3 — "aguardando escopo".
 ---
 
 ## GRUPO I — Backlog de pesquisa não triado (10 itens)
+
+> **Revalidação de escopo (B14/D10, 2026-09-19):** I1, I3-I7, I9-I11 confirmados **REAL**. I2 e I8 já tinham a sua própria discrepância auto-documentada no texto original (não é achado novo desta auditoria) — confirmado que continua correcto. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
 Nota honesta sobre este grupo: a primeira versão deste documento reduziu vários destes itens a "mesmo padrão de I1" — isso não é um prompt, é uma citação vazia, exactamente o erro já apontado nesta sessão. Reescrito abaixo item a item, sem atalho.
 
@@ -2243,6 +2287,8 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## GRUPO J — Arquivado (7 itens, não fazer agora, registados individualmente para não desaparecer)
 
+> **Revalidação de escopo (B14/D10, 2026-09-19):** confirmado **REAL** — todos continuam arquivados, sem gatilho novo. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
+
 ### J1 — PCU Constitution *(= P1)*
 
 **Quem:** Desenvolvedor (só ele pode reabrir)
@@ -2301,4 +2347,6 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 A(23) + B(13) + C(7) + D(10) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **115 itens** (108 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, A23, D8, D9, D10, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
+
+> **B14/D10 — Auditoria de escopo concluída em 2026-09-19.** Todos os itens pendentes (Grupos A-J) revalidados contra o código real. Resultado: 61 REAL, 4 DIFERENTE (A15, A19, D1, I2 — este já auto-documentado), 2 N/A (A19, I8 — este já auto-documentado), 4 JÁ FEITO (C7, F2, F3, F4). Relatório completo: `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`. 3 inconsistências de contagem adicionais encontradas e corrigidas nos cabeçalhos dos Grupos A/D/E (diziam 21/7/7, deviam dizer 23/10/9 — já batiam no fecho de cada grupo e na Contagem final, só o cabeçalho estava desactualizado).
 
