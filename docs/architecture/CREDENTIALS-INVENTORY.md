@@ -28,6 +28,18 @@ Produzido durante a auditoria de cobertura desta sessão (item S22), na sequênc
 
 ---
 
+## Credenciais futuras (ainda não em uso)
+
+Introduzidas em 2026-09-20 (A8/S11) em `packages/mcp/src/server/McpAuth.ts` e `packages/mcp/src/client/MCPClient.ts`, mas **deliberadamente não adicionadas ao `.env.example`** — o `MCPServer.createHttpHandler()` que as consome não está ligado a nenhum servidor real hoje (achado do próprio S11); um template no `.env.example` sem consumidor real seria um template morto, o mesmo padrão de anomalia já assinalado no achado 3 abaixo.
+
+| Credencial | Onde vive (código) | Estado | Quando activar |
+|---|---|---|---|
+| `MCP_SERVER_KEYS` | `packages/mcp/src/server/McpAuth.ts` (lista separada por vírgulas — cada key é um caller distinto) | Não em uso — `createHttpHandler()` nunca é montado num servidor real | Adicionar ao `.env.example` quando `MCPServer` for ligado a um endpoint HTTP real |
+| `MCP_CLIENT_KEY` | `packages/mcp/src/client/MCPClient.ts` (construtor, `apiKey` opcional) | Não em uso pelo mesmo motivo | Idem — par da chave acima, o cliente real usaria uma das `MCP_SERVER_KEYS` |
+| `MCP_ALLOW_UNAUTHENTICATED` | `packages/mcp/src/server/McpAuth.ts` (bypass de dev local, ignorado em produção) | Não em uso | Idem |
+
+---
+
 ## Problemas encontrados
 
 1. **Inconsistência de nome:** `SUPABASE_SERVICE_KEY` (encontrado no `.env` apagado da cópia `Downloads`, S16) vs. `SUPABASE_SERVICE_ROLE_KEY` (nome correcto, usado em todo o resto). Já resolvido pela remoção do ficheiro errado (S16), mas o nome errado pode reaparecer se alguém recriar o `.env` a partir de memória em vez do `.env.example` real.

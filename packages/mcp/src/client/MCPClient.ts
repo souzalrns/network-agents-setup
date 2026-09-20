@@ -3,12 +3,16 @@ import { toClientError } from '../util/sanitizeError';
 export class MCPClient implements IMCPClient {
   private serverUrl: string | null = null;
   private tools: MCPTool[] = [];
+  constructor(private apiKey: string = process.env.MCP_CLIENT_KEY || '') {}
+  private authHeaders(): Record<string, string> {
+    return this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {};
+  }
   async connect(serverUrl: string): Promise<void> {
     this.serverUrl = serverUrl;
-    
+
     // Carrega as ferramentas disponíveis
     try {
-      const response = await fetch(`${serverUrl}/tools`);
+      const response = await fetch(`${serverUrl}/tools`, { headers: this.authHeaders() });
       if (!response.ok) {
         throw new Error(`Failed to get tools: ${response.statusText}`);
       }
@@ -32,6 +36,7 @@ export class MCPClient implements IMCPClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...this.authHeaders(),
         },
         body: JSON.stringify({ name, params }),
       });

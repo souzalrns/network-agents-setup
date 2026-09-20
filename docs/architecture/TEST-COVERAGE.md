@@ -2,6 +2,8 @@
 
 Primeira medição real de cobertura TS deste repo (antes só existia a heurística src-vs-test da auditoria de cobertura, 2g). Produzido no item **S24**.
 
+> **Actualização 2026-09-20 (A8/S11):** `pnpm run test:coverage` re-corrido depois de implementar A8/S11 (autenticação + propagação de caller em `MCPServer.ts`/`MCPClient.ts`). O achado crítico nº1 (`MCPServer.ts` 0%) está fechado — linhas afectadas marcadas "(A8/S11)" abaixo; o resto da tabela (pastas não tocadas por esta mudança) não se alterou entre as 2 corridas, confirmado por diff visual da tabela completa.
+
 **Ferramenta:** `@vitest/coverage-v8@1.6.1` (mesma major do `vitest@1.6.1` já instalado). Instalado como devDependency na raiz (`pnpm add -D -w`).
 
 **Configuração:** `vitest.config.ts` (raiz) ganhou o bloco `coverage` (`provider: 'v8'`, reporters `text`+`json-summary`+`html`, `include: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.ts']`). Novo script `pnpm run test:coverage` → `vitest run tests/unit tests/integration --coverage`.
@@ -20,6 +22,8 @@ Primeira medição real de cobertura TS deste repo (antes só existia a heuríst
 | Branch | 66.83% |
 | Functions | 43.19% |
 | Lines | 48.86% |
+
+**Após A8/S11 (2026-09-20): 188/188 testes** (33 ficheiros — +`MCPServer.test.ts`, +`MCPClient.test.ts`), agregado sobe para **49.29% statements / 67.73% branch / 43.92% funções / 49.29% lines**.
 
 ---
 
@@ -52,8 +56,8 @@ Primeira medição real de cobertura TS deste repo (antes só existia a heuríst
 | `packages/core/src/simulation` | 87.98 | |
 | `packages/core/src/ux` | 32.98 | |
 | `packages/langgraph/src/*` (graphs + state) | **0** | pacote inteiro sem cobertura TS — ver achados |
-| `packages/mcp/src/client` | 48.14 | `MCPClient.ts` |
-| `packages/mcp/src/server` | **0** | `MCPServer.ts` — ver achados (crítico) |
+| `packages/mcp/src/client` | ~~48.14~~ **74.57 (A8/S11)** | `MCPClient.ts` — envia `Authorization: Bearer` agora, testado |
+| `packages/mcp/src/server` | ~~0~~ **76.25 (A8/S11)** | `MCPServer.ts` 77.58% + `McpAuth.ts` (novo) 75.49% — ver achados |
 | `packages/mcp/src/tools` | 91.79 | inclui `ActionReceipt.ts` (98.27, novo nesta sessão, C5) |
 | `packages/mcp/src/tools/built-in` | 81.89 | inclui `SsrfGuard.ts` (74.19) |
 | `packages/mcp/src/tools/legal` | 74.12 | |
@@ -85,7 +89,7 @@ Primeira medição real de cobertura TS deste repo (antes só existia a heuríst
 | `packages/langgraph/src/graphs/execution/ExecutionGraph.ts` | 123 | |
 | `packages/langgraph/src/graphs/multi-agent/MultiAgentGraph.ts` | 114 | |
 | `packages/langgraph/src/state/StateManager.ts` | 81 | |
-| `packages/mcp/src/server/MCPServer.ts` | 46 | **crítico — ver achados** |
+| ~~`packages/mcp/src/server/MCPServer.ts`~~ | 46→57 | **RESOLVIDO em 2026-09-20 (A8/S11) — agora 77.58%, ver achados** |
 | `packages/mcp/src/tools/legal/db.ts` | 4 | trivial (stub de conexão) |
 | `packages/scripts/src/bootstrap.ts` | 89 | |
 | `packages/scripts/src/db.ts` | 7 | trivial |
@@ -107,7 +111,7 @@ Primeira medição real de cobertura TS deste repo (antes só existia a heuríst
 
 ## Achados
 
-1. **`packages/mcp/src/server/MCPServer.ts` (0%) é o ficheiro mais crítico desta lista.** É o ponto onde, segundo **S11** (já registado em `STATUS.md`), a identidade real (`caller`/`providedKey`) devia ser propagada ao `ToolExecutor` — hoje `caller='unknown'` por omissão. Zero cobertura de testes neste ficheiro significa que a lógica de autorização (ou a sua ausência) nunca foi exercitada por um teste automatizado.
+1. ~~**`packages/mcp/src/server/MCPServer.ts` (0%) é o ficheiro mais crítico desta lista.**~~ — **RESOLVIDO em 2026-09-20 (A8/S11).** `MCPServer.ts`/`MCPClient.ts` agora autenticam (`Authorization: Bearer` contra `MCP_SERVER_KEYS`) e propagam `caller` real (hash da key) ao `ToolExecutor` — antes `caller='unknown'` sempre. Cobertura: `MCPServer.ts` 0%→77.58%, `MCPClient.ts` 48.14%→74.57%. **Ressalva que se mantém:** `ToolPolicy.authorize()` continua a não usar `caller` na decisão allow/deny (só `providedKey`/`toolName`/`profile`) — o ganho real é audit trail/`ActionReceipt`/rate-limit per-caller verdadeiros, não autorização diferenciada por identidade (isso seria trabalho novo). Achado adicional descoberto ao implementar: `MCPServer`/`MCPClient`/`ToolExecutor` não estão ligados a nenhum servidor HTTP real neste repo (`createHttpHandler()` nunca montado em `apps/api`) — zero superfície de ataque viva hoje, mas a correcção fica pronta para quando for ligado. Ver `EXECUTION-PROMPTS.md` A8/S11, `AUDIT-TOOLS-MCP.md` secção 4.
 2. **`packages/langgraph/src/*` (0% em todo o pacote TS)** — o motor de execução Python (`langgraph_engine.py`) tem cobertura real e testada (93% via pytest, ver auditoria 2g), mas o pacote TypeScript equivalente (`StateGraph.ts`, `ExecutionGraph.ts`, `MultiAgentGraph.ts`, `StateManager.ts`) nunca é exercitado por nenhum teste `tests/unit`/`tests/integration`. Requer confirmação: este pacote está mesmo em uso em produção (via `apps/api`) ou é código ainda não ligado?
 3. **`packages/scripts/src/validate/check-consistency.ts` (445 linhas, 0%)** é invocado por `ci.yml` (`validate:consistency`) mas nunca por um teste `vitest` — a única validação da sua correcção é a CI a correr contra o estado real do repo, não um teste unitário isolado com casos conhecidos (positivos/negativos).
 4. **`packages/scripts/src/ingest/*` (0%, 5 ficheiros, ~1150 linhas no total)** — todo o pipeline de ingestão RAG (que alimentou os 110 chunks do C8, um resultado já confirmado a funcionar) não tem nenhum teste automatizado; a única validação até agora foi a execução manual bem-sucedida documentada no C8.
