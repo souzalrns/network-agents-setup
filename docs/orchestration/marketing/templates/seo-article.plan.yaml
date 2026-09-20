@@ -17,6 +17,9 @@ steps:
     tools_allowed: [read_repo_file, web_search]
     output_artifact: artifacts/01-research.md
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "AI findability item 13 estrutura de conteudo"
 
   - id: seo_brief
     action: seo_brief
@@ -26,6 +29,9 @@ steps:
     output_schema: SeoBrief
     # Item 13: campos no schema / notas obrigatórias no brief
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "checklist SEO tecnico FAQ citavel"
 
   - id: copy
     action: copy_answer_first
@@ -44,6 +50,9 @@ steps:
     output_artifact: artifacts/04-critic.json
     output_schema: CriticReport
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "criterios de avaliacao AI findability"
 
   - id: hitl_publish_decision
     action: plan_approve

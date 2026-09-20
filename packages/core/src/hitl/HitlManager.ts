@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { readFileSync, writeFileSync } from 'fs';
 import {
   HitlRequest,
   HitlStatus,
@@ -7,6 +8,84 @@ import {
 } from '@network-agents/shared';
 import { randomUUID } from 'crypto';
 import { getGlobalLogger } from '@network-agents/observability';
+
+/** Traduz response interno (particípio) <-> contrato v1 (imperativo). 'edit' é igual dos dois lados. */
+function responseToContract(response?: HitlRequest['response']): 'approve' | 'reject' | 'edit' | null {
+  if (response === 'approved') return 'approve';
+  if (response === 'rejected') return 'reject';
+  if (response === 'edit') return 'edit';
+  return null;
+}
+function responseFromContract(response: string | null | undefined): HitlRequest['response'] {
+  if (response === 'approve') return 'approved';
+  if (response === 'reject') return 'rejected';
+  if (response === 'edit') return 'edit';
+  return undefined;
+}
+
+/** Serializa um HitlRequest interno para o formato do contrato v1 (hitl-request-v1.json). */
+function toContractRecord(request: HitlRequest): Record<string, any> {
+  return {
+    schema: 'hitl-request-v1',
+    id: request.id,
+    source: request.source ?? 'node_api',
+    run_id: request.runId ?? null,
+    plan_id: request.planId ?? null,
+    step_id: request.stepId ?? null,
+    agent_id: request.agentId ?? null,
+    domain: request.domain ?? null,
+    category: request.category ?? null,
+    priority: request.priority,
+    status: request.status,
+    title: request.title,
+    description: request.description ?? null,
+    proposed_action: request.proposedAction ?? null,
+    allow: request.allow ?? ['approve', 'reject'],
+    context: request.context ?? {},
+    alternatives: request.alternatives ?? [],
+    risks: request.risks ?? [],
+    impacts: request.impacts ?? [],
+    requested_at: request.requestedAt.toISOString(),
+    expires_at: request.expiresAt ? request.expiresAt.toISOString() : null,
+    responded_at: request.respondedAt ? request.respondedAt.toISOString() : null,
+    response: responseToContract(request.response),
+    response_comment: request.responseComment ?? null,
+    responder_id: request.responderId ?? null,
+    metadata: request.metadata ?? {},
+  };
+}
+
+/** Reconstrói um HitlRequest interno a partir de um registo no formato do contrato v1. */
+function fromContractRecord(record: Record<string, any>): HitlRequest {
+  return {
+    id: record.id,
+    agentId: record.agent_id ?? null,
+    domain: record.domain ?? null,
+    category: record.category ?? null,
+    priority: record.priority ?? HitlPriority.MEDIUM,
+    status: (record.status as HitlStatus) ?? HitlStatus.PENDING,
+    title: record.title,
+    description: record.description ?? null,
+    context: record.context ?? {},
+    proposedAction: record.proposed_action ?? null,
+    alternatives: record.alternatives ?? [],
+    risks: record.risks ?? [],
+    impacts: record.impacts ?? [],
+    requestedAt: new Date(record.requested_at),
+    expiresAt: record.expires_at ? new Date(record.expires_at) : undefined,
+    respondedAt: record.responded_at ? new Date(record.responded_at) : undefined,
+    response: responseFromContract(record.response),
+    responseComment: record.response_comment ?? undefined,
+    responderId: record.responder_id ?? undefined,
+    metadata: record.metadata ?? {},
+    schema: 'hitl-request-v1',
+    source: record.source,
+    runId: record.run_id ?? null,
+    planId: record.plan_id ?? null,
+    stepId: record.step_id ?? null,
+    allow: record.allow,
+  };
+}
 export class HitlManager extends EventEmitter {
   private pendingRequests: Map<string, HitlRequest> = new Map();
   private approvedRequests: Map<string, HitlRequest> = new Map();
@@ -126,6 +205,54 @@ export class HitlManager extends EventEmitter {
   }
   isPending(requestId: string): boolean {
     return this.pendingRequests.has(requestId);
+  }
+  private mapForStatus(status: HitlStatus): Map<string, HitlRequest> {
+    switch (status) {
+      case HitlStatus.APPROVED:
+        return this.approvedRequests;
+      case HitlStatus.REJECTED:
+        return this.rejectedRequests;
+      case HitlStatus.EXPIRED:
+      case HitlStatus.CANCELLED:
+        return this.expiredRequests;
+      default:
+        return this.pendingRequests;
+    }
+  }
+  /**
+   * Lê um ficheiro JSONL no formato do contrato v1 (hitl-request-v1.json) —
+   * tipicamente `hitl-requests.jsonl` escrito pelo `plan_runner` — e importa
+   * cada pedido para o estado interno (mapa determinado pelo `status`).
+   * Devolve os pedidos importados.
+   */
+  importFromFile(path: string): HitlRequest[] {
+    const content = readFileSync(path, 'utf-8');
+    const imported: HitlRequest[] = [];
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const record = JSON.parse(trimmed);
+      const request = fromContractRecord(record);
+      this.mapForStatus(request.status).set(request.id, request);
+      imported.push(request);
+    }
+    return imported;
+  }
+  /**
+   * Escreve todos os pedidos actualmente conhecidos (pendentes, aprovados,
+   * rejeitados, expirados) para um ficheiro JSONL no formato do contrato v1,
+   * um pedido por linha. Serve de contraparte a `importFromFile` e é o que o
+   * `plan_runner` (lado Python) consegue reler como `hitl-requests.jsonl`.
+   */
+  exportToFile(path: string): void {
+    const all = [
+      ...this.pendingRequests.values(),
+      ...this.approvedRequests.values(),
+      ...this.rejectedRequests.values(),
+      ...this.expiredRequests.values(),
+    ];
+    const lines = all.map((request) => JSON.stringify(toContractRecord(request)));
+    writeFileSync(path, lines.length ? lines.join('\n') + '\n' : '', 'utf-8');
   }
   private scheduleExpiration(request: HitlRequest): void {
     if (!request.expiresAt) return;

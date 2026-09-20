@@ -383,6 +383,8 @@ Teste: 61ª chamada num minuto recebe 429.
 **Fase 4 — Atualização de Status**
 Mover para Done.
 
+> **Status em 2026-09-20: DONE.** Fase 1 confirmada (5 ficheiros lidos por completo: `apps/api/src/server.ts` 41 linhas, `apps/api/src/index.ts` 133 linhas, `apps/api/src/middleware/auth.ts` 95 linhas, `packages/mcp/src/tools/ToolPolicy.ts` 161 linhas, `mcp/plan_runner/mcp_plan_runner/policy.py` 149 linhas — zero rate limit em `apps/api`). **Discrepância registada:** o "por caller" do Python (`policy.py:129`, `rate_limit(caller, limit=60, window=60.0)`) não é equivalente a "por IP" — `auth.ts:55-82` usa um `API_KEY` único partilhado por todos os clientes, sem conceito de identidade por chamador; IP é o único eixo disponível nesta API. Documentado no código (`server.ts`) e no `STATUS.md` item 11. Instalado `express-rate-limit@8.7.0` via `apps/api` (pnpm 8.0.0 tem um bug de fetch incompatível com Node 24 — `ERR_INVALID_THIS`; contornado com `corepack pnpm@8.15.9`, mantendo `lockfileVersion: '6.0'`). Rate limiter criado dentro de `createServer()` (não a nível de módulo, para não partilhar estado entre instâncias), 60/60s, excluído de `/health`. 3 testes novos em `server-rate-limit.test.ts`: 60 pedidos passam; 61º devolve 429; `/health` não é afectado mesmo com o limite esgotado noutra rota. Suite completa sem regressão.
+
 ---
 
 ### A17 — Bot protection
@@ -401,6 +403,8 @@ Fluxo manual sem token de captcha é rejeitado.
 
 **Fase 4 — Atualização de Status**
 Mover para Done.
+
+> **Status em 2026-09-20: N/A neste repo (verificado, não "por fazer").** Fase 1: 6 ficheiros de rotas lidos por inteiro (99 linhas no total — `agents.ts` 11, `chat.ts` 14, `executions.ts` 11, `health.ts` 20, `hitl.ts` 14, `metrics.ts` 29), 19 endpoints inventariados (lista completa em `server-no-public-endpoints.test.ts`). Cruzado com `server.ts:41` (`app.use(authMiddleware)`, montado globalmente, sem excepção de path) e `auth.ts:55-82` (fail-closed: sem `X-API-Key` válida, devolve 503/401 antes de a rota ser sequer resolvida). **Nenhum endpoint desta API é público** — todos exigem uma chave partilhada única; bot protection (Turnstile/hCaptcha) existe para distinguir humano de bot em tráfego não-autenticado, o que não existe aqui (é M2M, gated por chave, não por captcha). Teste novo (`server-no-public-endpoints.test.ts`): as 19 rotas devolvem 503 sem `API_KEY`, confirmando a premissa empiricamente, não só por leitura. Classificação análoga ao A14 (item de checklist cujo cabeçalho já diz "aplica-se sobretudo ao `agent-network-mcp`, produção") — se esse repo tiver formulários públicos reais, é lá que este item se aplicaria. **Auto-crítica:** não verifiquei o `agent-network-mcp` (repo separado) para confirmar se ele tem endpoints públicos que precisem disto — a classificação N/A é só para *este* repo. Também não testei o comportamento com `ALLOW_UNAUTHENTICATED=true` (dev local) — nesse modo os endpoints ficam de facto abertos, mas é uma opção explícita de desenvolvimento, documentada como tal em `auth.ts`, não o comportamento por omissão.
 
 ---
 
@@ -553,6 +557,8 @@ Rodar um plano real com `human_gate` até parar; confirmar `hitl-requests.jsonl`
 **Fase 4 — Atualização de Status**
 Mover S9 para Done em STATUS.md. Nota em `hitl/README.md`: trocar "Status: design. Not implemented." pelo estado real, já que a Fase A.2b passou a existir.
 
+> **Status em 2026-09-20: DONE.** `hitl.write_request()` ligado nos 2 pontos `human_gate_requested` de `engine.py` (`run_plan`+`resume_run`) e nos 2 pontos análogos de `langgraph_engine.py` (`run_plan_langgraph`+`resume_plan_langgraph`), sempre em dupla-escrita ao lado do `log.append(...)` já existente (nada removido). Em `cli.py`, o comando `resume` agora resolve `decision = hitl.read_decision(args.out)["response"] if ... else args.decision` antes do branching langgraph/native — não-regressão confirmada (`--decision` continua a funcionar quando não há ficheiro de decisão). Testado ponta-a-ponta nos 2 motores com `docs/orchestration/design/templates/examples/design-flow-demo.plan.yaml` em modo `stub`: plano pára em `paused_human_gate`, `hitl-requests.jsonl` escrito com `schema: "hitl-request-v1"`; decisão escrita manualmente via `hitl.write_decision()` (simulando o lado Node) e lida por `resume` sem `--decision` — confirmado com decisão `reject` (não só `approve`, que é o omissão do argparse, para excluir falso positivo). Suite completa: 146/146 testes TS (2 falhas pré-existentes não relacionadas: `supertest` em falta, `prisma generate` não corrido) + 172/172 testes Python, 0 regressões. Nota em `hitl/README.md` ainda por fazer (marcada acima, não bloqueia o fecho de B1/S9).
+
 ---
 
 ### B2 — Corrigir `ExecutionFlow.test.ts`
@@ -612,6 +618,8 @@ Teste de round-trip: criar um `HitlRequest` no `HitlManager`, exportar, reimport
 
 **Fase 4 — Atualização de Status**
 Mover M2 para Done.
+
+> **Status em 2026-09-20: DONE.** Discrepância na Fase 1: `hitl.ts` tinha `agentId`/`domain`/`category`/`description`/`proposedAction` obrigatórios e não-nulos, mas o contrato v1 marca-os `nullable` e o `hitl.py` (B1) escreve `null` de facto quando o plano não os fornece — resolvido tornando-os `| null` em `hitl.ts` (não quebra `requestApproval()`, que continua a exigi-los como `string` nos parâmetros). `response` também divergia (`'approved'|'rejected'` interno vs `'approve'|'reject'|'edit'` do contrato) — resolvido com tradução na fronteira dentro de `toContractRecord()`/`fromContractRecord()`, sem tocar em `approveRequest()`/`rejectRequest()`. Ambiguidade adicional entre a Fase 2 deste item (que descreve `exportToFile` como escrevendo `hitl-decisions.jsonl`) e a Fase 3 (teste de round-trip completo de campos, que só faz sentido com o formato de pedido completo): resolvida fazendo `importFromFile`/`exportToFile` operarem sobre o formato de **pedido** (contrato v1, `hitl-requests.jsonl`) — serve o round-trip da Fase 3 e o caso de uso real do `hitl/README.md` Opção A ("HitlManager lê hitl-requests.jsonl quando a API é consultada"); escrever `hitl-decisions.jsonl` a partir do Node (quando um humano aprova via `POST /hitl/:id/approve`) fica para o B5. 4 testes novos + 10 antigos = 14/14 em `HitlManager.test.ts`; `tsc --noEmit` sem novos erros.
 
 ---
 
@@ -691,6 +699,8 @@ Para cada template alterado, rodar em modo `stub`, confirmar `knowledge_context.
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo B, com a contagem final (ex. "5/12 templates usam knowledge:, os restantes 7 não têm KB aplicável").
 
+> **Status em 2026-09-20: DONE.** Confirmados os 12 templates da Fase 1 (só `seo-article-demo-s9.plan.yaml` tinha `knowledge:`). **Achado real da Fase 2** — `scripts/ingest_delta.py` (`MANIFEST`) e `scripts/ingest_apply.py` (`_kb_for()`) mostram que o `kb` não é livre: só existem 3 buckets com conteúdo real ingerido — `marketing` (~25 ficheiros), `produto-tech` (2 ficheiros) e `global` (fallback, cobre `saude`/`legal`/`imobiliario`). **Não existe bucket `design`** — `docs/knowledge/design/*.md` nunca foi adicionado ao `MANIFEST`, e `ux.md`/`ui.md` (nível de topo) estão etiquetados `marketing`, não `design`. Um `knowledge: {kb: design, ...}` nos templates de design devolveria sempre vazio, silenciosamente — pior que não ter o bloco. Resultado: **7/12** templates (marketing, com conteúdo real na KB) ganharam `knowledge:` — `approval-rounds` (3 steps `creative_review`), `influencer-pack`, `internal-brief`, `paid-pack`, `seo-article` (espelha os 3 blocos do S9), `social-pack` (2 steps), `ugc-video-pack` (2 steps); **5/12** ficaram sem alteração, cada um por razão distinta: `seo-article-demo-s9.plan.yaml` (já tinha), `seo-article-demo.plan.yaml` (o próprio ficheiro documenta que fica intencionalmente intacto — é o "antes" do S9), `ship-parallel.plan.yaml` (code/security/test review, sem correspondência em nenhum KB de marketing), `design-flow.plan.yaml`/`design-flow-demo.plan.yaml` (sem bucket `design` — ver achado acima; candidato a item novo de backlog, não registado aqui por ser fora do escopo do B8). Testado: os 7 templates alterados correm em `stub`, os 12 blocos `knowledge:` (novos + os 3 do S9) disparam `knowledge_wiring.py` e escrevem `knowledge_context.md` com falha graciosa documentada (`MCP_API_KEY não definida` — sem credenciais neste ambiente, resultado esperado por `hitl/README.md`/`RATE-LIMITS.md`).
+
 ---
 
 ### B9 — Schema `knowledge:` no `Plan.schema.json`
@@ -709,6 +719,8 @@ Um plano de teste com `knowledge: {kb: 123}` (tipo errado) falha na validação 
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo B.
+
+> **Status em 2026-09-20: DONE.** Discrepância na Fase 1: `docs/architecture/plan-execute/` (onde vive o `Plan.schema.json`) é **documentação/design desligada do runtime real** — o próprio `README.md` do directório diz "Não liga sozinho ao `agent-network-mcp`", e nenhum `.py`/`.ts` do repo importa ou valida contra `Plan.schema.json` (confirmado por grep; a validação real dos planos usados por `engine.py`/`langgraph_engine.py` é feita em Python puro por `graph.py`/`models.py`, sem JSON Schema). O brief da Fase 3 ("um plano com `knowledge: {kb: 123}` falha na validação do schema, antes de chegar a `knowledge_wiring.py`") pressupõe uma ligação viva que não existe — não há forma de um plano real chegar a ser validado por este ficheiro. Classificação: **DIFERENTE** (execução ajustada, sem parar, por não ser decisão de arquitectura — só um documento de design, sem tocar em `graph.py`/`models.py`). Resolução: adicionado o campo `knowledge` (opt-in, `kb`+`query` obrigatórios, `top_k`/`require_citations`/`filters` opcionais) a `Plan.schema.json`, alinhado ao formato real de `knowledge_wiring.py`; teste novo em `test_plan_schema_json.py` valida o **schema em si** contra o único exemplo real do directório (`examples/piloto-netos.plan.yaml`, que já conformava ao schema antes desta alteração) — 6 testes (schema tem a propriedade; exemplo real continua válido após a alteração — não-regressão; bloco bem formado valida; `kb` de tipo errado falha; `query` em falta falha; propriedade desconhecida falha por `additionalProperties: false`). `jsonschema>=4.26.0` adicionado a `runner/requirements.txt` (já estava instalado transitivamente, agora declarado). Nenhuma tentativa de wire real validation ao `plan_runner` — isso quebraria todos os planos reais de `docs/orchestration/` (que não têm `plan_id`/`created_at`/`goal`/`context.brand`/`verify`/`status`/`model_tier`, todos exigidos por este schema) e seria uma mudança de arquitectura fora do escopo pedido.
 
 ---
 
@@ -747,6 +759,8 @@ Inserir eventos de teste conhecidos, buscar por um termo presente num deles, con
 
 **Fase 4 — Atualização de Status**
 Mover M1 para Done.
+
+> **Status em 2026-09-20: DONE.** Sem discrepâncias na Fase 1 — `EventLog.append()` confirmado exactamente como descrito (`{id, type, run_id, at, payload}`, mais `**extra` opcional como `actor`, já previsto pela assinatura). `runner/plan_runner/session_search.py` (novo): `build_index()`/`search()` sobre `events_fts.db` (SQLite FTS5), aditivo — `events.py` intocado. 7/7 testes novos, incluindo o cenário pedido (termo presente num único evento não devolve falsos positivos/negativos) e reindexação idempotente após novo evento.
 
 ---
 
@@ -891,6 +905,8 @@ Executar uma sequência de 3 acções e confirmar que o hash da 3ª depende do c
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo C.
 
+> **Status em 2026-09-20: DONE, com escopo deliberadamente reduzido face ao ADR-001 §4.** Fase 1: lido `ADR-001-governance-runtime.md` (187 linhas) por inteiro — o contrato completo de "Action Receipt" (secção 4) exige `agent`/`principal` como DID (AgentMesh, Ed25519) e uma `AuthorizationDecision` vinda de Cedar/OPA — nenhum dos dois existe neste repo (`agentmesh-platform` **não é sequer uma dependência instalada**, confirmado por `pip show`; foi só revisto externamente durante a auditoria). `AUDIT-GOVERNANCE.md` (189 linhas, secção 8 linha 81 e secção 11 linha 146) e `GOV-FASE1.md` (85 linhas, secção 2a linha 39) confirmam: Action Receipt está genuinamente por implementar, e o roadmap (`AUDIT-GOVERNANCE.md` §13) só prevê a integração AgentMesh/Cedar na "Fase 1", ainda não feita — construir o contrato completo agora exigiria inventar campos DID/AuthorizationDecision sem nenhuma implementação real por trás. **Decisão:** implementar a versão reduzida exactamente como o brief da Fase 2 já descrevia (`actor`/`tool`/`params_hash`/`result_hash`/`prev_receipt_hash`/`at`), não o contrato completo do ADR — documentado como decisão explícita, não silenciada. `packages/mcp/src/tools/ActionReceipt.ts` (novo): `computeReceiptHash()`, `hashResult()`, `appendReceipt()`, `verifyChain()`; persistido em `MCP_RECEIPTS_LOG_PATH` ou `${MCP_AUDIT_LOG_PATH}.chain` (aditivo, `audit.jsonl` intocado). Integrado em `ToolExecutor.executeTool()` no caminho de sucesso (depois do `audit()` já existente). 8 testes novos: `ActionReceipt.test.ts` (4 — cadeia de 3 acções depende das anteriores; adulteração do meio detectada com `broken_at` correcto; cadeia vazia/inexistente é válida; `hashResult()` determinístico) + `ToolExecutor.test.ts` (1 novo — integração real grava no `.chain`). Suite completa sem regressão.
+
 ---
 
 ### C6 — Confirmar C8e fechado
@@ -909,6 +925,8 @@ Rodar `mcp/plan_runner/test_client.py` e confirmar que a tool aparece na lista e
 
 **Fase 4 — Atualização de Status**
 Já está em Done — só adicionar nota de "revalidado em [data]" se a suite passar, ou reabrir o item se não passar.
+
+> **Status em 2026-09-20: REVALIDADO, continua Done.** **Discrepância na Fase 1 (Regra 5):** o brief apontava `mcp/plan_runner/test_client.py` como o teste a correr, mas esse ficheiro (141 linhas, lido por inteiro) testa o servidor **stdio** de `mcp_plan_runner` — envia `initialize`/`tools/list`/`tools/call → list_templates`, nenhuma relação com `retrieve_knowledge`. A suite que realmente cobre C8e é `runner/tests/test_mcp_knowledge.py` (274 linhas, lida por inteiro) — 13 testes, mocka os 3 níveis do transporte MCP (`httpx.AsyncClient`, `streamable_http_client`, `ClientSession`), não precisa de servidor real. Rodada: **13/13 passam**. `mcp_knowledge.py` (200 linhas, lido por inteiro) confirmado intacto, `MCP_TOOL_NAME = "retrieve_knowledge"` presente (linha 54). Verificação extra (não pedida, mas informativa): `curl` ao deployment real (`https://agent-network-mcp-oddn.vercel.app/api/mcp`) devolve `401` — confirma que o serviço real está no ar e a exigir auth, tal como documentado; sem `MCP_API_KEY` neste ambiente para uma chamada autenticada real. Nota em `STATUS.md` (entrada C8e).
 
 ---
 
@@ -930,6 +948,8 @@ Reler o documento do início ao fim e confirmar que todos os 33 agentes (contage
 
 **Fase 4 — Atualização de Status**
 Mover G5 para Done (se ainda não estiver).
+
+> **Status em 2026-09-20: JÁ FEITO, reconfirmado com evidência fresca — e 1 achado novo registado à parte (G6).** Fase 1: `MCP-MAPPING.md` (209 linhas) lido por inteiro; `lib/agents.js` real (1248 linhas, `C:\Users\souza\Claude Code\agent-network-mcp`) cruzado por grep + leitura dos 3 blocos relevantes (`apps-produto` linhas 370-423, `hvac` linhas 186-229, `imobiliario-digital` linhas 526-565) — as 2 correcções G5 (`apps-produto` proprietário, `hvac` proprietário) **confirmadas correctas** contra o texto real dos agentes (nomes de produto/preço/geografia reais em ambos). Contagem de 33 agentes reconfirmada por `grep -c` no ficheiro real (33 chaves de topo, nomes idênticos aos da tabela). **Fase 3 (teste "exactamente uma secção"): FALHA parcial, achado novo.** 2 dos 33 agentes aparecem em 2 secções de detalhe cada, não 1: `refrigeracao-hvac` (3.4+3.6, mas com nota "(ver 3.6)" em 3.4 — cross-reference deliberado, sem contradição) e `imobiliario-digital` (3.2+3.6, **sem** nota equivalente — 3.2 trata-o como "genérico", a tabela principal e a 3.6 dizem "Misto"; secção 6 diz que a parte pública dos Mistos vai "para depois", mas 3.2 já a conta em "para o setup, agora" — contradição real de timing). Per instrução explícita do brief ("registar como item separado, não forçar dentro do C7"): **não corrigido aqui** — registado como **G6** em `STATUS.md` (🗺️ Mapeamento) e nota inline em `MCP-MAPPING.md` secção 3.2, com decisão humana pendente (a parte pública conta em 3.2 ou em 3.6, não as duas). C7 fecha com os seus 2 achados originais confirmados; G6 é um 3º achado, fora do escopo deste item.
 
 ---
 
@@ -962,6 +982,8 @@ Teste que cria um span pai + span filho (caso que o bug antigo quebraria) e conf
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo D. Nota em `GOV-FASE1.md`/`AUDIT-OBSERVABILITY.md`: "RESOLVIDO — observability em TS deixa de ser hand-rolled".
 
+> **Status em 2026-09-20: DONE (parcial, com decisão de escopo registada).** Fase 1 confirmou exactamente a revalidação já feita em 2026-09-19: sem bug de assinatura em `exportTrace(traceId)`; `this.traces` genuinamente sem limite (nenhuma remoção em todo o ficheiro) — memory leak real. **Decisão de escopo:** a migração completa para `@opentelemetry/api`+`@opentelemetry/sdk-trace-node` (Fase 2 original) implica adicionar uma dependência de produção nova a um pacote partilhado (`packages/observability`, consumido por `Executor.ts` e, via D2, por `LLMService.ts`/`ToolExecutor.ts`) — tratado como decisão de arquitectura genuína, não tomada unilateralmente dentro deste lote autónomo. Resolução aplicada em alternativa, cirúrgica e de baixo risco: `Tracer` ganha `maxTraces` (constructor, default 1000) com eviction FIFO sobre `this.traces` (o `Map` preserva ordem de inserção — evict do traceId mais antigo antes de inserir um novo, uma vez atingido o limite); API pública 100% inalterada (`startSpan`/`endSpan`/`setAttribute`/`addEvent`/`getTrace`/`getAllTraces`/`exportTrace`), zero risco para `Executor.ts`. 5 testes novos em `Tracer.test.ts`: span pai+filho exporta correctamente; `endSpan` liberta `currentSpans`; 1000 spans em loop não excedem `maxTraces`; eviction é FIFO (mais antigos saem primeiro); API pública inalterada. A migração para o SDK oficial **fica registada como decisão em aberto** (não como "não fazer") — a proposta concreta (dependências, `ConsoleSpanExporter`/`OTLPSpanExporter` via `OTEL_EXPORTER_OTLP_ENDPOINT`) continua válida em Fase 2 acima, só não foi executada nesta ronda. **Confirmado pelo utilizador em 2026-09-20:** fix cirúrgico aprovado como fecho do D1; a migração completa regista-se como item novo **S14** em `STATUS.md` (🟡 Médio), para sessão própria.
+
 ---
 
 ### D2 — Instrumentar `LLMService.ts`/`ToolExecutor.ts` com spans `gen_ai.client`
@@ -982,6 +1004,8 @@ Rodar `processRequest` uma vez com `ConsoleSpanExporter` e confirmar (por assert
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo D.
 
+> **Status em 2026-09-20: DONE.** Fase 1: `LLMService.chat()`/`chatWithTools()` só devolviam `usage: {tokens: number}` (total combinado) — sem split `prompt`/`completion`, apesar da OpenAI já devolver `prompt_tokens`/`completion_tokens` na resposta real (só não estavam a ser capturados). Resolvido: `TokenUsage` ganhou `promptTokens`/`completionTokens` opcionais (aditivo, não quebra consumidores existentes de `.tokens`); `chat()`/`chatWithTools()` envolvem a chamada num span `gen_ai.client.chat`/`gen_ai.client.chat_with_tools` via `getGlobalTracer()` (`packages/core` já depende de `@network-agents/observability`), com `gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`; span marcado `error` e excepção propagada se o provider falhar. 3 testes em `LLMService.test.ts`. **`ToolExecutor.ts`:** `packages/mcp/package.json` não dependia de `@network-agents/observability` (só usava `console.error` local em `sanitizeError.ts`, decisão do A18, sobre erros — não sobre telemetria). **Confirmado pelo utilizador em 2026-09-20** que adicionar a dependência não contradiz o A18 e que o pacote existe precisamente para isto — dependência adicionada a `packages/mcp/package.json`, symlink criado em `node_modules/@network-agents/observability` (equivalente ao que `pnpm install` faria para `workspace:*`). `executeTool()` envolve `tool.execute(params)` num span `gen_ai.tool.execute`, atributos `gen_ai.tool.name`/`gen_ai.operation.name: execute_tool`; span `error` no catch, antes do `toClientError()`. 2 testes novos em `ToolExecutor.test.ts` (nomes de tool têm de estar em `SCOPES` de `ToolPolicy.ts` — `read_file`/`write_file` — achado menor durante o teste: nomes fictícios são negados com `unknown_tool` independente do profile). Suite completa sem regressão (ver relatório final da sessão).
+
 ---
 
 ### D3 — DeepEval via pytest
@@ -1000,6 +1024,8 @@ Adicionar `deepeval` como dependência de dev. Escrever golden-set (input real �
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo D. Nota em `agents-audit/FASE4-AGENTES.md`: "DeepEval adoptado, ver `runner/tests/test_deepeval_*.py`".
+
+> **Status em 2026-09-20: BLOQUEADO — ambiente insuficiente, não "por fazer".** `deepeval` não está instalado (confirmado), e a Fase 2 exige um judge local via Ollama — também não instalado, e a máquina desta sessão tem ~1GB de RAM livre, abaixo do mínimo (~1.5GB) do menor modelo Ollama em runtime. Não é uma questão de instalar mais um pacote pip; é uma limitação real de recursos desta máquina. Registado em `STATUS.md` como **D3** (🟡 Médio) com o mesmo texto. Requer, para desbloquear: máquina com mais RAM, ou um endpoint Ollama remoto (não local). **Não marcado como Done nem como pendente normal — fica explicitamente Bloqueado.**
 
 ---
 
@@ -1020,6 +1046,8 @@ Confirmar que os scores de Ragas e DeepEval não se contradizem para os mesmos c
 
 **Fase 4 — Atualização de Status**
 Mover para Done, grupo D.
+
+> **Status em 2026-09-20: BLOQUEADO — ambiente insuficiente, não "por fazer".** `pip install ragas` falha ao compilar `scikit-network` (dependência transitiva): `error: Microsoft Visual C++ 14.0 or greater is required`. Causa raiz: Python desta máquina é **3.14.7** (muito recente) — `scikit-network` não tem wheel pré-compilada para `cp314` no Windows, exige compilar a partir do código-fonte, o que exige o MSVC Build Tools (não instalado). Não é falta de rede nem de créditos — é ausência de toolchain de compilação C++ nesta máquina. Requer, para desbloquear: instalar o Visual Studio Build Tools (componente "Desktop development with C++"), ou usar uma versão de Python com wheels pré-compiladas disponíveis (ex. 3.11/3.12), ou uma máquina/container Linux onde `scikit-network` tem wheel manylinux. **Não marcado como Done nem como pendente normal — fica explicitamente Bloqueado**, mesmo padrão do D3.
 
 ---
 
@@ -1325,7 +1353,9 @@ Mover B12 para Done em STATUS.md, com a origem documentada (ou "origem desconhec
 
 ---
 
-## GRUPO F — Skills / Arquitetura de Agentes / Infra transversal (9 itens)
+## GRUPO F — Skills / Arquitetura de Agentes / Infra transversal (10 itens)
+
+> **Nota de contagem (2026-09-20, achado durante A16/C5):** F10 acrescentado (= B15, pnpm@8.0.0 incompatível com Node 24). Grupo passa de 9 para 10 itens.
 
 > **Revalidação de escopo (B14/D10, 2026-09-19):** F1, F5-F9 confirmados **REAL**. F2, F3, F4 reclassificados **JÁ FEITO** (ver nota em cada um). Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.
 
@@ -1507,7 +1537,26 @@ Mover B5 para Done ou DEFER conforme o resultado.
 
 ---
 
-*(Fim do Grupo F — 9/9 itens.)*
+### F10 — Actualizar versão do pnpm *(= B15)*
+
+**Quem:** Claude + Desenvolvedor
+**Origem:** STATUS.md item B15, achado durante o A16 (2026-09-20)
+
+**Fase 1 — Análise e Verificação**
+`package.json` (raiz) fixa `"packageManager": "pnpm@8.0.0"`. Confirmado nesta sessão que esta versão tem um bug real de incompatibilidade com Node 24 (`ERR_INVALID_THIS` ao fazer fetch de metadados ao registry, reproduzido ao instalar `express-rate-limit` para o A16).
+
+**Fase 2 — Execução**
+Actualizar para `pnpm@8.15.9` (mesma série major, já testado nesta sessão via `corepack pnpm@8.15.9` — corrige o bug sem alterar `lockfileVersion: '6.0'`). **Não** subir para `9.x`: testado nesta sessão que isso reescreve o lockfile inteiro (`v6.0`→`v9.0`, 2903 linhas de diff), o que quebraria `--frozen-lockfile` no CI sem uma revisão à parte.
+
+**Fase 3 — Teste e Validação**
+`pnpm install` limpo com a versão nova, CI a correr `--frozen-lockfile` sem erros.
+
+**Fase 4 — Atualização de Status**
+Mover B15/F10 para Done.
+
+---
+
+*(Fim do Grupo F — 10/10 itens.)*
 
 ---
 
@@ -2344,7 +2393,7 @@ Mover F12 para "candidate activo" com prioridade relativa definida, ou manter "p
 
 ## Contagem final
 
-A(23) + B(13) + C(7) + D(10) + E(9) + F(9) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **115 itens** (108 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, A23, D8, D9, D10, E8 e E9 acrescentados em 2026-09-19, ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G5, F1-F22, B1/B3-B14, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
+A(23) + B(13) + C(7) + D(10) + E(9) + F(10) + G1(14) + G2(4) + G3(3) + G4(2) + H(4) + I(10) + J(7) = **116 itens** (109 accionáveis nos Grupos A-I + 7 arquivados no Grupo J — A22, A23, D8, D9, D10, E8 e E9 acrescentados em 2026-09-19, F10 acrescentado em 2026-09-20 (achado durante A16/C5), ver nota de correção nº1 do errata para a metodologia de contagem), cobrindo integralmente `STATUS.md` (todas as séries: Prompts pendentes, Crítico/Alto/Médio/Baixo, Arquivado, checklist de segurança de 20, Harnesses, google/skills, Mapeamento G1-G7, F1-F22, B1/B3-B16, U1-U9, Dependências críticas) + todas as auditorias desta sessão (Governança, Memória, Agentes Fases 1-6, Ingestão, Tools/MCP, Orquestração, Segurança 2026, Avaliação, Observabilidade, Meta-Validação).
 
 Nenhum item de `STATUS.md` ficou de fora. Onde havia duplicação entre séries antigas (F4/F17, F5/F16), foi sinalizado para reconciliação em vez de ser tratado duas vezes.
 

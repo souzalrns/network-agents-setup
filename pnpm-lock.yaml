@@ -56,6 +56,9 @@ importers:
       express:
         specifier: ^4.22.3
         version: 4.22.3
+      express-rate-limit:
+        specifier: ^8.7.0
+        version: 8.7.0(express@4.22.3)
       helmet:
         specifier: ^7.0.0
         version: 7.2.0
@@ -137,6 +140,9 @@ importers:
 
   packages/mcp:
     dependencies:
+      '@network-agents/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@network-agents/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1424,6 +1430,19 @@ packages:
       strip-final-newline: 3.0.0
     dev: true
 
+  /express-rate-limit@8.7.0(express@4.22.3):
+    resolution: {integrity: sha512-hOwV7WOxXfjRpAM1DSJWZDXx3GhplwD8IfwuwvogD8i1Qnkgosw/H45s4ZnFAUHDAhPjlY9hLBvJhKmGMyY26g==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      express: '>= 4.11'
+    dependencies:
+      debug: 4.4.3
+      express: 4.22.3
+      ip-address: 10.7.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /express@4.22.3:
     resolution: {integrity: sha512-Bdcs4+3qlpVlx2NRn6fgX2Ue2/gGRaPeawebgclM0ERSCqDpA+owF1fdPwjJUTAJWMTuAaxjDf+hzb0/4eKvvw==}
     engines: {node: '>= 0.10.0'}
@@ -1666,6 +1685,11 @@ packages:
       standard-as-callback: 2.1.0
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /ip-address@10.7.2:
+    resolution: {integrity: sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==}
+    engines: {node: '>= 12'}
     dev: false
 
   /ipaddr.js@1.9.1:

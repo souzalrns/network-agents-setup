@@ -16,6 +16,7 @@
     "@network-agents/langgraph": "workspace:*",
     "@network-agents/shared": "workspace:*",
     "express": "^4.22.3",
+    "express-rate-limit": "^8.7.0",
     "cors": "^2.8.5",
     "helmet": "^7.0.0",
     "ws": "^8.14.0",

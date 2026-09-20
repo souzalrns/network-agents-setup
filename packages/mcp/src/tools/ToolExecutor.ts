@@ -1,6 +1,8 @@
 import { ToolRegistry, MCPTool, MCPToolResult } from './ToolRegistry';
 import { authorize, rateLimit, audit, hashParamsForAudit } from './ToolPolicy';
+import { appendReceipt, hashResult } from './ActionReceipt';
 import { toClientError } from '../util/sanitizeError';
+import { getGlobalTracer } from '@network-agents/observability';
 
 export interface ExecutionContext {
   caller?: string;
@@ -38,12 +40,27 @@ export class ToolExecutor {
       return { content: [{ type: 'text', text: 'Rate limit exceeded' }], isError: true };
     }
 
+    const tracer = getGlobalTracer();
+    const spanId = tracer.startSpan('gen_ai.tool.execute');
+    tracer.setAttribute(spanId, 'gen_ai.tool.name', name);
+    tracer.setAttribute(spanId, 'gen_ai.operation.name', 'execute_tool');
     try {
       this.validateParams(tool, params);
       const result = await tool.execute(params);
+      tracer.endSpan(spanId, 'ok');
       audit({ caller, tool: name, params_hash: hashParamsForAudit(params), allowed: true, reason: auth.reason });
+      // C5: recibo de acção com hash encadeado (ADR-001 §8), aditivo ao
+      // audit.jsonl já existente -- ver ActionReceipt.ts para o escopo
+      // deliberadamente reduzido face ao contrato completo do ADR-001.
+      appendReceipt({
+        actor: caller,
+        tool: name,
+        params_hash: hashParamsForAudit(params),
+        result_hash: hashResult(result),
+      });
       return result;
     } catch (error: any) {
+      tracer.endSpan(spanId, 'error', error);
       audit({
         caller,
         tool: name,

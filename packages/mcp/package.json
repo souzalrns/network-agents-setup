@@ -8,6 +8,7 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
+    "@network-agents/observability": "workspace:*",
     "@network-agents/shared": "workspace:*",
     "@prisma/client": "^5.0.0",
     "cheerio": "^1.0.0",

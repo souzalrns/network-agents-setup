@@ -23,25 +23,32 @@ export enum HitlCategory {
 }
 export interface HitlRequest {
   id: string;
-  agentId: string;
-  domain: string;
-  category: HitlCategory;
+  agentId: string | null;
+  domain: string | null;
+  category: HitlCategory | null;
   priority: HitlPriority;
   status: HitlStatus;
   title: string;
-  description: string;
+  description: string | null;
   context: Record<string, any>;
-  proposedAction: string;
+  proposedAction: string | null;
   alternatives?: string[];
   risks?: string[];
   impacts?: string[];
   requestedAt: Date;
   expiresAt?: Date;
   respondedAt?: Date;
-  response?: 'approved' | 'rejected';
+  response?: 'approved' | 'rejected' | 'edit';
   responseComment?: string;
   responderId?: string;
   metadata?: Record<string, any>;
+  /** Contrato v1 (hitl-request-v1.json) — presentes só em pedidos importados do plan_runner. */
+  schema?: 'hitl-request-v1';
+  source?: 'plan_runner' | 'node_api';
+  runId?: string | null;
+  planId?: string | null;
+  stepId?: string | null;
+  allow?: Array<'approve' | 'reject' | 'edit'>;
 }
 export interface HitlCheckpoint {
   id: string;

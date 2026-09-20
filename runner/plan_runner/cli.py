@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from . import hitl
 from .engine import PlanError, resume_run, run_plan
 
 
@@ -53,6 +54,13 @@ def main(argv: list[str] | None = None) -> int:
                 st = load_status(args.out)
             except Exception:
                 pass
+
+            # B1: tenta a decisao escrita pelo lado Node (hitl-decisions.jsonl)
+            # primeiro; se nao houver, cai no --decision explicito da CLI
+            # (nao-regressao: o uso actual continua a funcionar sem alteracao).
+            hitl_decision = hitl.read_decision(args.out)
+            decision = hitl_decision["response"] if hitl_decision else args.decision
+
             if st and st.get("engine", "").startswith("langgraph"):
                 from .langgraph_engine import resume_plan_langgraph
 
@@ -61,9 +69,9 @@ def main(argv: list[str] | None = None) -> int:
                     if not args.payload_file.exists():
                         raise PlanError(f"payload file not found: {args.payload_file}")
                     payload = args.payload_file.read_text(encoding="utf-8-sig")
-                result = resume_plan_langgraph(args.out, decision=args.decision, payload=payload)
+                result = resume_plan_langgraph(args.out, decision=decision, payload=payload)
             else:
-                result = resume_run(args.out, decision=args.decision)
+                result = resume_run(args.out, decision=decision)
     except PlanError as e:
         print(f"error: {e}")
         return 1

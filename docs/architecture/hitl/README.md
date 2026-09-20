@@ -2,8 +2,8 @@
 
 > Design note: how `plan_runner` (Python) and the Node platform (TypeScript) will share HITL state.
 >
-> **Status:** design. Not implemented.
-> **Last updated:** 2026-09-11
+> **Status:** Phase A.2 (Python side) implemented and tested 2026-09-20 — see note below. Phases A.3 (TypeScript side) and A.4 (end-to-end) still pending.
+> **Last updated:** 2026-09-20
 
 ---
 
@@ -170,21 +170,22 @@ Three options, in order of complexity:
 - `docs/architecture/hitl/hitl-request-v1.json`
 - `docs/architecture/hitl/README.md` (this file)
 
-### Phase A.2 — Python side (1 day)
+### Phase A.2 — Python side (1 day) — **done 2026-09-20 (S9 / EXECUTION-PROMPTS.md B1)**
 
-**New file:** `runner/plan_runner/hitl.py`
+**New file:** `runner/plan_runner/hitl.py` (S6a)
 
 Responsibilities:
 - `write_request(run_dir, *, step, run_id, plan_id, completed) -> str` — appends to `hitl-requests.jsonl`, returns `hitl_id`
 - `read_decision(run_dir) -> dict | None` — reads `hitl-decisions.jsonl`, returns the latest decision
 
-**Changes:**
-- `runner/plan_runner/engine.py` — replace direct writes with `hitl.write_request()`
-- `runner/plan_runner/langgraph_engine.py` — same
-- `runner/plan_runner/cli.py` — `resume` reads the decision from the file (still supports `--decision` for CLI override)
+**Changes (S9 / B1, 2026-09-20):**
+- `runner/plan_runner/engine.py` — `hitl.write_request()` added alongside the existing `log.append("human_gate_requested", ...)` in both `run_plan()` and `resume_run()` (dual-write, additive — nothing removed)
+- `runner/plan_runner/langgraph_engine.py` — same, in `run_plan_langgraph()` and `resume_plan_langgraph()`
+- `runner/plan_runner/cli.py` — `resume` now tries `hitl.read_decision(args.out)` first; falls back to `--decision` only when no decision file exists (non-regression: explicit `--decision` still works)
 
 **Tests:**
 - `tests/test_hitl_contract.py` — verify written JSON validates against the schema
+- Manual end-to-end validation (both `native` and `langgraph` engines) with `docs/orchestration/design/templates/examples/design-flow-demo.plan.yaml`: run pauses at `paused_human_gate`, `hitl-requests.jsonl` written with `schema: "hitl-request-v1"`; decision written manually to `hitl-decisions.jsonl` (simulating the Node side) and read back by `resume` without `--decision` (confirmed with `reject`, not just the argparse default `approve`). Full suite: 146/146 TS + 172/172 Python, 0 regressions.
 
 ### Phase A.3 — TypeScript side (1 day)
 

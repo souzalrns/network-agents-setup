@@ -16,6 +16,9 @@ steps:
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-influencer-brief.md
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "briefing de influenciador estrutura e critérios"
 
   - id: critic
     action: critic

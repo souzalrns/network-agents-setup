@@ -10,12 +10,16 @@ export interface Span {
   attributes: Record<string, any>;
   events: Array<{ name: string; timestamp: Date; attributes: Record<string, any> }>;
 }
+const DEFAULT_MAX_TRACES = 1000;
+
 export class Tracer {
   private traces: Map<string, Span[]> = new Map();
   private currentSpans: Map<string, Span> = new Map();
   private serviceName: string;
-  constructor(serviceName: string = 'network-agents') {
+  private maxTraces: number;
+  constructor(serviceName: string = 'network-agents', maxTraces: number = DEFAULT_MAX_TRACES) {
     this.serviceName = serviceName;
+    this.maxTraces = maxTraces;
   }
   startSpan(name: string, parentId?: string): string {
     const traceId = parentId ? this.getTraceId(parentId) || crypto.randomUUID() : crypto.randomUUID();
@@ -30,7 +34,17 @@ export class Tracer {
       events: [],
     };
     this.currentSpans.set(span.id, span);
-    if (!this.traces.has(traceId)) this.traces.set(traceId, []);
+    if (!this.traces.has(traceId)) {
+      // D1: `traces` nunca era limpo -- crescia sem limite (memory leak
+      // confirmado, ver AUDIT-SCOPE-2026-09-19.md). Eviction FIFO: Map
+      // preserva ordem de insercao, o traceId mais antigo e o primeiro.
+      while (this.traces.size >= this.maxTraces) {
+        const oldestTraceId = this.traces.keys().next().value;
+        if (oldestTraceId === undefined) break;
+        this.traces.delete(oldestTraceId);
+      }
+      this.traces.set(traceId, []);
+    }
     this.traces.get(traceId)!.push(span);
     return span.id;
   }

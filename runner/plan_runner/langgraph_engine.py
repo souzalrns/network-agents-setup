@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
+from . import hitl
 from .engine import _validate_out_dir, load_plan, load_status, save_status
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
@@ -84,6 +85,14 @@ def run_plan_langgraph(
                         "step_id": step.id,
                         "allow": step.human_gate.allow,
                     },
+                )
+                hitl.write_request(
+                    out,
+                    step=step,
+                    run_id=run_id,
+                    plan_id=plan.id,
+                    completed=completed,
+                    mode=mode,
                 )
 
             decision = interrupt(
@@ -445,6 +454,14 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
                             "step_id": step.id,
                             "allow": step.human_gate.allow,
                         },
+                    )
+                    hitl.write_request(
+                        out_dir,
+                        step=step,
+                        run_id=run_id,
+                        plan_id=plan.id,
+                        completed=completed,
+                        mode=mode,
                     )
 
                 decision_value = interrupt(

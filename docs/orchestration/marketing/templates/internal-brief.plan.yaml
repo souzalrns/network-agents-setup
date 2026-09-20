@@ -12,6 +12,9 @@ steps:
     action: research
     tools_allowed: [read_repo_file, web_search]
     output_artifact: artifacts/01-context.md
+    knowledge:
+      kb: marketing
+      query: "playbook de orquestração de marketing"
 
   - id: brief
     action: internal_brief

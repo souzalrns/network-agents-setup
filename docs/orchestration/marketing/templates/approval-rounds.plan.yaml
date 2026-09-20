@@ -13,6 +13,9 @@ steps:
     action: creative_review
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-review-r1.json
+    knowledge:
+      kb: marketing
+      query: "critérios de revisão criativa checklist"
 
   - id: hitl_r1
     action: plan_approve
@@ -36,6 +39,9 @@ steps:
     depends_on: [revise_r2]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/04-review-r2.json
+    knowledge:
+      kb: marketing
+      query: "critérios de revisão criativa checklist"
 
   - id: hitl_r2
     action: plan_approve
@@ -52,6 +58,9 @@ steps:
     depends_on: [hitl_r2]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/06-review-final.json
+    knowledge:
+      kb: marketing
+      query: "critérios de revisão criativa checklist"
 
   - id: hitl_final
     action: plan_approve

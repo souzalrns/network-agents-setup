@@ -78,7 +78,7 @@ Todas as licenças acima são permissivas (MIT/Apache-2.0) — nenhum risco de l
 | Workload identity | AUSENTE | PARCIAL (modelo, não integração real) | AUSENTE | AUSENTE | AUSENTE | **FORTE** |
 | Audit | PARCIAL (só Python) | FORTE | FORTE | PARCIAL (decision logs via integração) | FORTE (decision logs nativos) | PARCIAL |
 | Provenance | PARCIAL (`events.jsonl`) | FORTE | PARCIAL | AUSENTE | AUSENTE | AUSENTE |
-| Receipts | AUSENTE (desenhado no ADR, não implementado) | PARCIAL (hash-chain do `DelegationLink` é próximo) | AUSENTE | AUSENTE | AUSENTE | AUSENTE |
+| Receipts | PARCIAL — *(2026-09-20, C5: `ActionReceipt.ts` implementa hash-chain próprio, escopo reduzido face ao ADR-001 §4, ver secção 11)* | PARCIAL (hash-chain do `DelegationLink` é próximo) | AUSENTE | AUSENTE | AUSENTE | AUSENTE |
 | Revocation | PARCIAL (campo de estado, sem acção) | **FORTE** (`RevocationEntry` real) | AUSENTE | AUSENTE | AUSENTE | FORTE (rotação de SVID) |
 | Kill switch | AUSENTE | FORTE (`agent-sre`) | AUSENTE | N/A | N/A | AUSENTE |
 | Observability | PARCIAL (só Python) | FORTE (`agent-sre/tracing`) | FORTE (OpenTelemetry nativo) | AUSENTE | PARCIAL | AUSENTE |
@@ -143,7 +143,7 @@ A hipótese de 3 Providers (Identity/Policy/Discovery) proposta como alternativa
 | Dispatch | `ToolExecutor` próprio, **construído** para chamar o Policy Provider antes de executar (hoje não chama nada) |
 | Execution | `plan_runner` (Python) — já funciona, não mexer |
 | HITL | `hitl.py` (Python) — já funciona |
-| Action Receipt | **Construir no core** — nenhum candidato externo tem exactamente este formato; o `DelegationLink.compute_hash()` do AgentMesh é a peça mais próxima a reaproveitar como inspiração de formato |
+| Action Receipt | **Construir no core** — nenhum candidato externo tem exactamente este formato; o `DelegationLink.compute_hash()` do AgentMesh é a peça mais próxima a reaproveitar como inspiração de formato — **RESOLVIDO em 2026-09-20 (C5).** `packages/mcp/src/tools/ActionReceipt.ts`: hash encadeado (`actor`, `tool`, `params_hash`, `result_hash`, `prev_receipt_hash`, `at`), integrado em `ToolExecutor.executeTool()` no caminho de sucesso, aditivo ao `audit.jsonl` (novo ficheiro `.chain` ao lado). **Escopo deliberadamente reduzido** face ao contrato completo do `ADR-001` §4 (que exige `agent`/`principal` como DID e uma `AuthorizationDecision` de Cedar/OPA) — nada disso existe neste repo hoje (`agentmesh-platform` nem está instalado, só foi revisto externamente durante esta auditoria); implementar o contrato completo depende da Fase 1 do roadmap (secção 13) ainda não feita. 8 testes novos (`ActionReceipt.test.ts` + `ToolExecutor.test.ts`). Ver `EXECUTION-PROMPTS.md` C5. |
 | Audit/Provenance | Portar o padrão já real de `mcp/plan_runner/` (Python) para `packages/mcp/` (TypeScript) |
 | Observability | OpenTelemetry (padrão, não específico de nenhum destes projectos) |
 | Revocation | AgentMesh (`RevocationEntry`) |

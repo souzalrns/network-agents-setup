@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import yaml
 
+from . import hitl
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
@@ -140,6 +141,14 @@ def run_plan(
                     "allow": step.human_gate.allow,
                 },
             )
+            hitl.write_request(
+                out,
+                step=step,
+                run_id=run_id,
+                plan_id=plan.id,
+                completed=sorted(completed),
+                mode=mode,
+            )
             status["state"] = "paused_human_gate"
             status["paused_at_step"] = step.id
             status["completed"] = sorted(completed)
@@ -267,6 +276,14 @@ def resume_run(out_dir: Path, decision: str) -> dict[str, Any]:
                 "human_gate_requested",
                 run_id,
                 {"step_id": step.id, "allow": step.human_gate.allow},
+            )
+            hitl.write_request(
+                out_dir,
+                step=step,
+                run_id=run_id,
+                plan_id=plan.id,
+                completed=sorted(completed),
+                mode=mode,
             )
             status["state"] = "paused_human_gate"
             status["paused_at_step"] = step.id

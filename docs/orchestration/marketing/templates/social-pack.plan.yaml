@@ -16,6 +16,9 @@ steps:
     tools_allowed: [web_search, read_repo_file]
     output_artifact: artifacts/01-trends.md
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "identificação de tendências redes sociais"
 
   - id: research
     action: research
@@ -35,6 +38,9 @@ steps:
     depends_on: [copy_social]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/04-story.md
+    knowledge:
+      kb: marketing
+      query: "storytelling estrutura narrativa de marca"
 
   - id: critic
     action: critic

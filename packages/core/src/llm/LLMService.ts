@@ -1,3 +1,5 @@
+import { getGlobalTracer } from '@network-agents/observability';
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
@@ -11,29 +13,69 @@ export interface ChatOptions {
   model?: string;
   tools?: any[];
 }
+export interface TokenUsage {
+  tokens: number;
+  promptTokens?: number;
+  completionTokens?: number;
+}
 export interface LLMProvider {
-  chat(options: ChatOptions): Promise<{ content: string; usage?: { tokens: number } }>;
+  chat(options: ChatOptions): Promise<{ content: string; usage?: TokenUsage }>;
   chatWithTools?(options: ChatOptions): Promise<{
     content: string;
     toolCalls?: any[];
-    usage?: { tokens: number };
+    usage?: TokenUsage;
   }>;
 }
+
+/** D2: gen_ai.client — únicos atributos estáveis da convenção OTel GenAI (o resto continua em Development). */
+function setGenAiAttributes(
+  spanId: string,
+  model: string | undefined,
+  usage: TokenUsage | undefined
+): void {
+  const tracer = getGlobalTracer();
+  if (model) tracer.setAttribute(spanId, 'gen_ai.request.model', model);
+  if (usage?.promptTokens !== undefined) {
+    tracer.setAttribute(spanId, 'gen_ai.usage.input_tokens', usage.promptTokens);
+  }
+  if (usage?.completionTokens !== undefined) {
+    tracer.setAttribute(spanId, 'gen_ai.usage.output_tokens', usage.completionTokens);
+  }
+}
+
 export class LLMService {
   constructor(private provider: LLMProvider) {}
-  async chat(options: ChatOptions): Promise<{ content: string; usage?: { tokens: number } }> {
-    return this.provider.chat(options);
+  async chat(options: ChatOptions): Promise<{ content: string; usage?: TokenUsage }> {
+    const tracer = getGlobalTracer();
+    const spanId = tracer.startSpan('gen_ai.client.chat');
+    try {
+      const result = await this.provider.chat(options);
+      setGenAiAttributes(spanId, options.model, result.usage);
+      tracer.endSpan(spanId, 'ok');
+      return result;
+    } catch (error) {
+      tracer.endSpan(spanId, 'error', error as Error);
+      throw error;
+    }
   }
   async chatWithTools(options: ChatOptions): Promise<{
     content: string;
     toolCalls?: any[];
-    usage?: { tokens: number };
+    usage?: TokenUsage;
   }> {
-    if (this.provider.chatWithTools) {
-      return this.provider.chatWithTools(options);
+    const tracer = getGlobalTracer();
+    const spanId = tracer.startSpan('gen_ai.client.chat_with_tools');
+    try {
+      const result = this.provider.chatWithTools
+        ? await this.provider.chatWithTools(options)
+        : await this.provider.chat(options).then((r) => ({ content: r.content, usage: r.usage }));
+      setGenAiAttributes(spanId, options.model, result.usage);
+      tracer.endSpan(spanId, 'ok');
+      return result;
+    } catch (error) {
+      tracer.endSpan(spanId, 'error', error as Error);
+      throw error;
     }
-    const result = await this.provider.chat(options);
-    return { content: result.content, usage: result.usage };
   }
 }
 // OpenAI Provider
@@ -86,7 +128,7 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
-  async chat(options: ChatOptions): Promise<{ content: string; usage?: { tokens: number } }> {
+  async chat(options: ChatOptions): Promise<{ content: string; usage?: TokenUsage }> {
     this.assertApiKey();
     const messages = [];
     if (options.system) {
@@ -111,13 +153,19 @@ export class OpenAIProvider implements LLMProvider {
     const message = data.choices?.[0]?.message;
     return {
       content: message?.content || '',
-      usage: data.usage ? { tokens: data.usage.total_tokens } : undefined,
+      usage: data.usage
+        ? {
+            tokens: data.usage.total_tokens,
+            promptTokens: data.usage.prompt_tokens,
+            completionTokens: data.usage.completion_tokens,
+          }
+        : undefined,
     };
   }
   async chatWithTools(options: ChatOptions): Promise<{
     content: string;
     toolCalls?: any[];
-    usage?: { tokens: number };
+    usage?: TokenUsage;
   }> {
     this.assertApiKey();
     const messages = [];
@@ -145,7 +193,13 @@ export class OpenAIProvider implements LLMProvider {
     return {
       content: message?.content || '',
       toolCalls: message?.tool_calls,
-      usage: data.usage ? { tokens: data.usage.total_tokens } : undefined,
+      usage: data.usage
+        ? {
+            tokens: data.usage.total_tokens,
+            promptTokens: data.usage.prompt_tokens,
+            completionTokens: data.usage.completion_tokens,
+          }
+        : undefined,
     };
   }
 }

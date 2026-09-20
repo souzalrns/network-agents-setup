@@ -85,6 +85,8 @@ Os 7 "de processo" **não são um grupo à parte** — são o subconjunto de "Ho
 
 **Vão para o setup.** Já têm conteúdo substantivo.
 
+> **Achado G6 (2026-09-20, durante C7, não corrigido — ver `STATUS.md` G6):** `imobiliario-digital` está listado aqui como "genérico", mas a tabela principal (secção 2) e a secção 3.6 classificam-no como **Misto** — e é dual-listado (também aparece em 3.6), ao contrário dos outros 32 agentes. Ao contrário do `refrigeracao-hvac` (o outro Misto, também dual-listado), esta linha não tem uma nota "(ver 3.6)" a sinalizar que é intencional. Decisão humana pendente: a parte pública dele conta para "setup, agora" (aqui) ou "depois, dividir" (secção 6)? Não pode ser as duas.
+
 | Agente | Conteúdo embutido | Fonte |
 |---|---|---|
 | cardiologia | Limiares troponina, janelas repetição | AHA/ACC 2021/2025 |

@@ -36,7 +36,7 @@ Primeira fase da auditoria arquitectural de governança, com a mesma disciplina 
 | Rollback / replay | **Ausente** | — | — | Baixa hoje |
 | SLO | **Ausente** | — | — | Baixa hoje |
 | Audit log / provenance | `events.jsonl` (Python), `audit.jsonl` do MCP local (Python) | `runner/plan_runner/events.py`, `mcp/plan_runner/` | Nenhum equivalente em TypeScript — `packages/mcp/` não regista nada | Alta |
-| Action/Decision receipt | **Ausente enquanto formato estruturado** — o `ADR-001` desenha isto, nada o implementa | — | — | Alta |
+| Action/Decision receipt | **RESOLVIDO em 2026-09-20 (C5)** — `packages/mcp/src/tools/ActionReceipt.ts`, hash encadeado, escopo reduzido (ver `AUDIT-GOVERNANCE.md` §11) | `tools/ActionReceipt.ts` | Sem `agent`/`principal` DID nem `AuthorizationDecision` (depende de Fase 1 do roadmap, ainda não feita) | Alta |
 | Revocation | Mencionado como estado (`status: 'revoked'`) em `Competence`, mas **sem mecanismo activo** de revogar em runtime | `governance/TrustManager.ts` | É um campo de estado, não uma acção implementada | Média |
 | Federation / trust entre agentes | **Ausente** | — | — | Média (roadmap, não agora) |
 | Workload identity / identidade criptográfica | **Ausente** | — | — | Alta se AGT/AgentMesh entrar |

@@ -16,6 +16,9 @@ steps:
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-ugc-brief.md
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "briefing UGC critérios e estrutura"
 
   - id: edit
     action: video_edit_plan
@@ -24,6 +27,9 @@ steps:
     inputs: [artifacts/01-ugc-brief.md]
     output_artifact: artifacts/02-video-edit-plan.md
     on_fail: human
+    knowledge:
+      kb: marketing
+      query: "plano de edição de vídeo checklist"
 
   - id: critic
     action: critic
