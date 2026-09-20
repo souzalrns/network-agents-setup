@@ -9,6 +9,7 @@
     "start": "node apps/api/dist/index.js",
     "start:dev": "pnpm run --parallel dev & node apps/api/dist/index.js",
     "test": "pnpm run --parallel test",
+    "test:coverage": "vitest run tests/unit tests/integration --coverage",
     "lint": "pnpm run --parallel lint",
     "format": "pnpm run --parallel format",
     "clean": "rm -rf node_modules packages/*/node_modules apps/*/node_modules",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
     "ts-node": "^10.9.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0",

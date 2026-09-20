@@ -536,6 +536,39 @@ Mover M8 para Done em STATUS.md. Nota: "9 alertas Dependabot resolvidos em [data
 
 ---
 
+### S15a — Rotação de credenciais incompleta no GitHub Actions do `agent-network-mcp`
+
+> **Nota:** item da série `S` (STATUS.md 🔴 Crítico), não contabilizado nos 23 itens do Grupo A acima — mesmo padrão de `S9`/`S11`-`S14`, cross-referenciados mas fora da contagem A-J.
+
+**Quem:** Desenvolvedor (é quem tem acesso ao GitHub Actions/Supabase de `agent-network-mcp`)
+**Origem:** achado durante a sessão de 2026-09-20, ao investigar a falha 401 do `transcribe.yml`
+
+**Fase 1 — Análise e Verificação (feita nesta sessão)**
+Lidos os 9 `.github/workflows/*.yml` de `agent-network-mcp` (repo clonado em `C:\Users\souza\Claude Code\agent-network-mcp`). **7 dos 9** usam `SUPABASE_SERVICE_ROLE_KEY`: `audit-tools.yml`, `diagnostico-playwright-portal.yml`, `extrair-imagem.yml` (2 jobs), `scrape.yml`, `testar-portal-justica.yml`, `transcribe.yml`, `visual-review.yml`. Os outros 2 (`heartbeat.yml`, `ingest.yml`) usam `INGEST_URL`/`INGEST_SECRET`, não Supabase directamente. Dos 7 afectados, só **`audit-tools.yml` corre por `schedule`** (cron `"0 10 1,15 * *"` — dias 1 e 15, 10h UTC); os restantes 6 são `workflow_dispatch` (só falham quando corridos manualmente). Confirmado pelo utilizador: as 3 credenciais rotacionadas hoje foram `SUPABASE_SERVICE_ROLE_KEY`, a password da BD, e `GEMINI_API_KEY` — todas expostas durante a sessão.
+
+**Fase 2 — Execução (Desenvolvedor)**
+Actualizar a secret `SUPABASE_SERVICE_ROLE_KEY` no GitHub Actions de `souzalrns/agent-network-mcp` (Settings → Secrets and variables → Actions) com o valor novo gerado na rotação de hoje.
+
+**Fase 3 — Teste e Validação**
+Re-correr `transcribe.yml` manualmente **só depois de confirmada a actualização da secret, e só com autorização explícita do utilizador para disparar** — com o reel que falhou originalmente. Confirmar HTTP 200/sucesso em vez de 401. **Estado actual: a aguardar essa autorização — não disparado ainda.**
+
+**Fase 4 — Atualização de Status**
+Mover S15a para Done em STATUS.md quando a secret estiver confirmada actualizada e `transcribe.yml` re-testado com sucesso.
+
+---
+
+### S15b — Verificar se `SUPABASE_ANON_KEY` também foi rotacionada
+
+> **Status em 2026-09-20: N/A, fechado.** Confirmado pelo utilizador: só as 3 credenciais acima foram rotacionadas — a `ANON_KEY` **não foi tocada, por decisão consciente** (é pública por design, não foi exposta nesta sessão, e rotacioná-la sem necessidade partiria clientes existentes sem ganho de segurança real). `keep-alive.yml` (`network-agents-setup`, corre por `schedule` a cada 3 dias) **continua funcional** — usa a mesma `ANON_KEY` de antes da sessão, nunca esteve em risco. `ci.yml`/`ingest-knowledge.yml`/`runner-tests.yml` não usam nenhuma credencial Supabase.
+
+---
+
+### S18 — `README.md` (raiz) desactualizado
+
+> **Status em 2026-09-20: DONE.** Achado durante a auditoria de cobertura (2f), corrigido de imediato (item pequeno, 15 min). `README.md` (171 linhas, lido por inteiro): "50 skills + 21 agentes" → **67 + 35** (confirmado por `find`); secção "Falta" tinha 3 itens já fechados (F3, F4, B1/S9) — removidos, mantido só Delegation Graph/Context Sync/AgentMesh/Cedar, com nota sobre Action Receipts (C5) já parcialmente feito; diagrama de pastas do `agents/` só listava 3 de 8 domínios reais — corrigido. Reler o ficheiro completo no fim confirma coerência; links/exemplos verificados a apontar para ficheiros reais.
+
+---
+
 ## GRUPO B — Fiação interna / HITL / validação de execução real (13 itens)
 
 > **Revalidação de escopo (B14/D10, 2026-09-19):** todos os 8 itens ainda pendentes (B1, B3-B9) confirmados **REAL** (escopo correcto, nada resolvido entretanto) por leitura directa do código. Ver `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md`.

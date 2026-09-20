@@ -26,15 +26,12 @@ Os **verticais** (agentes por negócio/domínio) não vivem aqui — vêm do `ag
 **Feito:**
 - RAG fechado (C8, 6/6): 110 chunks de 33 ficheiros ingeridos; pipeline completo markdown → chunk → embed (Gemini, 768 dims) → Supabase → retrieve via MCP.
 - Governança mapeada por inteiro: 39 ficheiros em `packages/core/` — 5 REAL, 19 INCOMPLETO, 14 MOCK, 1 BARREL.
-- Horizontais: 50 skills + 21 agentes já no setup.
+- Horizontais: 67 skills + 35 agentes já no setup, em 8 domínios (`marketing`, `design`, `meta`, `engenharia`, `gestao`, `atendimento`, `produto`, `_shared`).
 - 3 documentos de mapeamento produzidos por leitura directa dos ficheiros: `CORE-MAPPING.md`, `MCP-MAPPING.md`, `ROADMAP-GOVERNANCE.md`.
 
 **Falta:**
-- Migrar 5 knowledge packs verticais com ingestão (do MCP para o setup).
-- Limpar termos privados dos 13 horizontais ainda no MCP, antes de os trazer.
-- Integração do `hitl.py` em `engine.py`/`langgraph_engine.py`/`cli.py`.
-- Governança: construir o que falta além do que uma ferramenta externa (Microsoft Agent Governance Toolkit) cobre — Delegation Graph, Action Receipts, Context Sync.
-- Integração dessa ferramenta de governança no `agent-network-mcp` e no `plan_runner`.
+- Governança: Delegation Graph e Context Sync continuam por construir (Action Receipts já tem uma versão inicial — hash encadeado, ver `packages/mcp/src/tools/ActionReceipt.ts` — mas não o contrato completo do `ADR-001`, que exige identidade DID/AgentMesh e decisões de autorização Cedar/OPA ainda não adoptados).
+- Adoptar AgentMesh (identidade/delegação) e Cedar (policy engine) — nenhum dos dois está integrado ainda no `agent-network-mcp` nem no `plan_runner`.
 
 Detalhe completo e actualizado: [`docs/initiatives/STATUS.md`](./docs/initiatives/STATUS.md).
 
@@ -98,7 +95,7 @@ network-agents-setup/
 │   ├── langgraph/
 │   └── shared/
 ├── skills/            # horizontais (marketing, claude, design, meta)
-├── agents/            # horizontais (marketing, design, meta)
+├── agents/            # horizontais (marketing, design, meta, engenharia, gestao, atendimento, produto)
 ├── docs/
 │   └── architecture/  # ECOSYSTEM, CORE-MAPPING, MCP-MAPPING, governance/
 ├── apps/api/

@@ -91,3 +91,7 @@ coverage/
 **/.env
 **/.env.*
 !**/.env.example
+
+# === Ferramenta pessoal de sincronização entre sessões (não é parte do produto) ===
+# Achado do S23: nunca esteve tracked nem ignorada — previne um `git add .` acidental
+LUIZ RENATO/
