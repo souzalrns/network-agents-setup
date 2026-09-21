@@ -12,7 +12,7 @@ from uuid import uuid4
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from . import hitl
-from .engine import _validate_out_dir, load_plan, load_status, save_status
+from .engine import _load_client_memory, _validate_out_dir, load_plan, load_status, save_status
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError
@@ -63,6 +63,7 @@ def run_plan_langgraph(
     )
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "engine": "langgraph"})
+    _load_client_memory(out, plan, log, run_id)
 
     step_by_id = {s.id: s for s in plan.steps}
 

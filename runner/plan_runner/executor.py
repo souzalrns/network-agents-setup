@@ -64,8 +64,14 @@ def execute_external_request(out_root: Path, step: Step) -> StepResult:
     pending.mkdir(parents=True, exist_ok=True)
 
     repo_root = repo_root_from_out(out_root)
-    skill_path = resolve_skill_path(repo_root, step.action)
-    agent_path = resolve_agent_path(repo_root, step.action)
+    # S34: vertical era sempre "marketing" (omissao de resolve_skill_path),
+    # partindo a resolucao para qualquer plano fora desse vertical (ex.
+    # design-flow-demo.plan.yaml). Aditivo, mesmo padrao do bloco
+    # `knowledge:` (opt-in por step, via step.raw) -- planos existentes
+    # sem `vertical:` continuam a resolver contra "marketing", inalterados.
+    vertical = str(step.raw.get("vertical") or "marketing") if isinstance(step.raw, dict) else "marketing"
+    skill_path = resolve_skill_path(repo_root, step.action, vertical)
+    agent_path = resolve_agent_path(repo_root, step.action, vertical)
 
     req: dict[str, Any] = {
         "step_id": step.id,
@@ -88,6 +94,13 @@ def execute_external_request(out_root: Path, step: Step) -> StepResult:
     if agent_path:
         req["agent_preview_head"] = (read_text_if_exists(agent_path) or "")[:1500]
 
+    # S30: working memory do cliente (out/client_memory.md, escrito uma vez
+    # no arranque do run por engine.py::_load_client_memory) -- aditivo,
+    # so aparece se o plan.yaml tiver `client_id` e o MEMORY.md existir.
+    client_memory_path = out_root / "client_memory.md"
+    if client_memory_path.is_file():
+        req["client_memory_path"] = "client_memory.md"
+
     (pending / "request.json").write_text(
         json.dumps(req, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
@@ -96,6 +109,10 @@ def execute_external_request(out_root: Path, step: Step) -> StepResult:
         (pending / "SKILL.md").write_text(skill_path.read_text(encoding="utf-8"), encoding="utf-8")
     if agent_path and agent_path.is_file():
         (pending / "AGENT.md").write_text(agent_path.read_text(encoding="utf-8"), encoding="utf-8")
+    if client_memory_path.is_file():
+        (pending / "CLIENT_MEMORY.md").write_text(
+            client_memory_path.read_text(encoding="utf-8"), encoding="utf-8"
+        )
 
     result_path = pending / "result.json"
     if not result_path.exists():

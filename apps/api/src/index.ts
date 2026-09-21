@@ -72,7 +72,9 @@ async function main() {
   // 7. Core Components
   const router = new Router();
   const planner = new Planner(agentFactory, llm);
-  const executor = new Executor(agentFactory, memory, llm, hitlManager);
+  // S33: toolRegistry (passo 2) construido mas nunca passado ao Executor --
+  // as tools reais nunca chegavam a um agente em execucao. Ver STATUS.md S33.
+  const executor = new Executor(agentFactory, memory, llm, hitlManager, toolRegistry);
 
   // 8. Orchestrator (instancia internamente todos os módulos de governança,
   // economia, segurança, observabilidade, produtos e conformidade)

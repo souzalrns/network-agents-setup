@@ -4,6 +4,10 @@ export interface ChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
   tool_call_id?: string;
+  // S33: tool_calls do assistant que motivaram uma resposta role:'tool' --
+  // a API da OpenAI exige a mensagem assistant original (com estes IDs) de
+  // volta na conversa antes de aceitar as respostas 'tool' correspondentes.
+  toolCalls?: any[];
 }
 export interface ChatOptions {
   system?: string;
@@ -28,6 +32,18 @@ export interface LLMProvider {
 }
 
 /** D2: gen_ai.client — únicos atributos estáveis da convenção OTel GenAI (o resto continua em Development). */
+/** S33: mapeia ChatMessage -> formato de mensagem da API da OpenAI,
+ * preservando `tool_call_id` (mensagens role:'tool') e `tool_calls`
+ * (mensagens role:'assistant' que pediram uma tool) -- antes descartados,
+ * o que faria a API da OpenAI rejeitar (400) qualquer roda de tool-calling
+ * real (nunca exercitado em produção, ver S33/STATUS.md). */
+function toOpenAiMessage(m: ChatMessage): Record<string, any> {
+  const msg: Record<string, any> = { role: m.role, content: m.content };
+  if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
+  if (m.toolCalls) msg.tool_calls = m.toolCalls;
+  return msg;
+}
+
 function setGenAiAttributes(
   spanId: string,
   model: string | undefined,
@@ -134,7 +150,7 @@ export class OpenAIProvider implements LLMProvider {
     if (options.system) {
       messages.push({ role: 'system', content: options.system });
     }
-    messages.push(...options.messages.map((m) => ({ role: m.role, content: m.content })));
+    messages.push(...options.messages.map(toOpenAiMessage));
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -172,7 +188,7 @@ export class OpenAIProvider implements LLMProvider {
     if (options.system) {
       messages.push({ role: 'system', content: options.system });
     }
-    messages.push(...options.messages.map((m) => ({ role: m.role, content: m.content })));
+    messages.push(...options.messages.map(toOpenAiMessage));
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

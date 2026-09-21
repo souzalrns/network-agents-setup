@@ -18,6 +18,10 @@ export interface PlanStep {
   risks?: string[];
   impacts?: string[];
   approvalMetadata?: Record<string, any>;
+  // S33: nomes de tools reais (packages/mcp ToolRegistry) que este step pode
+  // usar via function-calling. Opt-in -- ausente/vazio mantem o
+  // comportamento anterior (LLMService.chat(), sem tools).
+  toolsAllowed?: string[];
 }
 export interface Plan {
   id: string;

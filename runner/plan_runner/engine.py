@@ -8,12 +8,13 @@ from uuid import uuid4
 
 import yaml
 
-from . import hitl
+from . import hitl, working_memory
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
 from .knowledge_wiring import inject_knowledge_context
 from .models import Plan
+from .skills import repo_root_from_out
 
 
 def load_plan(path: Path) -> Plan:
@@ -27,6 +28,28 @@ def load_plan(path: Path) -> Plan:
 
 def _status_path(out: Path) -> Path:
     return out / "status.json"
+
+
+def _load_client_memory(out: Path, plan: Plan, log: EventLog, run_id: str) -> None:
+    """S30: injecta o MEMORY.md do cliente (working_memory.py) no arranque
+    do run, se o plan.yaml tiver `client_id` de topo. Aditivo -- planos sem
+    `client_id` ficam 100% inalterados (working_memory.py continua
+    read-only, nao ganhou nenhuma funcao de escrita).
+
+    Escreve `out/client_memory.md` (visivel a qualquer step do run);
+    `executor.py::execute_external_request` copia-o para
+    `pending_steps/<id>/CLIENT_MEMORY.md`, ao lado de SKILL.md/AGENT.md.
+    """
+    client_id = plan.raw.get("client_id") if isinstance(plan.raw, dict) else None
+    if not client_id:
+        return
+    repo_root = repo_root_from_out(out)
+    text = working_memory.read_memory(str(client_id), repo_root=repo_root)
+    if text is None:
+        log.append("client_memory_absent", run_id, {"client_id": client_id})
+        return
+    (out / "client_memory.md").write_text(text, encoding="utf-8")
+    log.append("client_memory_loaded", run_id, {"client_id": client_id, "chars": len(text)})
 
 
 def save_status(out: Path, status: dict[str, Any]) -> None:
@@ -98,6 +121,7 @@ def run_plan(
     shutil.copy(plan_path, out / "plan.yaml")
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "objective": plan.objective})
+    _load_client_memory(out, plan, log, run_id)
 
     completed: set[str] = set()
     steps_run = 0

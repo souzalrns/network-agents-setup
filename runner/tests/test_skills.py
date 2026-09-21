@@ -36,6 +36,22 @@ def test_resolve_skill_path_missing(tmp_path):
     assert result is None
 
 
+def test_resolve_skill_path_non_marketing_vertical(tmp_path):
+    """S34: resolve_skill_path ja aceitava `vertical`, mas executor.py nunca
+    o passava (sempre "marketing", hardcoded) -- partindo planos fora desse
+    vertical (ex. design-flow-demo.plan.yaml). Este teste cobre o parametro
+    em si; o teste de regressao do caller real esta em test_executor.py.
+    """
+    skill = tmp_path / "skills" / "design" / "ux_flow" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# skill design", encoding="utf-8")
+
+    assert resolve_skill_path(tmp_path, "ux_flow", "design") == skill
+    # Mesma action, vertical errado (omissao "marketing") continua a nao achar --
+    # confirma que o parametro discrimina de facto, nao e um no-op.
+    assert resolve_skill_path(tmp_path, "ux_flow") is None
+
+
 def test_resolve_agent_path_exists(tmp_path):
     agent = tmp_path / "agents" / "marketing" / "review.agent.md"
     agent.parent.mkdir(parents=True)

@@ -31,6 +31,14 @@ def main(argv: list[str] | None = None) -> int:
     p_compile = sub.add_parser("compile-graph", help="Show LangGraph wave compilation for a plan")
     p_compile.add_argument("plan", type=Path)
 
+    # S31: expoe session_search.py (B11/M1) -- ate agora so tinha o proprio
+    # CLI standalone (`python -m plan_runner.session_search`), nunca ligado
+    # ao resto do runner. Aditivo: reindexacao automatica se o indice ainda
+    # nao existir (ja era o comportamento de search()).
+    p_search = sub.add_parser("search", help="Search events.jsonl of a run (FTS5, B11/M1)")
+    p_search.add_argument("out", type=Path, help="Run directory with events.jsonl")
+    p_search.add_argument("query", help="FTS5 query syntax (matched against event payloads)")
+
     args = parser.parse_args(argv)
     try:
         if args.cmd == "compile-graph":
@@ -39,6 +47,10 @@ def main(argv: list[str] | None = None) -> int:
 
             plan = load_plan(args.plan)
             result = compile_report(plan)
+        elif args.cmd == "search":
+            from .session_search import search
+
+            result = {"hits": search(args.out, args.query)}
         elif args.cmd == "run":
             if args.engine == "langgraph":
                 from .langgraph_engine import run_plan_langgraph

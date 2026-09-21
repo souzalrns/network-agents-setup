@@ -104,3 +104,51 @@ def test_external_ok_no_artifact(tmp_path):
     result = execute_external_request(tmp_path, step)
     assert result.ok is True
     assert result.detail == "external_ok_no_artifact"
+
+
+def test_external_resolves_skill_by_vertical_from_step_raw(tmp_path):
+    """S34 -- regressao do bug real: executor.py chamava resolve_skill_path()
+    sempre com vertical="marketing" (omissao), partindo design-flow-demo.plan.yaml
+    (acoes so existentes em skills/design/). Corrigido lendo step.raw["vertical"].
+
+    repo_root_from_out(out_root) devolve out_root.parent.parent quando
+    out_root.parent.name == "pilots" -- por isso o out_root aqui simula
+    <repo>/pilots/<run>, para o repo_root resolvido ser tmp_path (que
+    controlamos), tal como acontece no repo real.
+    """
+    repo_root = tmp_path
+    out_root = repo_root / "pilots" / "run-x"
+    out_root.mkdir(parents=True)
+
+    skill = repo_root / "skills" / "design" / "ux_flow" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# ux_flow (design)", encoding="utf-8")
+    # Confirma que NAO existe em marketing -- prova que o bug reproduziria
+    # skill_path=None se o vertical nao fosse propagado.
+    assert not (repo_root / "skills" / "marketing" / "ux_flow").exists()
+
+    step = Step(id="ux", action="ux_flow", raw={"id": "ux", "action": "ux_flow", "vertical": "design"})
+    result = execute_external_request(out_root, step)
+
+    assert result.ok is False  # waiting_external, sem result.json ainda
+    req = json.loads((out_root / "pending_steps" / "ux" / "request.json").read_text(encoding="utf-8"))
+    assert req["skill_path"] == "skills/design/ux_flow/SKILL.md"
+    assert (out_root / "pending_steps" / "ux" / "SKILL.md").read_text(encoding="utf-8") == "# ux_flow (design)"
+
+
+def test_external_falls_back_to_marketing_when_no_vertical_in_raw(tmp_path):
+    """Nao-regressao: planos existentes sem `vertical:` continuam a resolver
+    contra marketing, exactamente como antes do fix do S34."""
+    repo_root = tmp_path
+    out_root = repo_root / "pilots" / "run-y"
+    out_root.mkdir(parents=True)
+
+    skill = repo_root / "skills" / "marketing" / "prep" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    skill.write_text("# prep (marketing)", encoding="utf-8")
+
+    step = Step(id="prep", action="prep", raw={"id": "prep", "action": "prep"})
+    execute_external_request(out_root, step)
+
+    req = json.loads((out_root / "pending_steps" / "prep" / "request.json").read_text(encoding="utf-8"))
+    assert req["skill_path"] == "skills/marketing/prep/SKILL.md"

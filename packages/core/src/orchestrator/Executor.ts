@@ -1,5 +1,5 @@
 import { AgentFactory } from '../agents/AgentFactory';
-import { LLMService } from '../llm/LLMService';
+import { LLMService, ChatMessage } from '../llm/LLMService';
 import { MemoryManager } from '@network-agents/memory';
 import { HitlManager } from '../hitl/HitlManager';
 import { Plan, PlanStep, ExecutionResult } from '@network-agents/shared';
@@ -7,16 +7,25 @@ import { HitlCategory, HitlPriority } from '@network-agents/shared';
 import { getGlobalLogger } from '@network-agents/observability';
 import { getGlobalMetrics } from '@network-agents/observability';
 import { getGlobalTracer } from '@network-agents/observability';
+import { ToolRegistry, ToolExecutor } from '@network-agents/mcp';
 export class Executor {
   private logger = getGlobalLogger();
   private metrics = getGlobalMetrics();
   private tracer = getGlobalTracer();
+  // S33: opcional -- so existe quando o caller (Orchestrator/apps/api) passa
+  // um ToolRegistry real. Sem isto, executeStep() mantem-se 100% como antes
+  // (so this.llm.chat(), sem tools) -- nao-regressao para todo o codigo
+  // existente que constroi Executor com 4 argumentos.
+  private toolExecutor?: ToolExecutor;
   constructor(
     private agentFactory: AgentFactory,
     private memory: MemoryManager,
     private llm: LLMService,
-    private hitlManager: HitlManager
-  ) {}
+    private hitlManager: HitlManager,
+    private toolRegistry?: ToolRegistry
+  ) {
+    if (toolRegistry) this.toolExecutor = new ToolExecutor(toolRegistry);
+  }
   async execute(plan: Plan, executionId: string): Promise<ExecutionResult> {
     const logger = this.logger.child('Executor');
     logger.setExecutionId(executionId);
@@ -158,14 +167,23 @@ export class Executor {
     const systemPrompt = agent.systemPrompt || `You are ${agent.id}, a specialist in ${agent.description}.`;
     const userPrompt = step.prompt || step.description;
     const contextPrompt = this.buildContextPrompt(step, context);
+    const baseMessages: ChatMessage[] = [
+      {
+        role: 'user',
+        content: `${contextPrompt}\n\nTarefa: ${userPrompt}`,
+      },
+    ];
+
+    // S33: opt-in por step (`toolsAllowed`) + Executor precisa de ter
+    // recebido um ToolRegistry real (apps/api/src/index.ts) -- sem os 2,
+    // comportamento identico ao de antes (so this.llm.chat(), sem tools).
+    if (step.toolsAllowed?.length && this.toolExecutor && this.toolRegistry) {
+      return this.executeStepWithTools(step, systemPrompt, baseMessages);
+    }
+
     const response = await this.llm.chat({
       system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `${contextPrompt}\n\nTarefa: ${userPrompt}`,
-        },
-      ],
+      messages: baseMessages,
       temperature: step.temperature || 0.3,
       maxTokens: step.maxTokens || 2000,
     });
@@ -175,6 +193,91 @@ export class Executor {
       success: true,
       output: response.content,
       tokens: response.usage?.tokens || 0,
+      timestamp: new Date(),
+    };
+  }
+  /**
+   * S33: 1 volta de function-calling real. O LLM pode pedir tools de
+   * `step.toolsAllowed`; cada pedido é executado a sério via ToolExecutor
+   * (auth/rate-limit/audit do C1/A8/S11 aplicam-se, `caller: step.agentId`);
+   * os resultados voltam como mensagens `role: 'tool'` e uma 2ª chamada
+   * sintetiza a resposta final. Sem pedido de tool, devolve logo o content
+   * da 1ª chamada (não desperdiça uma 2ª chamada de LLM sem necessidade).
+   */
+  private async executeStepWithTools(
+    step: PlanStep,
+    systemPrompt: string,
+    baseMessages: ChatMessage[]
+  ): Promise<{
+    id: string;
+    agentId: string;
+    success: boolean;
+    output: any;
+    error?: string;
+    tokens?: number;
+    timestamp: Date;
+  }> {
+    const allowed = new Set(step.toolsAllowed);
+    const tools = this.toolRegistry!
+      .listTools()
+      .filter((t) => allowed.has(t.name))
+      .map((t) => ({
+        type: 'function',
+        function: { name: t.name, description: t.description, parameters: t.inputSchema },
+      }));
+
+    const first = await this.llm.chatWithTools({
+      system: systemPrompt,
+      messages: baseMessages,
+      temperature: step.temperature || 0.3,
+      maxTokens: step.maxTokens || 2000,
+      tools,
+    });
+
+    if (!first.toolCalls?.length) {
+      return {
+        id: step.id,
+        agentId: step.agentId,
+        success: true,
+        output: first.content,
+        tokens: first.usage?.tokens || 0,
+        timestamp: new Date(),
+      };
+    }
+
+    const toolResultMessages: ChatMessage[] = [];
+    for (const call of first.toolCalls) {
+      const name = call.function?.name;
+      let resultText: string;
+      try {
+        const args = call.function?.arguments ? JSON.parse(call.function.arguments) : {};
+        const result = await this.toolExecutor!.executeTool(name, args, { caller: step.agentId });
+        resultText = result.content.map((c: any) => c.text ?? '').join('\n');
+      } catch (error: any) {
+        resultText = `Tool ${name} error: ${error.message}`;
+      }
+      toolResultMessages.push({ role: 'tool', tool_call_id: call.id, content: resultText });
+    }
+
+    const assistantMessage: ChatMessage = {
+      role: 'assistant',
+      content: first.content || '',
+      toolCalls: first.toolCalls,
+    };
+
+    const final = await this.llm.chat({
+      system: systemPrompt,
+      messages: [...baseMessages, assistantMessage, ...toolResultMessages],
+      temperature: step.temperature || 0.3,
+      maxTokens: step.maxTokens || 2000,
+    });
+
+    return {
+      id: step.id,
+      agentId: step.agentId,
+      success: true,
+      output: final.content,
+      tokens: (first.usage?.tokens || 0) + (final.usage?.tokens || 0),
       timestamp: new Date(),
     };
   }
