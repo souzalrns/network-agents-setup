@@ -1,5 +1,5 @@
 PyYAML>=6.0.3
 httpx>=0.28.1
-psycopg[binary]>=3.3.5
+psycopg[binary]>=3.3.6
 mcp==1.30.0
 jsonschema>=4.26.0
