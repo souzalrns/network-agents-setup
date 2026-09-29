@@ -23,7 +23,7 @@ Além disso: **226 documentos de desenho e auditoria**, **67 skills** e **35 age
 - **Superfície MCP do motor:** stdio.
 - **Ingestão RAG:** escreve 110 chunks no Supabase em cada push.
 - **Autenticação HTTP:** fail-closed.
-- **CI:** TS e Python verdes, sem vulnerabilidades npm.
+- **CI:** TS e Python verdes. `pnpm audit` = 0, **mas o GitHub ainda reporta 1 alerta crítico do Dependabot (#11)**, provavelmente do manifest órfão `tests/package.json` (AU-05; não verificado directamente, a API devolve 403).
 
 **O que está morto ou só no papel.**
 
@@ -108,7 +108,7 @@ Colunas: ID | título | estado | tipo | severidade | quem | evidência. As linha
 | AU-02 | Dockerfile quebrado; k8s só no papel | NÃO INICIADO | BUG | Média | DEV | `Dockerfile:5-6,22` |
 | AU-03 | `apps/web` morto | MORTO | FALTA-DECIDIR | Baixa | AMBOS | `Dashboard.tsx:3,15` |
 | AU-04 | `packages/langgraph` morto | MORTO | FALTA-DECIDIR | Baixa | AMBOS | AUDIT-1 §1.1 |
-| AU-05 | `tests/package.json` órfão (gera PRs Dependabot) | MORTO | BUG | Baixa | CLAUDE | `pnpm-workspace.yaml:2-3` |
+| AU-05 | `tests/package.json` órfão; causa provável do alerta crítico Dependabot #11 | MORTO | BUG | **Média** | CLAUDE | `tests/package.json:13`; aviso do push |
 | AU-06 | Duas pipelines de ingestão | EM CURSO | FALTA-DECIDIR | Alta | DEV | AUDIT-1 §1.2 |
 | AU-07 | Dois orquestradores sem ponte; maestro por escolher | NÃO INICIADO | FALTA-DECIDIR | **Crítica** | DEV | AUDIT-3 §3.4 |
 | AU-08 | `.env.example` incompleto | NÃO INICIADO | DOC-ERRADO | Média | CLAUDE | AUDIT-1 R12 |
@@ -194,7 +194,7 @@ Colunas: ID | título | estado | tipo | severidade | quem | evidência. As linha
 | Grupo | IDs | Estado |
 |---|---|---|
 | **Só no papel** | **C8, keep-alive, S33, S15b** | **FECHADO-SÓ-NO-PAPEL** |
-| Verificados | S1, S2a, S2b-1..3, S3, S4, S4b, S6a, S7, S8, S9, S10\*, S11\*, S12, S15a, S18, S22, S23, S30, S31, S34\*, S35, S36, M1, M2\*, M8, B2\*, B7, B8, B9, B10, B13\*, B14, B15, B17\*, B18, C1, C2, C5, C8a-1, C8a-2, C8b, C8c, C8d, C8e\*, G2, G3, G4, G5, G-skill-1..5\* | FECHADO-VERIFICADO (\* = com ressalva registada na AUDIT-5 §5.3) |
+| Verificados | S1, S2a, S2b-1..3, S3, S4, S4b, S6a, S7, S8, S9, S10\*, S11\*, S12, S15a, S18, S22, S23, S30, S31, S34\*, S35, S36\*, M1, M2\*, M8\*, B2\*, B7, B8, B9, B10, B13\*, B14, B15, B17\*, B18, C1, C2, C5, C8a-1, C8a-2, C8b, C8c, C8d, C8e\*, G2, G3, G4, G5, G-skill-1..5\* | FECHADO-VERIFICADO (\* = com ressalva registada na AUDIT-5 §5.3) |
 | Não verificáveis daqui | S16, C3, C6, C7 | FECHADO — NÃO VERIFICÁVEL |
 
 ---
@@ -219,6 +219,8 @@ Ordenadas pelo que desbloqueia mais da visão com menos esforço. As decisões v
 **Fora do top 10, mas urgente operacionalmente:** S20 (chave antiga na VM Oracle; o bridge-worker falha com 401) e S27 (limites do Oracle Free Tier). São DEV, fora do código.
 
 **Barato e com retorno imediato em tokens de bootstrap:** AU-45, AU-46, AU-37 e AU-12 (higiene de docs). CLAUDE, cerca de 1–2 h.
+
+**Barato e fecha um alerta crítico:** AU-05, apagar o `tests/package.json` órfão. É a causa provável do Dependabot #11 que o GitHub reportou no push desta auditoria. CLAUDE, 5 min.
 
 ---
 
