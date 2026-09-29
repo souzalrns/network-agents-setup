@@ -5,9 +5,10 @@
 // quality-check.ts"), sem código nem descrição de comportamento além do nome. Foi escrito
 // combinando as duas peças que a "Fase 4 — Validação" do plano original já definia
 // (completude via check-completeness.ts e teste funcional via test-agents.ts) num único
-// relatório de saúde, para dar um alvo real a `ingestion-schedule.ts`'s verificação
-// "a cada 6 horas" (que hoje só chama checkCompleteness diretamente — este script é uma
-// alternativa mais completa, chamável isoladamente via `pnpm monitor:quality`).
+// relatório de saúde para uma verificação periódica de completude (que antes só chamava
+// checkCompleteness diretamente via um agendador node-cron entretanto removido — S36 P3,
+// código órfão sem invocação em produção) — este script é uma alternativa mais completa,
+// chamável isoladamente via `pnpm monitor:quality`.
 
 import { checkCompleteness } from '../validate/check-completeness';
 import { bootstrap } from '../bootstrap';

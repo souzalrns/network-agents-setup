@@ -17,7 +17,6 @@
     "docs:agents": "ts-node src/docs/generate-agents-doc.ts",
     "docs:skills": "ts-node src/docs/generate-skills-doc.ts",
     "docs:all": "ts-node src/docs/generate-code-map.ts && ts-node src/docs/generate-agents-doc.ts && ts-node src/docs/generate-skills-doc.ts",
-    "schedule": "ts-node src/schedule/ingestion-schedule.ts",
     "monitor:quality": "ts-node src/monitor/quality-check.ts",
     "smoke-test": "ts-node src/smoke-test.ts",
     "smoke-test:quick": "ts-node src/smoke-test.ts --quick"
@@ -30,12 +29,10 @@
     "@prisma/client": "^5.0.0",
     "axios": "^1.6.0",
     "cheerio": "^1.0.0",
-    "node-cron": "^3.0.0",
     "openai": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/node-cron": "^3.0.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   }
