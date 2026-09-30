@@ -77,3 +77,162 @@ Hoje:
 - [`docs/audit/DECISAO-1-runtimes.md`](../../audit/DECISAO-1-runtimes.md) e [`docs/audit/DECISAO-2-maestro.md`](../../audit/DECISAO-2-maestro.md).
 - [`ADR-DB-PLAN-B.md`](./ADR-DB-PLAN-B.md): onde vivem os checkpoints e a memória, se o Supabase free deixar de servir.
 - `config/areas.yaml`: registo de áreas v1 (J5).
+
+---
+
+> **Secções 9–13 acrescentadas em 2026-09-30.** Tudo o que está abaixo é **desenho**. Nenhuma linha de runtime foi escrita.
+
+## 9. Estrutura em 4 camadas (L0–L3)
+
+| Camada | Papel | Quem |
+|---|---|---|
+| **L0 — HUMANO (HITL)** | Aprova, veta ou clarifica | Dev |
+| **L1 — META (controlo)** | Router de área + chairman/moderator + trust/quorum | Meta-agentes (`kind: meta`, reservado) + router sobre `config/areas.yaml` |
+| **L2 — CONSELHO (deliberação)** | Participantes + protocolo (secção 11) | Membros `kind: internal` \| `external_ai` |
+| **L3 — EXECUÇÃO (objecto)** | Faz o trabalho | `runner/plan_runner` + tools + ledger de tokens (J6) |
+
+**L4 (memória) atravessa todas as camadas.** Um veredicto nasce `candidate` e só é consolidado depois do gate e do HITL.
+
+O contrato da L4 chama `active` ao estado consolidado, não `committed`: `"status": { "enum": ["candidate", "active"], "default": "candidate" }` em `docs/architecture/memory/contracts.md:29`. Neste ADR, "committed" = `active` do contrato. Ver E14 em `docs/audit/PLANO-DE-ACAO.md` §13.2.
+
+**Regra de encaminhamento:**
+- **Pedido normal** → L1 router → L3. Sem conselho.
+- **Pedido estrutural, de alta incerteza, ou de uma área com `hitl: required`** (`config/areas.yaml`: legal, finance, security) → L1 abre conselho (L2) → veredicto `candidate` → L0 → L4 (`candidate` → `active`) → L3, se houver acção.
+
+**Colisão de nomes `[ACRESCENTADO PELO AUDITOR]`.** "L0–L3" aqui são **camadas de controlo**. O modelo de memória já usa **L0–L6** para camadas de memória (`docs/architecture/memory/layers.md:1`), e "L4" desta secção é esse L4. Proposta de desambiguação: E13 no PLANO §13.2.
+
+## 10. Distinção meta vs. domínio
+
+- **Meta-agente ≠ "agente mais inteligente".** É uma **camada de controlo** (L1): decide *quem* delibera e *quando* se fecha, não *o quê*.
+- **Meta:** chairman, moderator, router-agent (futuro). `kind: meta`, **não usado hoje** (secção 7).
+- **Domínio:** executa a tarefa (security, finance, marketing…). `kind: internal`.
+- **Clarificação: o `security_auditor` NÃO é um meta-agente.**
+  - Vive em `agents/meta/` por razões históricas (`agents/meta/security_auditor.agent.md`), mas no registo é um **especialista L3** da área `security` (`config/areas.yaml`, área `security`).
+  - Tem `kind: internal`.
+  - Um *Security Council* na Fase 1 pode incluí-lo como membro **`required`** (com veto), com um chairman meta **separado**.
+
+## 11. Protocolo em estágios (Fase 1)
+
+| # | Estágio | O que faz | LLM? |
+|---|---|---|---|
+| 1 | **INDEPENDENT** | Cada membro responde sem ver os outros | Sim (1 chamada por membro) |
+| 2 | **PEER_RANK** | *Ranking* anónimo das respostas dos outros (contra a bajulação) | Sim (1 por membro) |
+| 3 | **SYNTHESIZE** | O chairman produz o `Verdict` (decisão + *dissent* + próximo passo + `confidence`) | Sim (1) |
+| 4 | **GATE** | `confidence ≥ τ` **e** regras de veto (um membro `required` que vete bloqueia) | **Não**: determinístico |
+| 5 | **HITL** | O humano aprova, revê ou rejeita | Não |
+| 6 | **PERSIST** | L4 `candidate` → `active` + registo no ledger | Não |
+
+**Custo por ronda** = 2·N + 1 chamadas LLM (N = membros). Por isso o ledger J6 é pré-requisito (secção 4) e `max_rounds` é obrigatório por painel (secção 13).
+
+## 12. Esboço do `CouncilSession` (LangGraph) — SÓ DESENHO
+
+> **DESENHO. NÃO IMPLEMENTAR** antes de AU-13 + motor mínimo + Bloco A (J1–J11, `docs/audit/DECISAO-4-ordem.md` §4.4). Implementação agendada: J5-c, PLANO §13.2.
+>
+> **Proveniência `[ACRESCENTADO PELO AUDITOR]`.** O brief pede para "transcrever o esboço já produzido". Esse esboço **não existe em nenhum ficheiro** deste repo nem do `agent-network-mcp` (procura por `CouncilState`/`CouncilSession`/`councils.yaml`: 0 resultados). O que está abaixo foi **reconstituído a partir da especificação do brief**: `CouncilState`, a topologia, *reducers* com `operator.add` e `interrupt()` para HITL. Se o Dev tiver o original, substitui-se (E15).
+
+```python
+# DESENHO — não é código do repo. Nomes indicativos.
+import operator
+from typing import Annotated, Literal, TypedDict
+
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt  # já usado em runner/plan_runner/langgraph_engine.py:79,99
+
+
+class Answer(TypedDict):
+    member_id: str
+    kind: Literal["internal", "external_ai"]
+    content: str
+
+
+class Rank(TypedDict):
+    ranker_id: str
+    order: list[str]          # ids anonimizados, melhor → pior
+
+
+class Verdict(TypedDict):
+    decision: str
+    dissent: list[str]
+    next_step: str
+    confidence: float         # 0..1 — atenção à lição do AU-13 (escalas)
+
+
+class CouncilState(TypedDict):
+    council_id: str           # ex.: "architecture" (councils.yaml)
+    question: str
+    members: list[str]
+    round: int
+    answers: Annotated[list[Answer], operator.add]   # reducer: acumula por membro
+    ranks: Annotated[list[Rank], operator.add]
+    verdict: Verdict | None
+    gate: Literal["pass", "veto", "low_confidence"] | None
+    human: Literal["approve", "revise", "reject"] | None
+    tokens: Annotated[list[int], operator.add]        # alimenta o ledger (J6)
+
+
+def assemble(s: CouncilState) -> dict: ...     # lê councils.yaml; resolve membros e τ
+def independent(s: CouncilState) -> dict: ...  # N respostas, cada uma sem ver as outras
+def peer(s: CouncilState) -> dict: ...         # ranking anonimizado
+def synthesize(s: CouncilState) -> dict: ...   # chairman → Verdict
+def gate(s: CouncilState) -> dict: ...         # determinístico: confidence ≥ τ e sem veto de required
+
+
+def hitl(s: CouncilState) -> dict:
+    return {"human": interrupt({"verdict": s["verdict"], "gate": s["gate"]})}
+
+
+def persist(s: CouncilState) -> dict: ...      # L4 candidate → active (só se approve) + ledger
+
+
+def after_hitl(s: CouncilState) -> str:
+    return "independent" if s["human"] == "revise" else "persist"   # max_rounds limita o ciclo
+
+
+g = StateGraph(CouncilState)
+for name, fn in [("assemble", assemble), ("independent", independent), ("peer", peer),
+                 ("synthesize", synthesize), ("gate", gate), ("hitl", hitl), ("persist", persist)]:
+    g.add_node(name, fn)
+g.add_edge(START, "assemble")
+g.add_edge("assemble", "independent")
+g.add_edge("independent", "peer")
+g.add_edge("peer", "synthesize")
+g.add_edge("synthesize", "gate")
+g.add_edge("gate", "hitl")                 # veto/low_confidence também vão ao humano, marcados
+g.add_conditional_edges("hitl", after_hitl, ["independent", "persist"])
+g.add_edge("persist", END)
+# compile(checkpointer=...) — ver nota de dependência abaixo
+```
+
+**Nota de dependência.** O checkpointer hoje é **SQLite** (`runner/requirements-langgraph.txt:4`; `runner/plan_runner/langgraph_engine.py:224`). O `langgraph-checkpoint-postgres` só entra quando houver **multi-instância** (mais de um processo a retomar a mesma sessão). **Não é "já usado".**
+
+## 13. `councils.yaml` v0 — config de painéis (NÃO criado agora)
+
+> **Este ficheiro NÃO é criado agora.** A criação é o item J5-b e o local é o E12 (recomendado: `config/councils.yaml`), ambos no PLANO §13.2.
+>
+> **Proveniência:** o exemplo "já produzido" também **não existe em ficheiro**. Foi reconstituído a partir do brief (painéis architecture, security, product; campos chairman, members, required, max_rounds, confidence_threshold). Os IDs são os reais de `config/areas.yaml`. O chairman é um ID **futuro** (`kind: meta`) que ainda **não existe**.
+
+```yaml
+# councils.yaml v0 — EXEMPLO (não existe no repo)
+version: 0
+councils:
+  - id: architecture
+    chairman: meta.chairman            # futuro (kind: meta) — não existe
+    members: [meta.arquitetura-agentes, engenharia.desenvolvimento, engenharia.revisor-codigo, meta.planejador]
+    required: [meta.arquitetura-agentes]
+    max_rounds: 2
+    confidence_threshold: 0.7
+
+  - id: security
+    chairman: meta.chairman            # separado do auditor (secção 10)
+    members: [meta.security-auditor, engenharia.revisor-codigo, engenharia.desenvolvimento]
+    required: [meta.security-auditor]  # com veto
+    max_rounds: 2
+    confidence_threshold: 0.8
+
+  - id: product
+    chairman: meta.chairman
+    members: [produto.produto-tech-transversal, design.ux, marketing.marketing, gestao.gestao-empresarial]
+    required: []
+    max_rounds: 1
+    confidence_threshold: 0.6
+```
