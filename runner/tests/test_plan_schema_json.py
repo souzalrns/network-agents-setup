@@ -12,7 +12,6 @@ examples/piloto-netos.plan.yaml), nao uma integracao com o plan_runner.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import jsonschema
 import pytest
