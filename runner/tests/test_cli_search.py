@@ -18,7 +18,6 @@ import json
 from pathlib import Path
 
 from plan_runner.events import EventLog
-
 from tests.conftest import RUNNER_DIR, _run_cli
 
 
