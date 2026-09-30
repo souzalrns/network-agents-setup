@@ -5,6 +5,27 @@
 
 ---
 
+## 0. REGRA NOVA E PERMANENTE — decisões humanas em A/B/C (acrescentado em 2026-09-30)
+
+**Nenhuma decisão humana pode chegar em aberto.** Toda a bifurcação chega ao Dev como escolha concreta:
+
+```
+Opção A — <descrição> | Custo: <x> | Consequência: <y>
+Opção B — <descrição> | Custo: <x> | Consequência: <y>
+Opção C — <descrição> | Custo: <x> | Consequência: <y>
+RECOMENDADA: <letra> porque <razão>
+Se o Dev não responder em N dias, executa-se a RECOMENDADA.
+```
+
+Acabou o "o que queres fazer?". A regra aplica-se a todas as decisões, incluindo as antigas da secção 8. O estado actual de cada uma está na **secção 13**: tomada, ou em aberto com uma opção recomendada por omissão.
+
+Secções acrescentadas em 2026-09-30:
+- **13** — Decisões tomadas vs. em aberto;
+- **14** — EXTRAIR (não adoptar);
+- **15** — Protocolo meta-agentes (Fase 2).
+
+---
+
 ## 1. Cabeçalho
 
 ### O que é este documento
@@ -457,3 +478,102 @@ CLAUDE **25** · DEV **11** · AMBOS **14** (contagem exacta). Itens abertos do 
 | [DECISAO-3-memoria.md](./DECISAO-3-memoria.md) | Memória L4 vs mem0 | `aa6747a` |
 | [DECISAO-4-ordem.md](./DECISAO-4-ordem.md) | Ordem de ataque | `706a0fa` |
 | [DECISOES-COMPLETO.md](./DECISOES-COMPLETO.md) | Consolidação da Fase 2 | `e061f87` |
+
+---
+
+## 13. Decisões tomadas vs. em aberto (acrescentado em 2026-09-30)
+
+### 13.1 TOMADAS (não reabrir)
+
+| Decisão | Conteúdo | Registo |
+|---|---|---|
+| **D1 — Runtime** | Núcleo = Python (`runner/plan_runner`). TS **arquivado, não apagado**. O `agent-network-mcp` continua a ser a porta de entrada de produção. Responde Q1, Q3, Q4 e ADR-M1 (runtime) | Grok, 2026-09-30 |
+| **D2 — Maestro** | Router hierárquico híbrido sobre `config/areas.yaml` versionado e validado em CI. Responde ADR-M3 (as 10 áreas) e ADR-M4 (config versionada) | Grok; `config/areas.yaml` |
+| **D3 — Memória L4** | L4 própria no `plan_runner` sobre Supabase. Responde M-Q2 (Supabase). Spike mem0 = **avaliação, não adopção** (M-Q3). **Escrita explícita** (`remember`) por omissão (M-Q1) | Grok |
+| **RAG canónico** | Tabela canónica = **`knowledge_chunks`**; `knowledge_chunks_t6` **abandonada** (fecha a micro-decisão do J3) | Grok |
+| **`areas.yaml` v1** | 10 áreas: software, marketing, legal, ops, research, finance, gamedev, security, docs, horizontal. Os 35 agentes `.agent.md` ficam cada um em exactamente uma área | `config/areas.yaml` |
+| **HITL por área** (parte do ADR-M6) | `hitl: required` em legal, finance e security; `budget: null` até existir o ledger J6 | `config/areas.yaml` |
+| **Keep-alive** | Precisa de **duas condições**: secrets `SUPABASE_URL`/`SUPABASE_ANON_KEY` **+** tabela `keepalive` | J1 / AU-47 |
+| **AU-13** (escala da deliberação) | Corrige-se **quando se for ligar a deliberação**, não antes | Grok; [ADR-META-AGENTS](../architecture/adr/ADR-META-AGENTS.md) §6 |
+| **DB Plano B** | Ficar no Supabase agora. Plano B managed = **Neon**; plano B local-first = **Postgres+pgvector na Oracle**. 4 gatilhos de saída definidos | [ADR-DB-PLAN-B](../architecture/adr/ADR-DB-PLAN-B.md) |
+| **Meta-agentes: modo / forma / participantes** | O Dev não respondeu; executaram-se as recomendadas A/A/A: modo assistido, conselhos por tipo de decisão, participantes mistos | [ADR-META-AGENTS](../architecture/adr/ADR-META-AGENTS.md) §2–3 |
+| **Campo `kind` no agente** | `internal \| external_ai \| meta`, por omissão `internal`. Está no agente, não na área | `agents/README.md`; `packages/shared/src/types/agent.ts` |
+
+### 13.2 EM ABERTO — cada uma com opção recomendada por omissão (N = 7 dias)
+
+| # | Decisão | Opção A | Opção B | Opção C | RECOMENDADA |
+|---|---|---|---|---|---|
+| E1 | **Q2 — Onde corre o motor em serviço** | VM Oracle. Custo US$ 0. Serviço 24/7, mas exige S20 (chave antiga) + S27 (acesso) | PC local. Custo US$ 0. Zero operação; só corre com o PC ligado | Serverless (Vercel). Custo US$ 0–20. Incompatível: o `plan_runner` escreve em disco | **B** até o worker mínimo correr; depois A, quando S20 e S27 fecharem. O motor ainda não tem worker, e a VM tem pendências de segurança |
+| E2 | **ADR-M1 — Onde vive o router (área → agente)** | No MCP (JS) a ler `areas.yaml`. Custo baixo. Duas fontes de verdade (JS + YAML de outro repo) | No `plan_runner` (Python); o MCP delega. Custo médio. Uma fonte, testável com a suíte do runner | Área no MCP, agente no Python. Custo alto. Duas metades para manter | **B**: segue a D1 (núcleo Python) e o `areas.yaml` vive neste repo |
+| E3 | **ADR-M2 — Um agente por pedido ou plano** | Sempre 1 agente. Simples; perde pedidos multi-passo | Sempre plano. Custo em tokens por pedido simples | 1 agente por omissão; plano quando o `meta.planejador` classificar o pedido como multi-passo | **C**: é o padrão do MCP (1 agente) e do `plan_runner` (plano) sem obrigar a escolher |
+| E4 | **ADR-M5 — Baixa confiança no routing** | Pedir clarificação ao utilizador. Custo: 1 volta | HITL. Custo: tempo do Dev | Encaminhar para um horizontal genérico (`meta.planejador`). Custo: resposta menos especializada | **A**, e **B** nas áreas com `hitl: required`. Não se inventa especialista |
+| E5 | **ADR-M7 — Os 33 agentes do MCP de produção no registo** | Entram na v2, depois de existir o validador (E7) | Entram já na v1 | Nunca; o MCP mantém o seu catálogo | **A**: sem validador, 33 IDs de outro repo apodreciam sem aviso |
+| E6 | **ADR-M8 — Nomenclatura canónica** | `vertical.nome` do frontmatter `.agent.md` (ex.: `marketing.critic`) | IDs do MCP (`lib/agents.js`) | Esquema novo | **A**: já é o usado em `areas.yaml` e no runtime Python (D1) |
+| E7 | **Validação do `areas.yaml` em CI** (exigida pela D2) | Script Python pequeno + passo no `runner-tests.yml`. Custo ~1h. Verifica IDs e cobertura | Script TS em `packages/scripts`. Contradiz a D1 (TS arquivado) | Só um hook local de pre-commit. Não protege PRs | **A**. Até lá, a validação foi feita à mão em 2026-09-30: 10 áreas, 35/35 agentes, 0 IDs desconhecidos, 0 duplicados |
+| E8 | **Trader** (não é uma das 10 áreas) | Trading como parte de `finance`: G1/B3 como agentes de `finance`, `hitl: required`, *paper trading* por omissão | Área própria `trading` na v2 | Fora de escopo | **A**: evita uma área vazia; o gate de risco (G1.5) usa o `hitl` da área |
+| E9 | **Cyber** vs **security** | `cyber` = `security` (o `security_auditor` já se declara "agente de cibersegurança defensivo") | Área `cyber` separada | Sub-área de `security` | **A**: não há código nem desenho distinto para "cyber" (T1.1) |
+| E10 | **"Deep Hardness Obsidian"** | Obsidian/Logseq como vista humana da memória (F10 = G4.1 = I8), fase posterior | deepseek-harness / `dsh-long-memory` como memória longa | Descartar | **A**: a função de B (memória longa) já é coberta pela L4 própria (D3); Obsidian não compete com ela |
+| E11 | **Estrutura existente de security/finance (T1.1)** | Integrar já no `areas.yaml` | Manter como referência | Avaliar em item próprio | **A** para `meta.security-auditor` e `gestao.contabilidade` (prompt real; **já integrados**). **B** para `financial-analyst` do TS (casca: só `description`, `config/agents.config.ts:69-73`) |
+
+---
+
+## 14. EXTRAIR (não adoptar) — análise de repos em 4 níveis (acrescentado em 2026-09-30)
+
+> **Crédito:** transcrição da análise do **Grok**, "Análise profunda do plano de acção × repos padrão ouro". A classificação é dele. As notas `[ACRESCENTADO PELO AUDITOR]` são verificações locais.
+
+### 14.1 ADOPTAR (dependência de produção, já alinhada)
+
+| Repo / ferramenta | Papel | Nota `[ACRESCENTADO PELO AUDITOR]` |
+|---|---|---|
+| **LangGraph** + **langgraph-checkpoint-postgres** (MIT) | Infra de fluxo e HITL durável. **Já usado** no `plan_runner`: aprofundar, não adoptar de novo | `langgraph>=0.6.11` em `runner/requirements-langgraph.txt:3`. O checkpointer hoje é **SQLite** (`:4`; `langgraph_engine.py:12,224`); o Postgres é **dependência nova** |
+| **modelcontextprotocol/python-sdk** | Base do `mcp_plan_runner` | Verificado: `mcp==1.30.0` em `runner/requirements.txt:4` |
+| **pgvector** (extensão + imagem `pgvector/pgvector`) | Vectores no Postgres | Verificado: imagem no CI (`.github/workflows/ci.yml:30`); extensão `vector 0.8.2` no Supabase (SQL, 2026-09-30) |
+| **gitleaks/gitleaks** + **semgrep/semgrep** | Segurança de CI (J10) | **Não** estão no CI hoje; só são corridos à mão pelo `security_auditor` (`agents/meta/security_auditor.agent.md`) |
+| **trufflehog** (opcional) | Referência adicional para segredos | — |
+
+### 14.2 EXTRAIR (ler padrões, NÃO adoptar como dependência)
+
+| Repo | O que se extrai | Nota |
+|---|---|---|
+| **mem0** | Padrões ADD/UPDATE/DELETE de memória; spike J11. **Não** é dependência | D3; [DECISAO-3](./DECISAO-3-memoria.md) §3.3 |
+| **karpathy/llm-council** | Protocolo em 3 estágios: parallel → blind peer → chairman. Extrair, não adoptar o stack | [ADR-META-AGENTS](../architecture/adr/ADR-META-AGENTS.md) §5 |
+| **HKUDS/LightRAG** | GraphRAG leve; só na Fase 2; versão ≥ 1.5.5 (CVEs) | Versão/CVEs **NÃO VERIFICADOS** nesta sessão |
+
+### 14.3 REFERÊNCIA (ideias, não código)
+
+| Repo | Ideia |
+|---|---|
+| **Microsoft Conductor** (workflows YAML) | Formato para o `areas.yaml` |
+| **aurelio-labs/semantic-router** | Routing barato por embeddings (área antes de LLM). Actividade do repo **NÃO VERIFICADA** |
+| **Cognee / Graphiti / Microsoft GraphRAG** | Padrões de memória e recuperação *multi-hop* |
+
+### 14.4 REJEITAR como núcleo
+
+| Repo | Porquê |
+|---|---|
+| **CrewAI / AutoGen** | Outro modelo (crew/chat). O AutoGen está em manutenção. Não substituem o `plan_runner` |
+| **Supabase self-host completo na Oracle (12 GB)** | Pesado para o que se usa |
+
+### 14.5 PLANO B DB (contingência, não "extrair")
+
+| Opção | Nota |
+|---|---|
+| **Neon** (managed, sem a pausa de 7 dias) | Recomendada quando um gatilho disparar, [ADR-DB-PLAN-B](../architecture/adr/ADR-DB-PLAN-B.md) §3 |
+| **Postgres+pgvector em Docker na Oracle** (local-first) | Checklist de capacidade em [ADR-DB-PLAN-B](../architecture/adr/ADR-DB-PLAN-B.md) §4 |
+
+---
+
+## 15. Protocolo meta-agentes (Fase 2) — resumo do ADR (acrescentado em 2026-09-30)
+
+> Fonte: [ADR-META-AGENTS](../architecture/adr/ADR-META-AGENTS.md). **Visão registada, nada implementado.**
+
+- **Objectivo:** deliberação entre agentes e, na Fase 2, entre várias IAs (Claude, Grok, outras), cada uma representada por um agente-maestro, sem o Dev a fazer de pombo-correio.
+- **Fase 1:** deliberação interna, reimplementada em Python no `plan_runner` a partir das ideias do `DeliberationEngine`/`ArchitectureCouncil`. **Não é drop-in do TS**, que está arquivado (D1).
+- **Fase 2:** mesmos protocolos, com participantes `kind: external_ai`.
+- **Protocolo (extraído do llm-council):**
+  1. **parallel** — cada participante responde sozinho;
+  2. **blind peer** — crítica anonimizada;
+  3. **chairman** — síntese com dissent + próximo passo.
+- **Modo, forma e participantes:** assistido (o Dev aprova o commit final) · conselhos por tipo de decisão (architecture, security, product) · participantes mistos.
+- **Pré-requisitos, por ordem:** motor mínimo a correr → AU-13 corrigido ao ligar a deliberação → conselho interno a funcionar → **ledger de tokens (J6)** → Fase 2.
+- **Não-objectivos:** não substitui o maestro; não é um orquestrador paralelo.
