@@ -1,5 +1,6 @@
 ---
 id: gestao.contabilidade
+kind: internal
 role: contabilidade
 action: contabilidade
 skill: null

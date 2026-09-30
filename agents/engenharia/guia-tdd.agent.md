@@ -1,5 +1,6 @@
 ---
 id: engenharia.guia-tdd
+kind: internal
 role: guia_tdd
 action: guia_tdd
 skill: skills/claude/test-driven-development/SKILL.md

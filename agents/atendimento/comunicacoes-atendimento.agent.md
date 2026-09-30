@@ -1,5 +1,6 @@
 ---
 id: atendimento.comunicacoes-atendimento
+kind: internal
 role: comunicacoes_atendimento
 action: comunicacoes_atendimento
 skill: null

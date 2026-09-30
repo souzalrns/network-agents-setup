@@ -1,5 +1,6 @@
 ---
 id: marketing.ad_creative
+kind: internal
 role: ad_creative
 action: ad_creative
 skill: skills/marketing/ad_creative/SKILL.md

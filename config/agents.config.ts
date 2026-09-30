@@ -3,24 +3,28 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== META (Camada 1) ==========
   {
     id: 'orchestrator-general',
+    kind: 'internal',
     layer: 'meta',
     visibility: 'public',
     description: 'Ponto de entrada de todas as demandas, roteia para o domínio correto.',
   },
   {
     id: 'domain-router',
+    kind: 'internal',
     layer: 'meta',
     visibility: 'public',
     description: 'Identifica se a demanda é de Software, Medicina, Marketing, Construção, Direito, etc.',
   },
   {
     id: 'context-manager',
+    kind: 'internal',
     layer: 'meta',
     visibility: 'public',
     description: 'Mantém o histórico e estado da conversa/projeto.',
   },
   {
     id: 'task-planner',
+    kind: 'internal',
     layer: 'meta',
     visibility: 'public',
     description: 'Quebra demandas complexas em subtarefas.',
@@ -28,24 +32,28 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== HORIZONTAL (Skills) ==========
   {
     id: 'research-agent',
+    kind: 'internal',
     layer: 'horizontal',
     visibility: 'public',
     description: 'Pesquisa genérica (mercado, técnica, jurídica, médica…).',
   },
   {
     id: 'critic-validator',
+    kind: 'internal',
     layer: 'horizontal',
     visibility: 'public',
     description: 'Revisa qualidade de qualquer saída.',
   },
   {
     id: 'documentation-agent',
+    kind: 'internal',
     layer: 'horizontal',
     visibility: 'public',
     description: 'Gera textos, relatórios e documentação.',
   },
   {
     id: 'methodology-legal',
+    kind: 'internal',
     layer: 'horizontal',
     visibility: 'public',
     description: 'Raciocínio jurídico genérico (fato × direito, hermenêutica).',
@@ -53,6 +61,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== VERTICAL - BUSINESS ==========
   {
     id: 'lead-qualifier',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'business',
@@ -60,6 +69,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'proposal-agent',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'business',
@@ -67,6 +77,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'financial-analyst',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'business',
@@ -75,6 +86,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== VERTICAL - MEDICAL ==========
   {
     id: 'clinical-orchestrator',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'medical',
@@ -82,6 +94,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'triage-agent',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'medical',
@@ -89,6 +102,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'cardiologist-agent',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'medical',
@@ -97,6 +111,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== VERTICAL - MARKETING ==========
   {
     id: 'marketing-orchestrator',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'marketing',
@@ -104,6 +119,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'copywriter-agent',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'marketing',
@@ -111,6 +127,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'geo-agent',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'marketing',
@@ -119,6 +136,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== VERTICAL - CONSTRUCTION ==========
   {
     id: 'construction-orchestrator',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'construction',
@@ -126,6 +144,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'architect-agent',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'construction',
@@ -133,6 +152,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'civil-engineer',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'construction',
@@ -141,6 +161,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   // ========== VERTICAL - LEGAL ==========
   {
     id: 'legal-orchestrator',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'legal',
@@ -153,6 +174,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
     // legal-agents.ts e check-consistency.ts referenciam estes 2 IDs
     // directamente -- fundir exigia alterar os 4, fora do escopo deste item.
     id: 'civil-law-br',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'legal',
@@ -162,6 +184,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'civil-law-pt',
+    kind: 'internal',
     layer: 'vertical',
     visibility: 'private',
     domain: 'legal',
@@ -171,6 +194,7 @@ export const AGENT_CONFIGS: AgentConfig[] = [
   },
   {
     id: 'legal-research',
+    kind: 'internal',
     layer: 'horizontal',
     visibility: 'public',
     domain: 'legal',

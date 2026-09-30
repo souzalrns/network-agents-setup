@@ -1,5 +1,6 @@
 ---
 id: meta.radar-ferramentas
+kind: internal
 role: radar_ferramentas
 action: radar_ferramentas
 skill: null

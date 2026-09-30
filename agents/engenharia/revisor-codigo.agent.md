@@ -1,5 +1,6 @@
 ---
 id: engenharia.revisor-codigo
+kind: internal
 role: revisor_codigo
 action: revisor_codigo
 skill: skills/claude/code-review-and-quality/SKILL.md

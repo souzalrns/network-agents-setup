@@ -1,5 +1,6 @@
 ---
 id: engenharia.qualidade-dados
+kind: internal
 role: qualidade_dados
 action: qualidade_dados
 skill: null

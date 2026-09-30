@@ -1,5 +1,6 @@
 ---
 id: marketing.media_buyer
+kind: internal
 role: media_buyer
 action: media_plan
 skill: skills/marketing/media_plan/SKILL.md

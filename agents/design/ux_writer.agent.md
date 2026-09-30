@@ -1,5 +1,6 @@
 ---
 id: design.ux_writer
+kind: internal
 role: ux_writer
 action: ux_writing
 skill: skills/design/ux_writing/SKILL.md

@@ -1,5 +1,6 @@
 ---
 id: marketing.creative_review
+kind: internal
 role: creative_review
 action: creative_review
 skill: skills/marketing/creative_review/SKILL.md

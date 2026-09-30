@@ -1,5 +1,6 @@
 ---
 id: meta.planejador
+kind: internal
 role: planejador
 action: planejador
 skill: skills/meta/meta-workflow/SKILL.md

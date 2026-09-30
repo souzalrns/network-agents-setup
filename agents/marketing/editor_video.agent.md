@@ -1,5 +1,6 @@
 ---
 id: marketing.editor_video
+kind: internal
 role: editor_video
 action: video_edit_plan
 skill: skills/marketing/video_edit_plan/SKILL.md

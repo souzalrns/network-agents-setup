@@ -1,5 +1,6 @@
 ---
 id: meta.arquitetura-agentes
+kind: internal
 role: arquitetura_agentes
 action: arquitetura_agentes
 skill: skills/meta/mcp-patterns/SKILL.md

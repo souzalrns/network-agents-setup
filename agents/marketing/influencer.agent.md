@@ -1,5 +1,6 @@
 ---
 id: marketing.influencer
+kind: internal
 role: influencer
 action: influencer_brief
 skill: skills/marketing/influencer_brief/SKILL.md

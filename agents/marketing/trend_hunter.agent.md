@@ -1,5 +1,6 @@
 ---
 id: marketing.trend_hunter
+kind: internal
 action: trend_hunter
 skill: skills/marketing/trend_hunter/SKILL.md
 priority: P1

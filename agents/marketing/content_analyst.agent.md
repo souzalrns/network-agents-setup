@@ -1,5 +1,6 @@
 ---
 id: marketing.content_analyst
+kind: internal
 role: content_analyst
 action: transcript_analysis
 skill: skills/marketing/transcript_analysis/SKILL.md

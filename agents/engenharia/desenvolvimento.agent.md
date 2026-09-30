@@ -1,5 +1,6 @@
 ---
 id: engenharia.desenvolvimento
+kind: internal
 role: desenvolvimento
 action: desenvolvimento
 skill: skills/meta/meta-workflow/SKILL.md

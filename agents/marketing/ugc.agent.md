@@ -1,5 +1,6 @@
 ---
 id: marketing.ugc
+kind: internal
 role: ugc
 action: ugc_brief
 skill: skills/marketing/ugc_brief/SKILL.md

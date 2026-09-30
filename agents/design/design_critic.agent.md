@@ -1,5 +1,6 @@
 ---
 id: design.design_critic
+kind: internal
 role: design_critic
 action: design_critic
 skill: skills/design/design_critic/SKILL.md
