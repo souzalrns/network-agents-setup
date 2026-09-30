@@ -14,8 +14,9 @@
 #
 # O que fica por decidir (cada ponto tem uma opção recomendada por omissão em
 # docs/audit/PLANO-DE-ACAO.md, secção "Decisões tomadas vs. em aberto"):
-#   1. Validação em CI (script que confirma que cada id existe e que nenhum
-#      agente fica de fora). Omissão: script pequeno em Python no runner.
+#   1. ~~Validação em CI~~ FEITO (E7): runner/plan_runner/areas.py, corrido no
+#      runner-tests.yml (`python -m plan_runner.areas`). Falha se um id não existir,
+#      se um agente ficar órfão ou estiver em duas áreas.
 #   2. Entrada das verticais do MCP de produção (ADR-M7). Omissão: fica para a v2.
 #   3. budget por área. Omissão: null até existir ledger de tokens (J6).
 #   4. Áreas sem agentes (legal, gamedev, docs): ficam declaradas com agents: []
