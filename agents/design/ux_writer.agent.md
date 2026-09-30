@@ -3,6 +3,7 @@ id: design.ux_writer
 kind: internal
 role: ux_writer
 action: ux_writing
+description: "Escreve microcopy de interface — labels, botões, mensagens de erro (o quê → porquê → como), empty states, tooltips e onboarding; não faz copy de marketing nem de SEO."
 skill: skills/design/ux_writing/SKILL.md
 vertical: design
 priority: P0

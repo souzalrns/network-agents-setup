@@ -3,6 +3,7 @@ id: meta.planejador
 kind: internal
 role: planejador
 action: planejador
+description: "Transforma uma demanda do orquestrador num plano estruturado — objectivo, critério de pronto, passos e riscos — e decide Fast-Path ou Full Cycle com justificação; nunca executa."
 skill: skills/meta/meta-workflow/SKILL.md
 vertical: meta
 priority: P1

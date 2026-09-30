@@ -3,6 +3,7 @@ id: marketing.ugc
 kind: internal
 role: ugc
 action: ugc_brief
+description: "Escreve briefs e scripts UGC/estilo creator para vídeo curto (TikTok, Reels, Shorts) — hook, valor, CTA e disclosure — sem produzir o vídeo final nem gerir contas de ads."
 skill: skills/marketing/ugc_brief/SKILL.md
 vertical: marketing
 priority: P1

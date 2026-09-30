@@ -3,6 +3,7 @@ id: marketing.media_buyer
 kind: internal
 role: media_buyer
 action: media_plan
+description: "Recomenda planos de paid media — estrutura de campanha, budget, audiências, plataforma e stop-loss — com compliance de anúncios; nunca executa gasto sem aprovação humana."
 skill: skills/marketing/media_plan/SKILL.md
 vertical: marketing
 priority: P1

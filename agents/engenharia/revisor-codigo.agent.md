@@ -3,6 +3,7 @@ id: engenharia.revisor-codigo
 kind: internal
 role: revisor_codigo
 action: revisor_codigo
+description: "Revê alterações de código (Node.js/NestJS/TypeScript) contra checklists de segurança, qualidade e backend; reporta só achados de alta confiança, por severidade, com ficheiro:linha e correcção."
 skill: skills/claude/code-review-and-quality/SKILL.md
 vertical: engenharia
 priority: P1

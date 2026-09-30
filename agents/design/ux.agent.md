@@ -3,6 +3,7 @@ id: design.ux
 kind: internal
 role: ux
 action: ux_flow
+description: "Desenha a experiência de utilização: problema, utilizador, fluxo principal e estados de erro/vazio/carregamento, com critérios de sucesso; entrega o handoff para UI sem definir o visual."
 skill: skills/design/ux_flow/SKILL.md
 vertical: design
 priority: P0

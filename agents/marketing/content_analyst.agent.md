@@ -3,6 +3,7 @@ id: marketing.content_analyst
 kind: internal
 role: content_analyst
 action: transcript_analysis
+description: "Analisa um vídeo ou reel a partir do link: dispara a transcrição configurada, lê o resultado e devolve resumo e recomendação objectiva de implementar ou não, cruzada com o contexto do negócio."
 skill: skills/marketing/transcript_analysis/SKILL.md
 vertical: marketing
 priority: P1

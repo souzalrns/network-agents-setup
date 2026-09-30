@@ -3,6 +3,7 @@ id: marketing.marketing
 kind: internal
 role: marketing
 action: marketing
+description: "Responde a pedidos gerais de marketing de qualquer negócio do portefólio, encaminhando para as skills de marketing adequadas; nunca inventa dados do negócio que não venham no pedido ou na memória."
 skill: null
 vertical: marketing
 priority: P1

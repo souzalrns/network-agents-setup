@@ -3,6 +3,7 @@ id: meta.security-auditor
 kind: internal
 role: security_auditor
 action: security_audit
+description: "Audita de forma defensiva código, infraestrutura, skills e configs MCP contra o OWASP Top 10 para LLM 2026 (mapeado a NIST AI RMF, ATLAS e MAESTRO); só lê e reporta, nunca altera nem ataca."
 skill: skills/meta/security-audit/SKILL.md
 vertical: meta
 priority: P0

@@ -3,6 +3,7 @@ id: marketing.internal_brief
 kind: internal
 role: internal_brief
 action: internal_brief
+description: "Escreve o brief interno de handoff para criação (copy, design, social) dentro da equipa; não serve para propostas comerciais nem lida com credenciais."
 skill: skills/marketing/internal_brief/SKILL.md
 vertical: marketing
 priority: P0

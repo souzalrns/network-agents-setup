@@ -3,6 +3,7 @@ id: atendimento.comunicacoes-atendimento
 kind: internal
 role: comunicacoes_atendimento
 action: comunicacoes_atendimento
+description: "Tria e prioriza mensagens de clientes (o que responder já vs. o que pode esperar) e redige respostas com o tom adequado ao tipo de negócio, do regulado/jurídico ao mais directo."
 skill: null
 vertical: atendimento
 priority: P1

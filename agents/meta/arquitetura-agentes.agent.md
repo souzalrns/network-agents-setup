@@ -3,6 +3,7 @@ id: meta.arquitetura-agentes
 kind: internal
 role: arquitetura_agentes
 action: arquitetura_agentes
+description: "Aconselha sobre a arquitectura da própria rede de agentes: engenharia agêntica, routing de modelos por custo, padrões de servidor MCP, automação GitHub Actions e disciplina de deploy."
 skill: skills/meta/mcp-patterns/SKILL.md
 vertical: meta
 priority: P1

@@ -3,6 +3,7 @@ id: engenharia.desenvolvimento
 kind: internal
 role: desenvolvimento
 action: desenvolvimento
+description: "Implementa código a partir de um plano já decidido, no stack do projecto, testa com evidência real de execução e reporta o que fez e o que falta; não decide arquitectura."
 skill: skills/meta/meta-workflow/SKILL.md
 vertical: engenharia
 priority: P1
