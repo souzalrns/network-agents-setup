@@ -494,3 +494,13 @@ Documentos com errata visível adicionada (não apagados, corrigidos com nota no
 | **Ruff** do runner | **FEITO** (`77bd6e2`): 0 erros; suíte 173 + 34 slow a passar | `runner-tests.yml:44` |
 | **e2e** (`tests/e2e/api.test.ts`) | **FEITO** (`cef2f24`): causa = sem servidor (ambiente) + sem `x-api-key` (teste desactualizado face à auth fail-closed). Com a API local + `E2E_API_KEY`: 3/3. Continua fora do CI (`ci.yml:93`) | `tests/e2e/api.test.ts` |
 | **E15** — esboços reconstituídos (`CouncilSession`, `councils.yaml` v0 no ADR-META-AGENTS §12–13) | **Aberto, baixa prioridade**: quando aparecerem os originais (se existirem), substituir a reconstituição. Nada mais a fazer até lá | `docs/audit/PLANO-DE-ACAO.md` §13.2 E15 |
+
+## 📋 J3 — RAG canónico (2026-09-30, modo nocturno)
+
+| Item | Estado | Evidência |
+|---|---|---|
+| **J3** — ingest passa a escrever na `knowledge_chunks` | **Código FEITO** (`fbad7bb`): DELETE limitado a `project='network-agents-setup'`; `agent_id` composto desdobrado | `runner/plan_runner/supabase_writer.py` |
+| Migração dos dados t6 → `knowledge_chunks` + remoção da overload ambígua de `match_knowledge` | **PENDENTE-DEV**: SQL versionado e testado localmente, **não executado** | `scripts/migrate_t6_to_knowledge_chunks.sql`; `docs/ops/RAG-CANONICAL.md` |
+| **Achado crítico:** 2 overloads de `match_knowledge`, e a chamada do MCP dá `42725 ... is not unique` | Reproduzido no Postgres; o SQL acima corrige. Falha pelo PostgREST **NÃO VERIFICADA** (sem chamadas nos logs de 24h) | `docs/ops/RAG-CANONICAL.md` |
+| Apagar a t6 | **PENDENTE-DEV**, depois dos passos 1–5 do guia, com backup | `scripts/drop_knowledge_chunks_t6.sql` |
+| Teste ingest → retrieve | **FEITO** (`e3a404f`): 3/3 contra Postgres + pgvector local; skip sem `RAG_TEST_DATABASE_URL` | `runner/tests/test_rag_canonical.py` |

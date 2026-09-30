@@ -103,3 +103,9 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **À espera de merge:** J7, no PR #30 (CI verde). Fecha o Dependabot #11. O merge é do maestro.
 - **PENDENTE-DEV:** J1. Os 5 passos estão em `docs/ops/KEEP-ALIVE-SETUP.md`.
 - **E15 (baixa prioridade):** quando aparecerem os originais do `CouncilSession`/`councils.yaml` (se existirem), substituir a reconstituição do ADR-META-AGENTS §12–13. E13 (C0–C3) e E14 (`active`) foram executados em 2026-09-30.
+
+## J3 — RAG canónico (2026-09-30)
+
+- **Código feito:** o ingest escreve na `knowledge_chunks` (`fbad7bb`); teste ingest → retrieve (`e3a404f`).
+- **PENDENTE-DEV:** correr `scripts/migrate_t6_to_knowledge_chunks.sql`, que também remove a overload ambígua de `match_knowledge` (achado crítico). Depois, seguir os passos 2–6 de `docs/ops/RAG-CANONICAL.md`.
+- **Atenção:** até ao merge para a `main`, um push que toque em `docs/**/*.md` continua a ingerir na t6 (o workflow só aplica o ingest na `main`).
