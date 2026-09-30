@@ -3,6 +3,7 @@ id: design.ui
 kind: internal
 role: ui
 action: ui_spec
+description: "Especifica a interface visual a partir do fluxo UX: layout, componentes com variantes e estados, tokens em 3 níveis e checklist de acessibilidade para o handoff à implementação."
 skill: skills/design/ui_spec/SKILL.md
 vertical: design
 priority: P0

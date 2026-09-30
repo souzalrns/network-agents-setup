@@ -3,6 +3,7 @@ id: marketing.research
 kind: internal
 role: research
 action: research
+description: "Prepara research estruturado e verificável para marketing e conteúdo — factos com fonte, ângulos e lacunas — que alimenta seo_brief, copy e briefs; não escreve a peça final."
 skill: skills/marketing/research/SKILL.md
 vertical: marketing
 priority: P0

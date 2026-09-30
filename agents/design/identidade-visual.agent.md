@@ -3,6 +3,7 @@ id: design.identidade-visual
 kind: internal
 role: identidade_visual
 action: design
+description: "Define e mantém a direcção de identidade visual (cores, tipografia, tom) e a consistência de marca entre os negócios do portefólio; orienta layout, não produz peças nem specs de UI."
 skill: null
 vertical: design
 priority: P1

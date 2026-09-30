@@ -3,6 +3,7 @@ id: gestao.gestao-empresarial
 kind: internal
 role: gestao_empresarial
 action: gestao_empresarial
+description: "Apoia decisões estratégicas ao nível do portefólio — prioridades entre negócios, dependências e trade-offs, com raciocínio tipo CFO/COO e SWOT; encaminha o detalhe técnico para os agentes de cada projecto."
 skill: null
 vertical: gestao
 priority: P1

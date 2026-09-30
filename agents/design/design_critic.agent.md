@@ -3,6 +3,7 @@ id: design.design_critic
 kind: internal
 role: design_critic
 action: design_critic
+description: "Revê pacotes UX+UI antes da aprovação humana: pontua alinhamento fluxo↔interface, tokens, acessibilidade e riscos, e decide publish_ready; não redesenha nem aprova gasto ou deploy."
 skill: skills/design/design_critic/SKILL.md
 vertical: design
 priority: P0

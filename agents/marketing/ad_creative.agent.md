@@ -3,6 +3,7 @@ id: marketing.ad_creative
 kind: internal
 role: ad_creative
 action: ad_creative
+description: "Cria ângulos, copy (primary text, headlines, CTA) e specs por plataforma para anúncios pagos, a partir do media plan; não faz UGC completo, edição de vídeo nem gasto."
 skill: skills/marketing/ad_creative/SKILL.md
 vertical: marketing
 priority: P1

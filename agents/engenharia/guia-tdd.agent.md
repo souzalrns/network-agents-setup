@@ -3,6 +3,7 @@ id: engenharia.guia-tdd
 kind: internal
 role: guia_tdd
 action: guia_tdd
+description: "Conduz o desenvolvimento testes-primeiro (Red-Green-Refactor): propõe testes unitários, de integração e E2E com casos-limite antes da implementação mínima, e exige evidência de execução."
 skill: skills/claude/test-driven-development/SKILL.md
 vertical: engenharia
 priority: P1

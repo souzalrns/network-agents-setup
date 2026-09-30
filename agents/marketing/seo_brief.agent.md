@@ -3,6 +3,7 @@ id: marketing.seo_brief
 kind: internal
 role: seo_brief
 action: seo_brief
+description: "Produz o brief SEO a partir do research — intenção, queries, outline, promessa única e bloco Item 13 obrigatório — sem escrever o artigo final."
 skill: skills/marketing/seo_brief/SKILL.md
 vertical: marketing
 priority: P0

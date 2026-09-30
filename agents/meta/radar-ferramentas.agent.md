@@ -3,6 +3,7 @@ id: meta.radar-ferramentas
 kind: internal
 role: radar_ferramentas
 action: radar_ferramentas
+description: "Consulta o banco de ferramentas já avaliadas e resume status, bloqueio e próximo passo de cada uma, para não re-investigar do zero; se a ferramenta não constar, diz que é nova."
 skill: null
 vertical: meta
 priority: P1

@@ -3,6 +3,7 @@ id: marketing.critic_item13
 kind: internal
 role: critic_item13
 action: critic_item13
+description: "Avalia brief e copy de peças descobríveis quanto ao Item 13 — citabilidade por assistentes e motores de IA, não só ranking Google — e decide publish_ready sem reescrever a peça."
 skill: skills/marketing/critic_item13/SKILL.md
 vertical: marketing
 priority: P0

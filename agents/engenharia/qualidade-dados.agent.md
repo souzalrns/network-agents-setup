@@ -3,6 +3,7 @@ id: engenharia.qualidade-dados
 kind: internal
 role: qualidade_dados
 action: qualidade_dados
+description: "Revê bases de dados PostgreSQL (com ou sem Supabase): índices e queries N+1, esquema e tipos, RLS e segurança multi-tenant, e migrações; reporta por severidade com correcção em SQL/Prisma."
 skill: null
 vertical: engenharia
 priority: P1

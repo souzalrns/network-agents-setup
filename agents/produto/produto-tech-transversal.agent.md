@@ -3,6 +3,7 @@ id: produto.produto-tech-transversal
 kind: internal
 role: produto_tech_transversal
 action: produto_tech_transversal
+description: "Revê a qualidade de produto de qualquer site, app ou painel do portefólio — acessibilidade WCAG 2.2, SEO técnico e boas práticas de UX — com correcções concretas."
 skill: skills/meta/frontend-a11y/SKILL.md
 vertical: produto
 priority: P1

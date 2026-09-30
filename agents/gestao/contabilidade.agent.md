@@ -3,6 +3,7 @@ id: gestao.contabilidade
 kind: internal
 role: contabilidade
 action: contabilidade
+description: "Apoia a organização contabilística e fiscal em Portugal e no Brasil — facturação, categorização de despesas, noções de IVA/IRS/IRC e IRPF/PIS/COFINS — sem substituir um contabilista certificado."
 skill: null
 vertical: gestao
 priority: P1
