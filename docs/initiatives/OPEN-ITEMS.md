@@ -84,3 +84,15 @@ Itens já fechados (Done/JÁ FEITO/N/A confirmado) **não estão nesta lista** �
 Cruzado contra `EXECUTION-PROMPTS.md` linha a linha (todos os 23+13+7+10+9+10+14+4+3+2+4+11+7 itens dos Grupos A-J, mais S15a/S15b/S18) e contra `STATUS.md` (secções 🔴🟠🟡🟢, checklist de 20 itens, mapeamento G1-G7, `## Done`). Nenhum item pendente de `EXECUTION-PROMPTS.md` ficou de fora desta lista — os únicos omitidos são os já fechados (Done/JÁ FEITO/N/A confirmado) e os ~30 itens dos Grupos G1-J que são resumidos como um bloco único (detalhe item-a-item preservado no documento original, não duplicado aqui para manter este relatório legível).
 
 **Auto-crítica:** não recontei manualmente cada um dos ~40 itens dos Grupos G1-J individualmente neste documento (resumidos em bloco) — se algum deles tiver uma dependência ou prioridade especial não capturada no resumo, só está visível no `EXECUTION-PROMPTS.md` original.
+
+---
+
+## Actualização 2026-09-30 — regra A/B/C
+
+A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opções A/B/C e uma **recomendada** que se executa se o Dev não responder em 7 dias (`docs/audit/PLANO-DE-ACAO.md` §0).
+
+- **Fechadas nesta data:** D1, D2, D3, RAG canónico (`knowledge_chunks`), `areas.yaml` v1, keep-alive (secrets + tabela), AU-13 (sobe ao ligar a deliberação), DB Plano B — ver `PLANO-DE-ACAO.md` §13.1.
+- **Criados:** `docs/architecture/adr/ADR-META-AGENTS.md`, `docs/architecture/adr/ADR-DB-PLAN-B.md`, `config/areas.yaml`; campo `kind` em todos os agentes.
+- **Em aberto com recomendação por omissão:** E1–E11 em `PLANO-DE-ACAO.md` §13.2 (ex.: E7 validação do `areas.yaml` em CI → recomendada A, script Python + passo no `runner-tests.yml`).
+- Os itens das tabelas acima que dependiam das decisões D1–D3 seguem a classificação de `docs/audit/DECISAO-4-ordem.md` §4.2–4.4.
+

@@ -16,6 +16,7 @@
 > O ID **S2** está dividido: **S2a** (Python) feito; **S2b** (Node) feito.
 > **C8 fechado (6/6):** C8a-1, C8a-2, C8b, C8c, C8d, C8e feitos. RAG alimentado (110 chunks) + retrieve via MCP (`McpKnowledge`) + pipeline completo (markdown → chunk → embed → Supabase → retrieve).
 > **Tabela exclusiva:** `knowledge_chunks_t6` (NÃO partilhar com `agent-network-mcp`).
+> **⚠️ Substituído em 2026-09-30:** a tabela canónica do RAG passa a ser `knowledge_chunks`; `knowledge_chunks_t6` fica abandonada (decisão do Grok, `docs/audit/PLANO-DE-ACAO.md` secção 13.1). A linha acima fica como histórico.
 > **Nova série de IDs `G` (Governança/Mapeamento), a partir de 2026-09-17:** próximo ID livre é **G8**.
 > Os 3 documentos de mapeamento (CORE-MAPPING, MCP-MAPPING, ROADMAP-GOVERNANCE) vivem em `docs/architecture/` — ver secção "Mapeamento" abaixo.
 
@@ -466,3 +467,15 @@ A pedido explícito do utilizador (as 3 auditorias acima tinham sido feitas por 
 **Lição registada explicitamente nos documentos corrigidos:** nem a documentação interna deste repo (`CORE-MAPPING.md`) é imune a precisar de verificação directa antes de ser citada como facto — a mesma disciplina "código > README" aplica-se a "código > documento de mapeamento do próprio repo".
 
 Documentos com errata visível adicionada (não apagados, corrigidos com nota no topo): `agents-audit/FASE1-AGENTES.md`, `agents-audit/AUDIT-AGENTS.md`. Documento com reescrita completa: `orchestration-audit/AUDIT-ORCHESTRATION.md`.
+
+## 📋 Resumo do dia 2026-09-30 — decisões D1–D3 fechadas + registo de áreas
+
+| O quê | Estado | Onde |
+|---|---|---|
+| D1 (núcleo Python, TS arquivado, MCP = porta de entrada), D2 (router hierárquico sobre `areas.yaml`), D3 (L4 própria sobre Supabase; mem0 = avaliação; escrita explícita) | **FECHADAS** (Grok) — não reabrir | `docs/audit/PLANO-DE-ACAO.md` §13.1 |
+| RAG canónico = `knowledge_chunks` (t6 abandonada) | **FECHADA** — correcção (J3/AU-19) ainda por fazer | idem |
+| `ADR-META-AGENTS` (visão Fase 2: deliberação entre agentes e entre IAs) | **Criado** — nada implementado | `docs/architecture/adr/ADR-META-AGENTS.md` |
+| `config/areas.yaml` v1 (10 áreas; 35/35 agentes cobertos) — J5 | **Criado** — sem código de router; validação em CI em aberto (E7, recomendada A) | `config/areas.yaml` |
+| Campo `kind` (`internal`/`external_ai`/`meta`, omissão `internal`) | **Introduzido** nos 35 `.agent.md` + 24 entradas de `config/agents.config.ts` + tipo `AgentKind` | `agents/README.md` |
+| `ADR-DB-PLAN-B` (Neon ou Postgres+pgvector na Oracle; 4 gatilhos; base hoje com 17 MB) | **Criado** — contingência, não activada | `docs/architecture/adr/ADR-DB-PLAN-B.md` |
+| Decisões ainda em aberto | Todas em A/B/C com recomendada por omissão (E1–E11, N = 7 dias) — **nenhuma pergunta em aberto** | `docs/audit/PLANO-DE-ACAO.md` §13.2 |
