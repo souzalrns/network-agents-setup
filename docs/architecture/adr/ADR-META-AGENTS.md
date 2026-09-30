@@ -95,7 +95,7 @@ Hoje:
 
 **L4 (memória) atravessa todas as camadas de controlo.** Um veredicto nasce `candidate` e só é consolidado depois do gate e do HITL.
 
-O contrato da L4 chama `active` ao estado consolidado, não `committed`: `"status": { "enum": ["candidate", "active"], "default": "candidate" }` em `docs/architecture/memory/contracts.md:29`. Neste ADR, "committed" = `active` do contrato. Ver E14 em `docs/audit/PLANO-DE-ACAO.md` §13.2.
+O contrato da L4 chama `active` ao estado consolidado, não `committed`: `"status": { "enum": ["candidate", "active"], "default": "candidate" }` em `docs/architecture/memory/contracts.md:29`. Este ADR usa só `active` para o estado consolidado (E14, 2026-09-30); o contrato é a fonte e não foi alterado.
 
 **Regra de encaminhamento:**
 - **Pedido normal** → C1 router → C3. Sem conselho.
