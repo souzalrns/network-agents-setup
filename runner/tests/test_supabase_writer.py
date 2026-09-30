@@ -6,8 +6,8 @@ Cobre:
 - validacao de dimensao do embedding
 - contagem
 
-A tabela alvo e `knowledge_chunks_t6` (exclusiva do T6), nao a
-`knowledge_chunks` do agent-network-mcp.
+A tabela alvo e `knowledge_chunks` (J3: tabela canonica, partilhada com o
+agent-network-mcp), com as linhas deste ingest em project='network-agents-setup'.
 """
 from __future__ import annotations
 
@@ -84,14 +84,15 @@ def test_upsert_source_executes_insert_on_conflict():
     assert params == ("docs/x.md", "abc", "marketing", "P0", 5, "deadbeef", 1234)
 
 
-def test_delete_chunks_targets_t6_table():
+def test_delete_chunks_only_this_project():
     conn = _FakeConn()
     n = sw.delete_chunks(conn, "docs/x.md")
     assert n == 3
     sql, params = conn.cur.executed[0]
-    assert "knowledge_chunks_t6" in sql
-    assert "WHERE source_path = %s" in sql
-    assert params == ("docs/x.md",)
+    assert "knowledge_chunks " in sql and "knowledge_chunks_t6" not in sql
+    # nunca apaga linhas do agent-network-mcp com a mesma source
+    assert "WHERE source = %s AND project = %s" in sql
+    assert params == ("docs/x.md", "network-agents-setup")
 
 
 def test_insert_chunks_rejects_wrong_embedding_size():
@@ -127,7 +128,7 @@ def test_insert_chunks_empty_returns_zero():
     )
 
 
-def test_insert_chunks_ok_targets_t6_table():
+def test_insert_chunks_ok_targets_canonical_table():
     conn = _FakeConn()
     chunks = [
         {"content": "a", "content_hash": "h1", "chunk_index": 0, "embedding": [0.0] * 768},
@@ -144,13 +145,30 @@ def test_insert_chunks_ok_targets_t6_table():
     inserts = [e for e in conn.cur.executed if e[0].upper().startswith("INSERT")]
     assert len(inserts) == 2
     sql, params = inserts[0]
-    assert "knowledge_chunks_t6" in sql
-    assert "source_path" in sql
-    # params: id, source_path, content_hash, chunk_index, content, agent_id, kb, embedding
+    assert "INSERT INTO knowledge_chunks (" in sql
+    assert "source_path" not in sql
+    # params: id, source, content_hash, chunk_index, content, agent_id, kb, embedding, project
     assert params[1] == "docs/x.md"
     assert params[3] == 0
     assert params[5] == "marketing"
     assert params[6] == "marketing"
+    assert params[8] == "network-agents-setup"
+
+
+def test_insert_chunks_splits_composite_agent_id():
+    """'a+b' gera uma linha por agente (o match_knowledge filtra por igualdade)."""
+    conn = _FakeConn()
+    chunks = [{"content": "a", "content_hash": "h", "chunk_index": 0, "embedding": [0.0] * 768}]
+    n = sw.insert_chunks(
+        conn,
+        source_path="docs/item-13-ai-findability.md",
+        agent_id="marketing+produto-tech-transversal",
+        kb="marketing",
+        chunks=chunks,
+    )
+    assert n == 2
+    agents = [params[5] for sql, params in conn.cur.executed if sql.upper().startswith("INSERT")]
+    assert agents == ["marketing", "produto-tech-transversal"]
 
 
 def test_replace_chunks_runs_upsert_delete_insert():
@@ -173,17 +191,18 @@ def test_replace_chunks_runs_upsert_delete_insert():
     assert conn.committed is True
 
 
-def test_count_chunks_with_source_targets_t6_table():
+def test_count_chunks_with_source_targets_canonical_table():
     conn = _FakeConn(rows=[(7,)])
     n = sw.count_chunks(conn, "docs/x.md")
     assert n == 7
     sql, params = conn.cur.executed[0]
-    assert "knowledge_chunks_t6" in sql
-    assert params == ("docs/x.md",)
+    assert "FROM knowledge_chunks " in sql
+    assert params == ("docs/x.md", "network-agents-setup")
 
 
 def test_count_chunks_without_source():
     conn = _FakeConn(rows=[(42,)])
     assert sw.count_chunks(conn) == 42
-    sql, _ = conn.cur.executed[0]
-    assert "knowledge_chunks_t6" in sql
+    sql, params = conn.cur.executed[0]
+    assert "FROM knowledge_chunks " in sql
+    assert params == ("network-agents-setup",)

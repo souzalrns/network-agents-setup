@@ -2,14 +2,17 @@
 
 Design: docs/T6-INGEST-PIPELINE.md (secao 4: knowledge_sources + knowledge_chunks).
 
-Este modulo e ADITIVO e escreve numa tabela EXCLUSIVA:
+Escreve em:
     - knowledge_sources: source_path (PK), content_hash, agent_id, priority,
       last_ingested_at, chunk_count, git_sha, size_bytes, updated_at
-    - knowledge_chunks_t6: id, source_path (FK), content_hash, chunk_index,
-      content, agent_id, kb, embedding vector(768), created_at, updated_at
+    - knowledge_chunks (J3, tabela canonica -- a que o match_knowledge do
+      agent-network-mcp le): agent_id, source, content, embedding vector(768),
+      project, content_hash, chunk_index, kb, created_at, updated_at
 
-NAO usa a tabela `knowledge_chunks` do agent-network-mcp (schema diferente,
-projeto diferente). A separacao evita colisoes de schema e de dados.
+A knowledge_chunks e partilhada com o agent-network-mcp: as linhas deste
+ingest ficam marcadas com project='network-agents-setup' e o DELETE so apaga
+essas (nunca as do MCP com a mesma `source`). A knowledge_chunks_t6 foi
+abandonada (scripts/migrate_t6_to_knowledge_chunks.sql).
 
 Le DATABASE_URL do ambiente (mesma que o Prisma usa).
 Sem ORM: usa psycopg directo (mais leve, sem migrations).
@@ -23,6 +26,9 @@ from contextlib import contextmanager
 from typing import Any
 
 import psycopg
+
+CHUNKS_TABLE = "knowledge_chunks"
+PROJECT = "network-agents-setup"
 
 
 class SupabaseWriterError(RuntimeError):
@@ -100,8 +106,8 @@ def delete_chunks(conn: psycopg.Connection, source_path: str) -> int:
     """Apaga todos os chunks de um source_path. Devolve o numero apagado."""
     with conn.cursor() as cur:
         cur.execute(
-            "DELETE FROM knowledge_chunks_t6 WHERE source_path = %s",
-            (source_path,),
+            f"DELETE FROM {CHUNKS_TABLE} WHERE source = %s AND project = %s",
+            (source_path, PROJECT),
         )
         return cur.rowcount
 
@@ -114,7 +120,10 @@ def insert_chunks(
     kb: str,
     chunks: list[dict[str, Any]],
 ) -> int:
-    """Insere chunks com embeddings. Devolve o numero inserido.
+    """Insere chunks com embeddings. Devolve o numero de linhas inseridas.
+
+    agent_id composto ('a+b') gera uma linha por agente: o match_knowledge
+    filtra por igualdade de agent_id, por isso 'a+b' nunca seria encontrado.
 
     Cada chunk (dict) deve ter:
         - content: str
@@ -125,14 +134,15 @@ def insert_chunks(
     if not chunks:
         return 0
 
-    sql = """
-        INSERT INTO knowledge_chunks_t6 (
-            id, source_path, content_hash, chunk_index, content,
-            agent_id, kb, embedding, created_at, updated_at
+    sql = f"""
+        INSERT INTO {CHUNKS_TABLE} (
+            id, source, content_hash, chunk_index, content,
+            agent_id, kb, embedding, project, created_at, updated_at
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s::vector, NOW(), NOW()
+            %s, %s, %s, %s, %s, %s, %s, %s::vector, %s, NOW(), NOW()
         )
     """
+    agents = [a for a in agent_id.split("+") if a] or [agent_id]
     n = 0
     with conn.cursor() as cur:
         for c in chunks:
@@ -142,20 +152,22 @@ def insert_chunks(
                     f"chunk_index={c.get('chunk_index')} tem {len(emb)} dims "
                     "(esperado 768)"
                 )
-            cur.execute(
-                sql,
-                (
-                    str(uuid.uuid4()),
-                    source_path,
-                    c["content_hash"],
-                    c["chunk_index"],
-                    c["content"],
-                    agent_id,
-                    kb,
-                    emb,
-                ),
-            )
-            n += 1
+            for agent in agents:
+                cur.execute(
+                    sql,
+                    (
+                        str(uuid.uuid4()),
+                        source_path,
+                        c["content_hash"],
+                        c["chunk_index"],
+                        c["content"],
+                        agent,
+                        kb,
+                        emb,
+                        PROJECT,
+                    ),
+                )
+                n += 1
     return n
 
 
@@ -214,10 +226,10 @@ def count_chunks(conn: psycopg.Connection, source_path: str | None = None) -> in
     with conn.cursor() as cur:
         if source_path:
             cur.execute(
-                "SELECT COUNT(*) FROM knowledge_chunks_t6 WHERE source_path = %s",
-                (source_path,),
+                f"SELECT COUNT(*) FROM {CHUNKS_TABLE} WHERE source = %s AND project = %s",
+                (source_path, PROJECT),
             )
         else:
-            cur.execute("SELECT COUNT(*) FROM knowledge_chunks_t6")
+            cur.execute(f"SELECT COUNT(*) FROM {CHUNKS_TABLE} WHERE project = %s", (PROJECT,))
         row = cur.fetchone()
         return int(row[0]) if row else 0
