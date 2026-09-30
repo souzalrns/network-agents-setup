@@ -1,5 +1,6 @@
 ---
 id: marketing.marketing
+kind: internal
 role: marketing
 action: marketing
 skill: null

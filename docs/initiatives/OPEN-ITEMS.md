@@ -84,3 +84,39 @@ Itens já fechados (Done/JÁ FEITO/N/A confirmado) **não estão nesta lista** �
 Cruzado contra `EXECUTION-PROMPTS.md` linha a linha (todos os 23+13+7+10+9+10+14+4+3+2+4+11+7 itens dos Grupos A-J, mais S15a/S15b/S18) e contra `STATUS.md` (secções 🔴🟠🟡🟢, checklist de 20 itens, mapeamento G1-G7, `## Done`). Nenhum item pendente de `EXECUTION-PROMPTS.md` ficou de fora desta lista — os únicos omitidos são os já fechados (Done/JÁ FEITO/N/A confirmado) e os ~30 itens dos Grupos G1-J que são resumidos como um bloco único (detalhe item-a-item preservado no documento original, não duplicado aqui para manter este relatório legível).
 
 **Auto-crítica:** não recontei manualmente cada um dos ~40 itens dos Grupos G1-J individualmente neste documento (resumidos em bloco) — se algum deles tiver uma dependência ou prioridade especial não capturada no resumo, só está visível no `EXECUTION-PROMPTS.md` original.
+
+---
+
+## Actualização 2026-09-30 — regra A/B/C
+
+A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opções A/B/C e uma **recomendada** que se executa se o Dev não responder em 7 dias (`docs/audit/PLANO-DE-ACAO.md` §0).
+
+- **Fechadas nesta data:** D1, D2, D3, RAG canónico (`knowledge_chunks`), `areas.yaml` v1, keep-alive (secrets + tabela), AU-13 (sobe ao ligar a deliberação), DB Plano B — ver `PLANO-DE-ACAO.md` §13.1.
+- **Criados:** `docs/architecture/adr/ADR-META-AGENTS.md`, `docs/architecture/adr/ADR-DB-PLAN-B.md`, `config/areas.yaml`; campo `kind` em todos os agentes.
+- **Em aberto com recomendação por omissão:** E1–E11 em `PLANO-DE-ACAO.md` §13.2 (ex.: E7 validação do `areas.yaml` em CI → recomendada A, script Python + passo no `runner-tests.yml`).
+- Os itens das tabelas acima que dependiam das decisões D1–D3 seguem a classificação de `docs/audit/DECISAO-4-ordem.md` §4.2–4.4.
+- **Acrescentados em 2026-09-30 (2.ª ronda):** J5-b, J5-c, E12, E13, E14, E15 em `PLANO-DE-ACAO.md` §13.2, todos com recomendada e prazo de 7 dias. `ADR-META-AGENTS.md` ganhou as secções 9–13 (desenho). O `runner/` do `agent-network-mcp` foi apagado; o material do J11 está em `runner/tests/test_mem0_connection.py` deste repo.
+
+## Bloco A (parcial) — 2026-09-30
+
+- **Fechados:** A8 (`8a1daca`, 21 agentes, também o A9), ruff do runner (`77bd6e2`), e2e (`cef2f24`, 3/3 com a API local + `E2E_API_KEY`). A8 e e2e estão só na `claude/audit-completo`; o ruff também está na `main` (PR #31).
+- **J7: FEITO** — PR #30 merged (`7696ceb`), fecha o Dependabot #11.
+- **J1: FEITO** (2026-09-30) — tabela + secrets; run #6 do keep-alive verde (30/09 17:31 UTC).
+- **E15 (baixa prioridade):** quando aparecerem os originais do `CouncilSession`/`councils.yaml` (se existirem), substituir a reconstituição do ADR-META-AGENTS §12–13. E13 (C0–C3) e E14 (`active`) foram executados em 2026-09-30.
+
+## J3 — RAG canónico (2026-09-30)
+
+- **Código feito:** o ingest escreve na `knowledge_chunks` (`fbad7bb`); teste ingest → retrieve (`e3a404f`).
+- **Migração: FEITA** (2026-09-30): 121 / 322 / 1 `match_knowledge` / `geo-agent.md` recuperável. PR #31 merged.
+- **PENDENTE-DEV:** passos 3 e 5 de `docs/ops/RAG-CANONICAL.md` (ingest local, teste real no MCP) e depois apagar a t6 (passo 6, irreversível, com backup).
+- ~~Até ao merge para a `main`, um push que toque em `docs/**/*.md` continua a ingerir na t6~~ — resolvido: o writer corrigido está na `main` desde o PR #31.
+
+## Fecho de 2026-09-30
+
+- **Fechados hoje:** J3 (RAG canónico, PR #31), J7 (PR #30), J1 (keep-alive verde), J6 (ledger de tokens em produção, PR #8 do `agent-network-mcp`), bug das 9 tools MCP (PR #9 do `agent-network-mcp`, em produção desde 27/09 até ao fix). Detalhe e evidência em `STATUS.md`, secção "Fecho das sessões de 2026-09-30".
+- **Em aberto:**
+  - J6: confirmar a 1.ª linha real em `token_usage` (passo 4 de `agent-network-mcp/docs/ops/TOKEN-LEDGER.md`; às 20:43 UTC havia 0 linhas porque ainda não tinha entrado nenhum pedido).
+  - J3: passos 3 e 5 do RAG-CANONICAL e depois apagar a t6.
+  - `log_execution` do MCP perde 4 campos (`capacidade_id`, `fast_path`, `custo_estimado`, `justificativa_full_cycle`): PR em curso.
+  - **Integrar a `claude/audit-completo` na `main`:** 37 commits (A8, e2e, auditoria, ADRs, `areas.yaml`, `kind`, docs). Decisão do maestro.
+

@@ -1,5 +1,6 @@
 ---
 id: design.ui
+kind: internal
 role: ui
 action: ui_spec
 skill: skills/design/ui_spec/SKILL.md

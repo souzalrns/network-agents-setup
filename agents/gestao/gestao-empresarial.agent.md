@@ -1,5 +1,6 @@
 ---
 id: gestao.gestao-empresarial
+kind: internal
 role: gestao_empresarial
 action: gestao_empresarial
 skill: null

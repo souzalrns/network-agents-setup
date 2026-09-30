@@ -1,5 +1,6 @@
 ---
 id: marketing.internal_brief
+kind: internal
 role: internal_brief
 action: internal_brief
 skill: skills/marketing/internal_brief/SKILL.md

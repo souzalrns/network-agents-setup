@@ -1,5 +1,6 @@
 ---
 id: meta.using_agent_skills
+kind: internal
 action: using_agent_skills
 skill: skills/meta/using-agent-skills/SKILL.md
 role: orchestrator_meta

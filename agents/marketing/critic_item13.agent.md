@@ -1,5 +1,6 @@
 ---
 id: marketing.critic_item13
+kind: internal
 role: critic_item13
 action: critic_item13
 skill: skills/marketing/critic_item13/SKILL.md

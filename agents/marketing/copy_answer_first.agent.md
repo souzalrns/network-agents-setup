@@ -1,5 +1,6 @@
 ---
 id: marketing.copy_answer_first
+kind: internal
 role: copy_answer_first
 action: copy_answer_first
 skill: skills/marketing/copy_answer_first/SKILL.md

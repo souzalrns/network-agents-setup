@@ -1,0 +1,131 @@
+# Registo de áreas — v1 (J5 do docs/audit/PLANO-DE-ACAO.md; D2 de docs/audit/DECISAO-2-maestro.md)
+#
+# O que é: DADOS para o router hierárquico híbrido (D2). Primeiro escolhe-se a
+# área (palavras-chave/embeddings); só dentro dela se escolhe o agente (LLM).
+# Não há código de router que leia este ficheiro ainda.
+#
+# Referências:
+#   - agents[] e horizontals[] usam o `id:` do frontmatter de agents/**/*.agent.md
+#     (runtime Python, D1). Os IDs de config/agents.config.ts (TS, arquivado)
+#     e os de agent-network-mcp/lib/agents.js (MCP de produção) NÃO entram na v1.
+#   - `kind` (internal | external_ai | meta) está no AGENTE, não na área.
+#   - Cada agente .agent.md aparece em exactamente uma lista agents[], para que
+#     nenhum fique inalcançável.
+#
+# O que fica por decidir (cada ponto tem uma opção recomendada por omissão em
+# docs/audit/PLANO-DE-ACAO.md, secção "Decisões tomadas vs. em aberto"):
+#   1. Validação em CI (script que confirma que cada id existe e que nenhum
+#      agente fica de fora). Omissão: script pequeno em Python no runner.
+#   2. Entrada das verticais do MCP de produção (ADR-M7). Omissão: fica para a v2.
+#   3. budget por área. Omissão: null até existir ledger de tokens (J6).
+#   4. Áreas sem agentes (legal, gamedev, docs): ficam declaradas com agents: []
+#      e o router devolve "sem especialista" + HITL. Não se inventam agentes.
+
+version: 1
+status: v1
+
+areas:
+  - id: software
+    description: Desenvolvimento, arquitectura de agentes, qualidade de código e dados, UI/UX de produto.
+    agents:
+      - engenharia.desenvolvimento
+      - engenharia.guia-tdd
+      - engenharia.revisor-codigo
+      - engenharia.qualidade-dados
+      - meta.arquitetura-agentes
+      - produto.produto-tech-transversal
+      - design.ui
+      - design.ux
+      - design.ux_writer
+      - design.design_critic
+    horizontals: [meta.planejador, meta.using_agent_skills, meta.security-auditor]
+    budget: null
+    hitl: null
+
+  - id: marketing
+    description: Estratégia, copy, criativos, media, SEO/GEO, conteúdo e identidade visual.
+    agents:
+      - marketing.marketing
+      - marketing.internal_brief
+      - marketing.research
+      - marketing.trend_hunter
+      - marketing.seo_brief
+      - marketing.copy_answer_first
+      - marketing.copy_social
+      - marketing.storytelling
+      - marketing.ad_creative
+      - marketing.creative_review
+      - marketing.critic
+      - marketing.critic_item13
+      - marketing.content_analyst
+      - marketing.editor_video
+      - marketing.influencer
+      - marketing.media_buyer
+      - marketing.ugc
+      - design.identidade-visual
+    horizontals: [meta.planejador, meta.using_agent_skills]
+    budget: null
+    hitl: null
+
+  - id: legal
+    description: Direito PT/BR (civil, contratos, jurisprudência). Sem agente .agent.md na v1.
+    agents: []
+    horizontals: [meta.planejador]
+    budget: null
+    hitl: required   # P-AG-118 (docs/estrutura-geral-agentes.md:156)
+
+  - id: ops
+    description: Gestão empresarial, operação e atendimento/comunicações com clientes.
+    agents:
+      - gestao.gestao-empresarial
+      - atendimento.comunicacoes-atendimento
+    horizontals: [meta.planejador, meta.using_agent_skills]
+    budget: null
+    hitl: null
+
+  - id: research
+    description: Pesquisa de ferramentas, repos e tecnologia (radar); pesquisa de nicho.
+    agents:
+      - meta.radar-ferramentas
+    horizontals: [meta.planejador]
+    budget: null
+    hitl: null
+
+  - id: finance
+    description: Contabilidade PT/BR e análise financeira. Trading (G1/B3) ainda não existe.
+    agents:
+      - gestao.contabilidade
+    horizontals: [meta.planejador]
+    budget: null
+    hitl: required   # P-AG-118 (docs/estrutura-geral-agentes.md:156); grounding (agents/_shared/grounding.directive.md:39)
+
+  - id: gamedev
+    description: Desenvolvimento de jogos (G2). Sem agentes na v1.
+    agents: []
+    horizontals: [meta.planejador]
+    budget: null
+    hitl: null
+
+  - id: security
+    description: Auditoria de segurança defensiva (código, dependências, MCP, CI). Nunca ofensiva.
+    agents:
+      - meta.security-auditor
+    horizontals: [meta.planejador]
+    budget: null
+    hitl: required   # achados de segurança não são aceites sem sinalizar (agents/meta/security_auditor.agent.md)
+
+  - id: docs
+    description: Documentação, ADRs, relatórios. Sem agente .agent.md dedicado na v1.
+    agents: []
+    horizontals: [meta.planejador]
+    budget: null
+    hitl: null
+
+  - id: horizontal
+    description: Agentes transversais que servem todas as áreas (planeamento e descoberta de skills).
+    agents:
+      - meta.planejador
+      - meta.using_agent_skills
+    horizontals: []
+    budget: null
+    hitl: null

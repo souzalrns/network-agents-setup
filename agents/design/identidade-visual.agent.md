@@ -1,5 +1,6 @@
 ---
 id: design.identidade-visual
+kind: internal
 role: identidade_visual
 action: design
 skill: null

@@ -1,5 +1,6 @@
 ---
 id: marketing.research
+kind: internal
 role: research
 action: research
 skill: skills/marketing/research/SKILL.md

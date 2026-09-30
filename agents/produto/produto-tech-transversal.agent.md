@@ -1,5 +1,6 @@
 ---
 id: produto.produto-tech-transversal
+kind: internal
 role: produto_tech_transversal
 action: produto_tech_transversal
 skill: skills/meta/frontend-a11y/SKILL.md

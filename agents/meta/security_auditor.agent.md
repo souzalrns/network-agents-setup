@@ -1,5 +1,6 @@
 ---
 id: meta.security-auditor
+kind: internal
 role: security_auditor
 action: security_audit
 skill: skills/meta/security-audit/SKILL.md

@@ -1,5 +1,6 @@
 ---
 id: marketing.seo_brief
+kind: internal
 role: seo_brief
 action: seo_brief
 skill: skills/marketing/seo_brief/SKILL.md

@@ -1,5 +1,6 @@
 ---
 id: design.ux
+kind: internal
 role: ux
 action: ux_flow
 skill: skills/design/ux_flow/SKILL.md

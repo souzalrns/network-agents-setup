@@ -1,5 +1,6 @@
 ---
 id: marketing.critic
+kind: internal
 action: critic
 skill: skills/marketing/critic/SKILL.md
 priority: P1

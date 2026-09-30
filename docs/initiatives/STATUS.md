@@ -16,6 +16,7 @@
 > O ID **S2** está dividido: **S2a** (Python) feito; **S2b** (Node) feito.
 > **C8 fechado (6/6):** C8a-1, C8a-2, C8b, C8c, C8d, C8e feitos. RAG alimentado (110 chunks) + retrieve via MCP (`McpKnowledge`) + pipeline completo (markdown → chunk → embed → Supabase → retrieve).
 > **Tabela exclusiva:** `knowledge_chunks_t6` (NÃO partilhar com `agent-network-mcp`).
+> **⚠️ Substituído em 2026-09-30:** a tabela canónica do RAG passa a ser `knowledge_chunks`; `knowledge_chunks_t6` fica abandonada (decisão do Grok, `docs/audit/PLANO-DE-ACAO.md` secção 13.1). A linha acima fica como histórico.
 > **Nova série de IDs `G` (Governança/Mapeamento), a partir de 2026-09-17:** próximo ID livre é **G8**.
 > Os 3 documentos de mapeamento (CORE-MAPPING, MCP-MAPPING, ROADMAP-GOVERNANCE) vivem em `docs/architecture/` — ver secção "Mapeamento" abaixo.
 
@@ -466,3 +467,69 @@ A pedido explícito do utilizador (as 3 auditorias acima tinham sido feitas por 
 **Lição registada explicitamente nos documentos corrigidos:** nem a documentação interna deste repo (`CORE-MAPPING.md`) é imune a precisar de verificação directa antes de ser citada como facto — a mesma disciplina "código > README" aplica-se a "código > documento de mapeamento do próprio repo".
 
 Documentos com errata visível adicionada (não apagados, corrigidos com nota no topo): `agents-audit/FASE1-AGENTES.md`, `agents-audit/AUDIT-AGENTS.md`. Documento com reescrita completa: `orchestration-audit/AUDIT-ORCHESTRATION.md`.
+
+## 📋 Resumo do dia 2026-09-30 — decisões D1–D3 fechadas + registo de áreas
+
+| O quê | Estado | Onde |
+|---|---|---|
+| D1 (núcleo Python, TS arquivado, MCP = porta de entrada), D2 (router hierárquico sobre `areas.yaml`), D3 (L4 própria sobre Supabase; mem0 = avaliação; escrita explícita) | **FECHADAS** (Grok) — não reabrir | `docs/audit/PLANO-DE-ACAO.md` §13.1 |
+| RAG canónico = `knowledge_chunks` (t6 abandonada) | **FECHADA** — correcção (J3/AU-19) **FEITA** em 2026-09-30 (PR #31 merged; migração corrida no Supabase). Só falta apagar a t6 | idem; secção J3 abaixo |
+| `ADR-META-AGENTS` (visão Fase 2: deliberação entre agentes e entre IAs) | **Criado** — nada implementado | `docs/architecture/adr/ADR-META-AGENTS.md` |
+| `config/areas.yaml` v1 (10 áreas; 35/35 agentes cobertos) — J5 | **Criado** — sem código de router; validação em CI em aberto (E7, recomendada A) | `config/areas.yaml` |
+| Campo `kind` (`internal`/`external_ai`/`meta`, omissão `internal`) | **Introduzido** nos 35 `.agent.md` + 24 entradas de `config/agents.config.ts` + tipo `AgentKind` | `agents/README.md` |
+| `ADR-DB-PLAN-B` (Neon ou Postgres+pgvector na Oracle; 4 gatilhos; base hoje com 17 MB) | **Criado** — contingência, não activada | `docs/architecture/adr/ADR-DB-PLAN-B.md` |
+| Decisões ainda em aberto | Todas em A/B/C com recomendada por omissão (E1–E11, N = 7 dias) — **nenhuma pergunta em aberto** | `docs/audit/PLANO-DE-ACAO.md` §13.2 |
+| `ADR-META-AGENTS` actualizado: camadas de controlo C0–C3 (antes L0–L3, renomeadas no E13), meta vs domínio, protocolo em 6 estágios, esboço `CouncilSession` e `councils.yaml` v0 (**só desenho**) | **Feito** | `docs/architecture/adr/ADR-META-AGENTS.md` §9–13 |
+| J5-b (`councils.yaml` v0), J5-c (`CouncilSession`), E12 (local do `councils.yaml`) + E13–E15 (auditor) | **Em aberto, com recomendada** (B, B, A, A, A, A; prazo 7 dias) | `docs/audit/PLANO-DE-ACAO.md` §13.2 |
+| `runner/` (só `tests/test_mem0_connection.py`, nunca commitado) | **Apagado** do disco do `agent-network-mcp` | — |
+| Material do spike J11 (teste mem0 com guarda do pytest) | **Guardado** | `runner/tests/test_mem0_connection.py` |
+
+## 📋 Bloco A (parcial) — 2026-09-30
+
+| Item | Estado | Evidência |
+|---|---|---|
+| **J7** — remover `tests/package.json` órfão | **FEITO e na `main`**: PR #30 merged (`7696ceb`), o que fecha o Dependabot #11 | PR #30 |
+| **J1** — keep-alive | **FEITO** (DEV, 2026-09-30): tabela `keepalive` criada (1 linha), 2 secrets definidas; run #6 **verde** (30/09 17:31 UTC, `workflow_dispatch`, na `main`). Os runs #1–#5 tinham falhado | `docs/ops/KEEP-ALIVE-SETUP.md`; Actions run 36752022236 |
+| **A8** — resolução de agentes/skills pelo frontmatter | **FEITO** (`8a1daca`): 21 agentes corrigidos (incl. `security_auditor` + os 7 A7); a convenção antiga continua primeiro; 12 testes novos. **Só na `claude/audit-completo`, ainda NÃO na `main`** (verificado 30/09: `8a1daca` não é antecessor de `origin/main`) | `runner/plan_runner/skills.py:16-59`; `runner/tests/test_agent_resolution.py` |
+| **Ruff** do runner | **FEITO** (`77bd6e2`): 0 erros; suíte 173 + 34 slow a passar. **Na `main`** via PR #31 (`3bf43a5`) | `runner-tests.yml:44` |
+| **e2e** (`tests/e2e/api.test.ts`) | **FEITO** (`cef2f24`, só na `claude/audit-completo`): causa = sem servidor (ambiente) + sem `x-api-key` (teste desactualizado face à auth fail-closed). Com a API local + `E2E_API_KEY`: 3/3. Continua fora do CI (`ci.yml:93`) | `tests/e2e/api.test.ts` |
+| **E15** — esboços reconstituídos (`CouncilSession`, `councils.yaml` v0 no ADR-META-AGENTS §12–13) | **Aberto, baixa prioridade**: quando aparecerem os originais (se existirem), substituir a reconstituição. Nada mais a fazer até lá | `docs/audit/PLANO-DE-ACAO.md` §13.2 E15 |
+
+## 📋 J3 — RAG canónico (2026-09-30, modo nocturno)
+
+| Item | Estado | Evidência |
+|---|---|---|
+| **J3** — ingest passa a escrever na `knowledge_chunks` | **Código FEITO** (`fbad7bb`): DELETE limitado a `project='network-agents-setup'`; `agent_id` composto desdobrado | `runner/plan_runner/supabase_writer.py` |
+| Migração dos dados t6 → `knowledge_chunks` + remoção da overload ambígua de `match_knowledge` | **FEITO** (DEV, 2026-09-30): 121 linhas do projecto, 322 no total, 1 só `match_knowledge`, `geo-agent.md` recuperável. Reconfirmado por SELECT read-only no fim do dia. Código na `main` via PR #31 (`2b3c2bf`) | `scripts/migrate_t6_to_knowledge_chunks.sql`; `docs/ops/RAG-CANONICAL.md` |
+| **Achado crítico:** 2 overloads de `match_knowledge`, e a chamada do MCP dá `42725 ... is not unique` | Reproduzido no Postgres; o SQL acima corrige. Falha pelo PostgREST **NÃO VERIFICADA** (sem chamadas nos logs de 24h) | `docs/ops/RAG-CANONICAL.md` |
+| Apagar a t6 | **PENDENTE-DEV**, com backup (a t6 ainda existe, verificado 30/09). Faltam os passos 3 e 5 do guia (ingest local + teste real no MCP; o 5 ficou possível com o fix das tools, PR #9 do `agent-network-mcp`) | `scripts/drop_knowledge_chunks_t6.sql` |
+| Teste ingest → retrieve | **FEITO** (`e3a404f`): 3/3 contra Postgres + pgvector local; skip sem `RAG_TEST_DATABASE_URL` | `runner/tests/test_rag_canonical.py` |
+
+## 📋 Fecho das sessões de 2026-09-30 — RAG, tools MCP, J6, J7, J1, A8
+
+Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supabase `agent-network-memory`), não só relatado.
+
+**`network-agents-setup`**
+
+| Item | Estado | Evidência |
+|---|---|---|
+| **J3 / RAG canónico (P1)** | **FEITO**: `match_knowledge` sem ambiguidade (1 função) + migração t6 → `knowledge_chunks` corrida (121 do projecto / 322 no total). Falta só apagar a t6 | PR #31 merged (`2b3c2bf`); `docs/ops/RAG-CANONICAL.md` |
+| **J7** (Dependabot #11) | **FEITO**: `tests/package.json` removido | PR #30 merged (`7696ceb`) |
+| **J1** (keep-alive) | **FEITO**: tabela + secrets; workflow verde | run #6, 30/09 17:31 UTC |
+| **A8** (agentes/skills pelo frontmatter, 21 agentes) | **FEITO na branch**, não na `main` | `8a1daca` na `claude/audit-completo` |
+| Ruff (2 erros pré-existentes) | **FEITO** e na `main` | `3bf43a5` (PR #31) |
+| e2e (`E2E_BASE_URL`/`E2E_API_KEY`) | **FEITO na branch** | `cef2f24` |
+| Docs: BOOTSTRAP, `memory-audit/`, EXECUTION-PROMPTS | **Commitados** na branch | `b38eb61`, `0289c32` |
+| Auditoria: AUDIT-3 A7/A8/A9/D8 marcados resolvidos | **Feito** na branch | `docs/audit/AUDIT-3-agentes.md` |
+| **Atenção** | A `claude/audit-completo` tem **37 commits que não estão na `main`** (auditoria, ADRs, `areas.yaml`, `kind`, A8, e2e, docs). Só J3/J7/ruff entraram via PRs #30/#31 | `git log origin/main..claude/audit-completo` |
+
+**`agent-network-mcp`** (produção, Vercel com deploy automático da `main`)
+
+| Item | Estado | Evidência |
+|---|---|---|
+| **Tools MCP** | **CORRIGIDO**: as 9 tools recebiam `undefined` desde 2026-09-27 (`024e0ee`, `.strict()` via `server.tool` no SDK 1.26.0 era tratado como annotations). Agora `registerTool`; e2e 12/12 (10/12 falhavam antes) | PR #9 merged (`d8955d8`); deploy de produção 30/09 20:31 UTC |
+| **J6** — ledger de tokens | **EM PRODUÇÃO**: tabela `token_usage` criada (RLS ligado), 1 linha por chamada Gemini (`router`/`agent` com tokens; `embed_query`/`embed_doc` com `missing_usage`) | PR #8 merged (`17650e1`); deploy 30/09 20:35 UTC; `agent-network-mcp/docs/ops/TOKEN-LEDGER.md` |
+| J6 — 1.ª linha real | **POR CONFIRMAR**: às 20:43 UTC a tabela tinha 0 linhas, porque ainda não tinha entrado nenhum pedido no deploy novo (logs do Vercel vazios). Confirmar com um pedido pelo conector (passo 4 do TOKEN-LEDGER) | SELECT read-only + logs Vercel |
+| Formato `usageMetadata` (chamada real) | `promptTokenCount`, `candidatesTokenCount`, `totalTokenCount`, `promptTokensDetails[]`, `serviceTier`; `modelVersion` = `gemini-3.5-flash-lite` (o `-latest` é alias); `responseId`. **`embedContent` não devolve `usageMetadata`** | `agent-network-mcp/lib/tokenLedger.js` |
+| Bug novo: `log_execution` perde 4 campos | **Em correcção** (PR próprio no `agent-network-mcp`) | `app/api/mcp/route.js` → `lib/memory.js` |
+
