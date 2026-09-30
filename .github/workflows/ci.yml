@@ -21,6 +21,14 @@ permissions:
   contents: read
   checks: write  # necessario para o passo "Publicar logs" (github.rest.checks.create)
 
+# `shell: bash` explícito faz o GitHub correr cada `run:` com `bash -eo pipefail`.
+# Sem isto (shell por omissão = `bash -e {0}`), `cmd 2>&1 | tee log` devolvia o código
+# do tee (sempre 0) e nenhum passo falhava: no PR #25 install, typecheck, vitest e smoke
+# falharam e o job ficou verde. Global de propósito, para apanhar também passos novos.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -119,11 +127,14 @@ jobs:
       # precisar do blob. Mantido mesmo com o CI verde porque o problema de acesso ao log
       # é do ambiente de quem diagnostica, não do estado do CI.
       - name: Publicar logs de qualquer passo que falhou (debug temporário)
+        # always(): com pipefail, install e vitest (sem continue-on-error) passam a
+        # parar o job; sem always() este passo seria saltado precisamente nessas falhas.
         if: |
+          always() && (
           steps.install.outcome == 'failure' || steps.pgvector.outcome == 'failure' ||
           steps.prisma_generate.outcome == 'failure' || steps.prisma_push.outcome == 'failure' ||
           steps.typecheck.outcome == 'failure' || steps.vitest.outcome == 'failure' ||
-          steps.consistency.outcome == 'failure' || steps.smoke.outcome == 'failure'
+          steps.consistency.outcome == 'failure' || steps.smoke.outcome == 'failure' )
         uses: actions/github-script@v7
         with:
           script: |
