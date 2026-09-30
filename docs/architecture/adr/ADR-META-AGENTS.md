@@ -82,32 +82,34 @@ Hoje:
 
 > **Secções 9–13 acrescentadas em 2026-09-30.** Tudo o que está abaixo é **desenho**. Nenhuma linha de runtime foi escrita.
 
-## 9. Estrutura em 4 camadas (L0–L3)
+## 9. Estrutura em 4 camadas de controlo (C0–C3)
+
+> **Convenção (E13):** C = Control layers (metacontrolo); L = Memory layers (L0–L6, `docs/architecture/memory/layers.md:1`).
 
 | Camada | Papel | Quem |
 |---|---|---|
-| **L0 — HUMANO (HITL)** | Aprova, veta ou clarifica | Dev |
-| **L1 — META (controlo)** | Router de área + chairman/moderator + trust/quorum | Meta-agentes (`kind: meta`, reservado) + router sobre `config/areas.yaml` |
-| **L2 — CONSELHO (deliberação)** | Participantes + protocolo (secção 11) | Membros `kind: internal` \| `external_ai` |
-| **L3 — EXECUÇÃO (objecto)** | Faz o trabalho | `runner/plan_runner` + tools + ledger de tokens (J6) |
+| **C0 — HUMANO (HITL)** | Aprova, veta ou clarifica | Dev |
+| **C1 — META (controlo)** | Router de área + chairman/moderator + trust/quorum | Meta-agentes (`kind: meta`, reservado) + router sobre `config/areas.yaml` |
+| **C2 — CONSELHO (deliberação)** | Participantes + protocolo (secção 11) | Membros `kind: internal` \| `external_ai` |
+| **C3 — EXECUÇÃO (objecto)** | Faz o trabalho | `runner/plan_runner` + tools + ledger de tokens (J6) |
 
-**L4 (memória) atravessa todas as camadas.** Um veredicto nasce `candidate` e só é consolidado depois do gate e do HITL.
+**L4 (memória) atravessa todas as camadas de controlo.** Um veredicto nasce `candidate` e só é consolidado depois do gate e do HITL.
 
 O contrato da L4 chama `active` ao estado consolidado, não `committed`: `"status": { "enum": ["candidate", "active"], "default": "candidate" }` em `docs/architecture/memory/contracts.md:29`. Neste ADR, "committed" = `active` do contrato. Ver E14 em `docs/audit/PLANO-DE-ACAO.md` §13.2.
 
 **Regra de encaminhamento:**
-- **Pedido normal** → L1 router → L3. Sem conselho.
-- **Pedido estrutural, de alta incerteza, ou de uma área com `hitl: required`** (`config/areas.yaml`: legal, finance, security) → L1 abre conselho (L2) → veredicto `candidate` → L0 → L4 (`candidate` → `active`) → L3, se houver acção.
+- **Pedido normal** → C1 router → C3. Sem conselho.
+- **Pedido estrutural, de alta incerteza, ou de uma área com `hitl: required`** (`config/areas.yaml`: legal, finance, security) → C1 abre conselho (C2) → veredicto `candidate` → C0 → L4 (`candidate` → `active`) → C3, se houver acção.
 
-**Colisão de nomes `[ACRESCENTADO PELO AUDITOR]`.** "L0–L3" aqui são **camadas de controlo**. O modelo de memória já usa **L0–L6** para camadas de memória (`docs/architecture/memory/layers.md:1`), e "L4" desta secção é esse L4. Proposta de desambiguação: E13 no PLANO §13.2.
+**Colisão de nomes resolvida (E13, 2026-09-30).** Estas camadas chamavam-se L0–L3 e colidiam com as camadas de memória L0–L6. Passaram a C0–C3; "L4" nesta secção é sempre a camada de memória.
 
 ## 10. Distinção meta vs. domínio
 
-- **Meta-agente ≠ "agente mais inteligente".** É uma **camada de controlo** (L1): decide *quem* delibera e *quando* se fecha, não *o quê*.
+- **Meta-agente ≠ "agente mais inteligente".** É uma **camada de controlo** (C1): decide *quem* delibera e *quando* se fecha, não *o quê*.
 - **Meta:** chairman, moderator, router-agent (futuro). `kind: meta`, **não usado hoje** (secção 7).
 - **Domínio:** executa a tarefa (security, finance, marketing…). `kind: internal`.
 - **Clarificação: o `security_auditor` NÃO é um meta-agente.**
-  - Vive em `agents/meta/` por razões históricas (`agents/meta/security_auditor.agent.md`), mas no registo é um **especialista L3** da área `security` (`config/areas.yaml`, área `security`).
+  - Vive em `agents/meta/` por razões históricas (`agents/meta/security_auditor.agent.md`), mas no registo é um **especialista C3** da área `security` (`config/areas.yaml`, área `security`).
   - Tem `kind: internal`.
   - Um *Security Council* na Fase 1 pode incluí-lo como membro **`required`** (com veto), com um chairman meta **separado**.
 
