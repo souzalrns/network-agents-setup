@@ -61,7 +61,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 22: o undici@8 (packages/mcp, raiz) exige node >=22.19.0. Em Node 20 os
+          # testes Executor/SsrfGuard/web nem carregavam (markAsUncloneable) e o smoke rebentava.
+          node-version: 22
           # Cache do pnpm activo: pnpm-lock.yaml commitado (S4).
 
       - name: Instalar dependências
