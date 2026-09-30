@@ -479,3 +479,7 @@ Documentos com errata visível adicionada (não apagados, corrigidos com nota no
 | Campo `kind` (`internal`/`external_ai`/`meta`, omissão `internal`) | **Introduzido** nos 35 `.agent.md` + 24 entradas de `config/agents.config.ts` + tipo `AgentKind` | `agents/README.md` |
 | `ADR-DB-PLAN-B` (Neon ou Postgres+pgvector na Oracle; 4 gatilhos; base hoje com 17 MB) | **Criado** — contingência, não activada | `docs/architecture/adr/ADR-DB-PLAN-B.md` |
 | Decisões ainda em aberto | Todas em A/B/C com recomendada por omissão (E1–E11, N = 7 dias) — **nenhuma pergunta em aberto** | `docs/audit/PLANO-DE-ACAO.md` §13.2 |
+| `ADR-META-AGENTS` actualizado: camadas L0–L3, meta vs domínio, protocolo em 6 estágios, esboço `CouncilSession` e `councils.yaml` v0 (**só desenho**) | **Feito** | `docs/architecture/adr/ADR-META-AGENTS.md` §9–13 |
+| J5-b (`councils.yaml` v0), J5-c (`CouncilSession`), E12 (local do `councils.yaml`) + E13–E15 (auditor) | **Em aberto, com recomendada** (B, B, A, A, A, A; prazo 7 dias) | `docs/audit/PLANO-DE-ACAO.md` §13.2 |
+| `runner/` (só `tests/test_mem0_connection.py`, nunca commitado) | **Apagado** do disco do `agent-network-mcp` | — |
+| Material do spike J11 (teste mem0 com guarda do pytest) | **Guardado** | `runner/tests/test_mem0_connection.py` |

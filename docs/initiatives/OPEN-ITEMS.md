@@ -95,4 +95,4 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **Criados:** `docs/architecture/adr/ADR-META-AGENTS.md`, `docs/architecture/adr/ADR-DB-PLAN-B.md`, `config/areas.yaml`; campo `kind` em todos os agentes.
 - **Em aberto com recomendação por omissão:** E1–E11 em `PLANO-DE-ACAO.md` §13.2 (ex.: E7 validação do `areas.yaml` em CI → recomendada A, script Python + passo no `runner-tests.yml`).
 - Os itens das tabelas acima que dependiam das decisões D1–D3 seguem a classificação de `docs/audit/DECISAO-4-ordem.md` §4.2–4.4.
-
+- **Acrescentados em 2026-09-30 (2.ª ronda):** J5-b, J5-c, E12, E13, E14, E15 em `PLANO-DE-ACAO.md` §13.2, todos com recomendada e prazo de 7 dias. `ADR-META-AGENTS.md` ganhou as secções 9–13 (desenho). O `runner/` do `agent-network-mcp` foi apagado; o material do J11 está em `runner/tests/test_mem0_connection.py` deste repo.
