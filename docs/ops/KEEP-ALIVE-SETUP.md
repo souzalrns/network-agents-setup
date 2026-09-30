@@ -1,6 +1,6 @@
 # Keep-alive do Supabase — setup (J1 / AU-47)
 
-> **Estado: NÃO RESOLVIDO.** Fecha só quando o passo (d) der **1 run verde**. Tudo o que está abaixo é trabalho do **DEV** (precisa de credenciais que o Claude não tem).
+> **Estado: RESOLVIDO (2026-09-30).** Tabela `keepalive` criada (1 linha) e secrets definidas pelo DEV; **run #6 verde** (30/09 17:31 UTC, `workflow_dispatch`, na `main`). O texto abaixo fica como registo do diagnóstico e dos passos.
 
 ## Porque falha hoje (5/5 runs)
 
@@ -47,7 +47,7 @@ GitHub → **Actions → keep-alive → Run workflow** (branch `main`). Esperado
 HTTP 200
 keep-alive: Supabase respondeu (projeto ativo)
 ```
-Registar aqui: `____-__-__ — run #___ — VERDE / VERMELHO`.
+Registar aqui: `2026-09-30 — run #6 — VERDE` (Actions run 36752022236).
 
 ### (e) Se falhar
 Colar o log abaixo e deixar o estado deste documento em **NÃO RESOLVIDO**.

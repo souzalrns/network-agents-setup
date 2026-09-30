@@ -1,6 +1,6 @@
 # RAG canónico — migração t6 → knowledge_chunks (J3)
 
-> **Estado: PENDENTE-DEV.** O código está pronto (o ingest já escreve na `knowledge_chunks`). A migração dos dados e a correcção do `match_knowledge` **não foram executadas** no Supabase. Ninguém nesta sessão tinha ordem para escrever em produção.
+> **Estado (2026-09-30): passos 1 e 2 FEITOS pelo DEV** (migração corrida, `match_knowledge` sem ambiguidade; código na `main` via PR #31). **Em aberto:** passos 3 e 5 (verificação) e o passo 6 (apagar a t6, irreversível).
 
 ## O problema (verificado ao vivo em 2026-09-30, SELECT read-only)
 
@@ -39,7 +39,7 @@ SELECT source FROM match_knowledge(
   query_embedding => (SELECT embedding FROM knowledge_chunks WHERE source = 'docs/knowledge/geo-agent.md' LIMIT 1),
   match_agent_id => 'marketing', match_count => 3);                            -- deve incluir geo-agent.md
 ```
-Registar aqui: `____-__-__ — 121 / 322 / 1 / geo-agent: SIM / NÃO`.
+Registar aqui: `2026-09-30 — 121 / 322 / 1 / geo-agent: SIM` (reconfirmado por SELECT read-only no fim do dia: 121 / 322 / 1).
 
 ### 3. Correr o ingest e confirmar que escreve no sítio certo
 **Atenção:** o workflow `ingest-knowledge` só **aplica** o ingest em `push` para a `main` (`.github/workflows/ingest-knowledge.yml:3-4,36`). O `workflow_dispatch` só faz o *dry-run* (`:33-34`). O writer corrigido está só na `claude/audit-completo` até haver merge. Até lá, um push para a `main` que toque em `docs/**/*.md` continua a escrever na **t6**.

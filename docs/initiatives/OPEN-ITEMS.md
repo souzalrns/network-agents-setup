@@ -99,13 +99,24 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 
 ## Bloco A (parcial) — 2026-09-30
 
-- **Fechados:** A8 (`8a1daca`, 21 agentes, também o A9), ruff do runner (`77bd6e2`), e2e (`cef2f24`, 3/3 com a API local + `E2E_API_KEY`).
-- **À espera de merge:** J7, no PR #30 (CI verde). Fecha o Dependabot #11. O merge é do maestro.
-- **PENDENTE-DEV:** J1. Os 5 passos estão em `docs/ops/KEEP-ALIVE-SETUP.md`.
+- **Fechados:** A8 (`8a1daca`, 21 agentes, também o A9), ruff do runner (`77bd6e2`), e2e (`cef2f24`, 3/3 com a API local + `E2E_API_KEY`). A8 e e2e estão só na `claude/audit-completo`; o ruff também está na `main` (PR #31).
+- **J7: FEITO** — PR #30 merged (`7696ceb`), fecha o Dependabot #11.
+- **J1: FEITO** (2026-09-30) — tabela + secrets; run #6 do keep-alive verde (30/09 17:31 UTC).
 - **E15 (baixa prioridade):** quando aparecerem os originais do `CouncilSession`/`councils.yaml` (se existirem), substituir a reconstituição do ADR-META-AGENTS §12–13. E13 (C0–C3) e E14 (`active`) foram executados em 2026-09-30.
 
 ## J3 — RAG canónico (2026-09-30)
 
 - **Código feito:** o ingest escreve na `knowledge_chunks` (`fbad7bb`); teste ingest → retrieve (`e3a404f`).
-- **PENDENTE-DEV:** correr `scripts/migrate_t6_to_knowledge_chunks.sql`, que também remove a overload ambígua de `match_knowledge` (achado crítico). Depois, seguir os passos 2–6 de `docs/ops/RAG-CANONICAL.md`.
-- **Atenção:** até ao merge para a `main`, um push que toque em `docs/**/*.md` continua a ingerir na t6 (o workflow só aplica o ingest na `main`).
+- **Migração: FEITA** (2026-09-30): 121 / 322 / 1 `match_knowledge` / `geo-agent.md` recuperável. PR #31 merged.
+- **PENDENTE-DEV:** passos 3 e 5 de `docs/ops/RAG-CANONICAL.md` (ingest local, teste real no MCP) e depois apagar a t6 (passo 6, irreversível, com backup).
+- ~~Até ao merge para a `main`, um push que toque em `docs/**/*.md` continua a ingerir na t6~~ — resolvido: o writer corrigido está na `main` desde o PR #31.
+
+## Fecho de 2026-09-30
+
+- **Fechados hoje:** J3 (RAG canónico, PR #31), J7 (PR #30), J1 (keep-alive verde), J6 (ledger de tokens em produção, PR #8 do `agent-network-mcp`), bug das 9 tools MCP (PR #9 do `agent-network-mcp`, em produção desde 27/09 até ao fix). Detalhe e evidência em `STATUS.md`, secção "Fecho das sessões de 2026-09-30".
+- **Em aberto:**
+  - J6: confirmar a 1.ª linha real em `token_usage` (passo 4 de `agent-network-mcp/docs/ops/TOKEN-LEDGER.md`; às 20:43 UTC havia 0 linhas porque ainda não tinha entrado nenhum pedido).
+  - J3: passos 3 e 5 do RAG-CANONICAL e depois apagar a t6.
+  - `log_execution` do MCP perde 4 campos (`capacidade_id`, `fast_path`, `custo_estimado`, `justificativa_full_cycle`): PR em curso.
+  - **Integrar a `claude/audit-completo` na `main`:** 37 commits (A8, e2e, auditoria, ADRs, `areas.yaml`, `kind`, docs). Decisão do maestro.
+
