@@ -6,11 +6,17 @@ on:
     paths:
       - 'runner/**'
       - '.github/workflows/runner-tests.yml'
+      # E7: o validador do areas.yaml tem de correr quando mudam os agentes ou o YAML.
+      - 'agents/**'
+      - 'config/areas.yaml'
   pull_request:
     branches: [main]
     paths:
       - 'runner/**'
       - '.github/workflows/runner-tests.yml'
+      # E7: o validador do areas.yaml tem de correr quando mudam os agentes ou o YAML.
+      - 'agents/**'
+      - 'config/areas.yaml'
   workflow_dispatch: {}
 
 permissions:
@@ -42,6 +48,9 @@ jobs:
         run: |
           python -m pip install ruff
           python -m ruff check plan_runner/ tests/
+
+      - name: Validar config/areas.yaml contra agents/ (E7)
+        run: python -m plan_runner.areas
 
       - name: Run tests with coverage
         run: |
