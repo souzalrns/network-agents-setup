@@ -483,3 +483,13 @@ Documentos com errata visível adicionada (não apagados, corrigidos com nota no
 | J5-b (`councils.yaml` v0), J5-c (`CouncilSession`), E12 (local do `councils.yaml`) + E13–E15 (auditor) | **Em aberto, com recomendada** (B, B, A, A, A, A; prazo 7 dias) | `docs/audit/PLANO-DE-ACAO.md` §13.2 |
 | `runner/` (só `tests/test_mem0_connection.py`, nunca commitado) | **Apagado** do disco do `agent-network-mcp` | — |
 | Material do spike J11 (teste mem0 com guarda do pytest) | **Guardado** | `runner/tests/test_mem0_connection.py` |
+
+## 📋 Bloco A (parcial) — 2026-09-30
+
+| Item | Estado | Evidência |
+|---|---|---|
+| **J7** — remover `tests/package.json` órfão | **FEITO** na `claude/audit-completo` (`eaf45bf`); **PR #30** para a `main` aberto, CI 5/5 verde. O Dependabot #11 fecha **quando o PR #30 for merged** | PR #30 |
+| **J1** — keep-alive | **PENDENTE-DEV**: SQL (`scripts/create_keepalive_table.sql`) e guia (`docs/ops/KEEP-ALIVE-SETUP.md`) feitos (`e4d0d50`); faltam os 5 passos do DEV (tabela, 2 secrets, confirmar o mesmo projecto que o `agent-network-mcp`, 1 run verde) | `docs/ops/KEEP-ALIVE-SETUP.md` |
+| **A8** — resolução de agentes/skills pelo frontmatter | **FEITO** (`8a1daca`): 21 agentes corrigidos (incl. `security_auditor` + os 7 A7); a convenção antiga continua primeiro; 12 testes novos | `runner/plan_runner/skills.py:16-59`; `runner/tests/test_agent_resolution.py` |
+| **Ruff** do runner | **FEITO** (`77bd6e2`): 0 erros; suíte 173 + 34 slow a passar | `runner-tests.yml:44` |
+| **e2e** (`tests/e2e/api.test.ts`) | **FEITO** (`cef2f24`): causa = sem servidor (ambiente) + sem `x-api-key` (teste desactualizado face à auth fail-closed). Com a API local + `E2E_API_KEY`: 3/3. Continua fora do CI (`ci.yml:93`) | `tests/e2e/api.test.ts` |

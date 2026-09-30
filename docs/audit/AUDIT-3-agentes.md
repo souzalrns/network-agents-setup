@@ -105,9 +105,9 @@ Especificação ampla com **5 camadas** (`:7`) e dezenas de agentes por domínio
 
 | ID | Achado | Evidência |
 |---|---|---|
-| A7 | **7 skills usadas em templates sem agente correspondente**, por diferença de nome: `influencer_brief`↔`influencer`, `media_plan`↔`media_buyer`, `ugc_brief`↔`ugc`, `video_edit_plan`↔`editor_video`, `ui_spec`↔`ui`, `ux_flow`↔`ux`, `ux_writing`↔`ux_writer`. O `request.json` sai com `agent_path: null` | Script sobre os 58 steps dos 12 templates; `skills.py:19-21` |
-| A8 | **O campo `skill:` do frontmatter dos agentes é ignorado.** O runner resolve só por `skills/<vertical>/<action>/SKILL.md`. `security_auditor` declara `action: security_audit`, mas a pasta é `skills/meta/security-audit` (hífen) → nunca resolveria | `agents/meta/security_auditor.agent.md:1-8`; `skills.py:14-16` |
-| A9 | **`design-flow.plan.yaml` (o template, não o demo) continua partido.** 0 steps com `vertical:`, logo `ux_flow`/`ui_spec`/`ux_writing`/`design_critic` resolvem contra `marketing` e nenhum existe. O S34 corrigiu só o `…/examples/design-flow-demo.plan.yaml` | `grep -c vertical:` = 0 vs 4 |
+| A7 ✅ RESOLVIDO 2026-09-30 (`8a1daca`) | **7 skills usadas em templates sem agente correspondente**, por diferença de nome: `influencer_brief`↔`influencer`, `media_plan`↔`media_buyer`, `ugc_brief`↔`ugc`, `video_edit_plan`↔`editor_video`, `ui_spec`↔`ui`, `ux_flow`↔`ux`, `ux_writing`↔`ux_writer`. O `request.json` sai com `agent_path: null` | Script sobre os 58 steps dos 12 templates; `skills.py:19-21` |
+| A8 ✅ RESOLVIDO 2026-09-30 (`8a1daca`) | **O campo `skill:` do frontmatter dos agentes é ignorado.** O runner resolve só por `skills/<vertical>/<action>/SKILL.md`. `security_auditor` declara `action: security_audit`, mas a pasta é `skills/meta/security-audit` (hífen) → nunca resolveria | `agents/meta/security_auditor.agent.md:1-8`; `skills.py:14-16` |
+| A9 ✅ resolvido por efeito do A8 (`8a1daca`; verificado: os 4 steps do template resolvem agente + skill) `[ACRESCENTADO PELO AUDITOR]` | **`design-flow.plan.yaml` (o template, não o demo) continua partido.** 0 steps com `vertical:`, logo `ux_flow`/`ui_spec`/`ux_writing`/`design_critic` resolvem contra `marketing` e nenhum existe. O S34 corrigiu só o `…/examples/design-flow-demo.plan.yaml` | `grep -c vertical:` = 0 vs 4 |
 | A10 | `plan_approve` (14 usos) é um gate humano sem skill, o que é esperado | — |
 | A11 | **23 dos 35 `.agent.md` não são referenciados por nenhum template**: os 13 de `engenharia` (4), `gestao` (2), `atendimento` (1), `produto` (1) e `meta` (5); 4 de `design` (`identidade-visual`, `ui`, `ux`, `ux_writer`, os três últimos também por A7); 6 de `marketing` (`content_analyst`, `editor_video`, `influencer`, `marketing`, `media_buyer`, `ugc`) | Script + `ls agents` |
 
@@ -148,7 +148,7 @@ Consequências: um pedido de **jogos** é reconhecido (`game`/`jogo`) e mandado 
 | D5 | **Horizontais e meta selecionáveis entre domínios** (o Planner devia receber domínio + horizontais) | A1, A6 | BUG/DESENHO |
 | D6 | **Fallback quando o domínio não tem agentes** (hoje lança erro) | `software` e jogos → erro | BUG |
 | D7 | **Contrato de handoff** entre maestro e agente de área: entrada, saída, tools, orçamento | Hoje o `PlanStep` não tem orçamento nem `toolsAllowed` com fonte | FALTA-DECIDIR |
-| D8 | **Resolução agente↔skill por frontmatter** (ou normalização de nomes) | A7, A8 | BUG |
+| D8 ✅ RESOLVIDO 2026-09-30 (`8a1daca`) | **Resolução agente↔skill por frontmatter** (ou normalização de nomes) | A7, A8 | BUG |
 | D9 | **Worker que execute os steps Python** (LLM com custo-zero, ex. Gemini) se o maestro for o `plan_runner` | Sem worker nada corre sozinho (Fase 2, Y6) | FALTA-CONSTRUIR |
 
 ### Que agentes teriam de existir por área (necessidade, não desenho final)
