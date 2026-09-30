@@ -102,3 +102,4 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **Fechados:** A8 (`8a1daca`, 21 agentes, também o A9), ruff do runner (`77bd6e2`), e2e (`cef2f24`, 3/3 com a API local + `E2E_API_KEY`).
 - **À espera de merge:** J7, no PR #30 (CI verde). Fecha o Dependabot #11. O merge é do maestro.
 - **PENDENTE-DEV:** J1. Os 5 passos estão em `docs/ops/KEEP-ALIVE-SETUP.md`.
+- **E15 (baixa prioridade):** quando aparecerem os originais do `CouncilSession`/`councils.yaml` (se existirem), substituir a reconstituição do ADR-META-AGENTS §12–13. E13 (C0–C3) e E14 (`active`) foram executados em 2026-09-30.
