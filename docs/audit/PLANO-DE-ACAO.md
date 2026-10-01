@@ -199,7 +199,7 @@ Ver a secção 10 deste documento: **3 decisões + 4 construções pequenas**.
 | 7 | **Registo único de áreas** + router com confiança e fallback | Pré-requisito da delegação por área e dos 3 nichos | AU-33, AU-34, AU-26, AU-30 | **DEV** desenha → **CLAUDE** implementa | **EM PR (2026-10-01)**: dados (J5) + router `runner/plan_runner/router.py` na branch `feat/router-hibrido` (ver `docs/ops/ROUTER.md`) |
 | 8 | **Se o TS ficar:** corrigir Q1–Q4 e o teste falso-verde, depois correr o EX-B3 | 5 correcções pequenas que tornam o `/chat` testável | AU-13, AU-14, AU-15, AU-17, EX-B3 | **CLAUDE** (AU-13: AMBOS) | Bloqueado (D1) |
 | 9 | **Decidir a memória L4** (própria pelo contrato vs mem0) | "Memória persistente" é pilar; decisão bloqueada desde 09-20 | S29, L6 | **DEV** | Bloqueado (D3) |
-| 10 | **Teste e2e no CI** (TS `/chat` + testes lentos Python + ingest→retrieve) | Impede que as quebras voltem sem ninguém notar | L1, AU-09, AU-17 | **CLAUDE** | Bloqueado (D1) |
+| 10 | **Teste e2e no CI** (TS `/chat` + testes lentos Python + ingest→retrieve) | Impede que as quebras voltem sem ninguém notar | L1, AU-09, AU-17 | **CLAUDE** | **Em parte (2026-10-01):** testes lentos Python no CI (job `test-slow`, PR `ci/slow-tests`). TS `/chat` deixou de se aplicar (D1, VIA A); falta ingest→retrieve contra BD |
 
 **Fora do top 10, mas urgente operacionalmente** (mesma origem): S20 (chave antiga na VM Oracle; o bridge-worker falha com 401) e S27 (limites do Oracle Free Tier), ambos DEV e fora do código. **Barato, com retorno imediato em tokens de bootstrap:** AU-45, AU-46, AU-37 e AU-12 (CLAUDE, cerca de 1–2 h). **Barato e fecha um alerta crítico:** AU-05 (CLAUDE, 5 min).
 
