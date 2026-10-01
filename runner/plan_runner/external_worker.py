@@ -46,6 +46,7 @@ import httpx
 import yaml
 
 from . import context_policy as cp
+from . import memory_wiring as mw
 from .skills import _frontmatter, repo_root_from_out
 
 DEFAULT_MODEL = "gemini-flash-lite-latest"
@@ -529,8 +530,11 @@ class GeminiWorker:
         transport: Transport | None = None,
         remote_ledger: RemoteSink | None | bool = True,
         context: str | None = None,
+        memory: mw.MemoryStore | None | bool = True,
     ):
         self.model = model or os.environ.get("AGENT_MODEL") or DEFAULT_MODEL
+        # L4 (D3): True = DATABASE_URL do ambiente (se houver); so e usada por planos com `memory:`.
+        self.memory = mw.store_from_env() if memory is True else (memory or None)
         self.context = cp.context_mode(context)  # opt (B1-bis) | legacy
         self._api_key = api_key
         self.max_output_tokens = max_output_tokens
@@ -567,6 +571,31 @@ class GeminiWorker:
     def _run(self, out_root: Path, pending: Path, request: dict, step_id: str, run_id: str | None) -> dict[str, Any]:
         built = build_prompt_ctx(out_root, pending, request, context=self.context)
         system, user, wants_json = built["system"], built["user"], built["wants_json"]
+        agent_id = _frontmatter(pending / "AGENT.md").get("id") or request.get("action")
+
+        # L4 (D3, docs/ops/MEMORY-L4.md): so com bloco `memory:` no plano.
+        plan_raw = _load_plan_raw(out_root)
+        try:
+            sm = mw.step_memory(plan_raw, _plan_step(plan_raw, step_id) or {}, agent_id)
+        except mw.l4.L4Error as e:
+            raise WorkerError(f"memory: {e}") from e
+        mem_meta: dict[str, Any] | None = None
+        wants_memory = False
+        if sm is not None:
+            mem_meta = {"scopes": [str(x) for x in sm.chain]}
+            if self.memory is None:
+                mem_meta["error"] = "plano com `memory:` mas sem DATABASE_URL: L4 desligada neste run"
+            else:
+                if sm.recall is not None:
+                    task = (_plan_step(plan_raw, step_id) or {}).get("task") or ""
+                    query = f"{plan_raw.get('objective', '')} {task} {request.get('action', '')}"[:1000]
+                    block, mem_meta["recall"] = mw.recall_block(self.memory, sm, query)
+                    if block:
+                        user += "\n" + _section("Memoria L4 (factos entre runs)", block)
+                if sm.remember is not None:
+                    wants_memory = True
+                    system += "\n" + _section("Memoria", mw.remember_instruction(sm, wants_json))
+
         response = gemini_generate(
             system,
             user,
@@ -578,7 +607,6 @@ class GeminiWorker:
             transport=self.transport,
         )
 
-        agent_id = _frontmatter(pending / "AGENT.md").get("id") or request.get("action")
         row = build_usage_row(run_id=run_id, agent_id=agent_id, model=self.model, response=response)
         ledger = record_token_usage(out_root, row, step_id=step_id, run_id=run_id, remote=self.remote_ledger)
 
@@ -591,6 +619,13 @@ class GeminiWorker:
                 content = _parse_json_output(text)
             except json.JSONDecodeError as e:
                 raise WorkerError(f"gemini: JSON invalido para {request.get('output_artifact')}: {e.msg}") from e
+        memories: list[dict[str, Any]] = []
+        if wants_memory:
+            content, memories, parse_errors = mw.extract_memories(content, wants_json)
+            if parse_errors:
+                mem_meta["parse_errors"] = parse_errors
+            if wants_json and not isinstance(content, (dict, list)):
+                raise WorkerError(f"gemini: `artifact` invalido para {request.get('output_artifact')}")
         summary = None
         if built["wants_summary"]:
             content, summary = cp.split_summary(content, wants_json)
@@ -617,6 +652,11 @@ class GeminiWorker:
         }
         if summary:
             result["artifact_summary"] = summary  # o executor grava-o em <artefacto>.summary.md
+        if wants_memory:
+            mem_meta["remember"] = mw.write_memories(
+                self.memory, sm, memories, out_root=out_root, run_id=run_id, plan_id=plan_raw.get("id"), step_id=step_id)
+        if mem_meta is not None:
+            result["meta"]["memory"] = mem_meta
         (pending / "result.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (pending / ERROR_FILE).unlink(missing_ok=True)
         return result

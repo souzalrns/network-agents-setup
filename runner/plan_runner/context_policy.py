@@ -192,7 +192,7 @@ def summary_instruction(wants_json: bool) -> str:
     keys = ", ".join(k for k, _ in SUMMARY_KEYS)
     if wants_json:
         return (
-            "Devolve UM objecto JSON com duas chaves: `artifact` (o objecto do artefacto, completo) e "
+            "Devolve UM objecto JSON com as chaves `artifact` (o objecto do artefacto, completo) e "
             f"`resumo` (objecto com as chaves {keys}; cada uma lista curta de strings, ou \"n/a\"). "
             f"O resumo (max. ~{SUMMARY_WORDS} palavras) serve os passos seguintes: so o que esta no "
             "artefacto, com as fontes dos factos; nada novo."
