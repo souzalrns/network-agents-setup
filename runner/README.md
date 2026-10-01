@@ -85,6 +85,10 @@ After the run, look at:
     # Run the pending external step of a stopped run with Gemini (any engine)
     python -m plan_runner.external_worker <out_dir> [--resume]
 
+    # Route a request: area (keywords) -> agent/plan (Gemini, inside the area) -> optional execution
+    python -m plan_runner route "<request>" [--execute] [--out <dir>] [--embeddings]
+    python -m plan_runner.router eval      # golden set against real Gemini (docs/ops/ROUTER.md)
+
     # Show wave compilation (debug tool)
     python -m plan_runner compile-graph <plan.yaml>
 

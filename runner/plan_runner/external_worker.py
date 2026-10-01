@@ -85,7 +85,9 @@ def ledger_run_uuid(run_id: str | None) -> str | None:
     return str(uuid.uuid5(_RUN_NAMESPACE, run_id)) if run_id else None
 
 
-def build_usage_row(*, run_id: str | None, agent_id: str | None, model: str, response: dict | None) -> dict[str, Any]:
+def build_usage_row(
+    *, run_id: str | None, agent_id: str | None, model: str, response: dict | None, call_kind: str = "agent"
+) -> dict[str, Any]:
     """Linha de token_usage -- espelho de buildUsageRow (agent-network-mcp lib/tokenLedger.js).
 
     So colunas da tabela (memory/token_usage.sql no agent-network-mcp); o
@@ -101,7 +103,7 @@ def build_usage_row(*, run_id: str | None, agent_id: str | None, model: str, res
     return {
         "run_id": ledger_run_uuid(run_id),
         "agent_id": agent_id,
-        "call_kind": "agent",
+        "call_kind": call_kind,  # agent | router | embed_query (check da tabela)
         "model": model,
         "model_version": (response or {}).get("modelVersion"),
         "tokens_in": _int("promptTokenCount"),
@@ -168,6 +170,48 @@ def record_token_usage(
     except OSError as e:
         print(f"[token_usage] falha no jsonl local: {e}", file=sys.stderr)
     return entry
+
+
+def gemini_api_key(explicit: str | None = None) -> str:
+    key = (explicit or os.environ.get("GEMINI_API_KEY", "")).strip()
+    if not key:
+        raise WorkerError("GEMINI_API_KEY em falta no ambiente (chave gratuita: aistudio.google.com/apikey)")
+    return key
+
+
+def gemini_generate(
+    system: str,
+    user: str,
+    *,
+    model: str,
+    api_key: str | None = None,
+    wants_json: bool = False,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
+    timeout: float = 60.0,
+    transport: Transport | None = None,
+) -> dict[str, Any]:
+    """Uma chamada generateContent. Devolve o JSON da resposta; lanca WorkerError.
+
+    Partilhada pelo worker e pelo router (plan_runner/router.py).
+    """
+    generation: dict[str, Any] = {"maxOutputTokens": max_output_tokens}
+    if wants_json:
+        generation["responseMimeType"] = "application/json"
+    body = {
+        "systemInstruction": {"parts": [{"text": system}]},
+        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "generationConfig": generation,
+    }
+    send = transport or httpx_transport
+    try:
+        # Chave no header (nao na query): nunca aparece em URLs de erro nem em logs.
+        code, response = send(GEMINI_URL.format(model=model), {"x-goog-api-key": gemini_api_key(api_key)}, body, timeout)
+    except httpx.HTTPError as e:
+        raise WorkerError(f"gemini: erro de rede: {type(e).__name__}") from e
+    if code != 200:
+        msg = ((response.get("error") or {}).get("message") or "")[:300]
+        raise WorkerError(f"gemini HTTP {code}: {msg}")
+    return response
 
 
 def httpx_transport(url: str, headers: dict[str, str], body: dict[str, Any], timeout: float) -> tuple[int, dict[str, Any]]:
@@ -257,6 +301,10 @@ def build_prompt(out_root: Path, pending: Path, request: dict[str, Any]) -> tupl
     for key, title in (("objective", "Objectivo do plano"), ("audience", "Audiencia")):
         if plan_raw.get(key):
             user_parts.append(_section(title, str(plan_raw[key])))
+    # `task:` opcional no passo (o router escreve-a em cada passo de um plano gerado).
+    task = (_plan_step(plan_raw, str(request.get("step_id"))) or {}).get("task")
+    if task:
+        user_parts.append(_section("Tarefa deste passo", str(task)))
 
     # Inputs declarados; sem eles, os artefactos dos passos de que este depende.
     inputs = list(request.get("inputs") or [])
@@ -322,12 +370,6 @@ class GeminiWorker:
         # True = Supabase se o ambiente o tiver; None/False = so jsonl local.
         self.remote_ledger = supabase_sink_from_env() if remote_ledger is True else (remote_ledger or None)
 
-    def _key(self) -> str:
-        key = (self._api_key or os.environ.get("GEMINI_API_KEY", "")).strip()
-        if not key:
-            raise WorkerError("GEMINI_API_KEY em falta no ambiente (chave gratuita: aistudio.google.com/apikey)")
-        return key
-
     def process(self, out_root: Path, step_id: str, *, run_id: str | None = None) -> dict[str, Any]:
         """Executa o passo. Devolve o result.json escrito; lanca WorkerError/HumanGateBlocked."""
         pending = out_root / "pending_steps" / step_id
@@ -354,23 +396,16 @@ class GeminiWorker:
 
     def _run(self, out_root: Path, pending: Path, request: dict, step_id: str, run_id: str | None) -> dict[str, Any]:
         system, user, wants_json = build_prompt(out_root, pending, request)
-        generation: dict[str, Any] = {"maxOutputTokens": self.max_output_tokens}
-        if wants_json:
-            generation["responseMimeType"] = "application/json"
-        body = {
-            "systemInstruction": {"parts": [{"text": system}]},
-            "contents": [{"role": "user", "parts": [{"text": user}]}],
-            "generationConfig": generation,
-        }
-        url = GEMINI_URL.format(model=self.model)
-        try:
-            # Chave no header (nao na query): nunca aparece em URLs de erro nem em logs.
-            code, response = self.transport(url, {"x-goog-api-key": self._key()}, body, self.timeout)
-        except httpx.HTTPError as e:
-            raise WorkerError(f"gemini: erro de rede: {type(e).__name__}") from e
-        if code != 200:
-            msg = ((response.get("error") or {}).get("message") or "")[:300]
-            raise WorkerError(f"gemini HTTP {code}: {msg}")
+        response = gemini_generate(
+            system,
+            user,
+            model=self.model,
+            api_key=self._api_key,
+            wants_json=wants_json,
+            max_output_tokens=self.max_output_tokens,
+            timeout=self.timeout,
+            transport=self.transport,
+        )
 
         agent_id = _frontmatter(pending / "AGENT.md").get("id") or request.get("action")
         row = build_usage_row(run_id=run_id, agent_id=agent_id, model=self.model, response=response)

@@ -51,8 +51,19 @@ def main(argv: list[str] | None = None) -> int:
     p_search.add_argument("out", type=Path, help="Run directory with events.jsonl")
     p_search.add_argument("query", help="FTS5 query syntax (matched against event payloads)")
 
+    # D2: router hierarquico hibrido (plan_runner/router.py, docs/ops/ROUTER.md)
+    p_route = sub.add_parser("route", help="Escolhe area + agente/plano para um pedido (e opcionalmente executa)")
+    p_route.add_argument("request", help="Pedido em linguagem natural")
+    p_route.add_argument("--execute", action="store_true", help="Corre a decisao no plan_runner (mode external + worker)")
+    p_route.add_argument("--out", type=Path, default=None, help="Directorio do run (dentro de pilots/; omissao: pilots/run-router-<id>)")
+    p_route.add_argument("--worker", choices=["none", "gemini"], default="gemini", help="Worker dos passos executados")
+    p_route.add_argument("--embeddings", action="store_true", help="Embeddings Gemini quando nenhuma keyword casa")
+    p_route.add_argument("--log", type=Path, default=None, help="jsonl das decisoes (omissao: pilots/router-decisions.jsonl)")
+
     args = parser.parse_args(argv)
     try:
+        if args.cmd == "route":
+            return _route(args)
         if args.cmd == "compile-graph":
             from .engine import load_plan
             from .langgraph_compile import compile_report
@@ -115,3 +126,35 @@ def main(argv: list[str] | None = None) -> int:
 
     print(json.dumps(result, indent=2, ensure_ascii=False))
     return 0
+
+
+def _route(args: argparse.Namespace) -> int:
+    from uuid import uuid4
+
+    from .router import REPO_ROOT, Router, log_decision
+
+    embed = None
+    if args.embeddings:
+        from . import external_worker as ew
+        from .embedder import EmbedderError, embed_text
+
+        def embed(text: str) -> list[float]:
+            try:
+                return embed_text(text)
+            except EmbedderError as e:
+                raise ew.WorkerError(str(e)) from e
+
+    router = Router(embed=embed)
+    decision = router.route(args.request)
+    log_decision(decision, args.log or REPO_ROOT / "pilots" / "router-decisions.jsonl")
+    if args.execute and decision.outcome in ("agent", "plan", "hitl"):
+        out = args.out or REPO_ROOT / "pilots" / f"run-router-{uuid4().hex[:8]}"
+        try:
+            result = router.execute(decision, out_dir=out, worker=args.worker)
+        except PlanError as e:
+            print(f"error: {e}")
+            return 1
+    else:
+        result = {"executed": False, "decision": decision.to_dict()}
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    return 1 if decision.outcome == "error" else 0

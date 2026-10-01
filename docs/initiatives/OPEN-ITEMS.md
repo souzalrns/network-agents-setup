@@ -140,7 +140,7 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 
 ## Bloco B — worker do modo `external` (AU-23), 2026-10-01
 
-- **Feito (PR `feat/external-worker`, sem merge):** `runner/plan_runner/external_worker.py`.
+- **Feito (PR #40, merged `7610921`):** `runner/plan_runner/external_worker.py`.
   - Executa com o Gemini (flash-lite) cada passo `external`, escreve `result.json` e regista os tokens no formato do `token_usage`.
   - Respeita o HITL.
   - Integrado no executor e no motor `native` (`--worker gemini`). Também tem uma CLI standalone para runs parados.
@@ -150,3 +150,17 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **B3: tools.** O worker não executa o `tools_allowed` (ex.: `web_search`). Depende do porte do `ToolExecutor` (D1, VIA A).
 - **B4: engine langgraph.** O worker inline só funciona no `native`; no langgraph usa-se `python -m plan_runner.external_worker <run>` + `resume`.
 - **B5: orçamento de tokens por run.** Hoje só existe o `budget.max_steps`.
+
+## Bloco B — router hierárquico híbrido (D2), 2026-10-01
+
+- **Feito (PR `feat/router-hibrido`, sem merge):** `runner/plan_runner/router.py`.
+  - A área é escolhida por keywords do `config/areas.yaml`, com embeddings opcionais.
+  - O agente ou o plano é escolhido pelo Gemini, só entre os candidatos da área e os horizontais.
+  - Clarificação, ou HITL nas áreas de risco; "sem especialista" + HITL nas áreas vazias.
+  - Execução no `plan_runner` com o worker.
+  - Como correr e afinar: `docs/ops/ROUTER.md`.
+- **R1 (DEV): avaliação real.** `python -m plan_runner.router eval` com `GEMINI_API_KEY` (~10 chamadas grátis). Os testes provam a área e a canalização; a escolha do agente pelo Gemini real ainda não foi medida.
+- **R2: agentes para legal, gamedev e docs.** Hoje vão sempre para HITL ("sem especialista"), por decisão do `areas.yaml`.
+- **R3: clarificação com estado.** Hoje a resposta do utilizador é um novo `route`.
+- **R4: robustez das keywords.** Não há negação nem pesos. Rever depois do R1 com casos reais.
+

@@ -56,6 +56,22 @@ def test_fixture_valida(tmp_path):
         (VALID.replace("    description: Software.\n", ""), "área `software`: falta `description`"),
         (VALID.replace("horizontals: []", "horizontals: meta.plan"), "`horizontals` tem de ser uma lista"),
         ("areas: [\n  - id: x", "não é YAML legível"),
+        # Router (D2): keywords, routing, budget, hitl, delegation
+        (VALID.replace("    agents: [eng.dev]\n", "    agents: [eng.dev]\n    keywords: [Código]\n"),
+         "keyword `Código` tem de estar em minúsculas, sem acentos"),
+        (VALID.replace("    agents: [eng.dev]\n", "    agents: [eng.dev]\n    keywords: [plano]\n")
+              .replace("    agents: [meta.plan]\n", "    agents: [meta.plan]\n    keywords: [plano]\n"),
+         "keyword `plano` está em mais de uma área"),
+        (VALID.replace("    agents: [eng.dev]\n", "    agents: [eng.dev]\n    keywords: codigo\n"),
+         "`keywords` tem de ser uma lista"),
+        ("routing:\n  area_min_confidence: 1.5\n" + VALID, "routing.area_min_confidence tem de ser um número"),
+        ("routing:\n  fallback_area: nenhuma\n" + VALID, "routing.fallback_area `nenhuma` não é uma área"),
+        (VALID.replace("    agents: [eng.dev]\n", "    agents: [eng.dev]\n    budget: 3\n"),
+         "`budget` tem de ser null ou {max_steps"),
+        (VALID.replace("    agents: [eng.dev]\n", "    agents: [eng.dev]\n    hitl: sempre\n"),
+         "`hitl` tem de ser null ou required"),
+        (VALID.replace("    agents: [eng.dev]\n", "    agents: [eng.dev]\n    delegation: talvez\n"),
+         "`delegation` tem de ser um de auto, agent, plan"),
         ("version: 1\n", "falta a lista `areas:`"),
     ],
 )
@@ -80,3 +96,18 @@ def test_cli_codigo_de_saida(tmp_path, capsys):
     bad.mkdir()
     assert main([str(_repo(bad, VALID.replace("agents: [eng.dev]", "agents: []"), AGENTS))]) == 1
     assert "agente órfão `eng.dev`" in capsys.readouterr().err
+
+
+def test_campos_do_router_validos(tmp_path):
+    yaml_text = "routing:\n  area_min_confidence: 0.7\n  fallback_area: horizontal\n" + VALID.replace(
+        "    agents: [eng.dev]\n",
+        "    agents: [eng.dev]\n    keywords: [codigo, pull request]\n    budget: {max_steps: 4}\n"
+        "    hitl: required\n    delegation: plan\n",
+    )
+    assert validate_areas(_repo(tmp_path, yaml_text, AGENTS)) == []
+
+
+def test_normalize():
+    from plan_runner.areas import normalize
+
+    assert normalize("Revisão do CÓDIGO e Ecrã") == "revisao do codigo e ecra"

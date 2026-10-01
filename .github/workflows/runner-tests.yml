@@ -9,6 +9,7 @@ on:
       # E7: o validador do areas.yaml tem de correr quando mudam os agentes ou o YAML.
       - 'agents/**'
       - 'config/areas.yaml'
+      - 'config/router-golden.yaml'
   pull_request:
     branches: [main]
     paths:
@@ -17,6 +18,7 @@ on:
       # E7: o validador do areas.yaml tem de correr quando mudam os agentes ou o YAML.
       - 'agents/**'
       - 'config/areas.yaml'
+      - 'config/router-golden.yaml'
   workflow_dispatch: {}
 
 permissions:
