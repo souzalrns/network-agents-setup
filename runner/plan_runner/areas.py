@@ -142,6 +142,9 @@ def validate_areas(repo_root: Path) -> list[str]:
     areas = registry["areas"]
 
     known, errors = agent_ids(repo_root)
+    # `kind: meta` (C1, ADR-META-AGENTS §10): camada de controlo, não domínio. Não entra
+    # em áreas (o router nunca o escolhe); tem de presidir a um conselho (councils.yaml).
+    meta = {aid for aid, p in known.items() if _frontmatter(p).get("kind") == "meta"}
     where: dict[str, list[str]] = {}  # agent id -> áreas cujo agents[] o lista
     seen_areas: set[str] = set()
 
@@ -166,16 +169,32 @@ def validate_areas(repo_root: Path) -> list[str]:
         for aid in _id_list(area_id, area, "horizontals", errors):
             if aid not in known:
                 errors.append(f"área `{area_id}`: horizontals[] refere `{aid}`, que não existe em agents/**/*.agent.md")
+        listed = [x for k in ("agents", "horizontals") if isinstance(area.get(k), list) for x in area[k]]
+        for aid in listed:
+            if aid in meta:
+                errors.append(f"área `{area_id}`: `{aid}` tem `kind: meta` (C1) e não pertence a áreas (ADR-META-AGENTS §10)")
 
     for aid, in_areas in sorted(where.items()):
         if len(in_areas) > 1:
             errors.append(f"agente `{aid}` está em agents[] de mais de uma área: {', '.join(in_areas)}")
     for aid, path in sorted(known.items()):
-        if aid not in where:
+        if aid not in where and aid not in meta:
             errors.append(
                 f"agente órfão `{aid}` ({path.relative_to(repo_root)}): não está em agents[] de nenhuma área"
             )
     _validate_router_fields(registry, areas, errors)
+
+    # Conselhos (Bloco C, config/councils.yaml): membros, chairman meta, áreas, τ, max_rounds.
+    from .council_session import load_councils, validate_councils
+
+    errors += validate_councils(repo_root, known, areas)
+    try:
+        councils = (load_councils(repo_root) or {}).get("councils") or []
+    except ValueError:
+        councils = []
+    chairs = {c.get("chairman") for c in councils if isinstance(c, dict)}
+    for aid in sorted(meta - chairs):
+        errors.append(f"agente meta órfão `{aid}` ({known[aid].relative_to(repo_root)}): não preside a nenhum conselho")
     return errors
 
 
@@ -189,7 +208,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     areas = load_areas(repo_root)
     n_agents = sum(len(a.get("agents") or []) for a in areas)
-    print(f"✓ {AREAS_FILE} válido: {len(areas)} áreas, {n_agents} agentes, todos existentes e sem órfãos.")
+    from .council_session import load_councils
+
+    n_councils = len((load_councils(repo_root) or {}).get("councils") or [])
+    print(f"✓ {AREAS_FILE} válido: {len(areas)} áreas, {n_agents} agentes, todos existentes e sem órfãos; "
+          f"{n_councils} conselho(s) válido(s).")
     return 0
 
 

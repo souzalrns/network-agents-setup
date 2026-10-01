@@ -1,0 +1,75 @@
+# Painéis de conselho, Fase 1 (deliberação interna): J5-b do docs/audit/PLANO-DE-ACAO.md
+# Desenho: docs/architecture/adr/ADR-META-AGENTS.md §9–§13. Operação: docs/ops/COUNCIL.md.
+# Lido por runner/plan_runner/council_session.py e validado com o areas.yaml (E7,
+# `python -m plan_runner.areas`).
+#
+# Protocolo (ADR §11): INDEPENDENT → PEER_RANK → SYNTHESIZE → GATE → HITL → PERSIST.
+# Custo por ronda = 2·N + 1 chamadas (N = membros). Por isso:
+#   - members: 2 a 3 nesta fase (o validador recusa mais);
+#   - max_rounds é obrigatório (uma ronda nova só por decisão humana "revise").
+#
+# Campos:
+#   area: área do areas.yaml cujo budget.max_tokens é o tecto do conselho (o conselho
+#     conta contra o tecto da área que o invoca).
+#   chairman: agente com `kind: meta` (C1). Não pertence a nenhuma área: o router nunca o escolhe.
+#     Recebe as posições ANONIMIZADAS (contra a bajulação: chairman e membros usam o mesmo modelo).
+#   members[].role: member (posição própria) | critic (ataca riscos e procura kill criteria).
+#   required: membros cujo voto `reject` (ou `veto: true`) bloqueia no GATE (determinístico).
+#     Com veto ou com confidence < confidence_threshold, o humano só pode rejeitar ou pedir revisão.
+#   confidence_threshold: τ em ]0, 1] (escala 0–1, nunca 0–10: lição do AU-13).
+#   escalation: quando o router (D2) envia um pedido para este conselho em vez de um agente.
+#     Só pedidos de áreas em `areas` E com uma das `keywords` (sem acentos, minúsculas;
+#     mesma regra de casamento do areas.yaml). Lista curta e explícita: um conselho custa 2·N+1 chamadas.
+#   chairman_model (opcional): outro modelo para o chairman. Omissão: o mesmo dos membros (AGENT_MODEL).
+
+version: 1
+memory_scope: project:network-agents-setup   # âmbito L4 por omissão dos veredictos (agente escreve candidate)
+
+councils:
+  - id: architecture
+    description: Decisões de desenho estrutural da rede de agentes e do runtime.
+    hitl_category: architectural
+    area: software
+    chairman: meta.chairman
+    members:
+      - {id: meta.arquitetura-agentes, role: member}
+      - {id: engenharia.desenvolvimento, role: member}
+      - {id: engenharia.revisor-codigo, role: critic}
+    required: [meta.arquitetura-agentes]
+    max_rounds: 2
+    confidence_threshold: 0.7
+    escalation:
+      areas: [software, docs, horizontal]
+      keywords: [decisao de arquitetura, decisao estrutural, mudanca estrutural, arquitetura do sistema, conselho de arquitetura, redesenhar, trade-off, tradeoff]
+
+  - id: security
+    description: Decisões de segurança defensiva (modelo de ameaças, segredos, acessos).
+    hitl_category: security
+    area: security
+    chairman: meta.chairman            # separado do auditor (ADR §10)
+    members:
+      - {id: meta.security-auditor, role: member}
+      - {id: engenharia.desenvolvimento, role: member}
+      - {id: engenharia.revisor-codigo, role: critic}
+    required: [meta.security-auditor]  # com veto
+    max_rounds: 2
+    confidence_threshold: 0.8
+    escalation:
+      areas: [security, software]
+      keywords: [decisao de seguranca, modelo de ameacas, threat model, politica de segredos, politica de acessos, conselho de seguranca]
+
+  - id: product
+    description: Decisões de produto (prioridades, âmbito, experiência).
+    hitl_category: strategic
+    area: software
+    chairman: meta.chairman
+    members:
+      - {id: produto.produto-tech-transversal, role: member}
+      - {id: design.ux, role: member}
+      - {id: design.design_critic, role: critic}
+    required: []
+    max_rounds: 1
+    confidence_threshold: 0.6
+    escalation:
+      areas: [software]
+      keywords: [decisao de produto, conselho de produto, priorizar funcionalidades, roadmap de produto]

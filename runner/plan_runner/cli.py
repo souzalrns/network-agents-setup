@@ -66,6 +66,20 @@ def main(argv: list[str] | None = None) -> int:
     p_route.add_argument("--worker", choices=["none", "gemini"], default="gemini", help="Worker dos passos executados")
     p_route.add_argument("--embeddings", action="store_true", help="Embeddings Gemini quando nenhuma keyword casa")
     p_route.add_argument("--log", type=Path, default=None, help="jsonl das decisoes (omissao: pilots/router-decisions.jsonl)")
+    p_route.add_argument("--no-council", action="store_true", help="Nao escala pedidos estruturais para conselho")
+
+    # Bloco C: conselho interno (plan_runner/council_session.py, docs/ops/COUNCIL.md)
+    sub.add_parser("council", help="Conselho interno: run|decide|resume|status|cost|validate (ver `council -h`)",
+                   add_help=False)
+
+    if argv is None:
+        import sys
+
+        argv = sys.argv[1:]
+    if argv and argv[0] == "council":
+        from .council_session import main as council_main
+
+        return council_main(argv[1:])
 
     args = parser.parse_args(argv)
     try:
@@ -153,10 +167,10 @@ def _route(args: argparse.Namespace) -> int:
             except EmbedderError as e:
                 raise ew.WorkerError(str(e)) from e
 
-    router = Router(embed=embed)
+    router = Router(embed=embed, councils=not args.no_council)
     decision = router.route(args.request)
     log_decision(decision, args.log or REPO_ROOT / "pilots" / "router-decisions.jsonl")
-    if args.execute and decision.outcome in ("agent", "plan", "hitl"):
+    if args.execute and decision.outcome in ("agent", "plan", "hitl", "council"):
         out = args.out or REPO_ROOT / "pilots" / f"run-router-{uuid4().hex[:8]}"
         try:
             result = router.execute(decision, out_dir=out, worker=args.worker)

@@ -16,6 +16,9 @@ on:
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
+      # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
+      - 'config/councils.yaml'
+      - 'scripts/alter_token_usage_council_kinds.sql'
   pull_request:
     branches: [main]
     paths:
@@ -31,6 +34,9 @@ on:
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
+      # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
+      - 'config/councils.yaml'
+      - 'scripts/alter_token_usage_council_kinds.sql'
   workflow_dispatch: {}
 
 permissions:
@@ -170,3 +176,7 @@ jobs:
       # L4 (D3): ciclo remember/recall/forget/promote + SQL (2x, idempotencia) + worker
       - name: memoria L4 (Postgres + pgvector, Gemini falso)
         run: python -m pytest tests/test_memory_l4.py tests/test_memory_l4_worker.py -v -rs
+
+      # Bloco C: veredicto do conselho -> L4 candidate -> HITL -> active (criterio de DONE)
+      - name: conselho + L4 (Postgres + pgvector, Gemini falso)
+        run: python -m pytest tests/test_council_l4.py -v -rs
