@@ -537,7 +537,7 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 
 | PR | Estado | Evidência |
 |---|---|---|
-| #25 uuid 14 (`apps/api`, sem lockfile) | **Fechado** (duplicado do #29; `--frozen-lockfile` falhava); o Dependabot apagou a branch | log do CI do #25, job 109214179248 |
-| #28 psycopg >=3.3.6 (runner) | **Aberto, à espera de rebase.** O comando do agente chegou neutralizado; falta o rebase via UI, depois CI e merge | PR #28, comentário 5922164622 |
-| #29 uuid 14 + vitest 5 | **Aberto, bloqueado**: S29-bis: alinhar `@vitest/coverage-v8` com vitest 5.x e depois mergear o PR #29 (uuid 14 + vitest 5). Verificar que a cobertura se mantém > 0%. | cobertura 0% com vitest 5 + coverage-v8 4 (vs 27,96% na `main`) |
+| #25 uuid 14 (`apps/api`, sem lockfile) | **Entrou por merge** (`da0a894`), não ficou fechado, por engano ou em simultâneo. A `main` ficou vermelha até à correção (a), que foi o merge do #29. A branch foi apagada pelo Dependabot | CI run 36796345114 (vermelho em `da0a894`) |
+| #28 psycopg >=3.3.6 (runner) | **Aberto, aguarda rebase manual pelo maestro** (UI ou "Update branch"). Depois: uma verificação de CI e merge se estiver verde | PR #28, comentário 5922164622 |
+| #29 uuid 14 + vitest 5 | **Merged** (`3016466`): a `main` voltou a verde e o `--frozen-lockfile` passa. **S29-bis passa a ser na `main`:** alinhar `@vitest/coverage-v8` com o vitest 5.x, porque a cobertura está a 0% e o `pnpm test:coverage` sai com código 1 | CI run 36796468154 (verde); `vitest --coverage` local: 195/195, cobertura 0%, saída 1 |
 
