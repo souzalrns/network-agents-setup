@@ -62,7 +62,9 @@ Contra um Postgres **descartável** com pgvector, nunca o Supabase:
 docker run -d --rm -p 5433:5432 -e POSTGRES_PASSWORD=pg pgvector/pgvector:pg16
 cd runner && RAG_TEST_DATABASE_URL=postgresql://postgres:pg@localhost:5433/postgres python -m pytest tests/test_rag_canonical.py -v
 ```
-Esperado: 3 passed. Sem `RAG_TEST_DATABASE_URL`, os 3 testes saem como *skipped*, com a razão.
+Esperado: 6 passed: os 3 J3 e 3 ponta a ponta (`test_e2e_*`: ficheiro → `scripts/ingest_apply.py::apply_one` com embedder falso → `match_knowledge`). Sem `RAG_TEST_DATABASE_URL`, saem como *skipped*, com a razão; com `RAG_TEST_REQUIRED=1`, a falta da BD é um erro.
+
+**No CI:** o job `test-rag` do `runner-tests.yml` corre isto em cada PR do runner, contra um serviço `pgvector/pgvector:pg16` descartável e com `RAG_TEST_REQUIRED=1` (PLANO item 10).
 
 ### 5. Teste real no MCP
 Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing` algo sobre "GEO / answer-first". A resposta deve citar `[Fonte: docs/knowledge/geo-agent.md …]`.

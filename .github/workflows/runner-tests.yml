@@ -10,6 +10,9 @@ on:
       - 'agents/**'
       - 'config/areas.yaml'
       - 'config/router-golden.yaml'
+      # ingest real usado pelo job test-rag
+      - 'scripts/ingest_apply.py'
+      - 'scripts/ingest_delta.py'
   pull_request:
     branches: [main]
     paths:
@@ -19,6 +22,9 @@ on:
       - 'agents/**'
       - 'config/areas.yaml'
       - 'config/router-golden.yaml'
+      # ingest real usado pelo job test-rag
+      - 'scripts/ingest_apply.py'
+      - 'scripts/ingest_delta.py'
   workflow_dispatch: {}
 
 permissions:
@@ -38,6 +44,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: runner/requirements*.txt
 
       - name: Install dependencies
         run: |
@@ -68,3 +76,87 @@ jobs:
           flags: runner
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+
+  # Testes marcados `slow` (planos reais por subprocess, LangGraph, crash recovery):
+  # o pytest.ini exclui-os por omissao (`addopts = -m "not slow"`) para o uso local
+  # ficar rapido, por isso o job `test` nunca os corria. Job a parte, em paralelo:
+  # o CI demora o mesmo e o default local nao muda. ~2-3 min (PLANO item 10, parte Python).
+  test-slow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: runner
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: runner/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-langgraph.txt
+          python -m pip install pytest
+
+      # `-m slow` na linha de comando substitui o `-m "not slow"` do addopts.
+      # 0 testes recolhidos = codigo de saida 5 = job vermelho (nunca passa em vazio).
+      - name: Run slow tests
+        run: python -m pytest tests/ -m slow -v --durations=10
+
+  # PLANO item 10: ingest -> retrieve de ponta a ponta contra Postgres + pgvector
+  # descartavel (servico do job, nunca o Supabase). Ficheiro markdown ->
+  # scripts/ingest_apply.py::apply_one (chunk_markdown -> embed -> replace_chunks)
+  # -> match_knowledge como o agent-network-mcp o chama. Embedder falso
+  # (deterministico, sem Gemini): custo zero. RAG_TEST_REQUIRED=1 faz da falta
+  # da BD um erro, nao um skip -- o job nunca fica verde sem ter corrido.
+  test-rag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: runner
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rag_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      RAG_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rag_ci
+      RAG_TEST_REQUIRED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: runner/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
+
+      - name: ingest -> retrieve (Postgres + pgvector, embedder falso)
+        run: python -m pytest tests/test_rag_canonical.py -v -rs
