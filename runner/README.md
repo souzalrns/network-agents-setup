@@ -57,8 +57,8 @@ After the run, look at:
   - Waits for `<step>/result.json` from any worker (LLM, human, script)
   - Built-in Gemini worker: `--worker gemini` runs each step inline (free tier, tokens logged). See [docs/ops/WORKER-EXTERNAL.md](../docs/ops/WORKER-EXTERNAL.md)
 - **Quality**
-  - 167 tests, 87% coverage (confirmed 2026-09-17 by running pytest directly, not carried over from an older count)
-  - CI on every push (GitHub Actions)
+  - 303 tests: 269 fast (default `pytest`) + 34 `slow` (`pytest -m slow`: real plans via subprocess, LangGraph, crash recovery); counted 2026-10-01
+  - CI on every push (GitHub Actions): job `test` (fast + coverage) and job `test-slow` (the 34 slow ones), in parallel
   - Coverage reported to Codecov
   - Release workflow (tag v* -> GitHub Release)
 
