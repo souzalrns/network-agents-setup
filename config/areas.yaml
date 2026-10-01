@@ -29,6 +29,8 @@
 #   3. budget por área: null ou {max_steps?, max_tokens?}. O max_tokens é o tecto de
 #      tokens do pedido (router + passos), aplicado pelo worker a partir do ledger
 #      (docs/ops/BUDGET.md). Omissão: null em todas = sem tecto, até o maestro escolher valores.
+#   5. grounding: full (omissão) | slim. slim = agents/_shared/grounding.slim.md, só em áreas
+#      sem risco (B1-bis, docs/ops/WORKER-EXTERNAL.md). finance/legal/security ficam full.
 #   4. Áreas sem agentes (legal, gamedev, docs): ficam declaradas com agents: []
 #      e o router devolve "sem especialista" + HITL. Não se inventam agentes.
 
@@ -84,6 +86,7 @@ areas:
     horizontals: [meta.planejador, meta.using_agent_skills]
     budget: null
     hitl: null
+    grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
   - id: legal
     description: Direito PT/BR (civil, contratos, jurisprudência). Sem agente .agent.md na v1.
@@ -111,6 +114,7 @@ areas:
     horizontals: [meta.planejador]
     budget: null
     hitl: null
+    grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
   - id: finance
     description: Contabilidade PT/BR e análise financeira. Trading (G1/B3) ainda não existe.
@@ -145,6 +149,7 @@ areas:
     horizontals: [meta.planejador]
     budget: null
     hitl: null
+    grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
   - id: horizontal
     description: Agentes transversais que servem todas as áreas (planeamento e descoberta de skills).

@@ -117,6 +117,10 @@ def _validate_router_fields(registry: dict, areas: list, errors: list[str]) -> N
             )
         if area.get("hitl") not in (None, "required"):
             errors.append(f"área `{aid}`: `hitl` tem de ser null ou required")
+        if area.get("grounding", "full") not in ("full", "slim"):
+            errors.append(f"área `{aid}`: `grounding` tem de ser full ou slim")
+        if area.get("grounding") == "slim" and area.get("hitl") == "required":
+            errors.append(f"área `{aid}`: `grounding: slim` não é permitido numa área com hitl: required (risco)")
         if area.get("delegation", "auto") not in DELEGATION:
             errors.append(f"área `{aid}`: `delegation` tem de ser um de {', '.join(DELEGATION)}")
 

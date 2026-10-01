@@ -147,6 +147,13 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     data = _read_json(result_path)
     if not data.get("ok"):
         return StepResult(ok=False, detail=str(data.get("detail") or "external_failed"))
+    if step.output_artifact and isinstance(data.get("artifact_summary"), str) and data["artifact_summary"].strip():
+        # B1-bis: resumo estruturado para os passos seguintes (context_policy.summary_path)
+        from .context_policy import summary_path
+
+        sp = summary_path(out_root, step.output_artifact)
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        sp.write_text(data["artifact_summary"], encoding="utf-8")
     if step.output_artifact and data.get("artifact_content") is not None:
         path = out_root / step.output_artifact
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -45,6 +45,7 @@ from typing import Any
 import httpx
 import yaml
 
+from . import context_policy as cp
 from .skills import _frontmatter, repo_root_from_out
 
 DEFAULT_MODEL = "gemini-flash-lite-latest"
@@ -313,8 +314,117 @@ def _section(title: str, body: str) -> str:
     return f"## {title}\n\n{body.strip()}\n"
 
 
-def build_prompt(out_root: Path, pending: Path, request: dict[str, Any]) -> tuple[str, str, bool]:
+def build_prompt(
+    out_root: Path, pending: Path, request: dict[str, Any], *, context: str | None = None
+) -> tuple[str, str, bool]:
     """(system, user, quer_json). Tudo o que o modelo ve vem de ficheiros do run/repo."""
+    built = build_prompt_ctx(out_root, pending, request, context=context)
+    return built["system"], built["user"], built["wants_json"]
+
+
+def build_prompt_ctx(
+    out_root: Path, pending: Path, request: dict[str, Any], *, context: str | None = None
+) -> dict[str, Any]:
+    """Prompt + o que entrou nele. `context`: opt (omissao, B1-bis) | legacy (prompt anterior)."""
+    mode = cp.context_mode(context)
+    if mode == "opt":
+        return _build_prompt_opt(out_root, pending, request)
+    system, user, wants_json = _build_prompt_legacy(out_root, pending, request)
+    return {"system": system, "user": user, "wants_json": wants_json, "wants_summary": False,
+            "meta": {"policy": "legacy"}}
+
+
+def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) -> dict[str, Any]:
+    """B1-bis (plan_runner/context_policy.py): sem frontmatter, grounding por area, pin + resumos."""
+    repo_root = repo_root_from_out(out_root)
+    plan_raw = _load_plan_raw(out_root)
+    step_id = str(request.get("step_id"))
+    agent_fm: dict[str, Any] = {}
+    system_parts: list[str] = []
+    for name, title in (("AGENT.md", "Agente"), ("SKILL.md", "Skill")):
+        p = pending / name
+        if p.is_file():
+            fm, body = cp.strip_frontmatter(p.read_text(encoding="utf-8"))
+            if name == "AGENT.md":
+                agent_fm = fm
+                if fm.get("description"):
+                    body = f"Papel: {fm['description']}\n\n{body}"
+            system_parts.append(_section(title, body))
+    level, grounding = cp.grounding_for(repo_root, agent_fm.get("id"))
+    if grounding:
+        _, gbody = cp.strip_frontmatter(grounding)
+        system_parts.append(_section("Grounding (obrigatorio)", gbody))
+
+    artifact = request.get("output_artifact") or ""
+    wants_json = artifact.lower().endswith(".json")
+    wants_summary = cp.needs_summary(plan_raw, step_id, artifact)
+    schema = request.get("output_schema")
+    fmt = (
+        "JSON valido (um unico objecto), sem texto antes nem depois"
+        + (f", com a estrutura de `{schema}` descrita na skill" if schema else "")
+        if wants_json
+        else "Markdown"
+    )
+    saida = (
+        f"Devolve SO o conteudo do artefacto `{artifact or '(sem ficheiro)'}`, em {fmt}. "
+        "Sem preambulos nem comentarios sobre a tarefa. Nao tens tools neste passo: "
+        "usa apenas o contexto desta mensagem e marca o que falta como lacuna."
+    )
+    if wants_summary:
+        saida += "\n\n" + cp.summary_instruction(wants_json)
+    system_parts.append(_section("Saida", saida))
+
+    user_parts = [
+        _section(
+            "Passo",
+            f"- plano: {plan_raw.get('id', '?')}\n- passo: {step_id}\n"
+            f"- action: {request.get('action')}\n- artefacto: {artifact or '(nenhum)'}",
+        )
+    ]
+    for key, title in (("objective", "Objectivo do plano"), ("audience", "Audiencia")):
+        if plan_raw.get(key):
+            user_parts.append(_section(title, str(plan_raw[key])))
+    task = (_plan_step(plan_raw, step_id) or {}).get("task")
+    if task:
+        user_parts.append(_section("Tarefa deste passo", str(task)))
+
+    inputs = cp.step_inputs(plan_raw, step_id, list(request.get("inputs") or []) or None)
+    modes = cp.input_modes(plan_raw, step_id, inputs)
+    used: list[dict[str, Any]] = []
+    for rel in inputs:
+        p = (out_root / rel).resolve()
+        if not (p.is_relative_to(out_root.resolve()) and p.is_file()):
+            user_parts.append(_section(f"Input: {rel}", "(ficheiro em falta -- trata como lacuna)"))
+            used.append({"path": rel, "mode": "missing", "chars": 0})
+            continue
+        mode = modes[rel]
+        summ = cp.summary_path(out_root, rel)
+        if mode == "summary" and summ.is_file():
+            body = summ.read_text(encoding="utf-8")
+            user_parts.append(_section(f"Input (resumo): {rel}", body + f"\n(artefacto completo em `{rel}`)"))
+        else:
+            mode = "full" if mode == "full" else "full (sem resumo)"
+            raw = p.read_text(encoding="utf-8")
+            body = _clip(cp.compact_json(raw) if rel.lower().endswith(".json") else raw)
+            user_parts.append(_section(f"Input: {rel}", body))
+        used.append({"path": rel, "mode": mode, "chars": len(body)})
+
+    for name, title in (("knowledge_context.md", "Conhecimento recuperado (L5)"), ("CLIENT_MEMORY.md", "Memoria do cliente")):
+        p = pending / name
+        if p.is_file():
+            user_parts.append(_section(title, _clip(p.read_text(encoding="utf-8"))))
+
+    return {
+        "system": "\n".join(system_parts),
+        "user": "\n".join(user_parts),
+        "wants_json": wants_json,
+        "wants_summary": wants_summary,
+        "meta": {"policy": "opt", "grounding": level, "inputs": used, "summary_requested": wants_summary},
+    }
+
+
+def _build_prompt_legacy(out_root: Path, pending: Path, request: dict[str, Any]) -> tuple[str, str, bool]:
+    """Prompt anterior ao B1-bis, byte a byte (PLAN_RUNNER_CONTEXT=legacy)."""
     repo_root = repo_root_from_out(out_root)
     system_parts: list[str] = []
     for name, title in (("AGENT.md", "Agente"), ("SKILL.md", "Skill")):
@@ -414,8 +524,10 @@ class GeminiWorker:
         timeout: float = 60.0,
         transport: Transport | None = None,
         remote_ledger: RemoteSink | None | bool = True,
+        context: str | None = None,
     ):
         self.model = model or os.environ.get("AGENT_MODEL") or DEFAULT_MODEL
+        self.context = cp.context_mode(context)  # opt (B1-bis) | legacy
         self._api_key = api_key
         self.max_output_tokens = max_output_tokens
         self.timeout = timeout
@@ -449,7 +561,8 @@ class GeminiWorker:
             raise
 
     def _run(self, out_root: Path, pending: Path, request: dict, step_id: str, run_id: str | None) -> dict[str, Any]:
-        system, user, wants_json = build_prompt(out_root, pending, request)
+        built = build_prompt_ctx(out_root, pending, request, context=self.context)
+        system, user, wants_json = built["system"], built["user"], built["wants_json"]
         response = gemini_generate(
             system,
             user,
@@ -474,12 +587,19 @@ class GeminiWorker:
                 content = _parse_json_output(text)
             except json.JSONDecodeError as e:
                 raise WorkerError(f"gemini: JSON invalido para {request.get('output_artifact')}: {e.msg}") from e
+        summary = None
+        if built["wants_summary"]:
+            content, summary = cp.split_summary(content, wants_json)
+            if wants_json and not isinstance(content, (dict, list)):
+                raise WorkerError(f"gemini: `artifact` invalido para {request.get('output_artifact')}")
+        context_meta = {**built["meta"], "summary": "written" if summary else ("missing" if built["wants_summary"] else "not_needed")}
 
         result = {
             "ok": True,
             "detail": f"gemini:{row['model_version'] or self.model}",
             "artifact_content": content,
             "meta": {
+                "context": context_meta,
                 "worker": self.name,
                 "model": self.model,
                 "model_version": row["model_version"],
@@ -491,6 +611,8 @@ class GeminiWorker:
                 "ledger_remote": ledger["remote"],
             },
         }
+        if summary:
+            result["artifact_summary"] = summary  # o executor grava-o em <artefacto>.summary.md
         (pending / "result.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (pending / ERROR_FILE).unlink(missing_ok=True)
         return result

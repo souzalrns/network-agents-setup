@@ -129,9 +129,15 @@ def test_le_request_chama_gemini_escreve_result_e_regista_tokens(tmp_path, tmp_r
     request = json.loads((pending / "request.json").read_text(encoding="utf-8"))
     system = call["body"]["systemInstruction"]["parts"][0]["text"]
     user = call["body"]["contents"][0]["parts"][0]["text"]
-    assert (pending / "AGENT.md").read_text(encoding="utf-8").strip()[:200] in system
-    assert (pending / "SKILL.md").read_text(encoding="utf-8").strip()[:200] in system
-    assert "Directiva de grounding" in system
+    # B1-bis (modo opt, omissao): corpo do AGENT.md/SKILL.md sem frontmatter, description
+    # numa linha, grounding curto (marketing). O modo legacy esta em test_context_opt.py.
+    from plan_runner.context_policy import strip_frontmatter
+
+    agent_fm, agent_body = strip_frontmatter((pending / "AGENT.md").read_text(encoding="utf-8"))
+    assert agent_body.strip()[:200] in system and f"Papel: {agent_fm['description']}" in system
+    assert strip_frontmatter((pending / "SKILL.md").read_text(encoding="utf-8"))[1].strip()[:200] in system
+    assert "id: marketing.research" not in system  # frontmatter fora
+    assert "Grounding (versão curta" in system
     assert request["output_artifact"] in system
     assert "Explicar AI Findability" in user
     assert "responseMimeType" not in call["body"]["generationConfig"]  # .md -> texto
