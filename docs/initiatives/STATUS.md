@@ -533,3 +533,11 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Formato `usageMetadata` (chamada real) | `promptTokenCount`, `candidatesTokenCount`, `totalTokenCount`, `promptTokensDetails[]`, `serviceTier`; `modelVersion` = `gemini-3.5-flash-lite` (o `-latest` é alias); `responseId`. **`embedContent` não devolve `usageMetadata`** | `agent-network-mcp/lib/tokenLedger.js` |
 | Bug novo: `log_execution` perde 4 campos | **Em correcção** (PR próprio no `agent-network-mcp`) | `app/api/mcp/route.js` → `lib/memory.js` |
 
+## 📋 Dependabot — ronda de 2026-10-01
+
+| PR | Estado | Evidência |
+|---|---|---|
+| #25 uuid 14 (`apps/api`, sem lockfile) | **Entrou por merge** (`da0a894`), não ficou fechado, por engano ou em simultâneo. A `main` ficou vermelha até à correção (a), que foi o merge do #29. A branch foi apagada pelo Dependabot | CI run 36796345114 (vermelho em `da0a894`) |
+| #28 psycopg >=3.3.6 (runner) | **Aberto, aguarda rebase manual pelo maestro** (UI ou "Update branch"). Depois: uma verificação de CI e merge se estiver verde | PR #28, comentário 5922164622 |
+| #29 uuid 14 + vitest 5 | **Merged** (`3016466`): a `main` voltou a verde e o `--frozen-lockfile` passa. **S29-bis passa a ser na `main`:** alinhar `@vitest/coverage-v8` com o vitest 5.x, porque a cobertura está a 0% e o `pnpm test:coverage` sai com código 1 | CI run 36796468154 (verde); `vitest --coverage` local: 195/195, cobertura 0%, saída 1 |
+
