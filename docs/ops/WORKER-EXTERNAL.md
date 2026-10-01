@@ -1,6 +1,6 @@
 # Worker do modo `external` (AU-23)
 
-> **Estado (2026-10-01):** implementado e testado com o Gemini falso (17 testes em `runner/tests/test_external_worker.py`). O plano `seo-article-demo` corre do início ao fim pela CLI. **Ainda não foi feita nenhuma chamada real**: a sessão em que foi escrito não tinha `GEMINI_API_KEY`. O primeiro run real é o passo 2 abaixo.
+> **Estado (2026-10-01):** implementado, testado com o Gemini falso (17 testes em `runner/tests/test_external_worker.py`) e **validado com o Gemini real (B1, feito pelo maestro a 2026-10-01)**: o `seo-article-demo` correu do início ao fim, 4 chamadas, 13 130 tokens. Ver "Primeiro run real (B1)".
 
 ## O que faz
 
@@ -75,7 +75,25 @@ python -m plan_runner.external_worker ../pilots/<run> --resume   # e depois reto
 | 1 | Erro (sem chave, HTTP, run fora de `waiting_external`) |
 | 2 | Bloqueado por HITL |
 
-### Primeiro run real (passo do DEV)
+### Primeiro run real (B1): FEITO a 2026-10-01
+
+Corrido pelo maestro: `seo-article-demo.plan.yaml`, `--mode external --worker gemini`, engine `native`. Correu do início ao fim e o estado final é `done`.
+
+| Passo | tokens_in | tokens_out | tokens_total | Input injectado (artefacto completo) |
+|---|---:|---:|---:|---|
+| research | 1 426 | 467 | 1 893 | — |
+| seo_brief | 2 189 | 1 226 | 3 415 | `01-research.md` (dependência, sem `inputs`) |
+| copy | 2 270 | 1 389 | 3 659 | `02-seo-brief.json` |
+| critic | 3 819 | 344 | 4 163 | `02-seo-brief.json` + `03-copy.md` |
+| **Total** | **9 704** | **3 426** | **13 130** | 4 chamadas |
+
+**Leitura:**
+- O `tokens_in` é ~1–1,5k de base (AGENT.md + SKILL.md + grounding + pedido) **mais os artefactos injectados completos**.
+- O passo que mais cresce é o `critic` (+68%), que recebe dois artefactos.
+- O `copy` quase não cresce (+4%): recebe um só, e a skill dele é mais curta.
+- A optimização (injectar resumos em vez de artefactos completos) é um item do PLANO-DE-ACAO.
+
+### Repetir um run real (passo do DEV)
 
 1. Com `GEMINI_API_KEY` e **sem** `SUPABASE_*`, correr um plano de 1 passo, ou o `seo-article-demo`, que faz 4 chamadas até ao gate.
 2. Confirmar:
@@ -93,7 +111,7 @@ order by created_at desc limit 10;
 
 ## Custo
 
-Medido no `seo-article-demo`, com os `AGENT.md` e `SKILL.md` reais: o prompt de cada passo tem 0,9 a 1,5 mil tokens de entrada. O `maxOutputTokens` é 4096 (`DEFAULT_MAX_OUTPUT_TOKENS`). Um plano de 4 passos faz 4 chamadas ao `flash-lite`, dentro do tier gratuito.
+**Real (B1):** o `seo-article-demo` gastou **13 130 tokens** em 4 chamadas ao `flash-lite`, entre 1,9k e 4,2k por passo (tabela acima). A estimativa anterior, de 0,9 a 1,5k de entrada, foi feita com o Gemini falso e artefactos pequenos, e subestimava os passos com inputs. O `maxOutputTokens` é 4096 (`DEFAULT_MAX_OUTPUT_TOKENS`). Tectos por run: [BUDGET.md](./BUDGET.md).
 
 ## Evidência (2026-10-01, Gemini falso)
 

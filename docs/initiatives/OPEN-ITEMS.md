@@ -145,12 +145,12 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
   - Respeita o HITL.
   - Integrado no executor e no motor `native` (`--worker gemini`). Também tem uma CLI standalone para runs parados.
   - Como correr: `docs/ops/WORKER-EXTERNAL.md`.
-- **B1 (DEV): primeiro run real.** Correr com `GEMINI_API_KEY` e confirmar `token_usage.jsonl` com `status: ok` e tokens não nulos. Na sessão de 01/10 não havia chave, por isso a evidência foi feita com o Gemini falso.
+- ~~**B1 (DEV): primeiro run real.**~~ **FEITO a 2026-10-01 (maestro):** `seo-article-demo` com `--worker gemini`, do início ao fim (`done`), 4 chamadas, **13 130 tokens**: research 1 893, seo_brief 3 415, copy 3 659, critic 4 163. Detalhe em `docs/ops/WORKER-EXTERNAL.md`.
 - **B2: ledger central.** Com `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (projecto `agent-network-memory`), as linhas entram também no Supabase. Escrever em produção é decisão do DEV.
 - **B3: tools.** O worker não executa o `tools_allowed` (ex.: `web_search`). Depende do porte do `ToolExecutor` (D1, VIA A).
 - **B4: engine langgraph.** O worker inline só funciona no `native`; no langgraph usa-se `python -m plan_runner.external_worker <run>` + `resume`.
 - ~~**B5: orçamento de tokens por run.**~~ **Feito** (PR `feat/token-budget`, empilhado no router): tecto por run, plano ou área; pausa em `paused_budget`; retoma com `resume --max-tokens`. Ver `docs/ops/BUDGET.md`.
-  - **B5-bis (maestro): valores de `budget.max_tokens` por área.** Hoje todas estão a `null`, portanto sem tecto. Ver a secção "De onde vem o tecto" em `docs/ops/BUDGET.md`.
+  - **B5-bis (maestro): valores de `budget.max_tokens` por área.** Hoje todas estão a `null`, portanto sem tecto. **Proposta da fase 1 (folgada), com base no B1 real:** `docs/ops/BUDGET.md`, secção "Proposta B5-bis". Recomendada A: produção 80k, risco 40k, exploratórias 30k, horizontal 20k. A fase 2 (contexto por resumo) é o PLANO item 11.
 
 ## Bloco B — router hierárquico híbrido (D2), 2026-10-01
 
