@@ -150,7 +150,7 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **B3: tools.** O worker não executa o `tools_allowed` (ex.: `web_search`). Depende do porte do `ToolExecutor` (D1, VIA A).
 - **B4: engine langgraph.** O worker inline só funciona no `native`; no langgraph usa-se `python -m plan_runner.external_worker <run>` + `resume`.
 - ~~**B5: orçamento de tokens por run.**~~ **Feito** (PR `feat/token-budget`, empilhado no router): tecto por run, plano ou área; pausa em `paused_budget`; retoma com `resume --max-tokens`. Ver `docs/ops/BUDGET.md`.
-  - **B5-bis (maestro): valores de `budget.max_tokens` por área.** Hoje todas estão a `null`, portanto sem tecto. **Proposta da fase 1 (folgada), com base no B1 real:** `docs/ops/BUDGET.md`, secção "Proposta B5-bis". Recomendada A: produção 80k, risco 40k, exploratórias 30k, horizontal 20k. A fase 2 (contexto por resumo) é o PLANO item 11.
+  - ~~**B5-bis: valores de `budget.max_tokens` por área.**~~ **APLICADO** (decisão do maestro, opção A): produção 80k, risco 40k, exploratórias 30k, horizontal 20k, em `config/areas.yaml`. Rever depois do B1-bis-C.
 
 ## Bloco B — router hierárquico híbrido (D2), 2026-10-01
 
@@ -167,21 +167,21 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 
 ## Bloco B — testes lentos no CI (PLANO item 10, parte Python), 2026-10-01
 
-- **Feito (PR `ci/slow-tests`, sem merge):** job `test-slow` no `runner-tests.yml`, em paralelo com o `test`. Corre os 34 testes `slow` (planos reais, LangGraph, crash recovery), que o `pytest.ini` exclui por omissão e que nenhum CI corria. O default local não muda.
-- ~~**Falta no item 10:** ingest→retrieve contra uma BD real no CI.~~ **Feito (PR `ci/rag-e2e`):** job `test-rag` com o serviço `pgvector/pgvector:pg16`.
+- **Feito (PR #43, merged `9a273d4`):** job `test-slow` no `runner-tests.yml`, em paralelo com o `test`. Corre os 34 testes `slow` (planos reais, LangGraph, crash recovery), que o `pytest.ini` exclui por omissão e que nenhum CI corria. O default local não muda.
+- ~~**Falta no item 10:** ingest→retrieve contra uma BD real no CI.~~ **Feito (PR #44, merged `c4d02fe`):** job `test-rag` com o serviço `pgvector/pgvector:pg16`.
   - O teste parte de ficheiros markdown e passa pelo ingest real (`scripts/ingest_apply.py::apply_one`: chunk → embed → `replace_chunks`), com um embedder falso determinístico (sem Gemini, custo zero). O retrieve é o `match_knowledge`, chamado como o MCP o chama.
   - 6 testes: os 3 J3, que existiam mas nenhum CI corria, mais 3 ponta a ponta: 1 doc → devolve esse doc; 2 docs com `agent_id` diferentes → cada agente só vê o seu; reingest não duplica.
   - `RAG_TEST_REQUIRED=1`: sem BD, o job falha em vez de saltar.
-- **✅ PLANO item 10 COMPLETO** (depois do merge do #43 e do `ci/rag-e2e`): testes lentos + ingest→retrieve no CI. O `/chat` TS deixou de se aplicar (D1, VIA A).
+- **✅ PLANO item 10 COMPLETO** (#43 + #44 merged): testes lentos + ingest→retrieve no CI. O `/chat` TS deixou de se aplicar (D1, VIA A).
 
 ## Bloco B — B1-bis: optimização de contexto do worker, 2026-10-01
 
-- **Feito (PR `feat/context-opt`, sem merge):** `runner/plan_runner/context_policy.py`, modo `opt` por omissão.
+- **Feito (PR #45, merged `810d1fe`):** `runner/plan_runner/context_policy.py`, modo `opt` por omissão.
   - Pin + resumos gerados na mesma chamada, com schema fixo.
   - Grounding `slim` em marketing, docs e research; o E7 recusa `slim` nas áreas de risco.
   - Sem frontmatter nem secções de documentação no prompt; JSON compacto.
   - `PLAN_RUNNER_CONTEXT=legacy` para A/B e rollback.
 - **Projecção calibrada no B1** (`python -m plan_runner.token_projection`): `seo-article-demo` 13,1k → **11,1k (−16%)**, critic `tokens_in` **−33%**. 8 passos (pior caso): 41,3k → 28,3k (−31%).
 - **B1-bis-R (maestro): run real** legacy vs opt, comparando tokens e qualidade do `copy` e do `critic`. Comandos em `docs/ops/WORKER-EXTERNAL.md`, "Medir a sério".
-- **B1-bis-9k (decisão):** a meta de <9k não cabe só no contexto. Opções A/B/C na secção "Porque não chega aos 9k" (máximo projectado com todas: 9,2k). Encurtar as skills ou o prompt-base seria um item novo.
+- ~~**B1-bis-9k (decisão)**~~ **DECIDIDO: opção C (maestro, 2026-10-01).** Fica o modo `opt` (−16%), e o caminho para <9k passa a ser o item próprio **B1-bis-C — encurtar skills/prompt-base** (PLANO item 12). **Não começar sem ordem.**
 

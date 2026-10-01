@@ -29,9 +29,9 @@ Não cortar a meio é deliberado. Um artefacto truncado a meio (`MAX_TOKENS`) pa
 
 O validador E7 (`python -m plan_runner.areas`) aceita na área `budget: null` ou `{max_steps?, max_tokens?}`, com inteiros > 0, e recusa o resto.
 
-> Hoje todas as áreas têm `budget: null`: **nenhum tecto está ligado por omissão.** Escolher os valores por área é decisão do maestro (B5-bis em `docs/initiatives/OPEN-ITEMS.md`).
+> **Tectos por área ligados (B5-bis fase 1, decidido pelo maestro a 2026-10-01, opção A):** produção (marketing, docs, research, software) 80k; risco (finance, legal, security) 40k; exploratórias (gamedev, ops) 30k; transversal (horizontal) 20k. Estão em `config/areas.yaml` e só se aplicam a planos gerados pelo router; planos escritos à mão usam o `budget` do próprio plano ou `--max-tokens`. **Rever depois do B1-bis-C** (encurtar skills/prompt-base, PLANO item 12).
 
-## Proposta B5-bis: tectos por área (fase 1, folgados), a decidir pelo maestro
+## Proposta B5-bis: tectos por área (fase 1, folgados): DECIDIDA (A) e aplicada a 2026-10-01
 
 **Base real (B1, 2026-10-01):** o `seo-article-demo` (4 passos) gastou **13 130 tokens**, entre 1,9k e 4,2k por passo, e o custo sobe com os artefactos injectados (`WORKER-EXTERNAL.md`, B1). Um plano real de 8 passos deve gastar **25–40k** (estimativa do maestro). O router soma ~0,3–1,2k por pedido e sai do tecto da área.
 
