@@ -90,6 +90,9 @@ After the run, look at:
     python -m plan_runner route "<request>" [--execute] [--out <dir>] [--embeddings]
     python -m plan_runner.router eval      # golden set against real Gemini (docs/ops/ROUTER.md)
 
+    # L4 persistent memory (docs/ops/MEMORY-L4.md): remember | recall | forget | promote | candidates | pending | decide
+    python -m plan_runner.memory_l4 --help
+
     # Show wave compilation (debug tool)
     python -m plan_runner compile-graph <plan.yaml>
 

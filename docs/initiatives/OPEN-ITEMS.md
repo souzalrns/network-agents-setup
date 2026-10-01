@@ -185,3 +185,14 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **B1-bis-R (maestro): run real** legacy vs opt, comparando tokens e qualidade do `copy` e do `critic`. Comandos em `docs/ops/WORKER-EXTERNAL.md`, "Medir a sério".
 - ~~**B1-bis-9k (decisão)**~~ **DECIDIDO: opção C (maestro, 2026-10-01).** Fica o modo `opt` (−16%), e o caminho para <9k passa a ser o item próprio **B1-bis-C — encurtar skills/prompt-base** (PLANO item 12). **Não começar sem ordem.**
 
+## Bloco L4 — memória persistente (D3), 2026-10-01
+
+- **Feito (PR `feat/memory-l4`, sem merge):** L4 própria sobre o Supabase. Detalhe e operação em `docs/ops/MEMORY-L4.md`.
+  - SQL: `scripts/create_memory_l4_table.sql` e `scripts/create_recall_l4_rpc.sql`.
+  - Código: `runner/plan_runner/memory_l4.py` (`remember`/`recall`/`forget`/`promote` + HITL de promoção + CLI) e `memory_wiring.py` (worker).
+  - 29 testes contra Postgres + pgvector, a correr no CI no job `test-rag`.
+- **L4-1 (DEV): correr os 2 SQL** no projecto `agent-network-memory`, pela ordem. Depois, as 3 consultas de verificação e o teste real mínimo da secção "Pôr em produção". **Até lá, a L4 fica desligada em produção.**
+- **L4-2: spike comparativo do mem0 (J11).** Fica para depois, por decisão D3, e é condição para qualquer auto-extracção (com flag).
+- **L4-3: ligar o MCP de produção à L4** (ADR-M7). Hoje só o runner a usa.
+- **B1-bis-R (maestro): FEITO.** O run real mediu **−2,6%** (a projecção dizia −16%): a hipótese do contexto acumulado foi refutada como alavanca principal. **Falta registar a tabela por passo** em `docs/ops/WORKER-EXTERNAL.md`; preciso dos números do run.
+

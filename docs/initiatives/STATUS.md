@@ -554,4 +554,4 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`): projecção −16%; B1-bis-R (run real) é do maestro | `docs/ops/WORKER-EXTERNAL.md` |
 | Tectos por área (B5-bis) | **Aplicado** (opção A): 80k/40k/30k/20k | `config/areas.yaml`, `docs/ops/BUDGET.md` |
 | B1-bis-C: encurtar skills/prompt-base | **Registado** (PLANO item 12); não começar sem ordem | `docs/audit/PLANO-DE-ACAO.md` |
-
+| **L4: memória persistente (D3)** | **EM PR** (`feat/memory-l4`). SQL versionado por correr no Supabase (DEV). Ciclo remember → recall → promote → forget provado localmente, e entre runs pelo worker | `docs/ops/MEMORY-L4.md` |
