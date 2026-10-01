@@ -174,3 +174,14 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
   - `RAG_TEST_REQUIRED=1`: sem BD, o job falha em vez de saltar.
 - **✅ PLANO item 10 COMPLETO** (depois do merge do #43 e do `ci/rag-e2e`): testes lentos + ingest→retrieve no CI. O `/chat` TS deixou de se aplicar (D1, VIA A).
 
+## Bloco B — B1-bis: optimização de contexto do worker, 2026-10-01
+
+- **Feito (PR `feat/context-opt`, sem merge):** `runner/plan_runner/context_policy.py`, modo `opt` por omissão.
+  - Pin + resumos gerados na mesma chamada, com schema fixo.
+  - Grounding `slim` em marketing, docs e research; o E7 recusa `slim` nas áreas de risco.
+  - Sem frontmatter nem secções de documentação no prompt; JSON compacto.
+  - `PLAN_RUNNER_CONTEXT=legacy` para A/B e rollback.
+- **Projecção calibrada no B1** (`python -m plan_runner.token_projection`): `seo-article-demo` 13,1k → **11,1k (−16%)**, critic `tokens_in` **−33%**. 8 passos (pior caso): 41,3k → 28,3k (−31%).
+- **B1-bis-R (maestro): run real** legacy vs opt, comparando tokens e qualidade do `copy` e do `critic`. Comandos em `docs/ops/WORKER-EXTERNAL.md`, "Medir a sério".
+- **B1-bis-9k (decisão):** a meta de <9k não cabe só no contexto. Opções A/B/C na secção "Porque não chega aos 9k" (máximo projectado com todas: 9,2k). Encurtar as skills ou o prompt-base seria um item novo.
+

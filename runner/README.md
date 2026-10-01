@@ -56,6 +56,7 @@ After the run, look at:
   - `--mode external` writes `pending_steps/<step>/request.json`
   - Waits for `<step>/result.json` from any worker (LLM, human, script)
   - Built-in Gemini worker: `--worker gemini` runs each step inline (free tier, tokens logged). See [docs/ops/WORKER-EXTERNAL.md](../docs/ops/WORKER-EXTERNAL.md)
+  - Context policy (B1-bis, default `opt`): last input full, earlier ones as structured summaries, slim grounding outside risk areas. `PLAN_RUNNER_CONTEXT=legacy` restores the old prompt; `python -m plan_runner.token_projection` projects tokens
 - **Quality**
   - 303 tests: 269 fast (default `pytest`) + 34 `slow` (`pytest -m slow`: real plans via subprocess, LangGraph, crash recovery); counted 2026-10-01
   - CI on every push (GitHub Actions): job `test` (fast + coverage), job `test-slow` (the 34 slow ones) and job `test-rag` (ingest → retrieve against a throwaway Postgres + pgvector, fake embedder), in parallel
