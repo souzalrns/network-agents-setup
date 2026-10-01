@@ -125,8 +125,16 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **#25 (uuid 11 → 14 só no `apps/api`): ENTROU POR MERGE (não ficou fechado), por engano ou em simultâneo** com o fecho pedido. Merge `da0a894`, a 2026-10-01 às 00:28:17Z. O `package.json` passou a `uuid ^14` e o lockfile ficou em `^11.1.1`, por isso o `pnpm install --frozen-lockfile` falhava. A `main` ficou vermelha (CI run 36796345114) até à correção (a). A correção acabou por ser o merge do #29 (`3016466`, 00:29:47Z), que trouxe o lockfile atualizado: o CI run 36796468154 está verde e o `--frozen-lockfile` passa. Não houve revert. A branch foi apagada pelo Dependabot.
 - **#28 (`psycopg[binary]` >=3.3.5 → >=3.3.6, runner): ABERTO, aguarda rebase manual pelo maestro** (comentário `@dependabot rebase` na UI ou "Update branch"). A ferramenta de comentários do agente neutraliza menções e comandos (`·@·d·ependabot`). Depois do rebase: uma verificação de CI e merge se estiver verde.
 - **#29 (uuid 11 → 14 + vitest 4.1.11 → 5.0.2): MERGED** (`3016466`, 2026-10-01 00:29:47Z). Estava marcado como bloqueado pelo S29-bis, mas entrou na `main`.
-  - **S29-bis (agora na `main`): alinhar `@vitest/coverage-v8` com o vitest 5.x. Verificar que a cobertura volta a > 0% (27,96% antes do #29).**
-  - Estado em `3016466`: o `@vitest/coverage-v8` ficou em 4.1.11 (`package.json:24`) e o `vitest` em 5.0.2 (`package.json:30`). Com `vitest run tests/unit --coverage`, os 195/195 testes passam, mas a cobertura dá 0% e o processo sai com código 1 (`TypeError: Expected string coverage payload, received object`, 33 vezes). Afecta o `pnpm test:coverage` (`package.json:12`).
-  - O `ci.yml` não corre cobertura, por isso o CI fica verde e não apanha o problema.
+  - ~~**S29-bis:** alinhar `@vitest/coverage-v8` com o vitest 5.x e verificar que a cobertura volta a > 0%.~~ **RESOLVIDO** na branch `fix/coverage-v8-vitest5` (commit `5917392`).
+    - **O problema:** em `3016466` o `@vitest/coverage-v8` estava em 4.1.11 e o `vitest` em 5.0.2. Os 195/195 testes passavam, mas a cobertura dava 0% e o comando saía com código 1 (`Expected string coverage payload`). O CI não corria cobertura e não deu por isso.
+    - **A correção:**
+      - `@vitest/coverage-v8` e `vitest` passam a `^5.0.3` (`package.json:24`, `:30`). O coverage-v8 5.0.3 exige o vitest 5.0.3 como peer, por isso ficar em `^5.0.2` voltava a misturar versões;
+      - o lockfile foi regenerado;
+      - o `ci.yml` ganha um passo de cobertura dos `tests/unit` com mínimo de 25% em lines e statements.
+    - **Verificado localmente** (Node 22):
+      - `--frozen-lockfile` OK;
+      - `tests/unit` 195/195;
+      - cobertura de `tests/unit` 27,96% stmts e 28,62% lines;
+      - `pnpm test:coverage` 196/196 e 34,44%.
   - O `uuid@14` (só ESM) funciona com `require` em Node 20.19+ e Node 22. O CI está em Node 22.
 
