@@ -15,7 +15,11 @@ passo pendente:
    SUPABASE_SERVICE_ROLE_KEY estiverem definidas (mesmo contrato e mesma
    regra do servidor MCP: gravar nunca faz falhar o passo);
 6. respeita o HITL: nunca executa um passo com `human_gate` nem avanca um
-   run em `paused_human_gate` -- a decisao e humana (hitl-*.jsonl, resume).
+   run em `paused_human_gate` -- a decisao e humana (hitl-*.jsonl, resume);
+7. respeita o orcamento (PLANO item 4, docs/ops/BUDGET.md): antes de cada
+   chamada soma o `tokens_total` do ledger do run; se ja chegou ao tecto
+   (`--max-tokens` do run, ou `budget.max_tokens` do plano), nao chama o
+   Gemini e lanca BudgetExceeded -- o motor pausa o run em `paused_budget`.
 
 Falha do Gemini (rede, HTTP, resposta vazia, JSON invalido) NAO escreve
 `result.json`: deixa `worker_error.json` com o motivo e o passo continua em
@@ -67,6 +71,15 @@ class WorkerError(RuntimeError):
 
 class HumanGateBlocked(WorkerError):
     """O passo ou o run esperam uma decisao humana; o worker nao avanca."""
+
+
+class BudgetExceeded(WorkerError):
+    """O run ja gastou o tecto de tokens; o passo nao chega a chamar o Gemini."""
+
+    def __init__(self, spent: int, cap: int):
+        super().__init__(f"orcamento de tokens atingido: {spent} gastos >= tecto {cap}")
+        self.spent = spent
+        self.cap = cap
 
 
 def _now() -> str:
@@ -238,6 +251,46 @@ def _plan_step(plan_raw: dict[str, Any], step_id: str) -> dict[str, Any] | None:
     return None
 
 
+def ledger_spent(out_root: Path) -> int:
+    """Tokens ja gastos pelo run: soma do tokens_total do ledger local (linhas sem tokens contam 0)."""
+    path = out_root / LEDGER_FILE
+    if not path.is_file():
+        return 0
+    total = 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            v = json.loads(line).get("tokens_total")
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        if isinstance(v, int) and not isinstance(v, bool):
+            total += v
+    return total
+
+
+def token_cap(out_root: Path) -> int | None:
+    """Tecto do run: `max_tokens` do status.json (--max-tokens) > `budget.max_tokens` do plano. None = sem tecto."""
+    status_path = out_root / "status.json"
+    if status_path.is_file():
+        try:
+            v = _read_json(status_path).get("max_tokens")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            v = None
+        if isinstance(v, int) and not isinstance(v, bool):
+            return v
+    v = (_load_plan_raw(out_root).get("budget") or {}).get("max_tokens")
+    return v if isinstance(v, int) and not isinstance(v, bool) else None
+
+
+def check_budget(out_root: Path) -> None:
+    """Lanca BudgetExceeded se o ledger do run ja chegou ao tecto."""
+    cap = token_cap(out_root)
+    if cap is None:
+        return
+    spent = ledger_spent(out_root)
+    if spent >= cap:
+        raise BudgetExceeded(spent, cap)
+
+
 def check_hitl(out_root: Path, step_id: str) -> None:
     """Lanca HumanGateBlocked se o passo tem gate ou o run espera decisao humana."""
     status_path = out_root / "status.json"
@@ -377,6 +430,7 @@ class GeminiWorker:
         if result_path.exists():
             return _read_json(result_path)  # idempotente: o passo ja tem resultado
         check_hitl(out_root, step_id)
+        check_budget(out_root)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
         request_path = pending / "request.json"
         if not request_path.is_file():
             raise WorkerError(f"sem request.json em {pending}")
@@ -472,7 +526,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if status.get("state") == "paused_human_gate":
             check_hitl(out, str(status.get("paused_at_step")))
-        if status.get("state") != "waiting_external":
+        if status.get("state") == "paused_budget":
+            check_budget(out)  # se o tecto ja foi subido no status, segue como waiting_external
+        if status.get("state") not in ("waiting_external", "paused_budget"):
             print(f"error: run em {status.get('state')!r}, nao em waiting_external", file=sys.stderr)
             return 1
         step_id = str(status.get("paused_at_step"))
@@ -480,6 +536,9 @@ def main(argv: list[str] | None = None) -> int:
     except HumanGateBlocked as e:
         print(f"hitl: {e}", file=sys.stderr)
         return 2
+    except BudgetExceeded as e:
+        print(f"budget: {e}; sobe o tecto com `python -m plan_runner resume <run> --max-tokens N`", file=sys.stderr)
+        return 3
     except WorkerError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1

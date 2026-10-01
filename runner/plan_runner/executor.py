@@ -14,12 +14,21 @@ from .skills import (
 
 
 class StepResult:
-    def __init__(self, ok: bool, detail: str = "", artifact: str | None = None, worker_error: str | None = None):
+    def __init__(
+        self,
+        ok: bool,
+        detail: str = "",
+        artifact: str | None = None,
+        worker_error: str | None = None,
+        budget: dict[str, int] | None = None,
+    ):
         self.ok = ok
         self.detail = detail
         self.artifact = artifact
         # So com worker inline: porque e que o passo continua em waiting_external.
         self.worker_error = worker_error
+        # detail == "budget_exceeded": {"spent": N, "cap": M} (docs/ops/BUDGET.md)
+        self.budget = budget
 
 
 def _read_json(path: Path) -> Any:
@@ -123,10 +132,13 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
 
     result_path = pending / "result.json"
     if not result_path.exists() and worker is not None:
-        from .external_worker import WorkerError
+        from .external_worker import BudgetExceeded, WorkerError
 
         try:
             worker.process(out_root, step.id)
+        except BudgetExceeded as e:
+            # Tecto de tokens atingido: o passo nao correu; o motor pausa o run (paused_budget).
+            return StepResult(ok=False, detail="budget_exceeded", worker_error=str(e), budget={"spent": e.spent, "cap": e.cap})
         except WorkerError as e:
             # Sem result.json: o passo fica em waiting_external e o resume tenta outra vez.
             return StepResult(ok=False, detail="waiting_external", worker_error=str(e))

@@ -401,8 +401,15 @@ class Router:
                 "output_artifact": "artifacts/99-aprovacao.json",
             })
         budget = area.get("budget") or {}
+        plan_budget: dict[str, int] = {}
         if budget.get("max_steps"):
-            plan["budget"] = {"max_steps": int(budget["max_steps"]) + (1 if decision.hitl_required else 0)}
+            plan_budget["max_steps"] = int(budget["max_steps"]) + (1 if decision.hitl_required else 0)
+        if budget.get("max_tokens"):
+            # O tecto da area cobre o pedido todo: o que o router ja gastou sai do tecto dos passos.
+            router_tokens = sum(r.get("tokens_total") or 0 for r in decision.usage)
+            plan_budget["max_tokens"] = max(0, int(budget["max_tokens"]) - router_tokens)
+        if plan_budget:
+            plan["budget"] = plan_budget
         return plan
 
     def execute(self, decision: RouteDecision, *, out_dir: Path, worker: str | None = "gemini") -> dict[str, Any]:
