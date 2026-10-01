@@ -112,4 +112,4 @@ O mesmo fluxo está no teste `test_plano_seo_demo_do_inicio_ao_fim_com_worker`.
 
 - **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A).
 - **Worker inline só no engine `native`.** No `langgraph` usa-se o worker standalone e depois o `resume`.
-- **Orçamento:** só o `budget.max_steps` do plano, já aplicado pelo motor. Não há tecto de tokens por run.
+- **Orçamento:** tecto de tokens por run (`--max-tokens`, ou `budget.max_tokens` do plano ou da área), verificado pelo worker antes de cada chamada. O run pausa em `paused_budget` e retoma com `resume --max-tokens N`. Ver [BUDGET.md](./BUDGET.md).

@@ -315,6 +315,7 @@ def resume_run(out_dir: Path, decision: str, worker: str | None = None, max_toke
             {"step_id": status.get("paused_at_step"), "spent": status.get("budget_spent"), "max_tokens": status.get("max_tokens")},
             actor={"kind": "human", "id": "cli"},
         )
+        status.pop("budget_spent", None)  # se voltar a parar, _paused_budget grava o valor novo
 
     # Crash recovery: state left as "running" mid-step — continue like waiting_external
     if state == "running":
