@@ -1,0 +1,101 @@
+# Golden set do router hierárquico híbrido (D2): docs/ops/ROUTER.md
+#
+# Usado em dois sítios:
+#   - runner/tests/test_router.py (offline). A ÁREA é calculada de verdade pelas
+#     keywords de config/areas.yaml. O LLM é falso e responde `llm_reply`, por
+#     isso o teste prova a canalização (candidatos certos, validação, outcome),
+#     não a qualidade do Gemini.
+#   - `python -m plan_runner.router eval` (Gemini real, ~1 chamada por caso que
+#     chega ao LLM). Mede a escolha do agente a sério. Ignora `llm_reply`.
+#
+# Campos esperados: area, outcome (agent|plan|clarify|hitl|error), agent,
+# plan_agents. Só se compara o que estiver presente.
+
+version: 1
+
+cases:
+  # --- 10 pedidos com área e agente definidos --------------------------------
+  - request: Faz um post de Instagram para o lançamento da nova coleção de verão
+    area: marketing
+    outcome: agent
+    agent: marketing.copy_social
+    llm_reply: {mode: agent, agent: marketing.copy_social, confidence: 0.92, reason: "copy curto para rede social"}
+
+  - request: Analisa este contrato de prestação de serviços e aponta riscos
+    area: legal
+    outcome: hitl          # área sem agentes: "sem especialista" + HITL (areas.yaml, ponto 4)
+
+  - request: Escreve um jogo simples
+    area: gamedev
+    outcome: hitl          # idem: gamedev ainda não tem agentes (G2)
+
+  - request: Revê o código deste pull request e aponta bugs
+    area: software
+    outcome: agent
+    agent: engenharia.revisor-codigo
+    llm_reply: {mode: agent, agent: engenharia.revisor-codigo, confidence: 0.9, reason: "revisão de código"}
+
+  - request: Faz uma auditoria de segurança às dependências e aos segredos do repositório de CI
+    area: security
+    outcome: agent
+    agent: meta.security-auditor
+    llm_reply: {mode: agent, agent: meta.security-auditor, confidence: 0.95, reason: "auditoria defensiva"}
+
+  - request: Prepara o balancete e a declaração de IVA deste trimestre
+    area: finance
+    outcome: agent
+    agent: gestao.contabilidade
+    llm_reply: {mode: agent, agent: gestao.contabilidade, confidence: 0.93, reason: "contabilidade PT"}
+
+  - request: Responde a este email de reclamação de um cliente sobre o atraso da encomenda
+    area: ops
+    outcome: agent
+    agent: atendimento.comunicacoes-atendimento
+    llm_reply: {mode: agent, agent: atendimento.comunicacoes-atendimento, confidence: 0.91, reason: "atendimento ao cliente"}
+
+  - request: Pesquisa ferramentas open source de scraping e compara os repositórios mais activos
+    area: research
+    outcome: agent
+    agent: meta.radar-ferramentas
+    llm_reply: {mode: agent, agent: meta.radar-ferramentas, confidence: 0.88, reason: "radar de ferramentas"}
+
+  - request: Desenha o wireframe e o fluxo de UX do onboarding da app
+    area: software
+    outcome: agent
+    agent: design.ux
+    llm_reply: {mode: agent, agent: design.ux, confidence: 0.87, reason: "fluxo UX"}
+
+  - request: Cria um artigo SEO sobre AI Findability, com pesquisa de base e revisão crítica no fim
+    area: marketing
+    outcome: plan
+    plan_agents: [marketing.research, marketing.seo_brief, marketing.copy_answer_first, marketing.critic_item13]
+    llm_reply:
+      mode: plan
+      confidence: 0.86
+      reason: "pesquisa -> brief -> copy -> crítica"
+      steps:
+        - {agent: marketing.research, task: "Reunir factos com fonte sobre AI Findability"}
+        - {agent: marketing.seo_brief, task: "Brief SEO a partir da pesquisa", depends_on: [1]}
+        - {agent: marketing.copy_answer_first, task: "Escrever o artigo answer-first", depends_on: [2]}
+        - {agent: marketing.critic_item13, task: "Rever o artigo com a checklist do Item 13", depends_on: [3]}
+
+  # --- 3 ambíguos -> clarificação / HITL --------------------------------------
+  - request: Cria um jogo para a nossa campanha
+    area: null             # marketing (campanha) e gamedev (jogo) empatam
+    outcome: clarify
+
+  - request: Analisa o contrato e o orçamento do fornecedor
+    area: null             # legal, finance e ops empatam; legal/finance são de risco
+    outcome: hitl
+
+  - request: Melhora o nosso marketing
+    area: marketing        # área clara, mas o pedido é vago: o LLM pede clarificação
+    outcome: clarify
+    llm_reply: {mode: clarify, confidence: 0.3, question: "Que canal e que objectivo (vendas, notoriedade, leads)?"}
+
+  # --- regressão: sem área reconhecida -> horizontal --------------------------
+  - request: Olá, preciso de uma ajuda rápida
+    area: horizontal
+    outcome: agent
+    agent: meta.planejador
+    llm_reply: {mode: agent, agent: meta.planejador, confidence: 0.7, reason: "pedido genérico: planear primeiro"}

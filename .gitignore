@@ -97,3 +97,6 @@ coverage/
 LUIZ RENATO/
 # Runs do worker external (AU-23): demos e runs reais, nao versionar
 pilots/run-worker-*/
+# Router (D2): runs executados e log de decisoes, nao versionar
+pilots/run-router-*/
+pilots/router-decisions.jsonl
