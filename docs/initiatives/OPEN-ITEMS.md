@@ -120,3 +120,12 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
   - `log_execution` do MCP perde 4 campos (`capacidade_id`, `fast_path`, `custo_estimado`, `justificativa_full_cycle`): PR em curso.
   - **Integrar a `claude/audit-completo` na `main`:** 37 commits (A8, e2e, auditoria, ADRs, `areas.yaml`, `kind`, docs). Decisão do maestro.
 
+## Dependabot — ronda de 2026-10-01
+
+- **#25 (uuid 11 → 14 só no `apps/api`):** FECHADO em 2026-10-01, porque é duplicado do #29 e o lockfile estava desatualizado (`pnpm install --frozen-lockfile` falhava). O Dependabot apagou a branch ao fechar.
+- **#28 (`psycopg[binary]` >=3.3.5 → >=3.3.6, runner):** patch, ainda ABERTO. O `@dependabot rebase` publicado pelo agente chegou neutralizado (`·@·d·ependabot`): a ferramenta de comentários do agente desarma menções e comandos. É preciso o rebase via UI (comentário do maestro) ou "Update branch"; depois CI verde e merge.
+- **#29 (uuid 11 → 14 + vitest 4.1.11 → 5.0.2): ABERTO e BLOQUEADO.**
+  - **S29-bis: alinhar `@vitest/coverage-v8` com vitest 5.x e depois mergear o PR #29 (uuid 14 + vitest 5). Verificar que a cobertura se mantém > 0%.**
+  - Motivo: o `@vitest/coverage-v8` fica em 4.1.11 e, com o vitest 5, a cobertura cai para 0% (27,96% na `main`). O vitest avisa "Running mixed versions is not supported". Medido em 30/09.
+  - Os unitários passam (195/195) e o `uuid@14` (só ESM) funciona com `require` em Node 20.20+ e Node 22.
+
