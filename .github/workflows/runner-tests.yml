@@ -13,6 +13,9 @@ on:
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
       - 'scripts/ingest_delta.py'
+      # L4 (D3): SQL versionado testado pelo job test-rag
+      - 'scripts/create_memory_l4_table.sql'
+      - 'scripts/create_recall_l4_rpc.sql'
   pull_request:
     branches: [main]
     paths:
@@ -25,6 +28,9 @@ on:
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
       - 'scripts/ingest_delta.py'
+      # L4 (D3): SQL versionado testado pelo job test-rag
+      - 'scripts/create_memory_l4_table.sql'
+      - 'scripts/create_recall_l4_rpc.sql'
   workflow_dispatch: {}
 
 permissions:
@@ -160,3 +166,7 @@ jobs:
 
       - name: ingest -> retrieve (Postgres + pgvector, embedder falso)
         run: python -m pytest tests/test_rag_canonical.py -v -rs
+
+      # L4 (D3): ciclo remember/recall/forget/promote + SQL (2x, idempotencia) + worker
+      - name: memoria L4 (Postgres + pgvector, Gemini falso)
+        run: python -m pytest tests/test_memory_l4.py tests/test_memory_l4_worker.py -v -rs

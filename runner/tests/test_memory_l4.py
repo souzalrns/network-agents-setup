@@ -9,15 +9,12 @@ from __future__ import annotations
 
 import json
 import os
-import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 psycopg = pytest.importorskip("psycopg")
-
-from psycopg.rows import dict_row  # noqa: E402
 
 from plan_runner import memory_l4 as l4  # noqa: E402
 from plan_runner.memory_l4 import L4Error, Scope, ScopeError  # noqa: E402
@@ -37,27 +34,6 @@ AGENT = "agent:marketing.copy_social"
 HUMAN = "human:maestro"
 P_A, P_B = Scope("project", "site-a"), Scope("project", "site-b")
 AG = Scope("agent", "marketing.copy_social")
-
-
-@pytest.fixture
-def db():
-    schema = f"l4_test_{uuid.uuid4().hex[:8]}"
-    with psycopg.connect(DB_URL, autocommit=True) as admin:
-        admin.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        admin.execute(f"CREATE SCHEMA {schema}")
-    opts = f"-c search_path={schema},public"
-    sql = [f.read_text(encoding="utf-8").replace("public.", f"{schema}.") for f in SQL_FILES]
-    with psycopg.connect(DB_URL, autocommit=True, options=opts) as c:
-        for _ in range(2):  # idempotencia
-            for text in sql:
-                c.execute(text)
-    conn = psycopg.connect(DB_URL, autocommit=False, row_factory=dict_row, options=opts)
-    try:
-        yield conn
-    finally:
-        conn.close()
-        with psycopg.connect(DB_URL, autocommit=True) as admin:
-            admin.execute(f"DROP SCHEMA {schema} CASCADE")
 
 
 def _vec(i: int) -> list[float]:

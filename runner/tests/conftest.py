@@ -150,3 +150,51 @@ def write_result_json():
         )
         return result_file
     return _write
+
+
+# --------------------------------------------------------------------------
+# L4 (D3): schema descartavel com o SQL versionado (tests/test_memory_l4*.py).
+# So corre com RAG_TEST_DATABASE_URL (Postgres + pgvector descartavel, nunca o
+# Supabase de producao); os modulos de teste fazem skip/erro sem ele.
+# --------------------------------------------------------------------------
+
+L4_SQL_FILES = [REPO_ROOT / "scripts/create_memory_l4_table.sql", REPO_ROOT / "scripts/create_recall_l4_rpc.sql"]
+
+
+@pytest.fixture
+def l4_opts():
+    """Schema proprio com o SQL versionado aplicado 2x (idempotencia). Devolve as `options` de ligacao."""
+    schema = f"l4_test_{uuid4().hex[:8]}"
+    with _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=True) as admin:
+        admin.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        admin.execute(f"CREATE SCHEMA {schema}")
+    opts = f"-c search_path={schema},public"
+    sql = [f.read_text(encoding="utf-8").replace("public.", f"{schema}.") for f in L4_SQL_FILES]
+    try:
+        with _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=True, options=opts) as c:
+            for _ in range(2):  # idempotencia
+                for text in sql:
+                    c.execute(text)
+        yield opts
+    finally:
+        with _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=True) as admin:
+            admin.execute(f"DROP SCHEMA {schema} CASCADE")
+
+
+@pytest.fixture
+def db(l4_opts):
+    conn = _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=False, row_factory=_psycopg().rows.dict_row, options=l4_opts)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+
+
+def _psycopg():
+    import psycopg
+    import psycopg.rows  # noqa: F401 -- carrega o submodulo para _psycopg().rows
+
+    return psycopg
+
