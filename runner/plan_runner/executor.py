@@ -14,10 +14,12 @@ from .skills import (
 
 
 class StepResult:
-    def __init__(self, ok: bool, detail: str = "", artifact: str | None = None):
+    def __init__(self, ok: bool, detail: str = "", artifact: str | None = None, worker_error: str | None = None):
         self.ok = ok
         self.detail = detail
         self.artifact = artifact
+        # So com worker inline: porque e que o passo continua em waiting_external.
+        self.worker_error = worker_error
 
 
 def _read_json(path: Path) -> Any:
@@ -58,8 +60,13 @@ def execute_stub(out_root: Path, step: Step) -> StepResult:
     return StepResult(ok=True, detail="stub_ok", artifact=art)
 
 
-def execute_external_request(out_root: Path, step: Step) -> StepResult:
-    """Write a pending request including agent+skill paths; wait for result.json."""
+def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> StepResult:
+    """Write a pending request including agent+skill paths; wait for result.json.
+
+    `worker` (AU-23, external_worker.GeminiWorker): se vier, executa o passo
+    logo a seguir a escrever o pedido, em vez de deixar o run em
+    waiting_external. Sem worker (omissao), o contrato e o de sempre.
+    """
     pending = out_root / "pending_steps" / step.id
     pending.mkdir(parents=True, exist_ok=True)
 
@@ -115,6 +122,14 @@ def execute_external_request(out_root: Path, step: Step) -> StepResult:
         )
 
     result_path = pending / "result.json"
+    if not result_path.exists() and worker is not None:
+        from .external_worker import WorkerError
+
+        try:
+            worker.process(out_root, step.id)
+        except WorkerError as e:
+            # Sem result.json: o passo fica em waiting_external e o resume tenta outra vez.
+            return StepResult(ok=False, detail="waiting_external", worker_error=str(e))
     if not result_path.exists():
         return StepResult(ok=False, detail="waiting_external")
     data = _read_json(result_path)

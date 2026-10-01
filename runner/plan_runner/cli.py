@@ -17,6 +17,12 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--mode", choices=["dry-run", "stub", "external"], default="stub")
     p_run.add_argument("--out", type=Path, default=None, help="Output run directory")
     p_run.add_argument(
+        "--worker",
+        choices=["none", "gemini"],
+        default=None,
+        help="Mode external: executa cada passo com este worker em vez de parar em waiting_external (engine native)",
+    )
+    p_run.add_argument(
         "--engine",
         choices=["native", "langgraph"],
         default="native",
@@ -27,6 +33,12 @@ def main(argv: list[str] | None = None) -> int:
     p_res.add_argument("out", type=Path, help="Run directory with status.json")
     p_res.add_argument("--decision", default="approve", help="approve|reject|edit")
     p_res.add_argument("--payload-file", type=Path, default=None, help="Ficheiro JSON com payload para edit (opcional)")
+    p_res.add_argument(
+        "--worker",
+        choices=["none", "gemini"],
+        default=None,
+        help="Worker do modo external (omissao: o do run; engine native)",
+    )
 
     p_compile = sub.add_parser("compile-graph", help="Show LangGraph wave compilation for a plan")
     p_compile.add_argument("plan", type=Path)
@@ -53,11 +65,16 @@ def main(argv: list[str] | None = None) -> int:
             result = {"hits": search(args.out, args.query)}
         elif args.cmd == "run":
             if args.engine == "langgraph":
+                if args.worker not in (None, "none"):
+                    raise PlanError(
+                        "--worker inline so no engine native; no langgraph usa "
+                        "`python -m plan_runner.external_worker <run>` e depois `resume`"
+                    )
                 from .langgraph_engine import run_plan_langgraph
 
                 result = run_plan_langgraph(args.plan, mode=args.mode, out_dir=args.out)
             else:
-                result = run_plan(args.plan, mode=args.mode, out_dir=args.out)
+                result = run_plan(args.plan, mode=args.mode, out_dir=args.out, worker=args.worker)
         else:
             st = None
             try:
@@ -74,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
             decision = hitl_decision["response"] if hitl_decision else args.decision
 
             if st and st.get("engine", "").startswith("langgraph"):
+                if args.worker not in (None, "none"):
+                    raise PlanError("--worker inline so no engine native (ver `python -m plan_runner.external_worker`)")
                 from .langgraph_engine import resume_plan_langgraph
 
                 payload = None
@@ -83,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
                     payload = args.payload_file.read_text(encoding="utf-8-sig")
                 result = resume_plan_langgraph(args.out, decision=decision, payload=payload)
             else:
-                result = resume_run(args.out, decision=decision)
+                result = resume_run(args.out, decision=decision, worker=args.worker)
     except PlanError as e:
         print(f"error: {e}")
         return 1
