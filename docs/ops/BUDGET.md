@@ -31,6 +31,41 @@ O validador E7 (`python -m plan_runner.areas`) aceita na área `budget: null` ou
 
 > Hoje todas as áreas têm `budget: null`: **nenhum tecto está ligado por omissão.** Escolher os valores por área é decisão do maestro (B5-bis em `docs/initiatives/OPEN-ITEMS.md`).
 
+## Proposta B5-bis: tectos por área (fase 1, folgados), a decidir pelo maestro
+
+**Base real (B1, 2026-10-01):** o `seo-article-demo` (4 passos) gastou **13 130 tokens**, entre 1,9k e 4,2k por passo, e o custo sobe com os artefactos injectados (`WORKER-EXTERNAL.md`, B1). Um plano real de 8 passos deve gastar **25–40k** (estimativa do maestro). O router soma ~0,3–1,2k por pedido e sai do tecto da área.
+
+**Fase 1 = freio, não optimização:** os tectos só param runs anómalos (loops, planos que crescem sem controlo). Marketing não desce de 60k antes da fase 2 (contexto por resumo, PLANO item 11). Lembrete: o tecto pode ser ultrapassado em **uma** chamada, até ~8k com os prompts reais (prompt de ~4k + `maxOutputTokens` 4096).
+
+| Grupo | Áreas | **A (recomendada)** | B (mais justa) | C (uniforme) |
+|---|---|---:|---:|---:|
+| Produção | marketing, docs, research, software | **80 000** | 60 000 | 100 000 |
+| Risco (`hitl: required`) | finance, legal, security | **40 000** | 30 000 | 100 000 |
+| Exploratórias | gamedev, ops | **30 000** | 20 000 | 100 000 |
+| Transversal | horizontal | **20 000** | 15 000 | 100 000 |
+
+- **A (recomendada):**
+  - **produção 80k** = 2× o topo da estimativa de 8 passos (40k), ~6× o B1. Nenhum plano legítimo de hoje lá chega;
+  - **risco 40k** cobre um plano de 8 passos no topo da estimativa. Estas áreas já têm gate humano no fim, por isso o tecto só trava um run descontrolado antes da revisão;
+  - **exploratórias 30k** ≈ 2× o B1. O `ops` hoje é sobretudo 1 passo (atendimento), e o `gamedev` não tem agentes;
+  - **horizontal 20k:** o planeador é chamado com pedidos vagos, e 1–2 passos chegam.
+- **B:** usa os mínimos que pediste (marketing 60k). Corre o risco de travar planos legítimos de 8 passos que gastem perto de 40k mais a ultrapassagem de uma chamada.
+- **C:** um valor para tudo. Simples, mas não dá uso à política por área (D2 R6) e deixa as áreas de risco tão soltas como as outras.
+
+Notas:
+- Software não estava na tua lista; pus-o em produção porque os planos de desenvolvimento tendem a ser longos.
+- Legal, gamedev e docs ainda não têm agentes: o router manda-os para triagem HITL sem chamar o LLM, por isso o tecto só passa a contar quando tiverem agentes.
+
+**Aplicar** (depois da decisão; é 1 linha por área no `config/areas.yaml`, validada pelo E7):
+
+```yaml
+  - id: marketing
+    ...
+    budget: {max_tokens: 80000}
+```
+
+**Rever na fase 2:** com o contexto por resumo medido, apertar marketing e software para ~2× o gasto real de um plano de 8 passos.
+
 ## Como correr
 
 ```bash

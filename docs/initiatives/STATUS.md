@@ -541,3 +541,15 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | #28 psycopg >=3.3.6 (runner) | **Merged** (`45a401a`), depois do rebase manual pelo maestro | PR #28 |
 | #29 uuid 14 + vitest 5 | **Merged** (`3016466`): a `main` voltou a verde e o `--frozen-lockfile` passa. ~~S29-bis~~ **resolvido** em `fix/coverage-v8-vitest5`: `@vitest/coverage-v8` e `vitest` em `^5.0.3`, mais um passo de cobertura no CI (mínimo de 25%) | CI run 36796468154 (verde); cobertura local depois da correção: 27,96% (`tests/unit`, 195/195) |
 
+## 📋 Bloco B — runner autónomo (2026-10-01)
+
+| Item | Estado | Evidência |
+|---|---|---|
+| Worker do modo `external` (AU-23) | **Merged** (#40) | `docs/ops/WORKER-EXTERNAL.md` |
+| **B1: primeiro run real com o Gemini** | **FEITO (maestro)**: `seo-article-demo` do início ao fim, `done`, 4 chamadas, **13 130 tokens** (research 1 893, seo_brief 3 415, copy 3 659, critic 4 163) | `docs/ops/WORKER-EXTERNAL.md`, secção B1 |
+| Router hierárquico híbrido (D2) | **Merged** (#41); R1 (`router eval` com o Gemini real) por correr | `docs/ops/ROUTER.md` |
+| Orçamento de tokens por run | **Merged** (#42); B5-bis (tectos por área) em proposta, todas as áreas a `null` | `docs/ops/BUDGET.md` |
+| Testes lentos no CI | PR #43 (merge depois do CI verde) | job `test-slow` |
+| ingest→retrieve no CI | PR `ci/rag-e2e` | job `test-rag` |
+| Contexto por resumo (`artifact_summary`) | **Próxima sessão** (PLANO item 11) | `docs/audit/PLANO-DE-ACAO.md` |
+
