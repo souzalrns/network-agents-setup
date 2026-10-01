@@ -108,6 +108,22 @@ jobs:
         id: vitest
         run: pnpm exec vitest run tests/unit --reporter=verbose 2>&1 | tee /tmp/log-vitest.log
 
+      # Cobertura dos mesmos tests/unit (~30 s). Vigia duas falhas que o passo
+      # anterior não vê:
+      #  - o provider de cobertura partir sem nenhum teste falhar. Aconteceu
+      #    com vitest 5 + @vitest/coverage-v8 4: 195/195 verdes, cobertura 0%
+      #    e saída 1, sem ninguém dar por isso;
+      #  - a cobertura cair abaixo de um mínimo. Estava em 27,96% stmts e
+      #    28,62% lines; 25% dá margem a refactors sem deixar passar um 0%.
+      - name: Cobertura dos testes unitários (vitest + coverage-v8, mínimo 25%)
+        id: coverage
+        run: >-
+          pnpm exec vitest run tests/unit --coverage
+          --coverage.reporter=text-summary
+          --coverage.thresholds.lines=25 --coverage.thresholds.statements=25
+          2>&1 | tee /tmp/log-coverage.log
+        continue-on-error: true
+
       - name: Consistência STATUS ↔ código ↔ agents.config
         id: consistency
         run: pnpm --filter @network-agents/scripts run validate:consistency 2>&1 | tee /tmp/log-consistency.log
@@ -134,12 +150,13 @@ jobs:
           steps.install.outcome == 'failure' || steps.pgvector.outcome == 'failure' ||
           steps.prisma_generate.outcome == 'failure' || steps.prisma_push.outcome == 'failure' ||
           steps.typecheck.outcome == 'failure' || steps.vitest.outcome == 'failure' ||
+          steps.coverage.outcome == 'failure' ||
           steps.consistency.outcome == 'failure' || steps.smoke.outcome == 'failure' )
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const files = ['install', 'pgvector', 'prisma-generate', 'prisma-push', 'typecheck', 'vitest', 'consistency', 'smoke'];
+            const files = ['install', 'pgvector', 'prisma-generate', 'prisma-push', 'typecheck', 'vitest', 'coverage', 'consistency', 'smoke'];
             let summary = '';
             for (const f of files) {
               const path = `/tmp/log-${f}.log`;
@@ -163,5 +180,6 @@ jobs:
           steps.install.outcome == 'failure' || steps.pgvector.outcome == 'failure' ||
           steps.prisma_generate.outcome == 'failure' || steps.prisma_push.outcome == 'failure' ||
           steps.typecheck.outcome == 'failure' || steps.vitest.outcome == 'failure' ||
+          steps.coverage.outcome == 'failure' ||
           steps.consistency.outcome == 'failure' || steps.smoke.outcome == 'failure'
         run: exit 1
