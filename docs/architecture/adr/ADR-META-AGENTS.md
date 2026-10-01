@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **ID** | ADR-META-AGENTS |
-| **Estado** | Aceite (visão registada; **nada implementado**) |
+| **Estado** | Aceite. **Fase 1 implementada** (Bloco C, 2026-10-01): `runner/plan_runner/council_session.py`, `config/councils.yaml`, `agents/meta/chairman.agent.md`; operação em [`docs/ops/COUNCIL.md`](../../ops/COUNCIL.md). Fase 2 por fazer |
 | **Data** | 2026-09-30 |
 | **Decisores** | Dev (dono do produto), decisões D1–D3 fechadas pelo Grok; redigido pelo Claude |
 | **Relacionados** | D1 ([DECISAO-1](../../audit/DECISAO-1-runtimes.md)), D2 ([DECISAO-2](../../audit/DECISAO-2-maestro.md)), D3 ([DECISAO-3](../../audit/DECISAO-3-memoria.md)), J5 (`config/areas.yaml`), AU-13 (`docs/audit/AUDIT-5-itens.md:30`) |
@@ -128,7 +128,15 @@ O contrato da L4 chama `active` ao estado consolidado, não `committed`: `"statu
 
 ## 12. Esboço do `CouncilSession` (LangGraph) — SÓ DESENHO
 
-> **DESENHO. NÃO IMPLEMENTAR** antes de AU-13 + motor mínimo + Bloco A (J1–J11, `docs/audit/DECISAO-4-ordem.md` §4.4). Implementação agendada: J5-c, PLANO §13.2.
+> **IMPLEMENTADO (Bloco C, 2026-10-01)** como **sequência Python** (`runner/plan_runner/council_session.py`), não como `StateGraph`. Motivo: o worker inline só corre no engine native, e o HITL durável já é por ficheiros, por isso não precisa de checkpointer. Os estágios têm os nomes dos nós abaixo. Diferenças para o esboço:
+> - o veredicto vai à L4 como `candidate` quando o HITL abre;
+> - `revise` = `edit` do contrato hitl-request-v1;
+> - o gate bloqueia `approve` (só `reject`/`edit`);
+> - o dissent determinístico é acrescentado pelo código.
+>
+> Ver `docs/ops/COUNCIL.md`. O esboço abaixo fica como referência histórica.
+>
+> ~~**DESENHO. NÃO IMPLEMENTAR** antes de AU-13 + motor mínimo + Bloco A (J1–J11, `docs/audit/DECISAO-4-ordem.md` §4.4). Implementação agendada: J5-c, PLANO §13.2.~~
 >
 > **Proveniência `[ACRESCENTADO PELO AUDITOR]`.** O brief pede para "transcrever o esboço já produzido". Esse esboço **não existe em nenhum ficheiro** deste repo nem do `agent-network-mcp` (procura por `CouncilState`/`CouncilSession`/`councils.yaml`: 0 resultados). O que está abaixo foi **reconstituído a partir da especificação do brief**: `CouncilState`, a topologia, *reducers* com `operator.add` e `interrupt()` para HITL. Se o Dev tiver o original, substitui-se (E15).
 
@@ -209,7 +217,12 @@ g.add_edge("persist", END)
 
 ## 13. `councils.yaml` v0 — config de painéis (NÃO criado agora)
 
-> **Este ficheiro NÃO é criado agora.** A criação é o item J5-b e o local é o E12 (recomendado: `config/councils.yaml`), ambos no PLANO §13.2.
+> **CRIADO (Bloco C, 2026-10-01): `config/councils.yaml`**, validado pelo E7. Diferenças para o exemplo abaixo:
+> - 2–3 membros por conselho (decisão do maestro): saem `meta.planejador` (architecture) e `marketing.marketing`/`gestao.gestao-empresarial` (product), e entra `design.design_critic` como crítico;
+> - campos novos: `area` (tecto), `hitl_category`, `role` (member|critic) e `escalation`;
+> - o `meta.chairman` passou a existir (`kind: meta`).
+>
+> ~~**Este ficheiro NÃO é criado agora.** A criação é o item J5-b e o local é o E12 (recomendado: `config/councils.yaml`), ambos no PLANO §13.2.~~
 >
 > **Proveniência:** o exemplo "já produzido" também **não existe em ficheiro**. Foi reconstituído a partir do brief (painéis architecture, security, product; campos chairman, members, required, max_rounds, confidence_threshold). Os IDs são os reais de `config/areas.yaml`. O chairman é um ID **futuro** (`kind: meta`) que ainda **não existe**.
 

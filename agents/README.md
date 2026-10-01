@@ -15,9 +15,9 @@ Todo `*.agent.md` declara `kind:` no frontmatter, a seguir ao `id:`:
 
 | Valor | Uso |
 |-------|-----|
-| `internal` | Agente deste repo (omissão; todos os actuais) |
+| `internal` | Agente deste repo (omissão; todos os de domínio) |
 | `external_ai` | Maestro que representa uma IA externa (Claude, Grok…) — reservado para a Fase 2 |
-| `meta` | Meta-agente de deliberação — reservado para a Fase 2 |
+| `meta` | Meta-agente de deliberação (C1, ADR-META-AGENTS §10). Em uso desde o Bloco C: `meta.chairman`. **Não pertence a nenhuma área** (o router nunca o escolhe) e tem de presidir a um conselho em `config/councils.yaml`; o E7 verifica as duas coisas |
 
 O `kind` é do agente, não da área (`config/areas.yaml`). Não confundir com `layer: 'meta'` de `config/agents.config.ts`. Ver [ADR-META-AGENTS](../docs/architecture/adr/ADR-META-AGENTS.md).
 
