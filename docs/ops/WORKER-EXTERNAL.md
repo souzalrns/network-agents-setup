@@ -109,6 +109,92 @@ order by created_at desc limit 10;
 
 > Nota: no Supabase, a tabela `token_usage` vive no projecto do MCP (`agent-network-memory`). A configuração está em [TOKEN-LEDGER.md](https://github.com/souzalrns/agent-network-mcp/blob/main/docs/ops/TOKEN-LEDGER.md) do `agent-network-mcp`. As linhas do worker distinguem-se pelos `agent_id` dos agentes deste repo (`marketing.*`, `design.*`…) e por `run_id`s que não vêm do MCP.
 
+## Optimização de contexto (B1-bis, 2026-10-01)
+
+> **Estado:** implementado (modo `opt`, a omissão) e testado offline: 18 testes em `runner/tests/test_context_opt.py`.
+> - **Os números abaixo são uma PROJECÇÃO calibrada no B1, não um run real**: esta sessão não tinha `GEMINI_API_KEY`.
+> - A confirmação é um run real do maestro (ver "Medir a sério").
+> - **A meta de <9k não é atingível só com técnicas de contexto neste plano.** Ver "Porque não chega aos 9k".
+
+### Diagnóstico: onde estavam os 13 130 tokens do B1
+O `tokens_in` de cada passo é o prompt-base mais os artefactos injectados. A calibração dá 3,29–3,50 caracteres por token nos 4 passos, o que confirma a decomposição.
+
+| Componente | Tokens | % |
+|---|---:|---:|
+| Prompt-base (AGENT.md + SKILL.md + grounding + pedido) | 5 396 | 41% |
+|   …grounding completo, repetido em cada passo | ~1 600 | 12% |
+|   …frontmatter YAML e secções de documentação | ~900 | 7% |
+| Artefactos injectados completos | 4 308 | 33% |
+| Saídas | 3 426 | 26% |
+
+O contexto acumulado conta, mas o **prompt-base pesa mais** (41% vs 33%). A subida também não é de +50% por passo: o `copy` sobe +4%, porque só recebe 1 input.
+
+### Técnicas: escolhidas e descartadas
+
+| # | Técnica | Decisão | Porquê |
+|---|---|---|---|
+| 1+2+5 | Artefacto dual + política de injecção + pin | **Sim, num só mecanismo** (`plan_runner/context_policy.py`) | **Pin:** o último input de cada passo vai completo; os anteriores vão como resumo. **Resumo:** gerado pelo passo produtor **na mesma chamada** (0 chamadas extra), com schema fixo (factos com fonte, keywords, estrutura, tom, restrições, decisões), a partir do próprio artefacto (nunca resumo de resumo), e **só quando algum passo o consome como resumo**. Sem resumo, o consumidor recebe o completo. **Override no plano:** `context: {full: [...], summary: [...]}` |
+| 4 | Grounding por área | **Sim** | `grounding: slim` no `areas.yaml` em marketing, docs e research (`agents/_shared/grounding.slim.md`, as mesmas 4 regras). Omissão `full`. **O E7 recusa `slim` em áreas com `hitl: required`**, por isso finance, legal e security não podem perder a directiva completa |
+| extra | Sem frontmatter nem secções de documentação | **Sim** (não estava na lista) | Os metadados YAML e as secções para humanos/runner (notas de migração, ponteiros "Skill", camadas de memória, handoff, "quando usar", trigger, knowledge ref) não são instruções para o modelo. Lista fechada em `DOC_ONLY_SECTIONS`; tudo o que muda comportamento fica (Enforcement Note, Não usar, Anti-padrões, Red Flags…). O que sai fica registado em `meta.context.dropped_sections` |
+| extra | JSON injectado compacto | **Sim** | O mesmo conteúdo sem indentação |
+| 3 | Tectos de output por tipo | **Não** | No B1 todos os passos já estavam dentro ou à beira dos tectos propostos (research 467 < 600, brief 1226 ≈ 1200, copy 1389 < 1500, critic 344 < 400): poupa ~0 e traz risco de JSON truncado. O travão de custo é o tecto por run ([BUDGET.md](./BUDGET.md)) |
+| 6 | Cache de prefixo | **Não** (não muda a métrica) | Os tokens em cache continuam no `promptTokenCount`; só mudam a fatura. A ordem do prompt já é estável (system → user) |
+
+`PLAN_RUNNER_CONTEXT=legacy` repõe o prompt anterior, para A/B e rollback. Cada `result.json` tem `meta.context` com a política, o grounding, cada input (modo e tamanho) e o estado do resumo.
+
+### Antes/depois: `seo-article-demo` (projecção, `python -m plan_runner.token_projection`)
+
+| Passo | in antes | out antes | total antes | in depois | out depois | total depois | Δ total |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| research | 1430 | 467 | 1897 | 946 | 467 | 1413 | −26% |
+| seo_brief | 2201 | 1226 | 3427 | 1926 | 1526 | 3452 | +1% |
+| copy | 2284 | 1389 | 3673 | 1896 | 1389 | 3285 | −11% |
+| critic | 3843 | 344 | 4187 | **2561** | 344 | 2905 | −31% |
+| **TOTAL** | | | **13 184** | | | **11 055** | **−16%** |
+
+- **"Antes" é a projecção do modo `legacy`:** reproduz o B1 real (13 130) com +0,4% de erro, e é essa a verificação da calibração.
+- **Critic `tokens_in`: −33%** (meta 30–50% ✓).
+- **seo_brief:** +300 de saída para gerar o resumo do brief, que o critic recebe no lugar do brief completo.
+- **Inputs por passo** (opt):
+  - seo_brief ← `01-research.md` completo (é o pin);
+  - copy ← `02-seo-brief.json` completo e compacto (pin);
+  - critic ← `02-seo-brief.json` em resumo + `03-copy.md` completo (pin).
+
+**Extrapolação, plano sintético de 8 passos** (agentes reais de marketing; pior caso de acumulação, com cada passo a declarar **todos** os anteriores; saídas de ~900 tokens):
+- legacy **41,3k** → opt **28,3k (−31%)**;
+- o `tokens_in` do 8.º passo cai 54% (7 174 → 3 293);
+- o crescimento passa de ~+900 por passo (um artefacto) para ~+300 (um resumo).
+
+### Qualidade (o que os testes garantem)
+- O critic recebe **a checklist inteira da skill**, **o copy completo** (é o alvo) e o brief em bullets estruturados (keywords, estrutura, restrições, decisões).
+- O copy recebe **o brief inteiro** (só sem indentação).
+- **HITL:** pára nos mesmos gates nos dois modos. Não houve fusão de passos nem chamadas extra.
+- Em finance, legal e security o grounding fica completo, e isso é garantido pelo E7.
+- **Falta:** a qualidade real do texto só se vê num run real (ver abaixo).
+
+### Porque não chega aos 9k
+Depois do `opt` ficam ~4,2k de prompt-base (conteúdo das skills e dos agentes), ~3,7k de saídas e ~3,3k de inputs. A maior parte destes é o copy completo para o critic, que a crítica precisa. As alavancas que restam mexem em conteúdo:
+
+| Alavanca adicional | Total projectado |
+|---|---:|
+| (opt, sem perda de conteúdo) | 11 055 (−16%) |
+| A: o copy recebe o **resumo** do brief (override `context` no plano) | 10 182 (−22%) |
+| B: resumos de 150 tokens em vez de 300 | 10 755 (−18%) |
+| C: brief com alvo de 700 tokens | 10 025 (−24%) |
+| A+B+C | **9 206 (−30%)** |
+
+Nem tudo junto chega a <9k. O que faltaria era o critic criticar um resumo do copy, e isso não se propõe. Para <9k é preciso encurtar o próprio prompt-base (as skills) ou as saídas, num item separado.
+
+### Medir a sério (passo do maestro)
+```bash
+cd runner
+PLAN_RUNNER_CONTEXT=legacy python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml \
+  --mode external --worker gemini --out ../pilots/run-worker-ctx-legacy
+python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml \
+  --mode external --worker gemini --out ../pilots/run-worker-ctx-opt          # opt = omissão
+# comparar token_usage.jsonl dos dois runs e ler os artefactos 03-copy.md e 04-critic.json lado a lado
+```
+
 ## Custo
 
 **Real (B1):** o `seo-article-demo` gastou **13 130 tokens** em 4 chamadas ao `flash-lite`, entre 1,9k e 4,2k por passo (tabela acima). A estimativa anterior, de 0,9 a 1,5k de entrada, foi feita com o Gemini falso e artefactos pequenos, e subestimava os passos com inputs. O `maxOutputTokens` é 4096 (`DEFAULT_MAX_OUTPUT_TOKENS`). Tectos por run: [BUDGET.md](./BUDGET.md).
