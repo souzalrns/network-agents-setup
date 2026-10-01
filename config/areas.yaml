@@ -2,7 +2,15 @@
 #
 # O que é: DADOS para o router hierárquico híbrido (D2). Primeiro escolhe-se a
 # área (palavras-chave/embeddings); só dentro dela se escolhe o agente (LLM).
-# Não há código de router que leia este ficheiro ainda.
+# Lido por runner/plan_runner/router.py (docs/ops/ROUTER.md).
+#
+# keywords[]: SEM acentos, em minúsculas. Até 5 caracteres casam só a palavra
+#   inteira ("lei" não apanha "leitura"; por isso os plurais curtos vão à parte);
+#   mais longas são radicais que casam no início de palavra ("contrat" apanha
+#   contrato/contratos/contratual). Frases com espaço casam a partir do início
+#   da 1.ª palavra ("pull request"). Uma keyword só pode estar numa área (E7).
+# routing: limiares de confiança (0-1) e área de fallback quando nenhuma
+#   keyword casa (G3 da D2).
 #
 # Referências:
 #   - agents[] e horizontals[] usam o `id:` do frontmatter de agents/**/*.agent.md
@@ -25,9 +33,15 @@
 version: 1
 status: v1
 
+routing:
+  area_min_confidence: 0.6    # margem da melhor área sobre a 2.ª; abaixo -> clarificação (ou HITL se houver área de risco)
+  agent_min_confidence: 0.6   # confiança do LLM na escolha do agente/plano; abaixo -> clarificação (ou HITL na área de risco)
+  fallback_area: horizontal   # sem nenhuma keyword (nem embeddings) -> esta área
+
 areas:
   - id: software
     description: Desenvolvimento, arquitectura de agentes, qualidade de código e dados, UI/UX de produto.
+    keywords: [codigo, programa, app, aplicac, aplicativ, site, frontend, backend, api, apis, bug, bugs, refactor, pull request, commit, tdd, testes unitarios, deploy, base de dados, sql, schema, typescript, javascript, python, ux, ui, wireframe, interface, ecra, tela, onboarding, componente, design system, arquitetura de agentes, produto digital]
     agents:
       - engenharia.desenvolvimento
       - engenharia.guia-tdd
@@ -45,6 +59,7 @@ areas:
 
   - id: marketing
     description: Estratégia, copy, criativos, media, SEO/GEO, conteúdo e identidade visual.
+    keywords: [marketing, instagram, tiktok, linkedin, facebook, post, posts, campanha, anuncio, publicidade, seo, conteudo, copy, slogan, influenc, ugc, marca, branding, identidade visual, logotipo, reels, newsletter, criativo, lancamento, colecao, trend, trends, hashtag, artigo, blog, storytelling, audiencia, promov]
     agents:
       - marketing.marketing
       - marketing.internal_brief
@@ -70,6 +85,7 @@ areas:
 
   - id: legal
     description: Direito PT/BR (civil, contratos, jurisprudência). Sem agente .agent.md na v1.
+    keywords: [contrat, juridic, direito, lei, leis, tribunal, advogad, clausul, jurisprud, processo judicial, litigio, arrendamento, rgpd, gdpr, notificacao judicial]
     agents: []
     horizontals: [meta.planejador]
     budget: null
@@ -77,6 +93,7 @@ areas:
 
   - id: ops
     description: Gestão empresarial, operação e atendimento/comunicações com clientes.
+    keywords: [cliente, atendimento, reclamac, email, emails, suporte, gestao, equipa, equipe, operac, recursos humanos, recrutamento, fornecedor, encomenda, procedimento]
     agents:
       - gestao.gestao-empresarial
       - atendimento.comunicacoes-atendimento
@@ -86,6 +103,7 @@ areas:
 
   - id: research
     description: Pesquisa de ferramentas, repos e tecnologia (radar); pesquisa de nicho.
+    keywords: [pesquis, ferramenta, radar, open source, repositor, compar, benchmark, estado da arte, alternativa, tecnologia, nicho]
     agents:
       - meta.radar-ferramentas
     horizontals: [meta.planejador]
@@ -94,6 +112,7 @@ areas:
 
   - id: finance
     description: Contabilidade PT/BR e análise financeira. Trading (G1/B3) ainda não existe.
+    keywords: [contabil, balancete, iva, irs, imposto, fatura, financeir, orcament, despesa, lucro, fluxo de caixa, investiment, trading, bolsa, cripto, declaracao]
     agents:
       - gestao.contabilidade
     horizontals: [meta.planejador]
@@ -102,6 +121,7 @@ areas:
 
   - id: gamedev
     description: Desenvolvimento de jogos (G2). Sem agentes na v1.
+    keywords: [jogo, jogos, game, games, gamedev, unity, godot, jogador, nivel do jogo]
     agents: []
     horizontals: [meta.planejador]
     budget: null
@@ -109,6 +129,7 @@ areas:
 
   - id: security
     description: Auditoria de segurança defensiva (código, dependências, MCP, CI). Nunca ofensiva.
+    keywords: [seguranc, vulnerab, cve, owasp, auditoria de seguranca, auditoria, segredo, secrets, credencia, ataque, malware]
     agents:
       - meta.security-auditor
     horizontals: [meta.planejador]
@@ -117,6 +138,7 @@ areas:
 
   - id: docs
     description: Documentação, ADRs, relatórios. Sem agente .agent.md dedicado na v1.
+    keywords: [documentac, adr, readme, relatorio, manual, wiki, changelog]
     agents: []
     horizontals: [meta.planejador]
     budget: null
@@ -124,6 +146,7 @@ areas:
 
   - id: horizontal
     description: Agentes transversais que servem todas as áreas (planeamento e descoberta de skills).
+    keywords: [planeia, planear, planejar, quebra em passos, que skill, skills]
     agents:
       - meta.planejador
       - meta.using_agent_skills
