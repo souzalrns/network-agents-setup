@@ -554,7 +554,8 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`). **Real (B1-bis-R): −2,6%**; a projecção de −16% foi refutada (lição de método registada) | `docs/ops/WORKER-EXTERNAL.md` |
 | Tectos por área (B5-bis) | **Aplicado** (opção A): 80k/40k/30k/20k | `config/areas.yaml`, `docs/ops/BUDGET.md` |
 | B1-bis-C: encurtar skills/prompt-base | **Registado** (PLANO item 12); não começar sem ordem | `docs/audit/PLANO-DE-ACAO.md` |
-| **L4: memória persistente (D3)** | **Merged** (#47, `a941147`). Falta o L4-1: o maestro corre os 2 SQL no Supabase | `docs/ops/MEMORY-L4.md` |
+| **L4: memória persistente (D3)** | **Merged** (#47, `a941147`) **e em produção**: L4-1 feito pelo maestro (verificação 4/4: tabela=1, rls=true, anon=0, rpc=1). Falta o teste real mínimo (L4-1b) | `docs/ops/MEMORY-L4.md` |
+| B1-bis-R: run real legacy vs opt | **Feito, mas o braço `opt` correu com o prompt `legacy`** (prompts-base idênticos ao token): −2,6% = variância da saída. Projecção não verificada; `opt` continua a omissão; repetir só o `opt` com verificação (B1-bis-R2) | `docs/ops/WORKER-EXTERNAL.md` |
 
 ## 🏁 Fecho do dia 2026-10-01
 
@@ -562,7 +563,8 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 |---|---|
 | A: auditoria, ADRs, áreas, J4, E7 | **Fechado** |
 | B: worker, router, orçamento, optimização, tectos, testes lentos, ingest→retrieve no CI | **Fechado** (#40–#46) |
-| D: L4, memória persistente | **Fechado** (#47); L4-1 (SQL em produção) com o maestro |
+| D: L4, memória persistente | **Fechado** (#47) e **em produção** (L4-1, 4/4); falta o teste real mínimo (L4-1b) |
 | "Pernas" (PLANO §10: 4 junções + 3 decisões + 4 construções) | **11/11** ("6/6" na contagem do maestro) |
-| Próximo item | **Parado até ordem** (B1-bis-C, L4-2, L4-3 ou Bloco C) |
+| Próximo item | **BLOCO C — CouncilSession** (Fase 1 do ADR-META-AGENTS, PLANO J5-c) |
+| Próximo-grande, NÃO agora | B1-bis-C (encurtar skills/prompt-base): com os tectos por área, o custo actual não é problema |
 

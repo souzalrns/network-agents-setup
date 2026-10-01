@@ -1,8 +1,10 @@
 """B1-bis: projeccao de tokens de um plano em modo legacy vs opt, sem Gemini.
 
-!!! REFUTADA PELO RUN REAL (B1-bis-R, 2026-10-01): projectou -16%, o real deu
--2,6%. NAO USAR PARA DECISOES -- so com usageMetadata real (ou o endpoint
-countTokens da API Gemini). Licao de metodo em docs/ops/WORKER-EXTERNAL.md.
+!!! NAO VERIFICADA. NAO USAR PARA DECISOES -- so com usageMetadata real (ou o
+endpoint countTokens da API Gemini). O run real B1-bis-R (2026-10-01, -2,6%) nao
+serve de comparacao: o braco "opt" correu com o prompt legacy (prompts-base
+identicos ao token nos 4 passos). Analise e licao de metodo em
+docs/ops/WORKER-EXTERNAL.md ("Medicao real (B1-bis-R)").
 Fica como ferramenta exploratoria (e e usada nos testes de test_context_opt.py).
 
 Corre o plano REAL pelo worker REAL (prompt construido como em producao), com
@@ -184,7 +186,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     before = project(args.plan, context="legacy", summary_tokens=args.summary_tokens)
     after = project(args.plan, context="opt", summary_tokens=args.summary_tokens)
-    print("AVISO: projeccao exploratoria, refutada pelo run real (-16% projectado vs -2,6% real, B1-bis-R).")
+    print("AVISO: projeccao exploratoria, NAO verificada (o run 'opt' do B1-bis-R correu com o prompt legacy).")
     print("       Nao usar para decisoes: medir com usageMetadata real. Ver docs/ops/WORKER-EXTERNAL.md.\n")
     print(table(before, after))
     for r in after:

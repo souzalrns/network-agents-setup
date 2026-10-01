@@ -4,7 +4,7 @@
 > - 18 testes do módulo (`runner/tests/test_memory_l4.py`);
 > - 11 da integração com o worker (`runner/tests/test_memory_l4_worker.py`), incluindo o ciclo **entre runs**: o run 1 propõe, o humano aprova, o run 3 lembra.
 >
-> **O SQL ainda não corre no Supabase**: é o passo do DEV (secção "Pôr em produção"). Até lá, a L4 está desligada em produção.
+> **Em produção desde 2026-10-01 (L4-1):** o maestro correu os 2 SQL no Supabase, com verificação 4/4 (secção "Pôr em produção"). Falta o teste real mínimo (passo 3, L4-1b).
 
 Decisão: [DECISAO-3-memoria.md](../audit/DECISAO-3-memoria.md), VIA A (L4 própria, sem mem0, escrita explícita, Supabase). Contrato: [contracts.md](../architecture/memory/contracts.md), [scopes.md](../architecture/memory/scopes.md), [layers.md](../architecture/memory/layers.md) (L4).
 
@@ -131,7 +131,18 @@ python -m plan_runner.memory_l4 forget <id> --reason "…"
     where table_name = 'memory_l4' and grantee in ('anon','authenticated');              -- 0 linhas
    select has_function_privilege('anon', 'public.recall_l4(vector,text[],text[],int,text[],boolean)', 'execute');  -- false
    ```
-3. **Teste real mínimo**, com o `DATABASE_URL` do projecto: `remember` → `recall --candidates` → `promote` → `recall` → `forget` pela CLI acima, com um âmbito de teste (`project:teste-l4`).
+   **Resultado (L4-1, maestro, 2026-10-01, projecto `mpsuurqilnhsvbnjmrpm`):**
+
+   | Verificação | Resultado |
+   |---|---|
+   | Tabela `memory_l4` | criada (`tabela_existe = 1`) |
+   | RPC `recall_l4` | criada (`rpc_existe = 1`) |
+   | RLS | activa (`rls_activa = true`) |
+   | `anon`/`authenticated` na tabela | 0 privilégios (`privilegios_anon = 0`) |
+   | `anon` → `EXECUTE recall_l4` | sem permissão |
+   | **Total** | **4/4** |
+
+3. **Teste real mínimo (L4-1b, por fazer)**, com o `DATABASE_URL` do projecto: `remember` → `recall --candidates` → `promote` → `recall` → `forget` pela CLI acima, com um âmbito de teste (`project:teste-l4`).
 
 ## Limites
 
