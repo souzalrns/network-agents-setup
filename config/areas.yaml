@@ -28,7 +28,9 @@
 #   2. Entrada das verticais do MCP de produção (ADR-M7). Omissão: fica para a v2.
 #   3. budget por área: null ou {max_steps?, max_tokens?}. O max_tokens é o tecto de
 #      tokens do pedido (router + passos), aplicado pelo worker a partir do ledger
-#      (docs/ops/BUDGET.md). Omissão: null em todas = sem tecto, até o maestro escolher valores.
+#      (docs/ops/BUDGET.md). B5-bis fase 1 (2026-10-01, decisão do maestro, opção A):
+#      produção 80k, risco 40k, exploratórias 30k, transversal 20k -- um freio, não
+#      optimização; rever depois do B1-bis-C (encurtar skills/prompt-base).
 #   5. grounding: full (omissão) | slim. slim = agents/_shared/grounding.slim.md, só em áreas
 #      sem risco (B1-bis, docs/ops/WORKER-EXTERNAL.md). finance/legal/security ficam full.
 #   4. Áreas sem agentes (legal, gamedev, docs): ficam declaradas com agents: []
@@ -58,7 +60,7 @@ areas:
       - design.ux_writer
       - design.design_critic
     horizontals: [meta.planejador, meta.using_agent_skills, meta.security-auditor]
-    budget: null
+    budget: {max_tokens: 80000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null
 
   - id: marketing
@@ -84,7 +86,7 @@ areas:
       - marketing.ugc
       - design.identidade-visual
     horizontals: [meta.planejador, meta.using_agent_skills]
-    budget: null
+    budget: {max_tokens: 80000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null
     grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
@@ -93,7 +95,7 @@ areas:
     keywords: [contrat, juridic, direito, lei, leis, tribunal, advogad, clausul, jurisprud, processo judicial, litigio, arrendamento, rgpd, gdpr, notificacao judicial]
     agents: []
     horizontals: [meta.planejador]
-    budget: null
+    budget: {max_tokens: 40000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: required   # P-AG-118 (docs/estrutura-geral-agentes.md:156)
 
   - id: ops
@@ -103,7 +105,7 @@ areas:
       - gestao.gestao-empresarial
       - atendimento.comunicacoes-atendimento
     horizontals: [meta.planejador, meta.using_agent_skills]
-    budget: null
+    budget: {max_tokens: 30000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null
 
   - id: research
@@ -112,7 +114,7 @@ areas:
     agents:
       - meta.radar-ferramentas
     horizontals: [meta.planejador]
-    budget: null
+    budget: {max_tokens: 80000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null
     grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
@@ -122,7 +124,7 @@ areas:
     agents:
       - gestao.contabilidade
     horizontals: [meta.planejador]
-    budget: null
+    budget: {max_tokens: 40000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: required   # P-AG-118 (docs/estrutura-geral-agentes.md:156); grounding (agents/_shared/grounding.directive.md:39)
 
   - id: gamedev
@@ -130,7 +132,7 @@ areas:
     keywords: [jogo, jogos, game, games, gamedev, unity, godot, jogador, nivel do jogo]
     agents: []
     horizontals: [meta.planejador]
-    budget: null
+    budget: {max_tokens: 30000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null
 
   - id: security
@@ -139,7 +141,7 @@ areas:
     agents:
       - meta.security-auditor
     horizontals: [meta.planejador]
-    budget: null
+    budget: {max_tokens: 40000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: required   # achados de segurança não são aceites sem sinalizar (agents/meta/security_auditor.agent.md)
 
   - id: docs
@@ -147,7 +149,7 @@ areas:
     keywords: [documentac, adr, readme, relatorio, manual, wiki, changelog]
     agents: []
     horizontals: [meta.planejador]
-    budget: null
+    budget: {max_tokens: 80000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null
     grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
@@ -158,5 +160,5 @@ areas:
       - meta.planejador
       - meta.using_agent_skills
     horizontals: []
-    budget: null
+    budget: {max_tokens: 20000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: null

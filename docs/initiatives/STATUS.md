@@ -548,8 +548,10 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Worker do modo `external` (AU-23) | **Merged** (#40) | `docs/ops/WORKER-EXTERNAL.md` |
 | **B1: primeiro run real com o Gemini** | **FEITO (maestro)**: `seo-article-demo` do início ao fim, `done`, 4 chamadas, **13 130 tokens** (research 1 893, seo_brief 3 415, copy 3 659, critic 4 163) | `docs/ops/WORKER-EXTERNAL.md`, secção B1 |
 | Router hierárquico híbrido (D2) | **Merged** (#41); R1 (`router eval` com o Gemini real) por correr | `docs/ops/ROUTER.md` |
-| Orçamento de tokens por run | **Merged** (#42); B5-bis (tectos por área) em proposta, todas as áreas a `null` | `docs/ops/BUDGET.md` |
-| Testes lentos no CI | PR #43 (merge depois do CI verde) | job `test-slow` |
-| ingest→retrieve no CI | PR `ci/rag-e2e` | job `test-rag` |
-| Contexto por resumo (`artifact_summary`) | **Próxima sessão** (PLANO item 11) | `docs/audit/PLANO-DE-ACAO.md` |
+| Orçamento de tokens por run | **Merged** (#42); B5-bis aplicado (ver abaixo) | `docs/ops/BUDGET.md` |
+| Testes lentos no CI | **Merged** (#43, `9a273d4`) | job `test-slow` |
+| ingest→retrieve no CI | **Merged** (#44, `c4d02fe`): PLANO item 10 completo | job `test-rag` |
+| Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`): projecção −16%; B1-bis-R (run real) é do maestro | `docs/ops/WORKER-EXTERNAL.md` |
+| Tectos por área (B5-bis) | **Aplicado** (opção A): 80k/40k/30k/20k | `config/areas.yaml`, `docs/ops/BUDGET.md` |
+| B1-bis-C: encurtar skills/prompt-base | **Registado** (PLANO item 12); não começar sem ordem | `docs/audit/PLANO-DE-ACAO.md` |
 
