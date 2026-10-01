@@ -110,6 +110,8 @@ Há ainda um **terceiro runtime** fora deste repo, o `agent-network-mcp` (JavaSc
 
 Ver a secção 10 deste documento: **3 decisões + 4 construções pequenas**.
 
+> **Estado a 2026-10-01: todos fechados**, item a item na secção 10 ("Fecho de 2026-10-01").
+
 ---
 
 ## 3. As 4 decisões pendentes
@@ -198,10 +200,10 @@ Ver a secção 10 deste documento: **3 decisões + 4 construções pequenas**.
 | 6 | **Worker do modo `external`** (lê `request.json`, chama o LLM barato, escreve `result.json`, respeita HITL e orçamento) | Sem ele nenhum agente Python corre sozinho | AU-23 | **AMBOS** | Bloqueado (D1) |
 | 7 | **Registo único de áreas** + router com confiança e fallback | Pré-requisito da delegação por área e dos 3 nichos | AU-33, AU-34, AU-26, AU-30 | **DEV** desenha → **CLAUDE** implementa | **EM PR (2026-10-01)**: dados (J5) + router `runner/plan_runner/router.py` na branch `feat/router-hibrido` (ver `docs/ops/ROUTER.md`) |
 | 8 | **Se o TS ficar:** corrigir Q1–Q4 e o teste falso-verde, depois correr o EX-B3 | 5 correcções pequenas que tornam o `/chat` testável | AU-13, AU-14, AU-15, AU-17, EX-B3 | **CLAUDE** (AU-13: AMBOS) | Bloqueado (D1) |
-| 9 | **Decidir a memória L4** (própria pelo contrato vs mem0) | "Memória persistente" é pilar; decisão bloqueada desde 09-20 | S29, L6 | **DEV** | **D3 decidida (VIA A) → L4 EM PR (2026-10-01, `feat/memory-l4`)**: tabela + RPC versionadas (por correr no Supabase pelo DEV), `memory_l4.py`, worker com recall/remember opt-in, promoção por HITL; ver `docs/ops/MEMORY-L4.md` |
+| 9 | **Decidir a memória L4** (própria pelo contrato vs mem0) | "Memória persistente" é pilar; decisão bloqueada desde 09-20 | S29, L6 | **DEV** | **FEITO (2026-10-01, #47 merged `a941147`)**: D3 → L4 própria. Falta só o DEV correr os 2 SQL no Supabase (L4-1); ver `docs/ops/MEMORY-L4.md` |
 | 10 | **Teste e2e no CI** (TS `/chat` + testes lentos Python + ingest→retrieve) | Impede que as quebras voltem sem ninguém notar | L1, AU-09, AU-17 | **CLAUDE** | **COMPLETO (2026-10-01, #43 + #44 merged):** testes lentos Python (job `test-slow`) + ingest→retrieve contra Postgres+pgvector com embedder falso (job `test-rag`). TS `/chat` deixou de se aplicar (D1, VIA A) |
-| 11 | **Contexto por resumo** (*acrescentado 2026-10-01, próxima sessão*): cada passo escreve o `artifact` completo **e** um `artifact_summary` estruturado (~300 tokens). O passo seguinte recebe só o summary, e o artefacto completo fica em disco para quem precisar dele | O custo está no **contexto acumulado**, não no modelo (análise externa `docs/análise-tokens.md`, que não está no repo). No B1 real, os inputs injectados completos foram 4 308 dos 9 704 tokens de entrada; o `critic` recebeu 2 615 (`docs/ops/WORKER-EXTERNAL.md`, secção B1). **Meta: `seo-article-demo` de 13,1k para <9k, sem perda de qualidade.** Estimativa só com summaries: ~10,9k (−3,1k de entrada, +~0,9k de saída para gerar os summaries). Para <9k falta outra alavanca (ex.: o summary sair na mesma chamada e ficar mais curto, ou cortar a base AGENT+SKILL+grounding, ~1–1,5k por passo). Excepção provável: o `critic` precisa do `copy` completo. Medir com um run real antes e depois | B5-bis (tectos mais apertados só depois disto), PLANO #4 | **CLAUDE** (implementa) + **DEV** (run real de comparação) | **FEITO em parte (2026-10-01, B1-bis, #45 merged):** pin + resumos, grounding por área, sem frontmatter nem secções de documentação. Projecção: **13,1k → 11,1k (−16%), critic in −33%**. **<9k não é atingível só com contexto** (o prompt-base é 41%); o maestro escolheu a opção C, que é o item 12. Falta o run real (B1-bis-R) |
-| 12 | **B1-bis-C — encurtar skills/prompt-base** (*acrescentado 2026-10-01, decisão do maestro; NÃO começar sem ordem*): deduplicar instruções entre AGENT.md, SKILL.md e grounding; encurtar as skills mais longas sem perder regras (ex.: `seo_brief` ~2,7k caracteres) | Depois do B1-bis (`opt`), o prompt-base continua a ser o maior bloco (~4,2k dos 11,1k projectados do `seo-article-demo`), e é **o único caminho para <9k** sem cortar o copy do critic (`docs/ops/WORKER-EXTERNAL.md`, "Porque não chega aos 9k") | B5-bis (rever os tectos por área depois disto), B1-bis-R (o run real primeiro dá a base) | **CLAUDE** (propõe e mede com `python -m plan_runner.token_projection`) + **DEV** (valida a qualidade num run real) | Depois do B1-bis-R; não começar sem ordem |
+| 11 | **Contexto por resumo** (*acrescentado 2026-10-01, próxima sessão*): cada passo escreve o `artifact` completo **e** um `artifact_summary` estruturado (~300 tokens). O passo seguinte recebe só o summary, e o artefacto completo fica em disco para quem precisar dele | O custo está no **contexto acumulado**, não no modelo (análise externa `docs/análise-tokens.md`, que não está no repo). No B1 real, os inputs injectados completos foram 4 308 dos 9 704 tokens de entrada; o `critic` recebeu 2 615 (`docs/ops/WORKER-EXTERNAL.md`, secção B1). **Meta: `seo-article-demo` de 13,1k para <9k, sem perda de qualidade.** Estimativa só com summaries: ~10,9k (−3,1k de entrada, +~0,9k de saída para gerar os summaries). Para <9k falta outra alavanca (ex.: o summary sair na mesma chamada e ficar mais curto, ou cortar a base AGENT+SKILL+grounding, ~1–1,5k por passo). Excepção provável: o `critic` precisa do `copy` completo. Medir com um run real antes e depois | B5-bis (tectos mais apertados só depois disto), PLANO #4 | **CLAUDE** (implementa) + **DEV** (run real de comparação) | **FEITO em parte (2026-10-01, B1-bis, #45 merged):** pin + resumos, grounding por área, sem frontmatter nem secções de documentação. **Run real (B1-bis-R): −2,6%** (a projecção dizia −16%: refutada; lição de método em `docs/ops/WORKER-EXTERNAL.md`). A hipótese do contexto acumulado não foi a alavanca principal. <9k fica no item 12 |
+| 12 | **B1-bis-C — encurtar skills/prompt-base** (*acrescentado 2026-10-01, decisão do maestro; NÃO começar sem ordem*): deduplicar instruções entre AGENT.md, SKILL.md e grounding; encurtar as skills mais longas sem perder regras (ex.: `seo_brief` ~2,7k caracteres) | Depois do B1-bis (`opt`), o prompt-base continua a ser o maior bloco (~4,2k dos 11,1k projectados do `seo-article-demo`), e é **o único caminho para <9k** sem cortar o copy do critic (`docs/ops/WORKER-EXTERNAL.md`, "Porque não chega aos 9k") | B5-bis (rever os tectos por área depois disto), B1-bis-R (o run real primeiro dá a base) | **CLAUDE** (propõe e mede com **`usageMetadata` real ou `countTokens`**, nunca com projecção por caracteres: lição do B1-bis-R) + **DEV** (valida a qualidade num run real) | Depois do B1-bis-R; não começar sem ordem |
 
 **Fora do top 10, mas urgente operacionalmente** (mesma origem): S20 (chave antiga na VM Oracle; o bridge-worker falha com 401) e S27 (limites do Oracle Free Tier), ambos DEV e fora do código. **Barato, com retorno imediato em tokens de bootstrap:** AU-45, AU-46, AU-37 e AU-12 (CLAUDE, cerca de 1–2 h). **Barato e fecha um alerta crítico:** AU-05 (CLAUDE, 5 min).
 
@@ -426,6 +428,29 @@ Com isto, os nichos (trader, jogos, segurança) passam a ser **conteúdo** (agen
 | L10 | Infra de persistência frágil [ACRESCENTADO] | Alto |
 
 ---
+
+
+### Fecho de 2026-10-01: as 11 condições de "pernas", uma a uma
+
+| Condição | Estado | Evidência |
+|---|---|---|
+| Junção 1: o pedido chega ao LLM (AU-13) | ✅ Fechada pela D1 (VIA A): o worker Python chama o Gemini | #40; B1 real: 4 chamadas, `done` |
+| Junção 2: o RAG lê da tabela onde escreve (AU-19) | ✅ `knowledge_chunks` canónica + ingest→retrieve no CI | J3; #44 (job `test-rag`) |
+| Junção 3: um só maestro (AU-07) | ✅ D1/D2 + router hierárquico híbrido | #41 |
+| Junção 4: os tokens são contados (AU-16) | ✅ Ledger J6 (MCP) + ledger do worker + orçamento | J6; #40; #42 |
+| Decisão 1: maestro | ✅ D1 (VIA A) + D2 (C4) | `DECISAO-1`, `DECISAO-2` |
+| Decisão 2: tabela canónica do RAG | ✅ `knowledge_chunks` | J3 |
+| Decisão 3: memória L4 | ✅ D3 (VIA A) **e implementada** | #47 (SQL em produção: L4-1, DEV) |
+| Construção 1: worker `external` | ✅ | #40 |
+| Construção 2: ledger com orçamento aplicado | ✅ tecto por run/plano/área, pausa/resume | #42, #46 |
+| Construção 3: registo único de áreas | ✅ `areas.yaml` + E7 + router | J5, E7, #41 |
+| Construção 4: teste e2e no CI | ✅ testes lentos + ingest→retrieve | #43, #44 |
+
+**11/11.** O maestro conta os mesmos critérios como "6/6 de pernas"; o fecho é o mesmo.
+
+**Ressalvas** (não reabrem nenhuma condição):
+- a L4 só fica activa em produção depois do L4-1;
+- o R1 (`router eval` real) e a tabela por passo do B1-bis-R estão por registar.
 
 ## 11. Contagens e estado
 

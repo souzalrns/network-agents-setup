@@ -551,7 +551,18 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Orçamento de tokens por run | **Merged** (#42); B5-bis aplicado (ver abaixo) | `docs/ops/BUDGET.md` |
 | Testes lentos no CI | **Merged** (#43, `9a273d4`) | job `test-slow` |
 | ingest→retrieve no CI | **Merged** (#44, `c4d02fe`): PLANO item 10 completo | job `test-rag` |
-| Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`): projecção −16%; B1-bis-R (run real) é do maestro | `docs/ops/WORKER-EXTERNAL.md` |
+| Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`). **Real (B1-bis-R): −2,6%**; a projecção de −16% foi refutada (lição de método registada) | `docs/ops/WORKER-EXTERNAL.md` |
 | Tectos por área (B5-bis) | **Aplicado** (opção A): 80k/40k/30k/20k | `config/areas.yaml`, `docs/ops/BUDGET.md` |
 | B1-bis-C: encurtar skills/prompt-base | **Registado** (PLANO item 12); não começar sem ordem | `docs/audit/PLANO-DE-ACAO.md` |
-| **L4: memória persistente (D3)** | **EM PR** (`feat/memory-l4`). SQL versionado por correr no Supabase (DEV). Ciclo remember → recall → promote → forget provado localmente, e entre runs pelo worker | `docs/ops/MEMORY-L4.md` |
+| **L4: memória persistente (D3)** | **Merged** (#47, `a941147`). Falta o L4-1: o maestro corre os 2 SQL no Supabase | `docs/ops/MEMORY-L4.md` |
+
+## 🏁 Fecho do dia 2026-10-01
+
+| Bloco | Estado |
+|---|---|
+| A: auditoria, ADRs, áreas, J4, E7 | **Fechado** |
+| B: worker, router, orçamento, optimização, tectos, testes lentos, ingest→retrieve no CI | **Fechado** (#40–#46) |
+| D: L4, memória persistente | **Fechado** (#47); L4-1 (SQL em produção) com o maestro |
+| "Pernas" (PLANO §10: 4 junções + 3 decisões + 4 construções) | **11/11** ("6/6" na contagem do maestro) |
+| Próximo item | **Parado até ordem** (B1-bis-C, L4-2, L4-3 ou Bloco C) |
+

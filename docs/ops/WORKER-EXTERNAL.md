@@ -112,9 +112,9 @@ order by created_at desc limit 10;
 ## Optimização de contexto (B1-bis, 2026-10-01)
 
 > **Estado:** implementado (modo `opt`, a omissão) e testado offline: 18 testes em `runner/tests/test_context_opt.py`.
-> - **Os números abaixo são uma PROJECÇÃO calibrada no B1, não um run real**: esta sessão não tinha `GEMINI_API_KEY`.
-> - A confirmação é um run real do maestro (ver "Medir a sério").
-> - **A meta de <9k não é atingível só com técnicas de contexto neste plano.** Ver "Porque não chega aos 9k".
+> - **Medido no run real (B1-bis-R, maestro, 2026-10-01): −2,6%.** A projecção dizia −16% e **foi refutada**. Ver "Medição real (B1-bis-R)" e "Lição de método".
+> - **A hipótese "o custo está no contexto acumulado" não se confirmou como alavanca principal neste plano.**
+> - A meta de <9k passou para o item próprio B1-bis-C (PLANO item 12).
 
 ### Diagnóstico: onde estavam os 13 130 tokens do B1
 O `tokens_in` de cada passo é o prompt-base mais os artefactos injectados. A calibração dá 3,29–3,50 caracteres por token nos 4 passos, o que confirma a decomposição.
@@ -142,7 +142,44 @@ O contexto acumulado conta, mas o **prompt-base pesa mais** (41% vs 33%). A subi
 
 `PLAN_RUNNER_CONTEXT=legacy` repõe o prompt anterior, para A/B e rollback. Cada `result.json` tem `meta.context` com a política, o grounding, cada input (modo e tamanho) e o estado do resumo.
 
-### Antes/depois: `seo-article-demo` (projecção, `python -m plan_runner.token_projection`)
+### Medição real (B1-bis-R, 2026-10-01, run do maestro)
+
+| Medida | Valor |
+|---|---|
+| Plano | `seo-article-demo`, `--worker gemini`, `legacy` vs `opt` (os comandos de "Medir a sério") |
+| Δ total real (opt vs legacy) | **−2,6%** |
+| Δ total projectado | −16% (tabela abaixo) |
+
+> **Tabela por passo: POR REGISTAR.** A mensagem de 2026-10-01 trazia o marcador `[tabela]` sem os números, e nenhum valor por passo é inventado aqui. Para preencher, usar `pilots/run-worker-ctx-legacy/token_usage.jsonl` e `pilots/run-worker-ctx-opt/token_usage.jsonl` (`tokens_in`, `tokens_out` e `tokens_total` por `step_id`).
+
+| Passo | in legacy | out legacy | in opt | out opt | Δ total |
+|---|---:|---:|---:|---:|---:|
+| research | _por registar_ | | | | |
+| seo_brief | _por registar_ | | | | |
+| copy | _por registar_ | | | | |
+| critic | _por registar_ | | | | |
+| **TOTAL** | | | | | **−2,6%** |
+
+### Lição de método: medir com usage real, não com proxies de caracteres
+
+A projecção sobrestimou o ganho em **~6×** (−16% projectado contra −2,6% real). Causas, por ordem de probabilidade. A atribuição exacta depende da tabela por passo:
+
+1. **Caracteres ≠ tokens, sobretudo no que se corta.**
+   - A projecção não usou ÷4: usou caracteres por token **calibrados no B1** (3,29–3,50, média do prompt inteiro).
+   - Mas aplicou essa média ao texto **cortado**: frontmatter YAML, cabeçalhos, tabelas, a directiva de grounding.
+   - Esse texto tem outra densidade no tokenizer do Gemini. Se o que saiu tem mais caracteres por token do que a média, poupa muito menos tokens do que os caracteres sugerem.
+   - Um rácio fixo é um proxy, não o tokenizer.
+2. **A saída não foi medida, foi assumida.**
+   - A projecção fixou as saídas nos valores do B1, mais 300 tokens de resumo.
+   - No run real, o modelo pode escrever mais (ou o resumo sair maior) com o prompt novo. Isso come o ganho na entrada.
+3. **O próprio legacy reproduzir o B1 (+0,4%) não validava nada sobre o opt.** Era circular: a calibração foi feita nesses mesmos números.
+
+**Regra a partir daqui** (vale para o B1-bis-C e para qualquer optimização de tokens):
+- **Só se decide com `usageMetadata` real** (`promptTokenCount`, `candidatesTokenCount`).
+- Para medir só a entrada sem gerar texto, há o endpoint `models/{model}:countTokens` da API Gemini. Dá a contagem exacta do tokenizer, e é uma alternativa barata a um run completo por cada hipótese (pendente: ver OPEN-ITEMS).
+- A `token_projection.py` fica no repo só como ferramenta exploratória, marcada como **não usar para decisões**.
+
+### Antes/depois: `seo-article-demo` (PROJECÇÃO, refutada pelo run real: ver acima)
 
 | Passo | in antes | out antes | total antes | in depois | out depois | total depois | Δ total |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -172,7 +209,7 @@ O contexto acumulado conta, mas o **prompt-base pesa mais** (41% vs 33%). A subi
 - Em finance, legal e security o grounding fica completo, e isso é garantido pelo E7.
 - **Falta:** a qualidade real do texto só se vê num run real (ver abaixo).
 
-### Porque não chega aos 9k
+### Porque não chega aos 9k (análise feita sobre a projecção; com −2,6% real, a distância é ainda maior)
 Depois do `opt` ficam ~4,2k de prompt-base (conteúdo das skills e dos agentes), ~3,7k de saídas e ~3,3k de inputs. A maior parte destes é o copy completo para o critic, que a crítica precisa. As alavancas que restam mexem em conteúdo:
 
 | Alavanca adicional | Total projectado |

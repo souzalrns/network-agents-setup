@@ -1,5 +1,10 @@
 """B1-bis: projeccao de tokens de um plano em modo legacy vs opt, sem Gemini.
 
+!!! REFUTADA PELO RUN REAL (B1-bis-R, 2026-10-01): projectou -16%, o real deu
+-2,6%. NAO USAR PARA DECISOES -- so com usageMetadata real (ou o endpoint
+countTokens da API Gemini). Licao de metodo em docs/ops/WORKER-EXTERNAL.md.
+Fica como ferramenta exploratoria (e e usada nos testes de test_context_opt.py).
+
 Corre o plano REAL pelo worker REAL (prompt construido como em producao), com
 um Gemini falso que devolve artefactos do tamanho medido no B1 real. O
 tokens_in de cada passo e estimado assim:
@@ -179,6 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     before = project(args.plan, context="legacy", summary_tokens=args.summary_tokens)
     after = project(args.plan, context="opt", summary_tokens=args.summary_tokens)
+    print("AVISO: projeccao exploratoria, refutada pelo run real (-16% projectado vs -2,6% real, B1-bis-R).")
+    print("       Nao usar para decisoes: medir com usageMetadata real. Ver docs/ops/WORKER-EXTERNAL.md.\n")
     print(table(before, after))
     for r in after:
         print(f"  {r['step']}: {', '.join(r['injected']) or 'sem inputs'}{' + gera resumo' if r['summary_generated'] else ''}")

@@ -1,6 +1,6 @@
 # Memória L4 — memória semântica persistente (D3)
 
-> **Estado (2026-10-01):** implementada e testada localmente contra Postgres 16 + pgvector 0.6.0:
+> **Estado (2026-10-01):** **merged (#47, `a941147`, 8 checks verdes)**; implementada e testada localmente e no CI contra Postgres 16 + pgvector:
 > - 18 testes do módulo (`runner/tests/test_memory_l4.py`);
 > - 11 da integração com o worker (`runner/tests/test_memory_l4_worker.py`), incluindo o ciclo **entre runs**: o run 1 propõe, o humano aprova, o run 3 lembra.
 >

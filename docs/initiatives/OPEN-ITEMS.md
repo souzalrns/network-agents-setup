@@ -182,17 +182,33 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
   - Sem frontmatter nem secções de documentação no prompt; JSON compacto.
   - `PLAN_RUNNER_CONTEXT=legacy` para A/B e rollback.
 - **Projecção calibrada no B1** (`python -m plan_runner.token_projection`): `seo-article-demo` 13,1k → **11,1k (−16%)**, critic `tokens_in` **−33%**. 8 passos (pior caso): 41,3k → 28,3k (−31%).
-- **B1-bis-R (maestro): run real** legacy vs opt, comparando tokens e qualidade do `copy` e do `critic`. Comandos em `docs/ops/WORKER-EXTERNAL.md`, "Medir a sério".
+- ~~**B1-bis-R (maestro): run real** legacy vs opt~~ **FEITO**: −2,6% real. Ver a secção L4 abaixo e `docs/ops/WORKER-EXTERNAL.md`.
 - ~~**B1-bis-9k (decisão)**~~ **DECIDIDO: opção C (maestro, 2026-10-01).** Fica o modo `opt` (−16%), e o caminho para <9k passa a ser o item próprio **B1-bis-C — encurtar skills/prompt-base** (PLANO item 12). **Não começar sem ordem.**
 
 ## Bloco L4 — memória persistente (D3), 2026-10-01
 
-- **Feito (PR `feat/memory-l4`, sem merge):** L4 própria sobre o Supabase. Detalhe e operação em `docs/ops/MEMORY-L4.md`.
+- **Feito (#47, merged `a941147`, 8 checks verdes):** L4 própria sobre o Supabase. Detalhe e operação em `docs/ops/MEMORY-L4.md`.
   - SQL: `scripts/create_memory_l4_table.sql` e `scripts/create_recall_l4_rpc.sql`.
   - Código: `runner/plan_runner/memory_l4.py` (`remember`/`recall`/`forget`/`promote` + HITL de promoção + CLI) e `memory_wiring.py` (worker).
   - 29 testes contra Postgres + pgvector, a correr no CI no job `test-rag`.
 - **L4-1 (DEV): correr os 2 SQL** no projecto `agent-network-memory`, pela ordem. Depois, as 3 consultas de verificação e o teste real mínimo da secção "Pôr em produção". **Até lá, a L4 fica desligada em produção.**
 - **L4-2: spike comparativo do mem0 (J11).** Fica para depois, por decisão D3, e é condição para qualquer auto-extracção (com flag).
 - **L4-3: ligar o MCP de produção à L4** (ADR-M7). Hoje só o runner a usa.
-- **B1-bis-R (maestro): FEITO.** O run real mediu **−2,6%** (a projecção dizia −16%): a hipótese do contexto acumulado foi refutada como alavanca principal. **Falta registar a tabela por passo** em `docs/ops/WORKER-EXTERNAL.md`; preciso dos números do run.
+- **B1-bis-R (maestro): FEITO, −2,6% real** (projecção −16%, refutada). Lição de método registada em `docs/ops/WORKER-EXTERNAL.md`: só decidir com `usageMetadata` real ou `countTokens`. **Tabela por passo POR REGISTAR**: a mensagem trazia o marcador `[tabela]` sem os números.
+
+## Fecho do dia 2026-10-01
+
+- **Bloco A (auditoria, ADRs, `areas.yaml`, `kind`, descrições J4, validador E7): FECHADO.**
+- **Bloco B: FECHADO.**
+  - Worker `external` (#40), router hierárquico híbrido (#41) e orçamento de tokens com pausa/resume (#42).
+  - Optimização de contexto B1-bis (#45; −2,6% real) e tectos por área B5-bis (#46).
+  - Testes lentos no CI (#43) e ingest→retrieve no CI (#44).
+- **Bloco D, L4 (memória persistente): FECHADO** (#47). Falta só o L4-1 (o DEV corre os 2 SQL).
+- **"Pernas": todas as condições do PLANO §10 fechadas** (4 junções + 3 decisões + 4 construções = 11/11; o maestro conta-as como 6/6). Tabela com a evidência em `docs/audit/PLANO-DE-ACAO.md` §10, "Fecho de 2026-10-01".
+- **Por registar:**
+  - a tabela por passo do B1-bis-R;
+  - o R1 (`router eval` com o Gemini real);
+  - o resultado do L4-1 (SQL + verificação + teste real mínimo).
+- **Próximo item: PARADO até ordem do maestro.** Candidatos: B1-bis-C (encurtar skills; o único caminho para <9k), L4-2 (spike mem0), L4-3 (MCP de produção → L4), Bloco C (CouncilSession / meta-agentes).
+- **Novo, para o B1-bis-C:** medir com o endpoint `countTokens` da API Gemini (contagem exacta da entrada sem gerar texto) em vez de projecções por caracteres.
 
