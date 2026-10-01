@@ -168,5 +168,9 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 ## Bloco B — testes lentos no CI (PLANO item 10, parte Python), 2026-10-01
 
 - **Feito (PR `ci/slow-tests`, sem merge):** job `test-slow` no `runner-tests.yml`, em paralelo com o `test`. Corre os 34 testes `slow` (planos reais, LangGraph, crash recovery), que o `pytest.ini` exclui por omissão e que nenhum CI corria. O default local não muda.
-- **Falta no item 10:** ingest→retrieve contra uma BD real no CI. Precisa de Postgres + pgvector no job, e o embedder precisa de `GEMINI_API_KEY` ou de um embedder falso. O `/chat` TS deixou de se aplicar (D1, VIA A).
+- ~~**Falta no item 10:** ingest→retrieve contra uma BD real no CI.~~ **Feito (PR `ci/rag-e2e`):** job `test-rag` com o serviço `pgvector/pgvector:pg16`.
+  - O teste parte de ficheiros markdown e passa pelo ingest real (`scripts/ingest_apply.py::apply_one`: chunk → embed → `replace_chunks`), com um embedder falso determinístico (sem Gemini, custo zero). O retrieve é o `match_knowledge`, chamado como o MCP o chama.
+  - 6 testes: os 3 J3, que existiam mas nenhum CI corria, mais 3 ponta a ponta: 1 doc → devolve esse doc; 2 docs com `agent_id` diferentes → cada agente só vê o seu; reingest não duplica.
+  - `RAG_TEST_REQUIRED=1`: sem BD, o job falha em vez de saltar.
+- **✅ PLANO item 10 COMPLETO** (depois do merge do #43 e do `ci/rag-e2e`): testes lentos + ingest→retrieve no CI. O `/chat` TS deixou de se aplicar (D1, VIA A).
 
