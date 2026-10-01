@@ -69,7 +69,7 @@ def load_status(out: Path) -> dict[str, Any] | None:
         return None
 
 
-_RESUMABLE = frozenset({"paused_human_gate", "waiting_external", "running"})
+_RESUMABLE = frozenset({"paused_human_gate", "waiting_external", "running", "paused_budget"})
 
 
 def _validate_out_dir(out: Path) -> Path:
@@ -91,6 +91,11 @@ def _validate_out_dir(out: Path) -> Path:
             "Mode external derives repo_root from the out dir; paths outside pilots/ break it."
         )
     return resolved
+
+
+def _check_max_tokens(max_tokens: int | None) -> None:
+    if max_tokens is not None and (isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens < 0):
+        raise PlanError(f"--max-tokens tem de ser um inteiro >= 0 (got {max_tokens!r})")
 
 
 def _worker_for(mode: str, name: str | None) -> Any:
@@ -115,12 +120,32 @@ def _waiting_external(log: EventLog, run_id: str, status: dict[str, Any], step_i
     log.append("step_waiting_external", run_id, payload)
 
 
+def _paused_budget(out: Path, log: EventLog, run_id: str, status: dict[str, Any], step_id: str, result: Any, completed: set[str]) -> None:
+    """PLANO item 4: tecto de tokens atingido. Pausa (nao mata): o resume com --max-tokens continua daqui."""
+    budget = result.budget or {}
+    log.append("budget_exceeded", run_id, {"step_id": step_id, **budget})
+    status["state"] = "paused_budget"
+    status["paused_at_step"] = step_id
+    status["completed"] = sorted(completed)
+    status["budget_spent"] = budget.get("spent")
+    save_status(out, status)
+    (out / "BUDGET.md").write_text(
+        f"# Orcamento de tokens\n\nRun `{run_id}` parado antes do passo `{step_id}`: "
+        f"{budget.get('spent')} tokens gastos >= tecto {budget.get('cap')}.\n\n"
+        f"Passos feitos: {sorted(completed)}\n\n"
+        f"Retomar com um tecto maior (docs/ops/BUDGET.md):\n```\n"
+        f"python -m plan_runner resume {out} --max-tokens <novo tecto>\n```\n",
+        encoding="utf-8",
+    )
+
+
 def run_plan(
     plan_path: Path,
     *,
     mode: str = "stub",
     out_dir: Path | None = None,
     worker: str | None = None,
+    max_tokens: int | None = None,
 ) -> dict[str, Any]:
     plan = load_plan(plan_path)
     order = topo_order(plan)
@@ -134,6 +159,7 @@ def run_plan(
         }
 
     worker_obj = _worker_for(mode, worker)
+    _check_max_tokens(max_tokens)
     run_id = f"run_{uuid4().hex[:10]}"
     out = _validate_out_dir(out_dir) if out_dir else Path("pilots") / run_id
     if out.exists() and any(out.iterdir()):
@@ -159,6 +185,8 @@ def run_plan(
     }
     if worker_obj is not None:
         status["worker"] = worker_obj.name
+    if max_tokens is not None:
+        status["max_tokens"] = max_tokens  # tem prioridade sobre o budget.max_tokens do plano
 
     for step in order:
         if steps_run >= plan.budget_max_steps:
@@ -215,6 +243,9 @@ def run_plan(
             result = execute_stub(out, step)
         elif mode == "external":
             result = execute_external_request(out, step, worker_obj)
+            if result.detail == "budget_exceeded":
+                _paused_budget(out, log, run_id, status, step.id, result, completed)
+                return status
             if result.detail == "waiting_external":
                 _waiting_external(log, run_id, status, step.id, result)
                 status["state"] = "waiting_external"
@@ -250,7 +281,7 @@ def run_plan(
     return status
 
 
-def resume_run(out_dir: Path, decision: str, worker: str | None = None) -> dict[str, Any]:
+def resume_run(out_dir: Path, decision: str, worker: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
     out_dir = _validate_out_dir(out_dir)
     status = load_status(out_dir)
     if not status:
@@ -274,6 +305,17 @@ def resume_run(out_dir: Path, decision: str, worker: str | None = None) -> dict[
         else:
             status["worker"] = worker_obj.name
     status.pop("worker_error", None)
+    _check_max_tokens(max_tokens)
+    if max_tokens is not None:
+        status["max_tokens"] = max_tokens
+    if state == "paused_budget":
+        log.append(
+            "budget_resumed",
+            run_id,
+            {"step_id": status.get("paused_at_step"), "spent": status.get("budget_spent"), "max_tokens": status.get("max_tokens")},
+            actor={"kind": "human", "id": "cli"},
+        )
+        status.pop("budget_spent", None)  # se voltar a parar, _paused_budget grava o valor novo
 
     # Crash recovery: state left as "running" mid-step — continue like waiting_external
     if state == "running":
@@ -354,6 +396,9 @@ def resume_run(out_dir: Path, decision: str, worker: str | None = None) -> dict[
             result = execute_stub(out_dir, step)
         else:
             result = execute_external_request(out_dir, step, worker_obj)
+            if result.detail == "budget_exceeded":
+                _paused_budget(out_dir, log, run_id, status, step.id, result, completed)
+                return status
             if result.detail == "waiting_external":
                 _waiting_external(log, run_id, status, step.id, result)
                 status["state"] = "waiting_external"
@@ -378,5 +423,6 @@ def resume_run(out_dir: Path, decision: str, worker: str | None = None) -> dict[
     status["state"] = "done"
     status["current_step"] = None
     status.pop("paused_at_step", None)
+    status.pop("budget_spent", None)
     save_status(out_dir, status)
     return status

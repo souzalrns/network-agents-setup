@@ -77,10 +77,10 @@ After the run, look at:
 ## CLI reference
 
     # Run a plan
-    python -m plan_runner run <plan.yaml> [--engine native|langgraph] [--mode dry-run|stub|external] [--worker none|gemini] [--out <dir>]
+    python -m plan_runner run <plan.yaml> [--engine native|langgraph] [--mode dry-run|stub|external] [--worker none|gemini] [--max-tokens N] [--out <dir>]
 
     # Resume a paused run (after HITL or external wait)
-    python -m plan_runner resume <out_dir> [--decision approve|reject|edit] [--payload-file <file.json>] [--worker none|gemini]
+    python -m plan_runner resume <out_dir> [--decision approve|reject|edit] [--payload-file <file.json>] [--worker none|gemini] [--max-tokens N]
 
     # Run the pending external step of a stopped run with Gemini (any engine)
     python -m plan_runner.external_worker <out_dir> [--resume]

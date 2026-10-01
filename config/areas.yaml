@@ -26,7 +26,9 @@
 #      runner-tests.yml (`python -m plan_runner.areas`). Falha se um id não existir,
 #      se um agente ficar órfão ou estiver em duas áreas.
 #   2. Entrada das verticais do MCP de produção (ADR-M7). Omissão: fica para a v2.
-#   3. budget por área. Omissão: null até existir ledger de tokens (J6).
+#   3. budget por área: null ou {max_steps?, max_tokens?}. O max_tokens é o tecto de
+#      tokens do pedido (router + passos), aplicado pelo worker a partir do ledger
+#      (docs/ops/BUDGET.md). Omissão: null em todas = sem tecto, até o maestro escolher valores.
 #   4. Áreas sem agentes (legal, gamedev, docs): ficam declaradas com agents: []
 #      e o router devolve "sem especialista" + HITL. Não se inventam agentes.
 

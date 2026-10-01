@@ -149,7 +149,8 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **B2: ledger central.** Com `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (projecto `agent-network-memory`), as linhas entram também no Supabase. Escrever em produção é decisão do DEV.
 - **B3: tools.** O worker não executa o `tools_allowed` (ex.: `web_search`). Depende do porte do `ToolExecutor` (D1, VIA A).
 - **B4: engine langgraph.** O worker inline só funciona no `native`; no langgraph usa-se `python -m plan_runner.external_worker <run>` + `resume`.
-- **B5: orçamento de tokens por run.** Hoje só existe o `budget.max_steps`.
+- ~~**B5: orçamento de tokens por run.**~~ **Feito** (PR `feat/token-budget`, empilhado no router): tecto por run, plano ou área; pausa em `paused_budget`; retoma com `resume --max-tokens`. Ver `docs/ops/BUDGET.md`.
+  - **B5-bis (maestro): valores de `budget.max_tokens` por área.** Hoje todas estão a `null`, portanto sem tecto. Ver a secção "De onde vem o tecto" em `docs/ops/BUDGET.md`.
 
 ## Bloco B — router hierárquico híbrido (D2), 2026-10-01
 

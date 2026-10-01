@@ -9,7 +9,7 @@ Regras (do cabeçalho de config/areas.yaml):
   - cada agente aparece em exactamente uma lista agents[] (nenhum inalcançável);
   - router (D2, plan_runner/router.py): keywords[] normalizadas (minúsculas, sem
     acentos) e cada uma numa só área; `routing:` com limiares em ]0, 1] e uma
-    fallback_area que exista; `budget` null ou {max_steps: int > 0}; `hitl` null
+    fallback_area que exista; `budget` null ou {max_steps?, max_tokens?: int > 0}; `hitl` null
     ou "required"; `delegation` (opcional) auto | agent | plan.
 
 CLI:  cd runner && python -m plan_runner.areas   (sai 1 e lista os erros)
@@ -108,11 +108,13 @@ def _validate_router_fields(registry: dict, areas: list, errors: list[str]) -> N
         budget = area.get("budget")
         if budget is not None and not (
             isinstance(budget, dict)
-            and isinstance(budget.get("max_steps"), int)
-            and not isinstance(budget.get("max_steps"), bool)
-            and budget["max_steps"] > 0
+            and budget
+            and set(budget) <= {"max_steps", "max_tokens"}
+            and all(isinstance(v, int) and not isinstance(v, bool) and v > 0 for v in budget.values())
         ):
-            errors.append(f"área `{aid}`: `budget` tem de ser null ou {{max_steps: inteiro > 0}}")
+            errors.append(
+                f"área `{aid}`: `budget` tem de ser null ou {{max_steps?, max_tokens?}} com inteiros > 0 (docs/ops/BUDGET.md)"
+            )
         if area.get("hitl") not in (None, "required"):
             errors.append(f"área `{aid}`: `hitl` tem de ser null ou required")
         if area.get("delegation", "auto") not in DELEGATION:
