@@ -18,7 +18,9 @@ duas primeiras partes sem tocar no conteudo das skills nem nas saidas:
    research) usa agents/_shared/grounding.slim.md; omissao `full` -- finance,
    legal e security nunca perdem a directiva completa.
 3. Sem frontmatter YAML nos AGENT.md/SKILL.md (metadados), so a `description`
-   numa linha. JSON injectado compacto (sem indentacao).
+   numa linha; sem as seccoes de documentacao (DOC_ONLY_SECTIONS: notas de
+   migracao, ponteiros para ficheiros, camadas de memoria do runner, handoff,
+   "quando usar"). JSON injectado compacto (sem indentacao).
 
 `PLAN_RUNNER_CONTEXT=legacy` repoe o prompt anterior byte a byte (A/B e rollback).
 """
@@ -65,6 +67,41 @@ def strip_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     except yaml.YAMLError:
         return {}, text
     return (fm if isinstance(fm, dict) else {}), parts[2].lstrip("\n")
+
+
+# Seccoes de documentacao (para humanos/runner), nao instrucoes para o modelo. Lista
+# fechada e conservadora: tudo o que muda comportamento (Enforcement Note, Nao usar,
+# Anti-padroes, Red Flags, ...) fica. Comparacao sem acentos nem maiusculas.
+DOC_ONLY_SECTIONS = {
+    "agent": ("nota de migracao", "nota de criacao", "skill obrigatoria", "skill", "skills relacionadas",
+              "memoria", "handoff"),
+    "skill": ("quando usar", "when to use", "trigger", "knowledge ref"),
+}
+
+
+def _norm(text: str) -> str:
+    import unicodedata
+
+    nfkd = unicodedata.normalize("NFKD", text.strip().lower())
+    return "".join(c for c in nfkd if not unicodedata.combining(c))
+
+
+def drop_doc_sections(body: str, kind: str) -> tuple[str, list[str]]:
+    """Tira as seccoes `## X` de DOC_ONLY_SECTIONS[kind]. Devolve (corpo, seccoes tiradas)."""
+    drop = set(DOC_ONLY_SECTIONS.get(kind, ()))
+    out, dropped, skipping = [], [], False
+    for line in body.splitlines(keepends=True):
+        if line.startswith("## "):
+            title = line[3:].strip()
+            skipping = _norm(title) in drop
+            if skipping:
+                dropped.append(title)
+                continue
+        elif line.startswith("# "):
+            skipping = False
+        if not skipping:
+            out.append(line)
+    return "".join(out), dropped
 
 
 @lru_cache(maxsize=8)

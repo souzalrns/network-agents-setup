@@ -341,10 +341,13 @@ def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) ->
     step_id = str(request.get("step_id"))
     agent_fm: dict[str, Any] = {}
     system_parts: list[str] = []
-    for name, title in (("AGENT.md", "Agente"), ("SKILL.md", "Skill")):
+    dropped: list[str] = []
+    for name, title, kind in (("AGENT.md", "Agente", "agent"), ("SKILL.md", "Skill", "skill")):
         p = pending / name
         if p.is_file():
             fm, body = cp.strip_frontmatter(p.read_text(encoding="utf-8"))
+            body, gone = cp.drop_doc_sections(body, kind)
+            dropped += [f"{name}: {g}" for g in gone]
             if name == "AGENT.md":
                 agent_fm = fm
                 if fm.get("description"):
@@ -419,7 +422,8 @@ def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) ->
         "user": "\n".join(user_parts),
         "wants_json": wants_json,
         "wants_summary": wants_summary,
-        "meta": {"policy": "opt", "grounding": level, "inputs": used, "summary_requested": wants_summary},
+        "meta": {"policy": "opt", "grounding": level, "inputs": used, "summary_requested": wants_summary,
+                 "dropped_sections": dropped},
     }
 
 
