@@ -301,7 +301,7 @@ Ver a secção 10 deste documento: **3 decisões + 4 construções pequenas**.
 | AU-20 | `toolsAllowed` sem fonte | NÃO INICIADO | FALTA-DECIDIR | Alta | AMBOS |
 | AU-21 | Streaming só no papel | NÃO INICIADO | FALTA-CONSTRUIR | Baixa | CLAUDE |
 | AU-22 | Campos de plano mortos | NÃO INICIADO | BUG | Média | CLAUDE |
-| AU-23 | Sem worker para `external` | NÃO INICIADO | FALTA-CONSTRUIR | Alta | AMBOS |
+| AU-23 | Sem worker para `external` | EM PR (2026-10-01, `feat/external-worker`; ver `docs/ops/WORKER-EXTERNAL.md`) | FALTA-CONSTRUIR → em revisão | Alta | AMBOS |
 | AU-24 | Regex anti-injecção com falsos positivos | NÃO INICIADO | BUG | Baixa | CLAUDE |
 | AU-25 | MCP `moderate` sem chave | EM CURSO | FALTA-DECIDIR | Baixa | DEV |
 | AU-26 | 8 agentes sem domínio inalcançáveis | NÃO INICIADO | BUG | Alta | AMBOS |

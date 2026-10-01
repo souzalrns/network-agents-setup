@@ -95,3 +95,5 @@ coverage/
 # === Ferramenta pessoal de sincronização entre sessões (não é parte do produto) ===
 # Achado do S23: nunca esteve tracked nem ignorada — previne um `git add .` acidental
 LUIZ RENATO/
+# Runs do worker external (AU-23): demos e runs reais, nao versionar
+pilots/run-worker-*/

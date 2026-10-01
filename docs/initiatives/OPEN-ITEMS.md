@@ -123,7 +123,7 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 ## Dependabot — ronda de 2026-10-01
 
 - **#25 (uuid 11 → 14 só no `apps/api`): ENTROU POR MERGE (não ficou fechado), por engano ou em simultâneo** com o fecho pedido. Merge `da0a894`, a 2026-10-01 às 00:28:17Z. O `package.json` passou a `uuid ^14` e o lockfile ficou em `^11.1.1`, por isso o `pnpm install --frozen-lockfile` falhava. A `main` ficou vermelha (CI run 36796345114) até à correção (a). A correção acabou por ser o merge do #29 (`3016466`, 00:29:47Z), que trouxe o lockfile atualizado: o CI run 36796468154 está verde e o `--frozen-lockfile` passa. Não houve revert. A branch foi apagada pelo Dependabot.
-- **#28 (`psycopg[binary]` >=3.3.5 → >=3.3.6, runner): ABERTO, aguarda rebase manual pelo maestro** (comentário `@dependabot rebase` na UI ou "Update branch"). A ferramenta de comentários do agente neutraliza menções e comandos (`·@·d·ependabot`). Depois do rebase: uma verificação de CI e merge se estiver verde.
+- **#28 (`psycopg[binary]` >=3.3.5 → >=3.3.6, runner): MERGED** (`45a401a`), depois do rebase manual pelo maestro.
 - **#29 (uuid 11 → 14 + vitest 4.1.11 → 5.0.2): MERGED** (`3016466`, 2026-10-01 00:29:47Z). Estava marcado como bloqueado pelo S29-bis, mas entrou na `main`.
   - ~~**S29-bis:** alinhar `@vitest/coverage-v8` com o vitest 5.x e verificar que a cobertura volta a > 0%.~~ **RESOLVIDO** na branch `fix/coverage-v8-vitest5` (commit `5917392`).
     - **O problema:** em `3016466` o `@vitest/coverage-v8` estava em 4.1.11 e o `vitest` em 5.0.2. Os 195/195 testes passavam, mas a cobertura dava 0% e o comando saía com código 1 (`Expected string coverage payload`). O CI não corria cobertura e não deu por isso.
@@ -138,3 +138,15 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
       - `pnpm test:coverage` 196/196 e 34,44%.
   - O `uuid@14` (só ESM) funciona com `require` em Node 20.19+ e Node 22. O CI está em Node 22.
 
+## Bloco B — worker do modo `external` (AU-23), 2026-10-01
+
+- **Feito (PR `feat/external-worker`, sem merge):** `runner/plan_runner/external_worker.py`.
+  - Executa com o Gemini (flash-lite) cada passo `external`, escreve `result.json` e regista os tokens no formato do `token_usage`.
+  - Respeita o HITL.
+  - Integrado no executor e no motor `native` (`--worker gemini`). Também tem uma CLI standalone para runs parados.
+  - Como correr: `docs/ops/WORKER-EXTERNAL.md`.
+- **B1 (DEV): primeiro run real.** Correr com `GEMINI_API_KEY` e confirmar `token_usage.jsonl` com `status: ok` e tokens não nulos. Na sessão de 01/10 não havia chave, por isso a evidência foi feita com o Gemini falso.
+- **B2: ledger central.** Com `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (projecto `agent-network-memory`), as linhas entram também no Supabase. Escrever em produção é decisão do DEV.
+- **B3: tools.** O worker não executa o `tools_allowed` (ex.: `web_search`). Depende do porte do `ToolExecutor` (D1, VIA A).
+- **B4: engine langgraph.** O worker inline só funciona no `native`; no langgraph usa-se `python -m plan_runner.external_worker <run>` + `resume`.
+- **B5: orçamento de tokens por run.** Hoje só existe o `budget.max_steps`.

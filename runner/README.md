@@ -55,6 +55,7 @@ After the run, look at:
 - **External workers**
   - `--mode external` writes `pending_steps/<step>/request.json`
   - Waits for `<step>/result.json` from any worker (LLM, human, script)
+  - Built-in Gemini worker: `--worker gemini` runs each step inline (free tier, tokens logged). See [docs/ops/WORKER-EXTERNAL.md](../docs/ops/WORKER-EXTERNAL.md)
 - **Quality**
   - 167 tests, 87% coverage (confirmed 2026-09-17 by running pytest directly, not carried over from an older count)
   - CI on every push (GitHub Actions)
@@ -76,10 +77,13 @@ After the run, look at:
 ## CLI reference
 
     # Run a plan
-    python -m plan_runner run <plan.yaml> [--engine native|langgraph] [--mode dry-run|stub|external] [--out <dir>]
+    python -m plan_runner run <plan.yaml> [--engine native|langgraph] [--mode dry-run|stub|external] [--worker none|gemini] [--out <dir>]
 
     # Resume a paused run (after HITL or external wait)
-    python -m plan_runner resume <out_dir> [--decision approve|reject|edit] [--payload-file <file.json>]
+    python -m plan_runner resume <out_dir> [--decision approve|reject|edit] [--payload-file <file.json>] [--worker none|gemini]
+
+    # Run the pending external step of a stopped run with Gemini (any engine)
+    python -m plan_runner.external_worker <out_dir> [--resume]
 
     # Show wave compilation (debug tool)
     python -m plan_runner compile-graph <plan.yaml>
@@ -90,7 +94,7 @@ After the run, look at:
 |---|---|
 | `dry-run` | Validates the plan, prints topological order, writes nothing |
 | `stub` | Runs steps in order; writes placeholder artifacts; stops at `human_gate` |
-| `external` | Writes `pending_steps/<step>/request.json`; waits for `result.json` |
+| `external` | Writes `pending_steps/<step>/request.json`; waits for `result.json`. With `--worker gemini` (native engine) the step runs inline |
 
 ### Engines
 
