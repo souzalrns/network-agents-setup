@@ -187,6 +187,26 @@ Conselho `architecture` (3 membros + chairman, `flash-lite`), 1 ronda.
 - **security** (tecto de 40k) não foi medido. Com um tamanho parecido, 1 ronda daria ~29% e 2 rondas ~59%: cabe, mas com menos folga. É uma estimativa; mede-se no primeiro run real de security.
 - **Por medir:** os tokens **por estágio** (independent / peer / synthesize). O run do maestro tem-nos em `council.json → ledger[]` (por participante) e no `token_usage.jsonl` (`call_kind`), mas este registo só traz os totais.
 
+### Regra de uso (maestro, 2026-10-03)
+
+> **1 conselho ≈ 1 SEO.** Não disparar o conselho por omissão: só para uma decisão estrutural (`architecture` / `security` / `product`), invocada explicitamente (`council run`), ou quando o router escala o pedido (keywords de `escalation` no `config/councils.yaml`).
+
+- **Porquê:** uma ronda (11 760 tokens) custa o mesmo que o `seo-article-demo` inteiro em `opt` (10 136): 1,16×.
+- **Como já está no código:** o router só escala com keywords explícitas, nas áreas listadas (`router.py:345`, `escalate`); `route --no-council` desliga a escalada. Nenhum plano nem agente abre um conselho sozinho.
+- **Escalar todas as áreas `hitl: required` (ADR §9) continua desligado.** Multiplicaria o custo de cada pedido de security, finance e legal por cerca de 1 SEO.
+
+### Análise do Grok (parceiro de design, 2026-10-03), sobre o B1-bis-R2 e o C-1
+
+1. **SEO em `opt` ~10k: saudável.** O critic deixou de ser o buraco do `tokens_in` (3759 → 2091, −44%).
+2. **Conselho ~12k por ronda: saudável para uma decisão estrutural.** 1 conselho ≈ 1 SEO.
+3. **Não abrir o B1-bis-C só porque não está <9k.** O ganho real já apareceu (−22%).
+4. **Não migrar SQLite → Postgres só porque o conselho falou nisso.** O veredicto é `conditional` e as condições não foram validadas. O SQLite continua certo para um só processo, que é o que o ADR §12 já dizia ("só quando houver multi-instância").
+5. **Não baixar o tecto do conselho para 15k agora.**
+
+**Decisões que ficam registadas:**
+- **Tecto:** o conselho não tem um `max_tokens` próprio; usa o da área do conselho (80k em `architecture`/`product`, 40k em `security`). Fica assim. Um tecto de 15k cobriria 1 ronda medida (11 760), mas não 2 (≈ 23 500, extrapolado), por isso mudá-lo exige decidir primeiro se a 2.ª ronda se mantém.
+- **Veredicto aprovado não executa nada.** O `approve` no HITL torna o veredicto conhecimento `active`; não aplica a decisão. Executar o que o veredicto propõe (aqui, a migração do checkpointer) é trabalho separado, que só começa depois de validadas as condições, por ordem do maestro.
+
 ### Antes do run (referência)
 
 **Lição do B1-bis aplicada: não se decide nada com caracteres.** O que existia antes do C-1:
@@ -238,6 +258,8 @@ Os prompts dos membros e do chairman são dominados pelo AGENT.md e pela directi
 | Estado final | **`done`** |
 
 É a primeira prova funcional com o modelo real: as saídas do `flash-lite` passaram na normalização (posições, ballots e veredicto em JSON válido, `confidence` em 0–1), e o protocolo correu de ponta a ponta.
+
+**Tema:** a migração dos checkpoints do LangGraph de SQLite para Postgres (segundo a análise do Grok, ponto 4). **Seguimento:** nenhum. O veredicto é `conditional`, as condições não estão validadas, e o SQLite fica (ver "Análise do Grok").
 
 **Por registar:** o texto das condições, dos kill criteria e dos próximos passos (`verdict.json` do run do maestro), e o estado da L4 neste run (`candidate` → `active`, ou `disabled` se correu com `--no-memory`).
 

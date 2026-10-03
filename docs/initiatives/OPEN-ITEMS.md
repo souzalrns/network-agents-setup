@@ -219,7 +219,11 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 
     Viável sem cortes. Detalhe em `docs/ops/COUNCIL.md`, "Custo medido (C-1)".
   - **C-2 (DEV): migração do ledger** no Supabase (`scripts/alter_token_usage_council_kinds.sql`). Até lá, as linhas do conselho ficam só no `token_usage.jsonl` local.
-- **B1-bis-C (encurtar skills/prompt-base): próximo-grande, NÃO agora.** Com os tectos por área, o custo actual não é problema. Base medida no B1-bis-R2: 10 136, a 1 136 da meta de <9k.
+- **B1-bis-C (encurtar skills/prompt-base): próximo-grande, NÃO agora.** Com os tectos por área, o custo actual não é problema. Base medida no B1-bis-R2: 10 136, a 1 136 da meta de <9k. **Não abrir só porque não está <9k** (análise do Grok, 2026-10-03): o ganho real já apareceu.
+- **Regra de uso do conselho (maestro, 2026-10-03):** 1 conselho ≈ 1 SEO. Não disparar por omissão: só para uma decisão estrutural (architecture / security / product) ou quando o router escala. Em `docs/ops/COUNCIL.md` e `docs/ops/BUDGET.md`.
+- **Não fazer agora (análise do Grok, 2026-10-03):**
+  - migrar os checkpoints SQLite → Postgres por causa do veredicto do C-1: é `conditional`, as condições não foram validadas, e o SQLite serve um só processo;
+  - baixar o tecto dos conselhos para 15k.
 - Outros candidatos, sem ordem: L4-2 (spike mem0), L4-3 (MCP de produção → L4).
 - **Novo, para o B1-bis-C:** medir com o endpoint `countTokens` da API Gemini (contagem exacta da entrada sem gerar texto) em vez de projecções por caracteres.
 

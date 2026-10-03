@@ -170,6 +170,9 @@ Critic `tokens_in`: 3759 → **2091 (−44%)**; a saída do critic fica em 341 (
 - **A hipótese "o `opt` só compensa em planos com 4+ passos" fica refutada.** Os cortes do prompt-base valem desde o 1.º passo (research −20%). Só a parte dos resumos depende de haver um passo que consuma um artefacto que não é o seu último input. Em planos mais longos o ganho deve crescer, porque a projecção de 8 passos aponta para −31%; mas isso é projecção, não medição.
 - **A projecção (−16%) subestimou o ganho real (−22%).** Por passo, previa research −26%, seo_brief +1%, copy −11%, critic −31%. A lição de método mantém-se: decidir só com `usageMetadata` real.
 - **Meta <9k:** faltam **1 136 tokens** (10 136 contra 9 000). O caminho continua a ser o B1-bis-C (PLANO item 12), que fica para quando houver ordem.
+- **Análise do Grok (parceiro de design, 2026-10-03):**
+  - ~10k em `opt` é saudável, e o critic deixou de ser o buraco do `tokens_in`;
+  - **não abrir o B1-bis-C só porque não está <9k**: o ganho real já apareceu, e o patamar dos 13k ficou para trás.
 
 **Limite deste registo:** só o critic tem a separação entrada/saída. Nos outros passos registam-se os totais, e não se sabe quanto do −31% do copy vem da entrada e quanto vem da saída (o modelo pode ter escrito menos). O `pilots/run-opt2/token_usage.jsonl` do maestro tem os números para separar.
 
