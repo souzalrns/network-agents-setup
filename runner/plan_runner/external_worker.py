@@ -46,6 +46,7 @@ import httpx
 import yaml
 
 from . import context_policy as cp
+from . import cost
 from . import memory_wiring as mw
 from . import repo_files as rf
 from .skills import _frontmatter, repo_root_from_out
@@ -79,8 +80,21 @@ class HumanGateBlocked(WorkerError):
 class BudgetExceeded(WorkerError):
     """O run ja gastou o tecto de tokens; o passo nao chega a chamar o Gemini."""
 
+    unit = "tokens"
+
     def __init__(self, spent: int, cap: int):
         super().__init__(f"orcamento de tokens atingido: {spent} gastos >= tecto {cap}")
+        self.spent = spent
+        self.cap = cap
+
+
+class CostBudgetExceeded(BudgetExceeded):
+    """D6: o run ja gastou o tecto de custo (budget.max_cost_usd / --max-cost-usd)."""
+
+    unit = "usd"
+
+    def __init__(self, spent: float, cap: float):
+        WorkerError.__init__(self, f"orcamento de custo atingido: US$ {spent:.6f} gastos >= tecto US$ {cap}")
         self.spent = spent
         self.cap = cap
 
@@ -284,14 +298,47 @@ def token_cap(out_root: Path) -> int | None:
     return v if isinstance(v, int) and not isinstance(v, bool) else None
 
 
-def check_budget(out_root: Path) -> None:
-    """Lanca BudgetExceeded se o ledger do run ja chegou ao tecto."""
+def cost_cap(out_root: Path) -> float | None:
+    """D6: tecto de custo em USD. `max_cost_usd` do status.json (--max-cost-usd) > `budget.max_cost_usd` do plano."""
+    status_path = out_root / "status.json"
+    if status_path.is_file():
+        try:
+            v = _read_json(status_path).get("max_cost_usd")
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            v = None
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            return float(v)
+    v = (_load_plan_raw(out_root).get("budget") or {}).get("max_cost_usd")
+    return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def check_budget(out_root: Path, model: str | None = None) -> None:
+    """Lanca BudgetExceeded se o ledger do run ja chegou a um tecto (tokens ou custo).
+
+    D6: com tecto de custo, falha fechada (WorkerError) se o modelo a usar, ou um
+    ja usado no run, nao tem preco confirmado em config/model-prices.yaml.
+    """
     cap = token_cap(out_root)
-    if cap is None:
+    if cap is not None:
+        spent = ledger_spent(out_root)
+        if spent >= cap:
+            raise BudgetExceeded(spent, cap)
+    usd_cap = cost_cap(out_root)
+    if usd_cap is None:
         return
-    spent = ledger_spent(out_root)
-    if spent >= cap:
-        raise BudgetExceeded(spent, cap)
+    prices = cost.load_prices()
+    missing = model if model is not None and model not in prices else None
+    try:
+        spent_usd = cost.ledger_cost_usd(out_root / LEDGER_FILE, prices)
+    except cost.CostUnknown as e:
+        missing = str(e)
+    if missing is not None:
+        raise WorkerError(
+            f"budget.max_cost_usd definido, mas o modelo {missing!r} nao tem preco confirmado "
+            "em config/model-prices.yaml (docs/ops/BUDGET.md, D6)"
+        )
+    if spent_usd >= usd_cap:
+        raise CostBudgetExceeded(spent_usd, usd_cap)
 
 
 def check_hitl(out_root: Path, step_id: str) -> None:
@@ -568,7 +615,7 @@ class GeminiWorker:
         if result_path.exists():
             return _read_json(result_path)  # idempotente: o passo ja tem resultado
         check_hitl(out_root, step_id)
-        check_budget(out_root)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
+        check_budget(out_root, self.model)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
         request_path = pending / "request.json"
         if not request_path.is_file():
             raise WorkerError(f"sem request.json em {pending}")
@@ -721,7 +768,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"hitl: {e}", file=sys.stderr)
         return 2
     except BudgetExceeded as e:
-        print(f"budget: {e}; sobe o tecto com `python -m plan_runner resume <run> --max-tokens N`", file=sys.stderr)
+        flag = "--max-cost-usd X" if e.unit == "usd" else "--max-tokens N"
+        print(f"budget: {e}; sobe o tecto com `python -m plan_runner resume <run> {flag}`", file=sys.stderr)
         return 3
     except WorkerError as e:
         print(f"error: {e}", file=sys.stderr)
