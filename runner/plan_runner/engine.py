@@ -98,6 +98,13 @@ def _check_max_tokens(max_tokens: int | None) -> None:
         raise PlanError(f"--max-tokens tem de ser um inteiro >= 0 (got {max_tokens!r})")
 
 
+def _check_max_cost(max_cost_usd: float | None) -> None:
+    if max_cost_usd is not None and (
+        isinstance(max_cost_usd, bool) or not isinstance(max_cost_usd, (int, float)) or max_cost_usd < 0
+    ):
+        raise PlanError(f"--max-cost-usd tem de ser um numero >= 0 (got {max_cost_usd!r})")
+
+
 def _worker_for(mode: str, name: str | None) -> Any:
     """AU-23: worker inline do modo external (None = esperar por result.json, como sempre)."""
     if name in (None, "", "none"):
@@ -128,13 +135,19 @@ def _paused_budget(out: Path, log: EventLog, run_id: str, status: dict[str, Any]
     status["paused_at_step"] = step_id
     status["completed"] = sorted(completed)
     status["budget_spent"] = budget.get("spent")
+    usd = budget.get("unit") == "usd"
+    if usd:
+        status["budget_unit"] = "usd"
     save_status(out, status)
+    what, flag = ("custo", "--max-cost-usd") if usd else ("tokens", "--max-tokens")
+    spent = f"US$ {budget.get('spent'):.6f} gastos" if usd else f"{budget.get('spent')} tokens gastos"
+    cap = f"US$ {budget.get('cap')}" if usd else f"{budget.get('cap')}"
     (out / "BUDGET.md").write_text(
-        f"# Orcamento de tokens\n\nRun `{run_id}` parado antes do passo `{step_id}`: "
-        f"{budget.get('spent')} tokens gastos >= tecto {budget.get('cap')}.\n\n"
+        f"# Orcamento de {what}\n\nRun `{run_id}` parado antes do passo `{step_id}`: "
+        f"{spent} >= tecto {cap}.\n\n"
         f"Passos feitos: {sorted(completed)}\n\n"
         f"Retomar com um tecto maior (docs/ops/BUDGET.md):\n```\n"
-        f"python -m plan_runner resume {out} --max-tokens <novo tecto>\n```\n",
+        f"python -m plan_runner resume {out} {flag} <novo tecto>\n```\n",
         encoding="utf-8",
     )
 
@@ -146,6 +159,7 @@ def run_plan(
     out_dir: Path | None = None,
     worker: str | None = None,
     max_tokens: int | None = None,
+    max_cost_usd: float | None = None,
 ) -> dict[str, Any]:
     plan = load_plan(plan_path)
     order = topo_order(plan)
@@ -160,6 +174,7 @@ def run_plan(
 
     worker_obj = _worker_for(mode, worker)
     _check_max_tokens(max_tokens)
+    _check_max_cost(max_cost_usd)
     run_id = f"run_{uuid4().hex[:10]}"
     out = _validate_out_dir(out_dir) if out_dir else Path("pilots") / run_id
     if out.exists() and any(out.iterdir()):
@@ -187,6 +202,8 @@ def run_plan(
         status["worker"] = worker_obj.name
     if max_tokens is not None:
         status["max_tokens"] = max_tokens  # tem prioridade sobre o budget.max_tokens do plano
+    if max_cost_usd is not None:
+        status["max_cost_usd"] = max_cost_usd  # D6: idem para o budget.max_cost_usd
 
     for step in order:
         if steps_run >= plan.budget_max_steps:
@@ -281,7 +298,13 @@ def run_plan(
     return status
 
 
-def resume_run(out_dir: Path, decision: str, worker: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
+def resume_run(
+    out_dir: Path,
+    decision: str,
+    worker: str | None = None,
+    max_tokens: int | None = None,
+    max_cost_usd: float | None = None,
+) -> dict[str, Any]:
     out_dir = _validate_out_dir(out_dir)
     status = load_status(out_dir)
     if not status:
@@ -306,16 +329,18 @@ def resume_run(out_dir: Path, decision: str, worker: str | None = None, max_toke
             status["worker"] = worker_obj.name
     status.pop("worker_error", None)
     _check_max_tokens(max_tokens)
+    _check_max_cost(max_cost_usd)
     if max_tokens is not None:
         status["max_tokens"] = max_tokens
+    if max_cost_usd is not None:
+        status["max_cost_usd"] = max_cost_usd
     if state == "paused_budget":
-        log.append(
-            "budget_resumed",
-            run_id,
-            {"step_id": status.get("paused_at_step"), "spent": status.get("budget_spent"), "max_tokens": status.get("max_tokens")},
-            actor={"kind": "human", "id": "cli"},
-        )
+        payload = {"step_id": status.get("paused_at_step"), "spent": status.get("budget_spent"), "max_tokens": status.get("max_tokens")}
+        if status.get("max_cost_usd") is not None:
+            payload["max_cost_usd"] = status["max_cost_usd"]
+        log.append("budget_resumed", run_id, payload, actor={"kind": "human", "id": "cli"})
         status.pop("budget_spent", None)  # se voltar a parar, _paused_budget grava o valor novo
+        status.pop("budget_unit", None)
 
     # Crash recovery: state left as "running" mid-step — continue like waiting_external
     if state == "running":
@@ -424,5 +449,6 @@ def resume_run(out_dir: Path, decision: str, worker: str | None = None, max_toke
     status["current_step"] = None
     status.pop("paused_at_step", None)
     status.pop("budget_spent", None)
+    status.pop("budget_unit", None)
     save_status(out_dir, status)
     return status

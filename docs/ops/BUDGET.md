@@ -70,6 +70,17 @@ Notas:
 
 **Rever na fase 2:** com o contexto por resumo medido, apertar marketing e software para ~2× o gasto real de um plano de 8 passos.
 
+## Tecto de custo em USD (D6, 2026-10-03)
+
+`budget.max_cost_usd` (plano) ou `--max-cost-usd X` (`run`/`resume`, com prioridade) funcionam como o tecto de tokens: verificados **antes** de cada chamada, e ao chegar ao tecto o run fica `paused_budget`, retomável com `resume --max-cost-usd <maior>`. Os dois tectos podem coexistir; pára o primeiro que for atingido.
+
+- **Custo de uma chamada** = `tokens_in × entrada + (tokens_total − tokens_in) × saída`, com os preços em USD/1M de [`config/model-prices.yaml`](../../config/model-prices.yaml). A saída inclui os tokens de raciocínio (o Gemini cobra-os como saída e não vêm em `tokens_out`). Linhas sem tokens contam 0, como no tecto de tokens. Código: `runner/plan_runner/cost.py`.
+- **Falha fechada:** com tecto de custo activo, se o modelo a usar (ou um já usado no run) não tem preço confirmado, o worker **não chama** o Gemini e deixa o passo em `waiting_external` com o erro a apontar para o `config/model-prices.yaml`. Sem tecto de custo, o ficheiro de preços nem é lido.
+- **⚠ Preços POR CONFIRMAR (DEV):** o `config/model-prices.yaml` tem os valores a `null`; a página oficial de preços não estava acessível na sessão que fez o D6. Até serem preenchidos, qualquer plano com `max_cost_usd` pára no 1.º passo, de propósito.
+- **Free tier:** o custo facturado é 0; o tecto mede o preço de lista (o que o run custaria em pay-as-you-go).
+- **Rastreio:** `status.json` guarda `max_cost_usd`; ao parar, `budget_spent` (USD) e `budget_unit: usd`; `events.jsonl` recebe `budget_exceeded {…, unit: "usd"}`; o `<run>/BUDGET.md` diz qual dos tectos parou o run. O worker standalone sai com o código 3, como no tecto de tokens.
+- **Fora do D6:** tectos de custo por área (`config/areas.yaml`) e por dia ou cliente (precisam do ledger central). O §8.5 do EXECUTION-PLAN (orçamento em camadas) continua modelo preliminar.
+
 ## Como correr
 
 ```bash

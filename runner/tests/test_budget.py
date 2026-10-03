@@ -205,3 +205,143 @@ def test_validador_aceita_max_tokens_e_recusa_lixo(tmp_path):
         y = VALID.replace("    agents: [eng.dev]\n", f"    agents: [eng.dev]\n    budget: {bad}\n")
         errors = validate_areas(repo(f"bad{i}", y))
         assert any("`budget` tem de ser null" in e for e in errors), (bad, errors)
+
+
+# --------------------------------------------------------------------------
+# D6: tecto de custo em USD (budget.max_cost_usd / --max-cost-usd)
+# --------------------------------------------------------------------------
+
+# Precos de TESTE (nao sao os reais): 1 USD/1M de entrada, 10 USD/1M de saida.
+# Cada chamada falsa: 812 de entrada + (955 - 812) = 143 de saida -> US$ 0.002242.
+PER_CALL_USD = (812 * 1.0 + 143 * 10.0) / 1_000_000
+
+
+@pytest.fixture
+def prices(tmp_path, monkeypatch):
+    from plan_runner import cost
+
+    def _write(models: dict) -> Path:
+        p = tmp_path / "model-prices.yaml"
+        p.write_text(json.dumps({"models": models}), encoding="utf-8")  # JSON e YAML valido
+        monkeypatch.setattr(cost, "PRICES_PATH", p)
+        return p
+
+    _write({"gemini-flash-lite-latest": {"usd_per_1m_input": 1.0, "usd_per_1m_output": 10.0}})
+    return _write
+
+
+def _cost_plan(tmp_path: Path, max_cost_usd: float) -> Path:
+    p = _plan(tmp_path)
+    p.write_text(p.read_text(encoding="utf-8").replace("objective: x\n", f"objective: x\nbudget:\n  max_cost_usd: {max_cost_usd}\n"),
+                 encoding="utf-8")
+    return p
+
+
+def test_custo_para_ao_atingir_o_tecto_sem_chamar_o_gemini(tmp_path, tmp_run_dir, fake, prices):
+    # 0.004: passo 1 (0) e passo 2 (0.002242) correm; o 3 ja nao (0.004484 >= 0.004)
+    status = run_plan(_cost_plan(tmp_path, 0.004), mode="external", out_dir=tmp_run_dir, worker="gemini")
+
+    assert status["state"] == "paused_budget" and status["paused_at_step"] == "copy"
+    assert status["budget_unit"] == "usd"
+    assert status["budget_spent"] == pytest.approx(2 * PER_CALL_USD)
+    assert len(fake.calls) == 2
+    [ev] = [e for e in _events(tmp_run_dir) if e["type"] == "budget_exceeded"]
+    assert ev["payload"]["unit"] == "usd" and ev["payload"]["cap"] == 0.004
+    note = (tmp_run_dir / "BUDGET.md").read_text(encoding="utf-8")
+    assert "Orcamento de custo" in note and "--max-cost-usd" in note
+
+
+def test_custo_resume_com_tecto_maior_continua(tmp_path, tmp_run_dir, fake, prices):
+    run_plan(_cost_plan(tmp_path, 0.004), mode="external", out_dir=tmp_run_dir, worker="gemini")
+    status = resume_run(tmp_run_dir, decision="approve", max_cost_usd=1.0)
+
+    assert status["state"] == "done" and len(fake.calls) == 3
+    assert status["max_cost_usd"] == 1.0 and "budget_unit" not in status and "budget_spent" not in status
+    resumed = [e for e in _events(tmp_run_dir) if e["type"] == "budget_resumed"]
+    assert resumed[0]["payload"]["max_cost_usd"] == 1.0
+
+
+def test_max_cost_usd_do_run_tem_prioridade_sobre_o_plano(tmp_path, tmp_run_dir, fake, prices):
+    status = run_plan(_cost_plan(tmp_path, 100.0), mode="external", out_dir=tmp_run_dir, worker="gemini", max_cost_usd=0.001)
+    assert status["state"] == "paused_budget" and status["paused_at_step"] == "brief" and len(fake.calls) == 1
+
+
+def test_custo_sem_preco_confirmado_falha_fechado_antes_de_gastar(tmp_path, tmp_run_dir, fake, prices):
+    prices({"gemini-flash-lite-latest": {"usd_per_1m_input": None, "usd_per_1m_output": None}})
+    status = run_plan(_cost_plan(tmp_path, 1.0), mode="external", out_dir=tmp_run_dir, worker="gemini")
+
+    assert fake.calls == []  # nunca gasta sem saber o preco
+    assert status["state"] == "waiting_external"
+    assert "config/model-prices.yaml" in status["worker_error"] and "gemini-flash-lite-latest" in status["worker_error"]
+
+
+def test_sem_tecto_de_custo_os_precos_nao_sao_lidos(tmp_path, tmp_run_dir, fake, monkeypatch):
+    from plan_runner import cost
+
+    monkeypatch.setattr(cost, "PRICES_PATH", tmp_path / "nao-existe.yaml")
+    status = run_plan(_plan(tmp_path), mode="external", out_dir=tmp_run_dir, worker="gemini")
+    assert status["state"] == "done" and "max_cost_usd" not in status
+
+
+def test_max_cost_usd_invalido(tmp_path, tmp_run_dir):
+    for bad in (-0.5, True):
+        with pytest.raises(PlanError, match="numero >= 0"):
+            run_plan(_plan(tmp_path), mode="external", out_dir=tmp_run_dir, worker="gemini", max_cost_usd=bad)
+
+
+def test_custo_por_linha_conta_raciocinio_como_saida_e_ignora_linhas_sem_tokens():
+    from plan_runner import cost
+
+    p = {"m": {"in": 1.0, "out": 10.0}}
+    # total 1000 = 100 in + 200 out + 700 de raciocinio: a saida cobrada e 900
+    assert cost.row_cost_usd({"model": "m", "tokens_in": 100, "tokens_out": 200, "tokens_total": 1000}, p) == pytest.approx(
+        (100 * 1 + 900 * 10) / 1_000_000)
+    assert cost.row_cost_usd({"model": "outro", "tokens_in": None, "tokens_total": None}, p) == 0.0
+    with pytest.raises(cost.CostUnknown):
+        cost.row_cost_usd({"model": "outro", "tokens_in": 1, "tokens_total": 2}, p)
+
+
+def test_load_prices_so_aceita_precos_confirmados(tmp_path):
+    from plan_runner import cost
+
+    f = tmp_path / "p.yaml"
+    f.write_text(json.dumps({"models": {
+        "ok": {"usd_per_1m_input": 0.1, "usd_per_1m_output": 0.4},
+        "nulo": {"usd_per_1m_input": None, "usd_per_1m_output": 0.4},
+        "negativo": {"usd_per_1m_input": -1, "usd_per_1m_output": 0.4},
+        "bool": {"usd_per_1m_input": True, "usd_per_1m_output": 0.4},
+    }}), encoding="utf-8")
+    assert cost.load_prices(f) == {"ok": {"in": 0.1, "out": 0.4}}
+
+
+def test_config_real_de_precos_e_valida_e_ainda_nao_tem_precos_confirmados():
+    """D6: config/model-prices.yaml existe e carrega; os valores estao por confirmar pelo DEV."""
+    from plan_runner import cost
+
+    assert cost.PRICES_PATH.is_file()
+    assert cost.load_prices() == {}  # mudar este teste quando o DEV preencher os precos
+
+
+def test_cli_run_e_resume_com_max_cost_usd(tmp_path, tmp_run_dir, fake, prices, capsys):
+    from plan_runner.cli import main
+
+    assert main(["run", str(_plan(tmp_path)), "--mode", "external", "--worker", "gemini",
+                 "--max-cost-usd", "0.004", "--out", str(tmp_run_dir)]) == 0
+    assert json.loads(capsys.readouterr().out)["state"] == "paused_budget"
+    assert main(["resume", str(tmp_run_dir), "--max-cost-usd", "1"]) == 0
+    assert json.loads(capsys.readouterr().out)["state"] == "done"
+
+
+def test_cli_langgraph_recusa_max_cost_usd(tmp_path, tmp_run_dir, capsys):
+    from plan_runner.cli import main
+
+    assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external",
+                 "--max-cost-usd", "1", "--out", str(tmp_run_dir)]) == 1
+    assert "--max-cost-usd so no engine native" in capsys.readouterr().out
+
+
+def test_worker_standalone_respeita_o_tecto_de_custo(tmp_path, tmp_run_dir, fake, prices, capsys):
+    run_plan(_cost_plan(tmp_path, 0.004), mode="external", out_dir=tmp_run_dir, worker="gemini")
+    assert ew.main([str(tmp_run_dir)]) == 3
+    err = capsys.readouterr().err
+    assert "orcamento de custo" in err and "--max-cost-usd" in err and len(fake.calls) == 2

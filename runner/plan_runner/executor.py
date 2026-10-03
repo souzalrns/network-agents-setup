@@ -20,7 +20,7 @@ class StepResult:
         detail: str = "",
         artifact: str | None = None,
         worker_error: str | None = None,
-        budget: dict[str, int] | None = None,
+        budget: dict[str, Any] | None = None,
     ):
         self.ok = ok
         self.detail = detail
@@ -137,8 +137,11 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
         try:
             worker.process(out_root, step.id)
         except BudgetExceeded as e:
-            # Tecto de tokens atingido: o passo nao correu; o motor pausa o run (paused_budget).
-            return StepResult(ok=False, detail="budget_exceeded", worker_error=str(e), budget={"spent": e.spent, "cap": e.cap})
+            # Tecto de tokens (ou de custo, D6) atingido: o passo nao correu; o motor pausa o run (paused_budget).
+            budget = {"spent": e.spent, "cap": e.cap}
+            if e.unit == "usd":
+                budget["unit"] = "usd"
+            return StepResult(ok=False, detail="budget_exceeded", worker_error=str(e), budget=budget)
         except WorkerError as e:
             # Sem result.json: o passo fica em waiting_external e o resume tenta outra vez.
             return StepResult(ok=False, detail="waiting_external", worker_error=str(e))

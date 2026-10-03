@@ -1,0 +1,23 @@
+# D6: preços por modelo para o tecto `budget.max_cost_usd` (docs/ops/BUDGET.md).
+#
+# USD por 1 milhão de tokens. `null` = preço NÃO CONFIRMADO: o modelo não tem
+# custo conhecido e, com um tecto de custo activo, o worker recusa chamá-lo
+# (falha fechada, antes de gastar). Sem `max_cost_usd` este ficheiro não é lido.
+#
+# A chave é o `model` pedido, tal como fica no token_usage.jsonl (não o
+# `model_version` devolvido pela API).
+#
+# POR CONFIRMAR PELO DEV: a fonte é a página oficial de preços da Gemini API
+# (https://ai.google.dev/gemini-api/docs/pricing); o acesso estava bloqueado na
+# sessão que criou este ficheiro (2026-10-03), por isso nenhum valor foi
+# preenchido. Ao preencher, actualizar `verified_at`.
+# Nota: no free tier o custo facturado é 0; estes valores são o preço de lista
+# (o que o run custaria em pay-as-you-go).
+
+verified_at: null
+source: https://ai.google.dev/gemini-api/docs/pricing
+
+models:
+  gemini-flash-lite-latest:   # DEFAULT_MODEL do worker, router e conselho
+    usd_per_1m_input: null
+    usd_per_1m_output: null
