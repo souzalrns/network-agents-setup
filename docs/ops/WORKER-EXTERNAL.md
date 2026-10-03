@@ -392,5 +392,5 @@ steps:
 ## Limites actuais
 
 - **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A). Para ler ficheiros do repo, usa-se o `repo_files` (secção acima).
-- **Worker inline só no engine `native`.** No `langgraph` usa-se o worker standalone e depois o `resume`.
+- **Worker inline nos 2 engines (W-005, 2026-10-03).** `--engine langgraph --worker gemini` corre cada passo como no `native`, incluindo as ondas paralelas, o `paused_budget` e o `worker_error` no status. Sem `--worker`, o langgraph continua a parar em `waiting_external` (worker standalone + `resume`, ou `resume --worker gemini`).
 - **Orçamento:** tecto de tokens por run (`--max-tokens`, ou `budget.max_tokens` do plano ou da área), verificado pelo worker antes de cada chamada. O run pausa em `paused_budget` e retoma com `resume --max-tokens N`. Ver [BUDGET.md](./BUDGET.md).

@@ -102,7 +102,7 @@ python -m plan_runner resume ../pilots/run-worker-seo --max-tokens 40000
   - volta a parar se chegar ao tecto novo.
 - O `resume` **sem** `--max-tokens` num run em `paused_budget` pára outra vez no mesmo passo, sem chamar o Gemini.
 - O worker standalone (`python -m plan_runner.external_worker <run>`) respeita o mesmo tecto e sai com o **código 3** quando o encontra.
-- No engine `langgraph`, `--max-tokens` dá erro explícito: o tecto é aplicado pelo worker inline, que só existe no `native`.
+- No engine `langgraph` (W-005, 2026-10-03), `--max-tokens` e `--max-cost-usd` funcionam como no `native`, com o worker inline (`--worker gemini`) ou com o worker standalone. O `resume` aceita `paused_budget` e os tectos novos.
 
 ## Rastreio
 

@@ -153,12 +153,17 @@ def test_cli_run_e_resume_com_max_tokens(tmp_path, tmp_run_dir, fake, capsys):
     assert json.loads(capsys.readouterr().out)["state"] == "done"
 
 
-def test_cli_langgraph_recusa_max_tokens(tmp_path, tmp_run_dir, capsys):
+def test_cli_langgraph_com_worker_inline_aplica_o_tecto_e_retoma(tmp_path, tmp_run_dir, fake, capsys):
+    """W-005: no langgraph o worker inline e o tecto funcionam como no native (antes: recusados)."""
+    pytest.importorskip("langgraph")
     from plan_runner.cli import main
 
-    assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external",
-                 "--max-tokens", "10", "--out", str(tmp_run_dir)]) == 1
-    assert "--max-tokens so no engine native" in capsys.readouterr().out
+    assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external", "--worker", "gemini",
+                 "--max-tokens", "1500", "--out", str(tmp_run_dir)]) == 0
+    st = json.loads(capsys.readouterr().out)
+    assert st["state"] == "paused_budget" and st["paused_at_step"] == "copy" and len(fake.calls) == 2
+    assert main(["resume", str(tmp_run_dir), "--max-tokens", "5000"]) == 0
+    assert json.loads(capsys.readouterr().out)["state"] == "done" and len(fake.calls) == 3
 
 
 def test_worker_standalone_respeita_o_tecto(tmp_path, tmp_run_dir, fake, capsys):
@@ -332,12 +337,15 @@ def test_cli_run_e_resume_com_max_cost_usd(tmp_path, tmp_run_dir, fake, prices, 
     assert json.loads(capsys.readouterr().out)["state"] == "done"
 
 
-def test_cli_langgraph_recusa_max_cost_usd(tmp_path, tmp_run_dir, capsys):
+def test_cli_langgraph_com_worker_inline_aplica_o_tecto_de_custo(tmp_path, tmp_run_dir, fake, prices, capsys):
+    """W-005 + D6: o tecto de custo tambem vale no langgraph com o worker inline."""
+    pytest.importorskip("langgraph")
     from plan_runner.cli import main
 
-    assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external",
-                 "--max-cost-usd", "1", "--out", str(tmp_run_dir)]) == 1
-    assert "--max-cost-usd so no engine native" in capsys.readouterr().out
+    assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external", "--worker", "gemini",
+                 "--max-cost-usd", "0.004", "--out", str(tmp_run_dir)]) == 0
+    st = json.loads(capsys.readouterr().out)
+    assert st["state"] == "paused_budget" and st["budget_unit"] == "usd" and len(fake.calls) == 2
 
 
 def test_worker_standalone_respeita_o_tecto_de_custo(tmp_path, tmp_run_dir, fake, prices, capsys):

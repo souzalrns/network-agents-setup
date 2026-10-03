@@ -104,18 +104,13 @@ def main(argv: list[str] | None = None) -> int:
             result = {"hits": search(args.out, args.query)}
         elif args.cmd == "run":
             if args.engine == "langgraph":
-                if args.max_tokens is not None:
-                    raise PlanError("--max-tokens so no engine native (o tecto e aplicado pelo worker inline)")
-                if args.max_cost_usd is not None:
-                    raise PlanError("--max-cost-usd so no engine native (o tecto e aplicado pelo worker inline)")
-                if args.worker not in (None, "none"):
-                    raise PlanError(
-                        "--worker inline so no engine native; no langgraph usa "
-                        "`python -m plan_runner.external_worker <run>` e depois `resume`"
-                    )
+                # W-005: worker inline e tectos tambem no langgraph (paridade com o native)
                 from .langgraph_engine import run_plan_langgraph
 
-                result = run_plan_langgraph(args.plan, mode=args.mode, out_dir=args.out)
+                result = run_plan_langgraph(
+                    args.plan, mode=args.mode, out_dir=args.out, worker=args.worker,
+                    max_tokens=args.max_tokens, max_cost_usd=args.max_cost_usd,
+                )
             else:
                 result = run_plan(
                     args.plan, mode=args.mode, out_dir=args.out, worker=args.worker,
@@ -137,10 +132,6 @@ def main(argv: list[str] | None = None) -> int:
             decision = hitl_decision["response"] if hitl_decision else args.decision
 
             if st and st.get("engine", "").startswith("langgraph"):
-                if args.worker not in (None, "none") or args.max_tokens is not None or args.max_cost_usd is not None:
-                    raise PlanError(
-                        "--worker/--max-tokens/--max-cost-usd so no engine native (ver `python -m plan_runner.external_worker`)"
-                    )
                 from .langgraph_engine import resume_plan_langgraph
 
                 payload = None
@@ -148,7 +139,10 @@ def main(argv: list[str] | None = None) -> int:
                     if not args.payload_file.exists():
                         raise PlanError(f"payload file not found: {args.payload_file}")
                     payload = args.payload_file.read_text(encoding="utf-8-sig")
-                result = resume_plan_langgraph(args.out, decision=decision, payload=payload)
+                result = resume_plan_langgraph(
+                    args.out, decision=decision, payload=payload, worker=args.worker,
+                    max_tokens=args.max_tokens, max_cost_usd=args.max_cost_usd,
+                )
             else:
                 result = resume_run(
                     args.out, decision=decision, worker=args.worker,
