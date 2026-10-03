@@ -227,3 +227,19 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - Outros candidatos, sem ordem: L4-2 (spike mem0), L4-3 (MCP de produção → L4).
 - **Novo, para o B1-bis-C:** medir com o endpoint `countTokens` da API Gemini (contagem exacta da entrada sem gerar texto) em vez de projecções por caracteres.
 
+## Meta-agentes, Fase 2: Execution Broker (registo, 2026-10-03; NÃO implementar)
+
+Contrato arquitectural em `docs/architecture/META-AGENTS-PHASE-2.md`, a partir da análise do GPT (transcrita sem alterações). Vem **depois** do `CouncilSession` (Fase 1, `docs/ops/COUNCIL.md`): o conselho delibera e entrega uma **Decision**; a Fase 2 decide **quem executa** e garante que **só um** executa.
+
+- **Fase 2: Execution Broker.** Escolhe o executor e decide entre EXECUTE / REDIRECT / WAIT / DEFER / BLOCK.
+  - Usa um registo de *Execution Providers* (agent, skill, tool, workflow, modelo, serviço externo ou humano), com capabilities, ferramentas, quotas, custo e disponibilidade.
+  - A selecção é por Execution Selection Score, sem ranking fixo de modelos.
+  - O fallback é configurável e **sem downgrade silencioso** (`minimum_capability_match`).
+  - Ao redireccionar, entrega um Execution Package ao novo executor.
+  - Grava a selecção no ledger: `selected_executor`, `selection_reason`, `estimated_cost`, `selection_confidence`, `alternatives`.
+  - Base existente: o registo de agentes por `kind` (`external_ai` está reservado), o tecto de tokens verificado antes de cada chamada, os estados retomáveis do `plan_runner` e o HITL para o BLOCK.
+- **Fase 2: Execution Lease.** Um só executor por tarefa, com claim → lease (com expiração) → execute → observe → validate → release; os outros providers ficam a observar. Hoje nada impede dois executores com escrita de actuarem sobre a mesma intenção.
+- **Fase 2: Learning (estimated vs actual).** Guardar a estimativa (`countTokens`) e o real (`usageMetadata`) por tarefa e provider, e comparar. O 1.º dado já existe: no C-1, o estimado era 5 860–22 756 e o real foi 11 760.
+- **Teste de validação: o caso Grok + Claude em paralelo.** Os dois executaram a mesma intenção no mesmo projecto. Com a lease, um executa e o outro observa; uma execução sem lease é recusada e registada. Critérios em `META-AGENTS-PHASE-2.md`, "Teste de validação".
+- **Pré-requisitos já registados:** o ledger J6 (existe) e a migração do `call_kind` dos conselhos no Supabase (C-2).
+
