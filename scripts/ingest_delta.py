@@ -34,6 +34,10 @@ MANIFEST: list[tuple[str, str, str]] = [
     ("docs/knowledge/item-13-ai-findability.md", "marketing", "P0"),
     ("docs/knowledge/ai-findability.md", "marketing", "P0"),
     ("docs/knowledge/seo-specialist.md", "produto-tech-transversal", "P0"),
+    # F0.4 (EXECUTION-PLAN §7; D-EP2 = A): pack da área security, consumido pelo bloco
+    # `knowledge:` (kb security) do security-audit-demo. No grupo P0 para caber no
+    # orçamento da 1.ª corrida (os P0 anteriores ficam UNCHANGED com o ingest incremental).
+    ("docs/knowledge/security-agents-stack.md", "security", "P0"),
     ("docs/knowledge/ai-visibility.md", "marketing", "P1"),
     ("docs/knowledge/geo-agent.md", "marketing", "P1"),
     ("docs/knowledge/copywriter.md", "marketing", "P1"),

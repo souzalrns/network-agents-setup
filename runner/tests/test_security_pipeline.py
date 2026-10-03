@@ -6,7 +6,9 @@ Prova o que o plano demo promete e o que não promete:
 - grounding `full` (área com `hitl: required`) e política `opt`;
 - a triagem (JSON pequeno) NÃO é pedida em resumo (override `context.full` no report);
 - em external o auditor recebe SÓ os ficheiros que o passo declara em `repo_files` (SEC-1);
-  o `knowledge_refs` continua ignorado (AU-22) e os outros passos não recebem ficheiros.
+  o `knowledge_refs` continua ignorado (AU-22) e os outros passos não recebem ficheiros;
+- F0.5 (EXECUTION-PLAN §7): só o `audit` pede L5 (bloco `knowledge:`, kb `security`); sem MCP
+  o passo continua com o aviso de falha, e com hits o prompt cita a fonte de cada um.
 """
 from __future__ import annotations
 
@@ -47,20 +49,15 @@ def _router_llm(agent: str):
 @pytest.fixture(autouse=True)
 def _env(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "chave-de-teste")
-    for var in ("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "AGENT_MODEL", "DATABASE_URL", "PLAN_RUNNER_CONTEXT"):
+    # MCP_*: o passo `audit` tem bloco `knowledge:` (F0.5); sem estas variáveis o retrieve
+    # falha de forma controlada e o teste nunca sai para a rede.
+    for var in ("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "AGENT_MODEL", "DATABASE_URL", "PLAN_RUNNER_CONTEXT",
+                "MCP_API_KEY", "MCP_URL"):
         monkeypatch.delenv(var, raising=False)
 
 
-def test_stub_chega_ao_hitl_com_os_3_artefactos(run_dir):
-    st = run_plan(PLAN, mode="stub", out_dir=run_dir)
-    assert st["state"] == "paused_human_gate" and st["paused_at_step"] == "hitl_security_decision"
-    assert sorted(st["completed"]) == ["audit", "report", "triage"]
-    assert sorted(p.name for p in (run_dir / "artifacts").iterdir()) == ARTIFACTS
-
-
-def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir):
-    calls: list[dict] = []
-
+def _fake_gemini(calls: list[dict]):
+    """Gemini falso: regista o prompt de cada passo e responde JSON à triagem, Markdown ao resto."""
     def fake(url, headers, body, timeout):
         system = body["systemInstruction"]["parts"][0]["text"]
         user = body["contents"][0]["parts"][0]["text"]
@@ -73,9 +70,20 @@ def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir)
             text = f"# {step}\n\nLacunas: sem acesso a ficheiros neste passo.\n"
         return 200, {"candidates": [{"content": {"parts": [{"text": text}]}, "finishReason": "STOP"}],
                      "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 5, "totalTokenCount": 15}}
+    return fake
 
+
+def test_stub_chega_ao_hitl_com_os_3_artefactos(run_dir):
+    st = run_plan(PLAN, mode="stub", out_dir=run_dir)
+    assert st["state"] == "paused_human_gate" and st["paused_at_step"] == "hitl_security_decision"
+    assert sorted(st["completed"]) == ["audit", "report", "triage"]
+    assert sorted(p.name for p in (run_dir / "artifacts").iterdir()) == ARTIFACTS
+
+
+def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir):
+    calls: list[dict] = []
     ew_transport = ew.httpx_transport
-    ew.httpx_transport = fake
+    ew.httpx_transport = _fake_gemini(calls)
     try:
         st = run_plan(PLAN, mode="external", out_dir=run_dir, worker="gemini")
     finally:
@@ -120,10 +128,47 @@ def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir)
         assert "Ficheiros do repo" not in by_step[step]["user"], step
     # AU-22 continua: o `knowledge_refs` do plano não é lido.
     assert "security-agents-stack" not in audit_user and "### docs/architecture/SECURITY.md" not in audit_user
+    # F0.5: só o `audit` pede L5; sem MCP_API_KEY o retrieve falha de forma controlada,
+    # o passo continua e o modelo é avisado (nunca inventar o contexto que faltou).
+    assert "## Conhecimento recuperado (L5)" in audit_user and "[L5 CONTEXT: FALHA]" in audit_user
+    for step in ("triage", "report"):
+        assert "Conhecimento recuperado (L5)" not in by_step[step]["user"], step
+        assert not (out / "pending_steps" / step / "knowledge_context.md").exists(), step
+    events = [json.loads(x) for x in (out / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    failed = [e["payload"] for e in events if e["type"] == "knowledge_context_failed"]
+    assert [(p["step_id"], p["kb"]) for p in failed] == [("audit", "security")]
 
     rows = [json.loads(x) for x in (out / ew.LEDGER_FILE).read_text(encoding="utf-8").splitlines()]
     assert [r["step_id"] for r in rows] == ["triage", "audit", "report"]
     assert [r["agent_id"] for r in rows] == ["security.triage", "meta.security-auditor", "security.reporter"]
+
+
+def test_audit_recebe_o_l5_de_security_com_a_fonte_citada(run_dir, monkeypatch):
+    """F0.5 com hits: o pedido ao MCP usa kb `security` e a query do plano; o prompt do
+    auditor traz cada excerto com a fonte (proveniência mínima actual: só `source`, F0.8)."""
+    from plan_runner import knowledge_wiring as kw
+
+    asked: list[dict] = []
+
+    class FakeMcp:
+        def retrieve(self, kb, query, *, top_k, filters, require_citations):
+            asked.append({"kb": kb, "query": query, "top_k": top_k})
+            return [{"content": "A área security é só defensiva: ler, classificar, auditar passivamente e reportar.",
+                     "citation": {"source": "docs/knowledge/security-agents-stack.md", "locator": None}}]
+
+    monkeypatch.setattr(kw, "McpKnowledge", FakeMcp)
+    calls: list[dict] = []
+    monkeypatch.setattr(ew, "httpx_transport", _fake_gemini(calls))
+    st = run_plan(PLAN, mode="external", out_dir=run_dir, worker="gemini")
+    assert st["state"] == "paused_human_gate"
+    assert [a["kb"] for a in asked] == ["security"] and asked[0]["top_k"] == 5
+    assert "security-auditor" in asked[0]["query"]
+    audit_user = next(c["user"] for c in calls if c["step"] == "audit")
+    assert "A área security é só defensiva" in audit_user
+    assert "[Fonte: docs/knowledge/security-agents-stack.md @ ?]" in audit_user
+    events = [json.loads(x) for x in (run_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    injected = [e["payload"] for e in events if e["type"] == "knowledge_context_injected"]
+    assert injected == [{"step_id": "audit", "kb": "security", "hit_count": 1}]
 
 
 @pytest.mark.parametrize("text", [

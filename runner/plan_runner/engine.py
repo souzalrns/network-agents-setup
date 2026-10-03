@@ -13,7 +13,7 @@ from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
 from .knowledge_wiring import inject_knowledge_context
-from .models import Plan
+from .models import Plan, ignored_plan_fields
 from .skills import repo_root_from_out
 
 
@@ -152,6 +152,17 @@ def _paused_budget(out: Path, log: EventLog, run_id: str, status: dict[str, Any]
     )
 
 
+def _log_ignored_fields(plan_path: Path, log: EventLog, run_id: str) -> None:
+    """AU-22: regista os campos do plano que o runner nao aplica (models.IGNORED_PLAN_FIELDS)."""
+    try:
+        data = yaml.safe_load(Path(plan_path).read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return
+    fields = ignored_plan_fields(data) if isinstance(data, dict) else []
+    if fields:
+        log.append("plan_fields_ignored", run_id, {"fields": fields, "doc": "docs/ops/WORKER-EXTERNAL.md#limites-actuais"})
+
+
 def run_plan(
     plan_path: Path,
     *,
@@ -186,6 +197,7 @@ def run_plan(
     shutil.copy(plan_path, out / "plan.yaml")
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "objective": plan.objective})
+    _log_ignored_fields(plan_path, log, run_id)
     _load_client_memory(out, plan, log, run_id)
 
     completed: set[str] = set()

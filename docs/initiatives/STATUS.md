@@ -1,5 +1,9 @@
 # Status — pendências consolidadas
 
+> **PAPEL DESTE FICHEIRO (2026-10-03, H-001, decisão P-6 = A).** O estado dos pendentes está **só** em `docs/initiatives/PENDENCIAS.md` (ID antigo → ID actual no §11).
+> Este ficheiro continua a ser actualizado para o estado dos sistemas: `## Done`, infra, credenciais e resumos do dia.
+> As secções de pendentes abaixo (marcadas "HISTÓRICO") ficam como registo e não são actualizadas. Novos IDs seguem o `PENDENCIAS.md` §0 (a regra da série C abaixo deixa de valer).
+
 > **📌 Ver `docs/initiatives/OPEN-ITEMS.md`** para o relatório consolidado de todos os itens ainda em aberto (deste ficheiro + `EXECUTION-PROMPTS.md`), agrupado por quem bloqueia (100% Claude / precisa humano / bloqueado por ambiente) e com ordem de execução sugerida. Produzido em 2026-09-20 (S22-S24, Tarefa 5 da auditoria autónoma).
 
 > **⚠️ Verificar a secção "📋 Prompts pendentes" no início de cada sessão.** Vários prompts já pedidos ficaram sem execução completa e sem registo — ver essa secção antes de assumir que algo está feito.
@@ -22,6 +26,8 @@
 
 ## 📋 Prompts pendentes
 
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
+
 Prompts já pedidos nesta sessão que ficaram sem execução completa e não tinham sido registados até agora.
 
 | ID | Descrição | Estado | Prioridade | Dependência |
@@ -30,6 +36,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | **B2c** | Integrar os resultados da auditoria B2/B2b — decidir o que entra no backlog real (Crítico/Alto/Médio) em vez de ficar só documentado em `SECURITY-AUDIT.md`/`SECURITY-AUDIT-FULL.md` | Parcial (2 achados do CodeQL já corrigidos; os da auditoria B2 original, não) | 🟡 Média | B2b |
 
 ## 🔴 Crítico (bloqueia outras coisas ou é risco real)
+
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
@@ -51,6 +59,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 
 ## 🟠 Alto (resolve problema real, valor claro)
 
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
+
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **S5** | **Fase 1.5** — `validate:consistency` + wiring marketing + import runner (provavelmente já feito — `ci.yml` corre `validate:consistency`) | 1h | Consistência | Auditoria Claude |
@@ -65,6 +75,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 | **S13** | **Restringir CORS a origens conhecidas.** `apps/api/src/server.ts:25` — `app.use(cors())` sem opções, aceita qualquer origem. Contradição detectada no A20: CORP do helmet (agora `cross-origin`) + CORS totalmente aberto. Acção: definir lista de origens legítimas (frontend próprio?), aplicar `{ origin: [...] }` no `cors()`. Requer decisão humana: que origens são legítimas? Ver `EXECUTION-PROMPTS.md` A20. **Revisitado em 2026-09-29: continua bloqueado** — não há nenhuma lista de origens de frontend documentada no repo (nenhum domínio/URL de produção do `apps/web` encontrado); implementar sem essa lista seria inventar a política de segurança. **Não avançado, sem decisão humana.** | 2-4h | Fecha o gap real de CORS | Novo (2026-09-19, achado durante A20) — **Bloqueado (decisão humana: origens legítimas)** |
 
 ## 🟡 Médio (valor claro, sem urgência)
+
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
 
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
@@ -94,6 +106,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 
 ## 🟢 Baixo (nice to have)
 
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
+
 | ID | Item | Esforço | Bloqueia | Origem |
 |---|---|---|---|---|
 | **S28** | **`transcribe.yml` (`agent-network-mcp`) — warning "Failed to save: `/usr/bin/tar` failed with exit code 2" nas Annotations do run.** Achado durante o re-teste do S15a (run #105, sucesso). **Confirmado não-bloqueante**: a transcrição foi gravada com sucesso em `public.transcripts` (Supabase) apesar do warning — verificado directamente por query (`execute_sql`), registo real com 1142 caracteres de transcrição em português. É um erro do `actions/cache@v4` a tentar guardar o cache de pip/apt no fim do job (`transcribe-pip-*`/`transcribe-apt-*`), não do passo de gravação em si. Investigar a causa exacta (`tar` exit code 2 é tipicamente espaço em disco do runner, ou um ficheiro que mudou de tamanho a meio do arquivamento) fica como pendência de baixa prioridade — não impede o funcionamento actual do workflow. | 30 min (investigação) | — | Novo (2026-09-20, achado durante re-teste do S15a) |
@@ -114,6 +128,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 
 ## ⏸️ Arquivado (não fazer agora)
 
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
+
 | ID | Item | Razão |
 |---|---|---|
 | **P1** | `INIT-100` — PCU Constitution | Formalismo, não resolve problema real |
@@ -126,6 +142,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 ---
 
 ## 🔒 Segurança (checklist de 20 itens)
+
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
 
 > Origem: checklist externa (reel `_danielllcruz`)
 > Aplica-se sobretudo ao `agent-network-mcp` (produção)
@@ -158,6 +176,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 
 ## 🧰 Harnesses multi-provider (2026)
 
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
+
 | Projeto | Stars | O que é | Relevância |
 |---|---|---|---|
 | **`deepseek-ai/deepseek-harness`** | 200k | MIT. "Everything is a plugin." | Alto |
@@ -172,6 +192,8 @@ Prompts já pedidos nesta sessão que ficaram sem execução completa e não tin
 ---
 
 ## 📦 `google/skills` — 132 manuais oficiais (Apache 2.0)
+
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
 
 Repo: `github.com/google/skills` — 19k estrelas.
 Aplicação: `media_buyer`, `ad_creative`, `marketing`.
@@ -257,6 +279,8 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 
 ## Ordem sugerida (próximas 3 sessões)
 
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
+
 ### Sessão 1 (1-2h)
 - Fechada: S1, S4, C1, B7, B8, B9
 
@@ -271,6 +295,8 @@ Três documentos novos, produzidos por leitura directa dos ficheiros (não por i
 ---
 
 ## 📌 Sessão 2026-09-14 — adições completas
+
+> **HISTÓRICO.** O estado destes itens está em `docs/initiatives/PENDENCIAS.md`. Esta secção não é actualizada.
 
 ### 🔧 Ferramentas (F1-F22)
 

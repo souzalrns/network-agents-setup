@@ -16,6 +16,7 @@ from .engine import (
     _check_max_cost,
     _check_max_tokens,
     _load_client_memory,
+    _log_ignored_fields,
     _paused_budget,
     _validate_out_dir,
     _worker_for,
@@ -79,7 +80,21 @@ def run_plan_langgraph(
     )
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "engine": "langgraph"})
+    _log_ignored_fields(plan_path, log, run_id)
     _load_client_memory(out, plan, log, run_id)
+
+    # AU-22: o native aplica budget.max_steps passo a passo (engine.py); aqui as ondas
+    # correm em paralelo, por isso a garantia (nunca mais de max_steps passos) e
+    # verificada antes de arrancar: um plano maior nao corre nenhum passo.
+    runnable = [s.id for s in plan.steps if not s.human_gate]
+    if len(runnable) > plan.budget_max_steps:
+        log.append("plan_aborted", run_id, {
+            "reason": "max_steps", "engine": "langgraph", "steps": len(runnable), "max_steps": plan.budget_max_steps,
+        })
+        status = {"run_id": run_id, "plan_id": plan.id, "mode": mode, "engine": "langgraph",
+                  "state": "aborted_budget", "completed": []}
+        save_status(out, status)
+        return status
 
     step_by_id = {s.id: s for s in plan.steps}
 

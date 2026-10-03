@@ -73,6 +73,13 @@ python -m plan_runner route "..." --execute --out ../pilots/run-router-x --worke
 python -m plan_runner resume ../pilots/run-router-x --decision approve                          # depois de um gate
 ```
 
+Clarificação com estado (W-002): guardar o JSON do `route` e responder à pergunta com `--clarify-from`:
+
+```bash
+python -m plan_runner route "Cria um jogo para a nossa campanha" > /tmp/r1.json   # outcome: clarify
+python -m plan_runner route --clarify-from /tmp/r1.json "é sobretudo o jogo"       # área: gamedev
+```
+
 Código de saída: 0 quando há decisão (incluindo clarificação/HITL); 1 em `error`.
 
 ## Validar com o Gemini real
@@ -118,4 +125,4 @@ O validador E7 (`python -m plan_runner.areas`, no CI do runner) rejeita:
 - **Keywords ingénuas:** não há negação nem contexto ("não é sobre marketing" conta `marketing`). O caso SEO do golden set passa com 0,67, perto do limiar de 0,6.
 - **Execução só no engine `native`**, porque é o worker inline (AU-23).
 - **Pedidos que só tocam em áreas sem agentes** (legal, gamedev, docs) acabam sempre em HITL até haver agentes (decisão do `areas.yaml`).
-- **A clarificação não tem estado:** devolve a pergunta; a resposta do utilizador é um novo `route` com o pedido reformulado.
+- **Clarificação com estado (W-002, 2026-10-03):** `route --clarify-from <json do route anterior> "<resposta>"` continua a decisão em vez de começar do zero. Clarificação do agente: a área fica e o agente é escolhido com o pedido + a resposta. Clarificação da área: se a resposta nomeia uma só das áreas candidatas (pelo id ou pelas keywords dela), fica essa; senão, o pedido + a resposta voltam a ser classificados. Ao fim de 2 respostas ainda em `clarify` passa a HITL. A decisão guarda `clarification {original_request, question, answer, rounds}` (`router.py`, `Router.clarify`).

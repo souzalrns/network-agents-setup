@@ -43,27 +43,9 @@ pytestmark = pytest.mark.skipif(
     "nunca o Supabase de producao)",
 )
 
-# Esquema minimo igual ao de producao (verificado em 2026-09-30) e o
-# match_knowledge versionado em agent-network-mcp/memory/schema.sql:45-58.
-SCHEMA_SQL = """
-CREATE TABLE knowledge_sources (
-  source_path text PRIMARY KEY, content_hash text NOT NULL, agent_id text NOT NULL,
-  priority text NOT NULL DEFAULT 'P1', last_ingested_at timestamptz NOT NULL DEFAULT now(),
-  chunk_count int NOT NULL DEFAULT 0, git_sha text, size_bytes int,
-  updated_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE knowledge_chunks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), agent_id text NOT NULL, source text NOT NULL,
-  content text NOT NULL, embedding vector(768), created_at timestamptz DEFAULT now(),
-  project text, content_hash text, chunk_index integer, kb text DEFAULT 'marketing',
-  updated_at timestamptz DEFAULT now());
-CREATE FUNCTION match_knowledge(query_embedding vector(768), match_agent_id text,
-  match_count int DEFAULT 4)
-RETURNS TABLE (id uuid, content text, source text, similarity float)
-LANGUAGE sql STABLE AS $$
-  SELECT id, content, source, 1 - (embedding <=> query_embedding) AS similarity
-  FROM knowledge_chunks WHERE agent_id = match_agent_id OR agent_id = 'global'
-  ORDER BY embedding <=> query_embedding LIMIT match_count; $$;
-"""
+# AU-11: o schema vem do DDL canónico versionado (scripts/rag_schema.sql), o
+# mesmo que serve de referência para produção; não há uma cópia aqui.
+SCHEMA_SQL = (Path(__file__).resolve().parents[2] / "scripts" / "rag_schema.sql").read_text(encoding="utf-8")
 
 
 def _vec(i: int) -> list[float]:
@@ -112,6 +94,25 @@ def _ingest(connect, source: str, agent_id: str, dim: int) -> dict[str, int]:
         chunks=[{"content": f"conteudo {source}", "content_hash": "c0",
                  "chunk_index": 0, "embedding": _vec(dim)}],
     )
+
+
+def test_schema_canonico_e_idempotente(connect):
+    """AU-11: scripts/rag_schema.sql corre por cima do que existe sem erro nem perda
+    (e o que permite usa-lo como referencia de producao)."""
+    _ingest(connect, "docs/knowledge/geo-agent.md", "marketing", 7)
+    with connect() as c:
+        c.execute(SCHEMA_SQL)  # 2.a vez
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM knowledge_chunks")
+        assert cur.fetchone()[0] == 1
+        cur.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema = current_schema() AND table_name = 'knowledge_chunks' ORDER BY ordinal_position"
+        )
+        assert [r[0] for r in cur.fetchall()] == [
+            "id", "agent_id", "source", "content", "embedding", "created_at",
+            "project", "content_hash", "chunk_index", "kb", "updated_at",
+        ]
 
 
 def test_ingested_doc_is_retrieved(connect):
@@ -177,15 +178,25 @@ def ingest(connect, monkeypatch, tmp_path):
         with connect() as conn:
             yield conn
 
+    embedded: list[str] = []
+
+    def counting_embed(text: str) -> list[float]:
+        embedded.append(text)
+        return _fake_embed(text)
+
     monkeypatch.setattr(ia, "connect", test_connect)  # nunca o DATABASE_URL de producao
-    monkeypatch.setattr(ia, "embed_text", _fake_embed)  # nunca o Gemini
+    monkeypatch.setattr(ia, "embed_text", counting_embed)  # nunca o Gemini
     monkeypatch.setattr(ia, "ROOT", tmp_path)
 
-    def _apply(rel: str, body: str, agent_id: str) -> dict:
+    def _apply(rel: str, body: str, agent_id: str, *, budget=None, force: bool = False) -> dict:
         path = tmp_path / rel
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(body, encoding="utf-8")
-        return ia.apply_one(rel, agent_id, "P1", dry_run=False, budget=ia.ChunkBudget(100))
+        return ia.apply_one(rel, agent_id, "P1", dry_run=False,
+                            budget=budget if budget is not None else ia.ChunkBudget(100), force=force)
+
+    _apply.embedded = embedded  # type: ignore[attr-defined]
+    _apply.ia = ia  # type: ignore[attr-defined]
 
     return _apply
 
@@ -241,4 +252,87 @@ def test_e2e_reingest_do_mesmo_ficheiro_nao_duplica(connect, ingest):
     with connect() as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) FROM knowledge_chunks WHERE source = %s", ("docs/knowledge/instagram.md",))
         assert cur.fetchone()[0] == second["chunks"]
+
+
+# --------------------------------------------------------------------------
+# F0.4: ingest incremental por content_hash (regra T6, EXECUTION-PLAN §15.12)
+# --------------------------------------------------------------------------
+
+DOC_SECURITY = """# Security
+
+## Politica defensiva
+
+A area security so audita de forma passiva: nunca ataque activo nem escrita em producao.
+"""
+
+
+def test_f04_ficheiro_igual_nao_e_reembedado_nem_reescrito(connect, ingest):
+    first = ingest("docs/knowledge/instagram.md", DOC_SOCIAL, "marketing")
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT id FROM knowledge_chunks WHERE source = %s ORDER BY id", ("docs/knowledge/instagram.md",))
+        ids_before = cur.fetchall()
+    n_embeds = len(ingest.embedded)
+
+    again = ingest("docs/knowledge/instagram.md", DOC_SOCIAL, "marketing")
+    assert again == {"action": "UNCHANGED", "chunks": 0, "deleted": 0}
+    assert len(ingest.embedded) == n_embeds == first["chunks"]  # zero embeddings novos (quota)
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT id FROM knowledge_chunks WHERE source = %s ORDER BY id", ("docs/knowledge/instagram.md",))
+        assert cur.fetchall() == ids_before  # nada apagado nem reinserido
+
+
+def test_f04_orcamento_so_e_gasto_em_ficheiros_novos_ou_alterados(connect, ingest):
+    """Antes do F0.4, o ficheiro igual gastava o orçamento e o novo ficava SKIPPED_QUOTA."""
+    ingest("docs/knowledge/instagram.md", DOC_SOCIAL, "marketing")
+    probe = ingest("docs/knowledge/probe-security.md", DOC_SECURITY, "security")  # mede o nº de chunks
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM knowledge_sources WHERE source_path = 'docs/knowledge/probe-security.md'")
+        cur.execute("DELETE FROM knowledge_chunks WHERE source = 'docs/knowledge/probe-security.md'")
+        conn.commit()
+    budget = ingest.ia.ChunkBudget(probe["chunks"])  # só chega para o ficheiro novo
+    assert ingest("docs/knowledge/instagram.md", DOC_SOCIAL, "marketing", budget=budget)["action"] == "UNCHANGED"
+    assert ingest("docs/knowledge/probe-security.md", DOC_SECURITY, "security", budget=budget)["action"] == "OK"
+    assert budget.used == probe["chunks"]
+
+
+@pytest.mark.parametrize("change", ["conteudo", "agent_id", "linhas_em_falta", "force"])
+def test_f04_reingere_quando_algo_mudou_ou_com_force(connect, ingest, change):
+    ingest("docs/knowledge/instagram.md", DOC_SOCIAL, "marketing")
+    body, agent, force = DOC_SOCIAL, "marketing", False
+    if change == "conteudo":
+        body = DOC_SOCIAL + "\nNota nova.\n"
+    elif change == "agent_id":
+        agent = "marketing+design"  # mesmo conteúdo, outro dono: tem de reescrever as linhas
+    elif change == "linhas_em_falta":  # ex.: fonte registada mas chunks apagados/migração incompleta
+        with connect() as conn, conn.cursor() as cur:
+            cur.execute("DELETE FROM knowledge_chunks WHERE source = 'docs/knowledge/instagram.md'")
+            conn.commit()
+    else:
+        force = True
+    out = ingest("docs/knowledge/instagram.md", body, agent, force=force)
+    assert out["action"] == "OK" and out["chunks"] >= 1
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT agent_id, count(*) FROM knowledge_chunks WHERE source = %s GROUP BY agent_id ORDER BY 1",
+                    ("docs/knowledge/instagram.md",))
+        rows = cur.fetchall()
+    expected_agents = ["design", "marketing"] if change == "agent_id" else ["marketing"]
+    assert [a for a, _ in rows] == expected_agents and all(n == out["chunks"] for _, n in rows)
+
+
+def test_f04_agent_id_composto_igual_fica_unchanged(connect, ingest):
+    """O item-13 (marketing+produto-tech-transversal) grava 2 linhas por chunk e não pode ser
+    re-embedado em cada corrida só porque as linhas são o dobro do chunk_count."""
+    first = ingest("docs/item-13.md", DOC_SOCIAL, "marketing+produto-tech-transversal")
+    assert first["action"] == "OK"
+    assert ingest("docs/item-13.md", DOC_SOCIAL, "marketing+produto-tech-transversal")["action"] == "UNCHANGED"
+
+
+def test_f04_pack_security_fica_com_kb_security_e_e_recuperado(connect, ingest):
+    out = ingest("docs/knowledge/security-agents-stack.md", DOC_SECURITY, "security")
+    assert out["action"] == "OK"
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT DISTINCT agent_id, kb FROM knowledge_chunks WHERE source = %s",
+                    ("docs/knowledge/security-agents-stack.md",))
+        assert cur.fetchall() == [("security", "security")]  # antes: kb 'global'
+    assert _ask(connect, "security", "auditoria passiva sem ataque activo") == ["docs/knowledge/security-agents-stack.md"]
 

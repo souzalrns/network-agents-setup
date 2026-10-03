@@ -67,7 +67,11 @@ def main(argv: list[str] | None = None) -> int:
 
     # D2: router hierarquico hibrido (plan_runner/router.py, docs/ops/ROUTER.md)
     p_route = sub.add_parser("route", help="Escolhe area + agente/plano para um pedido (e opcionalmente executa)")
-    p_route.add_argument("request", help="Pedido em linguagem natural")
+    p_route.add_argument("request", help="Pedido em linguagem natural (com --clarify-from: a resposta a pergunta)")
+    p_route.add_argument(
+        "--clarify-from", type=Path, default=None,
+        help="W-002: JSON de um `route` anterior que acabou em clarify; o pedido passa a ser a resposta",
+    )
     p_route.add_argument("--execute", action="store_true", help="Corre a decisao no plan_runner (mode external + worker)")
     p_route.add_argument("--out", type=Path, default=None, help="Directorio do run (dentro de pilots/; omissao: pilots/run-router-<id>)")
     p_route.add_argument("--worker", choices=["none", "gemini"], default="gemini", help="Worker dos passos executados")
@@ -179,7 +183,15 @@ def _route(args: argparse.Namespace) -> int:
                 raise ew.WorkerError(str(e)) from e
 
     router = Router(embed=embed, councils=not args.no_council)
-    decision = router.route(args.request)
+    if args.clarify_from is not None:
+        try:
+            previous = json.loads(args.clarify_from.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as e:
+            print(f"error: --clarify-from: {e}")
+            return 1
+        decision = router.clarify(previous, args.request)
+    else:
+        decision = router.route(args.request)
     log_decision(decision, args.log or REPO_ROOT / "pilots" / "router-decisions.jsonl")
     if args.execute and decision.outcome in ("agent", "plan", "hitl", "council"):
         out = args.out or REPO_ROOT / "pilots" / f"run-router-{uuid4().hex[:8]}"

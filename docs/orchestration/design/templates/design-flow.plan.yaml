@@ -1,4 +1,5 @@
 # Template — design_flow (UX → UI → UX writing → critic → HITL)
+# S34/AU-32: cada passo de domínio declara `vertical:` (omissão do executor = marketing).
 
 id: template-design-flow
 version: 2
@@ -13,12 +14,14 @@ budget:
 steps:
   - id: ux
     action: ux_flow
+    vertical: design
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-ux-flow.md
     on_fail: human
 
   - id: ui
     action: ui_spec
+    vertical: design
     depends_on: [ux]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-ux-flow.md]
@@ -27,6 +30,7 @@ steps:
 
   - id: copy_ui
     action: ux_writing
+    vertical: design
     depends_on: [ux, ui]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-ux-flow.md, artifacts/02-ui-spec.md]
@@ -35,6 +39,7 @@ steps:
 
   - id: critic
     action: design_critic
+    vertical: design
     depends_on: [copy_ui]
     tools_allowed: [read_repo_file]
     inputs:

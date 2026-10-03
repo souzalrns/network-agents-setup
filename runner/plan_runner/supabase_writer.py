@@ -213,6 +213,28 @@ def replace_chunks(
     return {"deleted": deleted, "inserted": inserted}
 
 
+def source_state(conn: psycopg.Connection, source_path: str) -> dict[str, Any] | None:
+    """Estado gravado de uma fonte (F0.4, ingest incremental): hash, agent_id e
+    chunk_count de knowledge_sources + linhas reais deste projecto em knowledge_chunks.
+    None se a fonte nunca foi registada."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT content_hash, agent_id, chunk_count FROM knowledge_sources WHERE source_path = %s",
+            (source_path,),
+        )
+        row = cur.fetchone()
+        if row is None:
+            return None
+        # SEC-2d falso positivo: a f-string so interpola a constante CHUNKS_TABLE (linha 30); os valores vao como parametros %s.
+        # nosemgrep: sqlalchemy-execute-raw-query
+        cur.execute(
+            f"SELECT count(*) FROM {CHUNKS_TABLE} WHERE source = %s AND project = %s",
+            (source_path, PROJECT),
+        )
+        rows = cur.fetchone()[0]
+    return {"content_hash": row[0], "agent_id": row[1], "chunk_count": row[2], "rows": rows}
+
+
 def purge_source(conn: psycopg.Connection, source_path: str) -> int:
     """Apaga um source e os seus chunks. Devolve chunks apagados."""
     with conn:

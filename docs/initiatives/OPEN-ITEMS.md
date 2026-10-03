@@ -1,3 +1,5 @@
+> **HISTÓRICO.** O estado dos pendentes está em docs/initiatives/PENDENCIAS.md. Este documento não é actualizado.
+
 # Itens em Aberto — Relatório Consolidado (2026-09-20)
 
 Produzido na Tarefa 5 da auditoria autónoma desta sessão. Fontes lidas por completo: `STATUS.md` (446 linhas), `EXECUTION-PROMPTS.md` (2448 linhas, todos os Grupos A-J), `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md` (192 linhas).
@@ -286,20 +288,20 @@ Plano em `docs/architecture/EXECUTION-PLAN.md`; fontes arquivadas tal como foram
 - **D-EP8:** domínio do F6 escolhido só depois do F5, com uso real.
 - **D-EP9:** **T6 canónico** (`ingest-knowledge.yml`); `agent-network-mcp/.github/workflows/ingest.yml` = JSON do MCP, legado documentado.
 
-**Decisões em aberto** (propostas pré-gravação que mexem em regras permanentes do maestro; EXECUTION-PLAN §9.5):
-- **D-EP10:** refinar "commit + push no fim de cada passo" e "uma só verificação de CI por PR". Recomendada A: passos `R` sem commit; commits lógicos; uma verificação por push, sem polling.
-- **D-EP11:** os passos `W-repo` do F0 (F0.5 bloco `knowledge:`; F0.7a golden set) entram na Etapa 2. Recomendada A: sim (reversíveis, sem efeito em produção).
+**D-EP10 e D-EP11: FECHADAS na opção A (maestro, 2026-10-03):**
+- **D-EP10:** passos `R` sem commit; commits lógicos; uma verificação de CI por push, sem polling.
+- **D-EP11:** os passos `W-repo` do F0 (F0.5, F0.7a) entram na Etapa 2.
 
 **Itens F0–F6** (detalhe e critérios de done no EXECUTION-PLAN §7; tipos `R` / `W-repo` / `W-prod`):
 
 | Fase | Item | Dono | Estado |
 |---|---|---|---|
-| F0 | F0.1–F0.3 revalidar o L5 canónico (contagens, pack de security no `knowledge_chunks`, passo 3 do J3) | Claude Code (SELECT, se autorizado) / DEV | Por fazer (Etapa 2, depois do merge do plano) |
-| F0 | F0.4 pack de security no MANIFEST (`W-prod` no merge, via workflow) | Claude Code prepara; maestro (D-EP2 = A) | Por fazer (Etapa 3) |
-| F0 | F0.5 bloco `knowledge:` no passo `audit` do plano demo de security (`W-repo`) | Claude Code | Por fazer (D-EP11) |
+| F0 | F0.1–F0.3 revalidar o L5 canónico (contagens, pack de security no `knowledge_chunks`, passo 3 do J3) | **maestro** (tem a `DATABASE_URL`) | Parcial (2026-10-03): 1 overload ✅; total 322; pack de security **não ingerido** (8 linhas "security" são de um pack ECC importado); última escrita 14:25 UTC ✅. Faltam `projecto`, F0.1b por fonte, `ultima_t6` e o `agent_id` da fonte ECC (`docs/ops/L5-F0-REVALIDATION.md` §0) |
+| F0 | F0.4 pack de security no MANIFEST (`W-prod` no merge, via workflow) | Claude Code prepara; **maestro faz merge** (D-EP2 = A; P1 = A) | **PR aberto, sem merge** (2026-10-03): `ingest_apply.py` incremental por hash (UNCHANGED se `content_hash`, `agent_id` e linhas batem; `--force` para re-ingerir); entrada `(security-agents-stack.md, security, P0)` no grupo P0; `_kb_for(security) = security`; pack corrigido antes da 1.ª ingestão (P2 = A). Testes: 8 `test_f04_*` no test-rag + `test_ingest_manifest.py`. Depois do merge: F0.2 (esperado 20 linhas `agent_id = security`), F0.6, F0.7b |
+| F0 | F0.5 bloco `knowledge:` no passo `audit` do plano demo de security (`W-repo`) | Claude Code | ✅ Feito (Etapa 2): `kb: security`, top_k 5; testes em `runner/tests/test_security_pipeline.py` |
 | F0 | F0.6 passo 5 do J3: teste real no MCP | DEV | Por fazer |
-| F0 | F0.7a definir o golden set security, 10–20 perguntas (`W-repo`); F0.7b medir `hit@k` (credenciais) | Claude Code / DEV ou CI | Por fazer |
-| F0 | F0.8 provenance actual; F0.9 comparar C8 → J3 → hoje | Claude Code | Por fazer |
+| F0 | F0.7a definir o golden set security, 10–20 perguntas (`W-repo`); F0.7b medir `hit@k` (credenciais) | Claude Code / DEV ou CI | F0.7a ✅ Feito: `config/l5-golden-security.yaml` (18 casos) + `python -m plan_runner.l5_eval`; F0.7b por fazer (`run`, com `MCP_URL` + `MCP_API_KEY`; antes do F0.4 o esperado é 0) |
+| F0 | F0.8 provenance actual; F0.9 comparar C8 → J3 → hoje | Claude Code | ✅ Feito: `docs/ops/L5-F0-REVALIDATION.md` §1–§2 |
 | F0 | F0.12 apagar a t6 (passo 6 do J3, irreversível, opcional) | DEV | Por fazer |
 | F1 | Contrato *Universal Ingestion & Research Primitives* (ADR, em paralelo, D-EP4) + spike MarkItDown → T6 (só com o F0 verde; pins e mitigações da `AUDIT-INGESTION`) | Claude Code | Por fazer |
 | F1b | Docling, só se o benchmark o justificar | — | Condicional |
@@ -314,5 +316,12 @@ Plano em `docs/architecture/EXECUTION-PLAN.md`; fontes arquivadas tal como foram
 - DEV: **C-2** (`scripts/alter_token_usage_council_kinds.sql` no Supabase e depois o CHECK em `agent-network-mcp/memory/token_usage.sql`).
 - DEV: confirmar **S27** (Oracle 12 vs 24 GB) e **S20** (bridge 401).
 - Depois: F0 passos `R` → PR → só então F0.4.
+
+**Achados do F0.8/F0.9 (entrada do F3; nada disto bloqueia o F0):**
+- ~~11 linhas inalcançáveis (`agent_id` composto)~~ **Corrigido (2026-10-03):** não existem. A migração J3 e o writer desdobram `a+b` numa linha por agente (`scripts/migrate_t6_to_knowledge_chunks.sql:37-48`; `supabase_writer.py`, `insert_chunks`). Fica para o F3 só a query de confirmação (`agent_id LIKE '%+%'` = 0; `docs/ops/L5-F0-REVALIDATION.md` §0).
+- 121 linhas no J3 (= a t6 inteira, com o composto desdobrado) contra 143 linhas esperadas hoje (132 chunks): provavelmente porque 28 dos 38 ficheiros do MANIFEST nunca são re-ingeridos pelo workflow (orçamento de 50 chunks, sem salto por hash; `L5-F0-REVALIDATION.md` §2.1). Viola a regra T6 (§15.12) e gasta quota do Gemini em cada push de docs.
+- ~~O pack `security-agents-stack.md` tem as §7 e §23 desactualizadas~~ **Corrigido no PR do F0.4 (P2 = A)**: §7, §9, §23, §29 e o preâmbulo, antes da 1.ª ingestão; os casos sec-07/sec-16 do golden set deixam de estar `stale:`.
+- **P3 (maestro):** SELECTs em falta: `projecto`, F0.1b por fonte, `ultima_t6`, `agent_id`/`project` da fonte ECC e `agent_id LIKE '%+%'` (esperado 0). Queries em `docs/ops/L5-F0-REVALIDATION.md` §0 e §3.
+- Provenance: o `locator` não é gravado; o modelo do embedding não é gravado por linha; as fontes L5 não ficam no `result.json`.
 
 **Pendentes acrescentados pela verificação do plano** (EXECUTION-PLAN §9.2): AU-44 (transcrições → RAG, candidato do F1); B7 (expor langgraph/edit no MCP, depois do F5); contrato do plano do runner (o `Plan.schema.json` é de outro formato e não declara `repo_files`/`context` por passo); gitingest revisto para ADAPT com reservas (`ingestion-audit/AUDIT-INGESTION.md:249,309`).
