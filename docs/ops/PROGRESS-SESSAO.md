@@ -8,11 +8,17 @@
 - **Branch actual:** `docs/progresso-sessao` (este ficheiro). Antes: `docs/pendencias-ronda-2` (`35088cd`, PR #83).
 - **Último commit de trabalho:** `35088cd` (PENDENCIAS, 2.ª ronda), às 20:50.
 - **`main` de referência:** `2b27f66` (merge dos PRs #63–#78).
-- **Itens em trabalho:** nenhum em código. À espera de:
-  - merge de #79–#83 (NAS) e #11–#14 (MCP);
-  - a verificação única de CI agendada para as 21:07 (trigger `trig_01Q7XUJ5LU23E4tH6PjejxGM`).
+- **Itens em trabalho:** nenhum em código. À espera do merge de #79–#84 (NAS) e #11–#14 (MCP); o CI destes 10 está **verde** (verificação das 21:07).
 
 ## Log (mais recente no topo)
+
+### 21:07 — CI consolidado (D-EP10, verificação única)
+- **Feito:** lidos os check runs dos 10 PRs abertos, uma vez e sem polling.
+- **Evidência:**
+  - **NAS #79:** os 10 checks a `success`: `test`, `test-rag`, `test-slow`, gitleaks, semgrep e CodeQL nas 3 linguagens;
+  - **NAS #80–#84:** os 7 checks a `success` em cada um (`test`, gitleaks, semgrep, CodeQL);
+  - **MCP #11–#14:** `Vercel` (status) e `Vercel Preview Comments` a `success` em cada um. O repo MCP não tem CI de testes (`npm test` 16/16 e `next build` OK correram localmente no #14).
+- **Próximo:** merges do maestro.
 
 ### 20:51 — PROTOCOLO
 - **Feito:** criado este ficheiro (regra de persistência).
@@ -135,7 +141,7 @@
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #79 | `fix/W-005-worker-langgraph` | W-005 | Aberto; CI a verificar às 21:07 |
+| NAS #79 | `fix/W-005-worker-langgraph` | W-005 | Aberto; CI verde (21:07) |
 | NAS #80 | `fix/INIT-094-harnesses` | INIT-094 | Aberto |
 | NAS #81 | `fix/F1-adr-ingestao` | F1 (ADR) | Aberto |
 | NAS #82 | `fix/ING-5-6-analise` | ING-5, ING-6 | Aberto |
