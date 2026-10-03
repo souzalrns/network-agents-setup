@@ -48,6 +48,7 @@ import yaml
 from . import context_policy as cp
 from . import cost
 from . import memory_wiring as mw
+from . import model_tiers as mt
 from . import repo_files as rf
 from .skills import _frontmatter, repo_root_from_out
 
@@ -615,7 +616,12 @@ class GeminiWorker:
         if result_path.exists():
             return _read_json(result_path)  # idempotente: o passo ja tem resultado
         check_hitl(out_root, step_id)
-        check_budget(out_root, self.model)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
+        # D5: `model_tier` do passo -> modelo (config/model-tiers.yaml); sem tier, o modelo do worker.
+        try:
+            model, tier = mt.resolve_model(_plan_step(_load_plan_raw(out_root), step_id), self.model)
+        except mt.ModelTierError as e:
+            raise WorkerError(f"model_tier: {e}") from e
+        check_budget(out_root, model)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
         request_path = pending / "request.json"
         if not request_path.is_file():
             raise WorkerError(f"sem request.json em {pending}")
@@ -625,15 +631,19 @@ class GeminiWorker:
             run_id = _read_json(status_path).get("run_id") if status_path.is_file() else None
 
         try:
-            return self._run(out_root, pending, request, step_id, run_id)
+            return self._run(out_root, pending, request, step_id, run_id, model=model, tier=tier)
         except WorkerError as e:
             (pending / ERROR_FILE).write_text(
-                json.dumps({"at": _now(), "model": self.model, "error": str(e)}, indent=2, ensure_ascii=False) + "\n",
+                json.dumps({"at": _now(), "model": model, "error": str(e)}, indent=2, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
             raise
 
-    def _run(self, out_root: Path, pending: Path, request: dict, step_id: str, run_id: str | None) -> dict[str, Any]:
+    def _run(
+        self, out_root: Path, pending: Path, request: dict, step_id: str, run_id: str | None,
+        *, model: str | None = None, tier: str | None = None,
+    ) -> dict[str, Any]:
+        model = model or self.model
         built = build_prompt_ctx(out_root, pending, request, context=self.context)
         system, user, wants_json = built["system"], built["user"], built["wants_json"]
         agent_id = _frontmatter(pending / "AGENT.md").get("id") or request.get("action")
@@ -664,7 +674,7 @@ class GeminiWorker:
         response = gemini_generate(
             system,
             user,
-            model=self.model,
+            model=model,
             api_key=self._api_key,
             wants_json=wants_json,
             max_output_tokens=self.max_output_tokens,
@@ -672,7 +682,7 @@ class GeminiWorker:
             transport=self.transport,
         )
 
-        row = build_usage_row(run_id=run_id, agent_id=agent_id, model=self.model, response=response)
+        row = build_usage_row(run_id=run_id, agent_id=agent_id, model=model, response=response)
         ledger = record_token_usage(out_root, row, step_id=step_id, run_id=run_id, remote=self.remote_ledger)
 
         text, finish = _response_text(response)
@@ -700,12 +710,12 @@ class GeminiWorker:
 
         result = {
             "ok": True,
-            "detail": f"gemini:{row['model_version'] or self.model}",
+            "detail": f"gemini:{row['model_version'] or model}",
             "artifact_content": content,
             "meta": {
                 "context": context_meta,
                 "worker": self.name,
-                "model": self.model,
+                "model": model,
                 "model_version": row["model_version"],
                 "finish_reason": finish,
                 "tokens_in": row["tokens_in"],
@@ -715,6 +725,8 @@ class GeminiWorker:
                 "ledger_remote": ledger["remote"],
             },
         }
+        if tier is not None:
+            result["meta"]["model_tier"] = tier
         if summary:
             result["artifact_summary"] = summary  # o executor grava-o em <artefacto>.summary.md
         if wants_memory:

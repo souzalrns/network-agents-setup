@@ -1,0 +1,12 @@
+# D5: modelo por `model_tier` do passo (planner | executor | verifier).
+# Lido pelo worker external (runner/plan_runner/model_tiers.py).
+#
+# `null` = usar o modelo normal do worker (AGENT_MODEL ou gemini-flash-lite-latest).
+# Com tudo a null o comportamento é o de antes do D5. O DEV escolhe os modelos
+# (o worker só fala com a Gemini API: o modelo tem de existir lá).
+# Com `budget.max_cost_usd`, o modelo escolhido precisa de preço em config/model-prices.yaml.
+
+tiers:
+  planner: null
+  executor: null
+  verifier: null
