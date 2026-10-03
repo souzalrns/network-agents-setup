@@ -259,3 +259,11 @@ Contrato arquitectural em `docs/architecture/META-AGENTS-PHASE-2.md`, a partir d
 - **SEC-2 (DEV): J10, `gitleaks`/`semgrep` no CI.** É o caminho para a capability `secrets_hygiene` (hoje `partial`), sem mandar ficheiros a um LLM.
 - **SEC-3: pentest/red-team (`agent_redteam_lab`).** Continua `deferred` e fora do runner de produção.
 
+### SEC-2: CI de segurança (gitleaks + semgrep), 2026-10-03
+
+- **SEC-2: FEITO (opção A).** `.github/workflows/security-scan.yml`: gitleaks no histórico completo (bloqueia fugas novas) e semgrep (bloqueia achados novos ERROR/WARNING num PR; relatório no `main`). Versões e regras fixadas; actions fixadas por SHA. Linha de base e triagem em `docs/architecture/SECURITY-AGENTS.md`, "CI de segurança". Substitui o item "SEC-2 (DEV): J10" acima.
+  - Fragmento da antiga `SUPABASE_SERVICE_ROLE_KEY` removido do `STATUS.md` actual; as 2 ocorrências do histórico estão no `.gitleaksignore`, com o motivo.
+- **SEC-2b (DEV): confirmar no Supabase que a chave cujo fragmento estava no `STATUS.md` (S20) foi mesmo revogada.** O registo diz "rotacionada e apagada em 2026-09-19", mas o repo é público e o fragmento continua no histórico.
+- **SEC-2c: fixar por SHA as 20 actions dos workflows existentes** (`runner-tests.yml`, `ci.yml`, `release.yml`, `ingest-knowledge.yml`), o único achado real de supply chain na linha de base do semgrep.
+- **SEC-2d: triagem da linha de base do semgrep** (85 achados): marcar os falsos positivos (`# nosemgrep: <regra>` com motivo) para o relatório do `main` ficar só com o que é real.
+
