@@ -27,6 +27,8 @@ Não cortar a meio é deliberado. Um artefacto truncado a meio (`MAX_TOKENS`) pa
 | `budget.max_tokens` da **área** (`config/areas.yaml`) | O router passa-o ao plano que gera: **tecto da área menos os tokens que o router já gastou** a decidir. Assim o tecto cobre o pedido inteiro | Política por área (D2 R6, ADR-M6) |
 | Nada | Sem tecto: tudo como antes | — |
 
+**Conselhos (Bloco C):** o tecto é o `budget.max_tokens` da área do conselho (`area:` no `config/councils.yaml`) ou `--max-tokens`. O orçamento é verificado antes de cada chamada (membro, par, chairman). Atingido o tecto, a sessão fica `paused_budget`, e `council resume <dir> --max-tokens N` retoma sem repagar o que já está feito ([COUNCIL.md](./COUNCIL.md)).
+
 O validador E7 (`python -m plan_runner.areas`) aceita na área `budget: null` ou `{max_steps?, max_tokens?}`, com inteiros > 0, e recusa o resto.
 
 > **Tectos por área ligados (B5-bis fase 1, decidido pelo maestro a 2026-10-01, opção A):** produção (marketing, docs, research, software) 80k; risco (finance, legal, security) 40k; exploratórias (gamedev, ops) 30k; transversal (horizontal) 20k. Estão em `config/areas.yaml` e só se aplicam a planos gerados pelo router; planos escritos à mão usam o `budget` do próprio plano ou `--max-tokens`. **Rever depois do B1-bis-C** (encurtar skills/prompt-base, PLANO item 12).

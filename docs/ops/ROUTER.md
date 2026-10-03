@@ -50,6 +50,12 @@ A decisão vira um plano do `plan_runner` e corre em `--mode external --worker g
 | área com `hitl: required` | + gate humano `aprovacao` no fim |
 | `hitl` | 1 passo `triagem` com `human_gate`. Pedido durável em `hitl-requests.jsonl` |
 | `clarify` / `error` | Não corre; devolve a pergunta ou o motivo |
+| `council` | Abre um conselho (`CouncilSession`, [COUNCIL.md](./COUNCIL.md)) com o tecto da área do conselho. Pára no HITL do veredicto |
+
+**Escalada para conselho (Bloco C).** Corre depois da área e antes do agente, sem LLM:
+- um pedido de uma área listada em `escalation.areas` de um conselho (`config/councils.yaml`) **e** com uma das `escalation.keywords` (ex.: "decisão de arquitetura", "threat model") passa a `outcome: council`;
+- a lista é curta de propósito, porque um conselho custa 2N+1 chamadas;
+- `route --no-council` (ou `Router(councils=False)`) desliga a escalada.
 
 **Rastreio (R7):**
 - **Ledger:** cada chamada do router grava uma linha `call_kind='router'` (`embed_query` para embeddings) no ledger J6. A linha fica no mesmo `run_id` dos passos, em `<run>/token_usage.jsonl`, e vai também para o Supabase se `SUPABASE_*` estiver configurado, como no worker.

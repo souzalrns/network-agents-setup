@@ -100,3 +100,5 @@ pilots/run-worker-*/
 # Router (D2): runs executados e log de decisoes, nao versionar
 pilots/run-router-*/
 pilots/router-decisions.jsonl
+# Bloco C: sessoes de conselho (tema/contexto podem ser sensiveis; evidencia vai para docs/)
+pilots/council-*/

@@ -17,6 +17,12 @@ Tres andares, todos lidos de config/areas.yaml (registo M3):
    corre em `--mode external` com o worker (AU-23). 1 agente = plano de 1
    passo; area com `hitl: required` ganha um gate humano no fim; HITL do
    router = plano com um so gate (pedido duravel em hitl-requests.jsonl).
+4. **Escalada para conselho** (Bloco C, ADR-META-AGENTS §9): depois da area e
+   antes do agente, um pedido ESTRUTURAL (keywords de `escalation` em
+   config/councils.yaml, so nas areas listadas) vira `council`: o
+   `execute` abre um CouncilSession (plan_runner/council_session.py) com o
+   tecto da area do conselho. Lista curta e explicita: um conselho custa 2N+1
+   chamadas. `Router(councils=False)` / `route --no-council` desliga.
 
 Rastreio (R7): cada decisao leva {area, agente/plano, confiancas, motivo,
 tokens}; a chamada ao LLM grava uma linha `call_kind='router'` no ledger J6
@@ -51,7 +57,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 GOLDEN_FILE = Path("config") / "router-golden.yaml"
 DEFAULT_MAX_PLAN_STEPS = 6
 WHOLE_WORD_MAX_LEN = 5  # keywords ate 5 caracteres casam so a palavra inteira (areas.yaml)
-OUTCOMES = ("agent", "plan", "clarify", "hitl", "error")
+OUTCOMES = ("agent", "plan", "clarify", "hitl", "council", "error")
 
 Embed = Callable[[str], list[float]]
 
@@ -59,7 +65,7 @@ Embed = Callable[[str], list[float]]
 @dataclass
 class RouteDecision:
     request: str
-    outcome: str  # agent | plan | clarify | hitl | error
+    outcome: str  # agent | plan | clarify | hitl | council | error
     area: str | None = None
     area_method: str = ""  # keywords | embeddings | fallback
     area_confidence: float = 0.0
@@ -73,6 +79,7 @@ class RouteDecision:
     reason: str = ""
     question: str | None = None
     usage: list[dict[str, Any]] = field(default_factory=list)  # linhas do ledger J6
+    council: str | None = None  # outcome council: id em config/councils.yaml
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -115,8 +122,10 @@ class Router:
         transport: ew.Transport | None = None,
         embed: Embed | None = None,
         api_key: str | None = None,
+        councils: bool = True,
     ):
         self.repo_root = repo_root
+        self.councils = councils
         self.registry = load_registry(repo_root)
         self.areas = {a["id"]: a for a in self.registry["areas"]}
         self.config = routing_config(self.registry)
@@ -332,6 +341,21 @@ class Router:
             steps.append({"agent": s["agent"], "task": str(s.get("task") or "").strip(), "depends_on": deps})
         return steps
 
+    # --------------------------------------------------------------- conselho
+    def escalate(self, text: str, decision: RouteDecision) -> bool:
+        """Pedido estrutural -> conselho (sem LLM: keywords do councils.yaml). True se escalou."""
+        if not self.councils:
+            return False
+        from .council_session import match_escalation
+
+        hit = match_escalation(self.repo_root, text, decision.area)
+        if hit is None:
+            return False
+        decision.outcome, decision.council = "council", hit[0]
+        decision.hitl_required = True  # modo assistido (ADR §2.3): o veredicto passa sempre por HITL
+        decision.reason = "; ".join(x for x in (decision.reason, f"pedido estrutural ({', '.join(hit[1])}): conselho `{hit[0]}` (ADR-META-AGENTS §9)") if x)
+        return True
+
     # ------------------------------------------------------------------ route
     def route(self, text: str) -> RouteDecision:
         decision = RouteDecision(request=text, outcome="error")
@@ -339,7 +363,7 @@ class Router:
             decision.reason = "pedido vazio"
             return decision
         try:
-            if self.classify_area(text, decision):
+            if self.classify_area(text, decision) and not self.escalate(text, decision):
                 self.choose_agent(text, decision)
         except ew.WorkerError as e:  # embeddings
             decision.outcome, decision.reason = "error", f"embeddings: {e}"
@@ -412,8 +436,21 @@ class Router:
             plan["budget"] = plan_budget
         return plan
 
-    def execute(self, decision: RouteDecision, *, out_dir: Path, worker: str | None = "gemini") -> dict[str, Any]:
+    def execute(self, decision: RouteDecision, *, out_dir: Path, worker: str | None = "gemini",
+                council_deps: Any = None) -> dict[str, Any]:
         """Corre a decisao no plan_runner (mode external + worker). clarify/error nao correm."""
+        if decision.outcome == "council":
+            if worker in (None, "none"):
+                return {"executed": False, "decision": decision.to_dict(),
+                        "reason": "um conselho precisa do worker gemini (--worker gemini)"}
+            from .council_session import CouncilDeps, run_council
+
+            # O conselho conta contra o tecto da area do conselho; as chamadas do router entram no mesmo ledger.
+            state = run_council(decision.council, decision.request, out_dir=out_dir, repo_root=self.repo_root,
+                                deps=council_deps or CouncilDeps.from_env(), pre_ledger=decision.usage)
+            out = Path(out_dir).resolve()
+            (out / "route.json").write_text(json.dumps(decision.to_dict(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            return {"executed": True, "decision": decision.to_dict(), "council": state}
         if decision.outcome not in ("agent", "plan", "hitl"):
             return {"executed": False, "decision": decision.to_dict()}
         from .engine import run_plan
