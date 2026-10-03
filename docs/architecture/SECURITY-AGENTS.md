@@ -128,7 +128,7 @@ As actions estão fixadas por SHA, e o workflow passa no `actionlint` e nas regr
   - **11 ERROR são falsos positivos:**
     - SQL (9): as f-strings só interpolam constantes (`COLUMNS`, `CHUNKS_TABLE`), e os valores vão como parâmetros `%s` (ex.: `runner/plan_runner/memory_l4.py:132`, `runner/plan_runner/supabase_writer.py:233`);
     - `subprocess.Popen` (2): lista de argumentos com `sys.executable`, num cliente de teste (`mcp/plan_runner/test_client.py:51`).
-  - **20 WARNING reais (supply chain):** actions dos workflows existentes fixadas por tag e não por SHA (`runner-tests.yml` 8, `ci.yml` 5, `release.yml` 5, `ingest-knowledge.yml` 2). Pendente: SEC-2c.
+  - **20 WARNING reais (supply chain):** actions dos workflows existentes fixadas por tag e não por SHA (`runner-tests.yml` 8, `ci.yml` 5, `release.yml` 5, `ingest-knowledge.yml` 2). Pendente: SEC-2c. **FEITO (SEC-2c, 2026-10-03):** as 17 `uses:` por tag dos 4 workflows antigos ficaram fixadas por SHA, no commit para onde a tag móvel apontava, logo sem mudar de versão. O semgrep passou a 0 achados de GitHub Actions; o repo passou de 85 para 65 achados (WARNING de 63 para 43, todos de código, SEC-2d). Os SHAs são actualizados pelo Dependabot (`package-ecosystem: github-actions` em `.github/dependabot.yml`).
   - **O resto** (path traversal / fs com nomes não literais, sobretudo em `packages/`, que é o TS arquivado pela D1; i18n; formatação) fica na linha de base. Só achados **novos** falham um PR.
   - Teste do modo PR: um commit limpo passa (exit 0); um commit com `subprocess.call(cmd, shell=True)` falha (exit 1).
 
