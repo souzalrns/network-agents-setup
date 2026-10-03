@@ -555,7 +555,9 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Tectos por área (B5-bis) | **Aplicado** (opção A): 80k/40k/30k/20k | `config/areas.yaml`, `docs/ops/BUDGET.md` |
 | B1-bis-C: encurtar skills/prompt-base | **Registado** (PLANO item 12); não começar sem ordem | `docs/audit/PLANO-DE-ACAO.md` |
 | **L4: memória persistente (D3)** | **Merged** (#47, `a941147`) **e em produção**: L4-1 feito pelo maestro (verificação 4/4: tabela=1, rls=true, anon=0, rpc=1). Falta o teste real mínimo (L4-1b) | `docs/ops/MEMORY-L4.md` |
-| B1-bis-R: run real legacy vs opt | **Feito, mas o braço `opt` correu com o prompt `legacy`** (prompts-base idênticos ao token): −2,6% = variância da saída. Projecção não verificada; `opt` continua a omissão; repetir só o `opt` com verificação (B1-bis-R2) | `docs/ops/WORKER-EXTERNAL.md` |
+| B1-bis-R: run real legacy vs opt | **Feito, mas o braço `opt` correu com o prompt `legacy`** (prompts-base idênticos ao token): −2,6% = variância da saída | `docs/ops/WORKER-EXTERNAL.md` |
+| **B1-bis-R2: run `opt` verificado** | **Feito (2026-10-03): −22% real** (12 998 → 10 136; ~−16% atribuível ao `opt` com as saídas normalizadas), com o modo `opt` confirmado nos 4 passos. research −20%, seo_brief +9%, copy −31%, critic −41%. `opt` fica a omissão | `docs/ops/WORKER-EXTERNAL.md` |
+| **C-1: custo real do conselho** | **Feito (2026-10-03):** 1 ronda do `architecture` = 11 760 tokens (14,7% de 80k); veredicto real `conditional` 0,85, gate `pass`, HITL `approve`, `done`. Viável sem cortes. **Regra: 1 conselho ≈ 1 SEO**, só para decisão estrutural ou escalada pelo router. Sem migração SQLite → Postgres e sem baixar o tecto para 15k (análise do Grok) | `docs/ops/COUNCIL.md`, `docs/ops/BUDGET.md` |
 
 ## 🏁 Fecho do dia 2026-10-01
 
@@ -565,6 +567,6 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | B: worker, router, orçamento, optimização, tectos, testes lentos, ingest→retrieve no CI | **Fechado** (#40–#46) |
 | D: L4, memória persistente | **Fechado** (#47) e **em produção** (L4-1, 4/4); falta o teste real mínimo (L4-1b) |
 | "Pernas" (PLANO §10: 4 junções + 3 decisões + 4 construções) | **11/11** ("6/6" na contagem do maestro) |
-| Próximo item | **BLOCO C — CouncilSession** (Fase 1 do ADR-META-AGENTS, PLANO J5-c): **em PR #54**, DONE com mock; faltam o custo real (C-1) e a migração do ledger (C-2) |
+| Bloco C — CouncilSession | **Merged** (#54); DONE com mock e **validado com o Gemini real** (C-1); falta a migração do ledger no Supabase (C-2, DEV) |
 | Próximo-grande, NÃO agora | B1-bis-C (encurtar skills/prompt-base): com os tectos por área, o custo actual não é problema |
 

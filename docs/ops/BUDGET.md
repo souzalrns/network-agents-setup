@@ -29,6 +29,8 @@ Não cortar a meio é deliberado. Um artefacto truncado a meio (`MAX_TOKENS`) pa
 
 **Conselhos (Bloco C):** o tecto é o `budget.max_tokens` da área do conselho (`area:` no `config/councils.yaml`) ou `--max-tokens`. O orçamento é verificado antes de cada chamada (membro, par, chairman). Atingido o tecto, a sessão fica `paused_budget`, e `council resume <dir> --max-tokens N` retoma sem repagar o que já está feito ([COUNCIL.md](./COUNCIL.md)).
 
+> **Regra de uso (maestro, 2026-10-03):** **1 conselho ≈ 1 SEO.** Não disparar o conselho por omissão: só para uma decisão estrutural (`architecture` / `security` / `product`), invocada explicitamente (`council run`), ou quando o router escala o pedido (keywords de `escalation` no `config/councils.yaml`). Medido no C-1: 1 ronda = 11 760 tokens, contra 10 136 do `seo-article-demo` em `opt` (B1-bis-R2). O tecto dos conselhos continua o da área; não desce para 15k agora (análise do Grok, [COUNCIL.md](./COUNCIL.md)).
+
 O validador E7 (`python -m plan_runner.areas`) aceita na área `budget: null` ou `{max_steps?, max_tokens?}`, com inteiros > 0, e recusa o resto.
 
 > **Tectos por área ligados (B5-bis fase 1, decidido pelo maestro a 2026-10-01, opção A):** produção (marketing, docs, research, software) 80k; risco (finance, legal, security) 40k; exploratórias (gamedev, ops) 30k; transversal (horizontal) 20k. Estão em `config/areas.yaml` e só se aplicam a planos gerados pelo router; planos escritos à mão usam o `budget` do próprio plano ou `--max-tokens`. **Rever depois do B1-bis-C** (encurtar skills/prompt-base, PLANO item 12).

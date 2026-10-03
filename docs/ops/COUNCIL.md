@@ -6,9 +6,9 @@
 >
 > **Critério de DONE cumprido com mock** (Gemini falso, L4 real num Postgres local): o conselho `architecture` corre de ponta a ponta, dá um veredicto estruturado, o HITL aprova, e a L4 passa de `candidate` a `active` (secção "Evidência").
 >
-> **Por fazer:**
-> - **Custo real:** sem `GEMINI_API_KEY` neste ambiente não se correu o `countTokens` nem um run real (secção "Custo").
-> - **Migração do ledger no Supabase:** é passo do DEV (secção "Ledger").
+> **Custo real medido (C-1, 2026-10-03, run do maestro):** 1 ronda do `architecture` = **11 760 tokens** (14,7% do tecto de 80k). Veredicto real `conditional`, gate `pass`, HITL `approve`, estado `done`. Ver "Custo medido (C-1)" e "Evidência real".
+>
+> **Por fazer:** migração do ledger no Supabase, passo do DEV (C-2, secção "Ledger").
 
 Desenho: [ADR-META-AGENTS](../architecture/adr/ADR-META-AGENTS.md) §9–§13. Contrato da L4: [contracts.md](../architecture/memory/contracts.md). HITL: [hitl-request-v1](../architecture/hitl/hitl-request-v1.json).
 
@@ -163,16 +163,87 @@ Regra de escalada (`config/councils.yaml`, `escalation`):
   - depois, os 3 valores novos e os 4 antigos são aceites;
   - um valor inválido continua a ser recusado.
 
-## Custo
+## Custo medido (C-1, 2026-10-03, run do maestro, Gemini real)
 
-**Lição do B1-bis aplicada: não se decide nada com caracteres.** O que existe hoje:
+Conselho `architecture` (3 membros + chairman, `flash-lite`), 1 ronda.
+
+| Medida | Valor | Fonte |
+|---|---:|---|
+| Chamadas | **7** (3 member + 3 peer + 1 chairman) | run real |
+| Entrada fixa da ronda (`council cost`) | **5 860** | **`countTokens`** (estimativa exacta do tokenizer, sem gerar texto) |
+| Intervalo previsto da ronda | **5 860 – 22 756** (floor – ceiling) | `countTokens` + tectos de saída |
+| `tokens_in` real | **9 502** | `usageMetadata` (ledger) |
+| `tokens_out` real | **2 258** | `usageMetadata` (ledger) |
+| **`tokens_total` real (1 ronda)** | **11 760** | `usageMetadata` (ledger) |
+| % do tecto da área `software` (80 000) | **14,7%** | 11 760 / 80 000 |
+| 2 rondas (`max_rounds` = 2) | ≈ 23 500 (29%) | **extrapolação** (2 × a ronda medida), não medido |
+
+- **O real cai dentro do intervalo previsto**, a 35% do caminho entre floor e ceiling: (11 760 − 5 860) / (22 756 − 5 860). A parte que depende das saídas (posições reinjectadas nos pares e no chairman, mais as próprias saídas) vale ~5,9k, metade do total.
+- **Comparação:** uma ronda de conselho (11 760) custa mais do que o `seo-article-demo` inteiro em `opt` (10 136, B1-bis-R2), com 7 chamadas contra 4.
+
+**Conclusão: o conselho é viável a este custo, sem cortes.**
+- **architecture:** 1 ronda usa 14,7% do tecto; com a ronda máxima (2), ≈ 29%. A regra de paragem 4 (custo > tecto) não se aplica.
+- **Não proponho cortar membros nem rondas.** O ganho de 2 membros (5 chamadas por ronda) não justifica perder o crítico. Fica como alavanca se o uso real crescer (opções abaixo).
+- **security** (tecto de 40k) não foi medido. Com um tamanho parecido, 1 ronda daria ~29% e 2 rondas ~59%: cabe, mas com menos folga. É uma estimativa; mede-se no primeiro run real de security.
+
+#### Ledger por chamada (`council.json → ledger[]` do run do maestro)
+
+| Estágio | Participante | in | out | total |
+|---|---|---:|---:|---:|
+| independent | `meta.arquitetura-agentes` | 1 450 | 458 | 1 908 |
+| independent | `engenharia.desenvolvimento` | 1 022 | 474 | 1 496 |
+| independent | `engenharia.revisor-codigo` (critic) | 1 492 | 414 | 1 906 |
+| peer_rank | `meta.arquitetura-agentes` | 973 | 91 | 1 064 |
+| peer_rank | `engenharia.desenvolvimento` | 953 | 85 | 1 038 |
+| peer_rank | `engenharia.revisor-codigo` | 1 023 | 120 | 1 143 |
+| synthesize | `meta.chairman` | 2 589 | 616 | 3 205 |
+| **TOTAL** | 7 chamadas | **9 502** | **2 258** | **11 760** |
+
+| Estágio | Chamadas | in | out | total | % |
+|---|---:|---:|---:|---:|---:|
+| INDEPENDENT | 3 | 3 964 | 1 346 | **5 310** | **45%** |
+| PEER_RANK | 3 | 2 949 | 296 | **3 245** | **28%** |
+| SYNTHESIZE | 1 | 2 589 | 616 | **3 205** | **27%** |
+
+**Leitura:**
+- **INDEPENDENT (45%)** é o grosso, e é o valor do conselho: 3 posições a ~1,5–1,9k cada. As entradas (1 022–1 492) são dominadas pelo AGENT.md e pela directiva de grounding de cada membro.
+- **PEER_RANK (28%) é quase só entrada:** 91% do custo é ler as 2 posições dos outros mais o tema (as saídas têm 85–120 tokens). É a alavanca natural se um dia for preciso cortar; o COUNCIL.md já lista "B: PEER_RANK sem contexto".
+- **SYNTHESIZE (27%):** 1 chamada só, mas é a maior entrada (2 589): o AGENT.md do chairman, o grounding completo, as 3 posições e as críticas. A saída (616) é o veredicto estruturado.
+- **Saídas abaixo dos tectos:** as posições ficam em 414–474 tokens contra um tecto de 1 024; os ballots em 85–120 contra 512; o veredicto em 616 contra 1 536. Nenhuma chamada se aproximou do `maxOutputTokens`, por isso não houve risco de JSON truncado.
+- **Coerência com o `countTokens`:** entrada fixa de 5 860 contra 9 502 de entrada real. A diferença (3 642) são as posições e as críticas reinjectadas nos pares e no chairman: a parte que o `estimate_cost` marca como dependente das saídas.
+
+**Nenhuma alteração proposta.** O custo é viável e o Grok recomenda não mexer agora (ver "Análise do Grok").
+
+### Regra de uso (maestro, 2026-10-03)
+
+> **1 conselho ≈ 1 SEO.** Não disparar o conselho por omissão: só para uma decisão estrutural (`architecture` / `security` / `product`), invocada explicitamente (`council run`), ou quando o router escala o pedido (keywords de `escalation` no `config/councils.yaml`).
+
+- **Porquê:** uma ronda (11 760 tokens) custa o mesmo que o `seo-article-demo` inteiro em `opt` (10 136): 1,16×.
+- **Como já está no código:** o router só escala com keywords explícitas, nas áreas listadas (`router.py:345`, `escalate`); `route --no-council` desliga a escalada. Nenhum plano nem agente abre um conselho sozinho.
+- **Escalar todas as áreas `hitl: required` (ADR §9) continua desligado.** Multiplicaria o custo de cada pedido de security, finance e legal por cerca de 1 SEO.
+
+### Análise do Grok (parceiro de design, 2026-10-03), sobre o B1-bis-R2 e o C-1
+
+1. **SEO em `opt` ~10k: saudável.** O critic deixou de ser o buraco do `tokens_in` (3759 → 2091, −44%).
+2. **Conselho ~12k por ronda: saudável para uma decisão estrutural.** 1 conselho ≈ 1 SEO.
+3. **Não abrir o B1-bis-C só porque não está <9k.** O ganho real já apareceu (−22%).
+4. **Não migrar SQLite → Postgres só porque o conselho falou nisso.** O veredicto é `conditional` e as condições não foram validadas. O SQLite continua certo para um só processo, que é o que o ADR §12 já dizia ("só quando houver multi-instância").
+5. **Não baixar o tecto do conselho para 15k agora.**
+
+**Decisões que ficam registadas:**
+- **Tecto:** o conselho não tem um `max_tokens` próprio; usa o da área do conselho (80k em `architecture`/`product`, 40k em `security`). Fica assim. Um tecto de 15k cobriria 1 ronda medida (11 760), mas não 2 (≈ 23 500, extrapolado), por isso mudá-lo exige decidir primeiro se a 2.ª ronda se mantém.
+- **Veredicto aprovado não executa nada.** O `approve` no HITL torna o veredicto conhecimento `active`; não aplica a decisão. Executar o que o veredicto propõe (aqui, a migração do checkpointer) é trabalho separado, que só começa depois de validadas as condições, por ordem do maestro.
+
+### Antes do run (referência)
+
+**Lição do B1-bis aplicada: não se decide nada com caracteres.** O que existia antes do C-1:
 
 | Medida | Valor | Natureza |
 |---|---|---|
 | Chamadas por ronda (architecture, 3 membros) | **7** (3 member + 3 peer + 1 chairman) | exacto |
 | `maxOutputTokens` por chamada | 1024 / 512 / 1536 | exacto (tecto) |
 | Parte variável máxima de 1 ronda (saídas no tecto + posições reinjectadas) | **16 896 tokens** | exacto (fórmula de `estimate_cost`) |
-| Entrada fixa de 1 ronda | **por medir** com `council cost` (`countTokens`) | precisa de `GEMINI_API_KEY` |
+| Entrada fixa de 1 ronda | **5 860** (medido no C-1) | `countTokens` |
 | Run real | **por medir** (7 chamadas `flash-lite`) | precisa de `GEMINI_API_KEY` |
 
 Tamanho dos prompts reais do repo, só para referência de **forma** (não são tokens), num run com saídas curtas do Gemini falso:
@@ -202,6 +273,39 @@ Os prompts dos membros e do chairman são dominados pelo AGENT.md e pela directi
 | `tests/test_council.py` (45) | 2N+1 chamadas e a ordem dos estágios; veredicto estruturado nos 4 valores; dissent determinístico; gate (veto de required, veto de não-required ignorado, veto + reject passa, low_confidence, confidence fora de escala inválida, incomplete); HITL pára, `resume` sem decisão não chama o LLM; pedido valida contra o schema v1; decisão escrita pelo lado Node; revise abre nova ronda com o comentário e respeita `max_rounds`; chairman nunca vê ids; peer não vê a própria posição; ballot inválido não bloqueia; Borda; quorum + `resume` só repete quem falhou; orçamento pausa e retoma sem repagar; tecto por omissão = área; ledger por ronda com `call_kind` e envio remoto; sem `DATABASE_URL`; `chairman_model`; escalada do router (com e sem keyword, `--no-council`, só nas áreas do conselho); CLI run/decide/status/validate; `countTokens`; validador (10 configurações inválidas, chairman não-meta, meta numa área, meta órfão) |
 | `tests/test_council_l4.py` (5, Postgres + pgvector) | **DONE:** candidate → HITL approve → active, e o recall devolve-o; reject → archived com motivo; revise → archived + novo candidate; com veto nunca chega a active; âmbito `org` recusado |
 
+## Evidência real (C-1, 2026-10-03, run do maestro, Gemini real)
+
+| Campo | Valor |
+|---|---|
+| Conselho | `architecture` (1 ronda, 7 chamadas) |
+| Decisão | **`conditional`**, confidence **0,85** (τ = 0,7) |
+| Conteúdo | **3 condições, 2 kill criteria, 2 next_actions** |
+| Gate | **`pass`** (coerente com as regras: `conditional` com condições, kill criteria e próximos passos; confidence ≥ τ) |
+| HITL | **`approve`** por **`human:souza`** |
+| Estado final | **`done`** |
+
+É a primeira prova funcional com o modelo real: as saídas do `flash-lite` passaram na normalização (posições, ballots e veredicto em JSON válido, `confidence` em 0–1), e o protocolo correu de ponta a ponta.
+
+**Tema:** a migração dos checkpoints do LangGraph de SQLite para Postgres (segundo a análise do Grok, ponto 4). **Seguimento:** nenhum. O veredicto é `conditional`, as condições não estão validadas, e o SQLite fica (ver "Análise do Grok").
+
+#### Evidência da deliberação (do `council.json` do run do maestro)
+
+- **As 3 posições são diferentes:** uma centrada no custo, outra na escala, outra na latência. Os membros não convergiram por imitação, porque a fase INDEPENDENT não deixa ver as outras posições.
+- **Ranking cego entre pares (Borda):** A = 0,5, B = 0,0, C = 1,0.
+  - Cada par ordena só as **2 posições dos outros**, nunca a sua (`council_session.py:542`, `exclude=member["id"]`; teste `test_peer_nao_ve_a_propria_posicao_e_letras_sao_coerentes`, `tests/test_council.py:359`). As letras são das **posições**, baralhadas por sessão (`council.json → rounds[0].labels`), e não da ordem dos membros no ledger.
+  - Com 2 posições por ballot, a 1.ª vale 1 e a 2.ª vale 0. Os scores dão exactamente esta leitura:
+    - **C foi a 1.ª escolha dos dois pares que a viram** (score 1,0);
+    - **B foi a última dos dois pares que a viram** (0,0);
+    - **A ficou dividida** (0,5): o autor de C pô-la em 1.º (A antes de B); o autor de B pô-la em 2.º (C antes de A).
+  - A ordem colectiva foi C > A > B, quase unânime.
+  - **Correcção a uma leitura anterior:** "B auto-desvalorizou-se" e "C rankeou-se primeiro" não podem ter acontecido, porque ninguém vê nem ordena a própria posição. O que aconteceu foi que os **outros** puseram C em 1.º e B em último.
+- **As críticas entre pares são reais:** cada ballot traz uma falha principal por posição.
+- **O chairman (anónimo) combinou as 3 perspectivas** num veredicto `conditional`, com 3 condições, 2 kill criteria e 2 próximos passos. Não seguiu só a posição mais bem classificada.
+
+**`verdict.json`: sem bug.** Os caracteres estranhos vistos no PowerShell eram do encoding do terminal; o ficheiro está bem. Para ler sem problemas no Windows: `Get-Content <dir>\verdict.json -Encoding UTF8` (o runner grava-o em UTF-8: `council_session.py:858`).
+
+**Por registar:** o estado da L4 neste run (`candidate` → `active`, ou `disabled` se correu com `--no-memory`).
+
 ## Evidência (2026-10-01, Gemini falso, L4 num Postgres 16 + pgvector local)
 
 O run usou o `config/councils.yaml` real, os AGENT.md reais e a BD criada com os 2 SQL da L4 (o mesmo SQL que está em produção desde o L4-1):
@@ -219,6 +323,7 @@ ficheiros: council.json events.jsonl hitl-requests.jsonl hitl-decisions.jsonl me
 ## Limites
 
 - **Fase 1 só:** membros `internal`. A Fase 2 (IAs externas, `kind: external_ai`) fica para depois, sobre o mesmo protocolo (ADR §2).
+- **O conselho delibera, não executa.** O `approve` só promove o veredicto na L4 (`council_session.py:853-858`). Quem executa a decisão, e a garantia de que só um executa, é a **Fase 2: Execution Broker + Execution Lease**: contrato em [META-AGENTS-PHASE-2.md](../architecture/META-AGENTS-PHASE-2.md), registo, não implementado.
 - **Anonimato parcial:**
   - o texto livre de uma posição pode revelar o papel do autor ("como revisor…");
   - só os ids são apagados;
