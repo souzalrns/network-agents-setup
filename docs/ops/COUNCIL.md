@@ -6,9 +6,9 @@
 >
 > **Critério de DONE cumprido com mock** (Gemini falso, L4 real num Postgres local): o conselho `architecture` corre de ponta a ponta, dá um veredicto estruturado, o HITL aprova, e a L4 passa de `candidate` a `active` (secção "Evidência").
 >
-> **Por fazer:**
-> - **Custo real:** sem `GEMINI_API_KEY` neste ambiente não se correu o `countTokens` nem um run real (secção "Custo").
-> - **Migração do ledger no Supabase:** é passo do DEV (secção "Ledger").
+> **Custo real medido (C-1, 2026-10-03, run do maestro):** 1 ronda do `architecture` = **11 760 tokens** (14,7% do tecto de 80k). Veredicto real `conditional`, gate `pass`, HITL `approve`, estado `done`. Ver "Custo medido (C-1)" e "Evidência real".
+>
+> **Por fazer:** migração do ledger no Supabase, passo do DEV (C-2, secção "Ledger").
 
 Desenho: [ADR-META-AGENTS](../architecture/adr/ADR-META-AGENTS.md) §9–§13. Contrato da L4: [contracts.md](../architecture/memory/contracts.md). HITL: [hitl-request-v1](../architecture/hitl/hitl-request-v1.json).
 
@@ -163,16 +163,40 @@ Regra de escalada (`config/councils.yaml`, `escalation`):
   - depois, os 3 valores novos e os 4 antigos são aceites;
   - um valor inválido continua a ser recusado.
 
-## Custo
+## Custo medido (C-1, 2026-10-03, run do maestro, Gemini real)
 
-**Lição do B1-bis aplicada: não se decide nada com caracteres.** O que existe hoje:
+Conselho `architecture` (3 membros + chairman, `flash-lite`), 1 ronda.
+
+| Medida | Valor | Fonte |
+|---|---:|---|
+| Chamadas | **7** (3 member + 3 peer + 1 chairman) | run real |
+| Entrada fixa da ronda (`council cost`) | **5 860** | **`countTokens`** (estimativa exacta do tokenizer, sem gerar texto) |
+| Intervalo previsto da ronda | **5 860 – 22 756** (floor – ceiling) | `countTokens` + tectos de saída |
+| `tokens_in` real | **9 502** | `usageMetadata` (ledger) |
+| `tokens_out` real | **2 258** | `usageMetadata` (ledger) |
+| **`tokens_total` real (1 ronda)** | **11 760** | `usageMetadata` (ledger) |
+| % do tecto da área `software` (80 000) | **14,7%** | 11 760 / 80 000 |
+| 2 rondas (`max_rounds` = 2) | ≈ 23 500 (29%) | **extrapolação** (2 × a ronda medida), não medido |
+
+- **O real cai dentro do intervalo previsto**, a 35% do caminho entre floor e ceiling: (11 760 − 5 860) / (22 756 − 5 860). A parte que depende das saídas (posições reinjectadas nos pares e no chairman, mais as próprias saídas) vale ~5,9k, metade do total.
+- **Comparação:** uma ronda de conselho (11 760) custa mais do que o `seo-article-demo` inteiro em `opt` (10 136, B1-bis-R2), com 7 chamadas contra 4.
+
+**Conclusão: o conselho é viável a este custo, sem cortes.**
+- **architecture:** 1 ronda usa 14,7% do tecto; com a ronda máxima (2), ≈ 29%. A regra de paragem 4 (custo > tecto) não se aplica.
+- **Não proponho cortar membros nem rondas.** O ganho de 2 membros (5 chamadas por ronda) não justifica perder o crítico. Fica como alavanca se o uso real crescer (opções abaixo).
+- **security** (tecto de 40k) não foi medido. Com um tamanho parecido, 1 ronda daria ~29% e 2 rondas ~59%: cabe, mas com menos folga. É uma estimativa; mede-se no primeiro run real de security.
+- **Por medir:** os tokens **por estágio** (independent / peer / synthesize). O run do maestro tem-nos em `council.json → ledger[]` (por participante) e no `token_usage.jsonl` (`call_kind`), mas este registo só traz os totais.
+
+### Antes do run (referência)
+
+**Lição do B1-bis aplicada: não se decide nada com caracteres.** O que existia antes do C-1:
 
 | Medida | Valor | Natureza |
 |---|---|---|
 | Chamadas por ronda (architecture, 3 membros) | **7** (3 member + 3 peer + 1 chairman) | exacto |
 | `maxOutputTokens` por chamada | 1024 / 512 / 1536 | exacto (tecto) |
 | Parte variável máxima de 1 ronda (saídas no tecto + posições reinjectadas) | **16 896 tokens** | exacto (fórmula de `estimate_cost`) |
-| Entrada fixa de 1 ronda | **por medir** com `council cost` (`countTokens`) | precisa de `GEMINI_API_KEY` |
+| Entrada fixa de 1 ronda | **5 860** (medido no C-1) | `countTokens` |
 | Run real | **por medir** (7 chamadas `flash-lite`) | precisa de `GEMINI_API_KEY` |
 
 Tamanho dos prompts reais do repo, só para referência de **forma** (não são tokens), num run com saídas curtas do Gemini falso:
@@ -201,6 +225,21 @@ Os prompts dos membros e do chairman são dominados pelo AGENT.md e pela directi
 |---|---|
 | `tests/test_council.py` (45) | 2N+1 chamadas e a ordem dos estágios; veredicto estruturado nos 4 valores; dissent determinístico; gate (veto de required, veto de não-required ignorado, veto + reject passa, low_confidence, confidence fora de escala inválida, incomplete); HITL pára, `resume` sem decisão não chama o LLM; pedido valida contra o schema v1; decisão escrita pelo lado Node; revise abre nova ronda com o comentário e respeita `max_rounds`; chairman nunca vê ids; peer não vê a própria posição; ballot inválido não bloqueia; Borda; quorum + `resume` só repete quem falhou; orçamento pausa e retoma sem repagar; tecto por omissão = área; ledger por ronda com `call_kind` e envio remoto; sem `DATABASE_URL`; `chairman_model`; escalada do router (com e sem keyword, `--no-council`, só nas áreas do conselho); CLI run/decide/status/validate; `countTokens`; validador (10 configurações inválidas, chairman não-meta, meta numa área, meta órfão) |
 | `tests/test_council_l4.py` (5, Postgres + pgvector) | **DONE:** candidate → HITL approve → active, e o recall devolve-o; reject → archived com motivo; revise → archived + novo candidate; com veto nunca chega a active; âmbito `org` recusado |
+
+## Evidência real (C-1, 2026-10-03, run do maestro, Gemini real)
+
+| Campo | Valor |
+|---|---|
+| Conselho | `architecture` (1 ronda, 7 chamadas) |
+| Decisão | **`conditional`**, confidence **0,85** (τ = 0,7) |
+| Conteúdo | **3 condições, 2 kill criteria, 2 next_actions** |
+| Gate | **`pass`** (coerente com as regras: `conditional` com condições, kill criteria e próximos passos; confidence ≥ τ) |
+| HITL | **`approve`** por **`human:souza`** |
+| Estado final | **`done`** |
+
+É a primeira prova funcional com o modelo real: as saídas do `flash-lite` passaram na normalização (posições, ballots e veredicto em JSON válido, `confidence` em 0–1), e o protocolo correu de ponta a ponta.
+
+**Por registar:** o texto das condições, dos kill criteria e dos próximos passos (`verdict.json` do run do maestro), e o estado da L4 neste run (`candidate` → `active`, ou `disabled` se correu com `--no-memory`).
 
 ## Evidência (2026-10-01, Gemini falso, L4 num Postgres 16 + pgvector local)
 

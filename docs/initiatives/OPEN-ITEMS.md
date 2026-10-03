@@ -183,7 +183,7 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
   - `PLAN_RUNNER_CONTEXT=legacy` para A/B e rollback.
 - **Projecção calibrada no B1** (`python -m plan_runner.token_projection`): `seo-article-demo` 13,1k → **11,1k (−16%)**, critic `tokens_in` **−33%**. 8 passos (pior caso): 41,3k → 28,3k (−31%).
 - ~~**B1-bis-R (maestro): run real** legacy vs opt~~ **FEITO, sem exercitar o `opt`** (ver a secção L4 abaixo e `docs/ops/WORKER-EXTERNAL.md`).
-- **B1-bis-R2 (maestro): repetir só o run `opt`**, com a verificação de modo de "Medir a sério" (`meta.context.policy`, `02-seo-brief.summary.md`; em PowerShell, `Remove-Item Env:PLAN_RUNNER_CONTEXT` antes). São 4 chamadas ao `flash-lite`. Só depois disto se decide qualquer coisa sobre o `opt`.
+- ~~**B1-bis-R2 (maestro): repetir só o run `opt`**~~ **FEITO (2026-10-03), com o modo `opt` confirmado nos 4 passos: −22% real** (12 998 → 10 136). research −20%, seo_brief +9% (gera o resumo), copy −31%, critic −41% (entrada do critic −44%). `opt` fica a omissão, agora medido. A hipótese "só compensa em 4+ passos" fica refutada. Detalhe em `docs/ops/WORKER-EXTERNAL.md`, "Medição real (B1-bis-R2)".
 - ~~**B1-bis-9k (decisão)**~~ **DECIDIDO: opção C (maestro, 2026-10-01).** Fica o modo `opt` (−16% projectado, não verificado), e o caminho para <9k passa a ser o item próprio **B1-bis-C — encurtar skills/prompt-base** (PLANO item 12). **Não começar sem ordem.**
 
 ## Bloco L4 — memória persistente (D3), 2026-10-01
@@ -208,12 +208,18 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **Bloco D, L4 (memória persistente): FECHADO** (#47) **e em produção** (L4-1 feito: SQL corrido, verificação 4/4). Falta o teste real mínimo (L4-1b).
 - **"Pernas": todas as condições do PLANO §10 fechadas** (4 junções + 3 decisões + 4 construções = 11/11; o maestro conta-as como 6/6). Tabela com a evidência em `docs/audit/PLANO-DE-ACAO.md` §10, "Fecho de 2026-10-01".
 - **Registado:** a tabela por passo do B1-bis-R (com a análise acima) e o L4-1 (4/4).
-- **Por registar:** o R1 (`router eval` com o Gemini real), o B1-bis-R2 (run `opt` verificado) e o L4-1b (teste real mínimo).
+- **Por registar:** o R1 (`router eval` com o Gemini real) e o L4-1b (teste real mínimo). O B1-bis-R2 e o C-1 ficaram registados a 2026-10-03.
 - **Próximo item: BLOCO C — CouncilSession** (deliberação interna entre meta-agentes, Fase 1 do ADR-META-AGENTS; PLANO J5-c). Decisão do maestro, 2026-10-01.
   - **Em PR #54** (sem merge): `runner/plan_runner/council_session.py`, `config/councils.yaml`, `agents/meta/chairman.agent.md`; operação em `docs/ops/COUNCIL.md`. **DONE com mock** cumprido: conselho `architecture` de ponta a ponta, veredicto estruturado, HITL aprovado, L4 candidate → active.
-  - **C-1 (maestro): custo real.** `python -m plan_runner council cost architecture "<tema>"` (`countTokens`, grátis) e 1 run real (7 chamadas `flash-lite`). Só depois se decide se 3 membros compensam.
+  - **Merged** (#54).
+  - ~~**C-1 (maestro): custo real.**~~ **FEITO (2026-10-03):**
+    - `countTokens`: entrada fixa 5 860, intervalo 5 860–22 756;
+    - 1 ronda real: **11 760 tokens** (in 9 502, out 2 258), **14,7% do tecto de 80k**; 2 rondas ≈ 29% (extrapolação);
+    - veredicto real `conditional` 0,85, gate `pass`, HITL `approve` (`human:souza`), `done`.
+
+    Viável sem cortes. Detalhe em `docs/ops/COUNCIL.md`, "Custo medido (C-1)".
   - **C-2 (DEV): migração do ledger** no Supabase (`scripts/alter_token_usage_council_kinds.sql`). Até lá, as linhas do conselho ficam só no `token_usage.jsonl` local.
-- **B1-bis-C (encurtar skills/prompt-base): próximo-grande, NÃO agora.** Com os tectos por área, o custo actual não é problema. Medir primeiro com o B1-bis-R2.
+- **B1-bis-C (encurtar skills/prompt-base): próximo-grande, NÃO agora.** Com os tectos por área, o custo actual não é problema. Base medida no B1-bis-R2: 10 136, a 1 136 da meta de <9k.
 - Outros candidatos, sem ordem: L4-2 (spike mem0), L4-3 (MCP de produção → L4).
 - **Novo, para o B1-bis-C:** medir com o endpoint `countTokens` da API Gemini (contagem exacta da entrada sem gerar texto) em vez de projecções por caracteres.
 

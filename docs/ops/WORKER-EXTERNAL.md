@@ -113,8 +113,8 @@ order by created_at desc limit 10;
 
 > **Estado:** implementado (modo `opt`, a omissão) e testado offline: 18 testes em `runner/tests/test_context_opt.py`.
 > - **Run real (B1-bis-R, maestro, 2026-10-01): −2,6%, mas o run "opt" correu com o prompt `legacy`.** Os prompts-base dos dois runs são idênticos token a token em todos os passos, e o código actual corta 16–34% dos caracteres de cada prompt-base. O −2,6% é variância da saída do modelo, não efeito do `opt`.
-> - **A projecção (−16%) fica NÃO VERIFICADA** (nem confirmada nem refutada). Ver "Medição real (B1-bis-R)".
-> - **Decisão do maestro:** `opt` continua a omissão. Próxima medição: repetir só o run `opt`, com a verificação de "Medir a sério".
+> - **Run real válido (B1-bis-R2, 2026-10-03, modo `opt` verificado): −22%** (12 998 → 10 136). research −20%, seo_brief +9% (gera o resumo), copy −31%, critic −41%. Ver "Medição real (B1-bis-R2)".
+> - **`opt` continua a omissão (decisão do maestro), agora confirmada por medição real.** A projecção (−16%) subestimou o ganho.
 > - A meta de <9k passou para o item próprio B1-bis-C (PLANO item 12).
 
 ### Diagnóstico: onde estavam os 13 130 tokens do B1
@@ -142,6 +142,36 @@ O contexto acumulado conta, mas o **prompt-base pesa mais** (41% vs 33%). A subi
 | 6 | Cache de prefixo | **Não** (não muda a métrica) | Os tokens em cache continuam no `promptTokenCount`; só mudam a fatura. A ordem do prompt já é estável (system → user) |
 
 `PLAN_RUNNER_CONTEXT=legacy` repõe o prompt anterior, para A/B e rollback. Cada `result.json` tem `meta.context` com a política, o grounding, cada input (modo e tamanho) e o estado do resumo.
+
+### Medição real (B1-bis-R2, 2026-10-03, run do maestro, modo `opt` verificado)
+
+Plano `seo-article-demo`, `--worker gemini` (`flash-lite`), run `opt` repetido com a verificação de "Medir a sério". O `legacy` é o do B1-bis-R, que esse correu de facto em `legacy`.
+
+**Modo: MODO OPT CONFIRMADO.** `meta.context.policy = "opt"` nos 4 passos e `02-seo-brief.summary.md` existe. Este run é uma medição válida, ao contrário do braço "opt" do B1-bis-R.
+
+| Passo | Legacy total | Opt total | Δ |
+|---|---:|---:|---:|
+| research | 1937 | 1556 | **−20%** |
+| seo_brief | 3363 | 3655 | **+9%** |
+| copy | 3599 | 2493 | **−31%** |
+| critic | 4099 | 2432 | **−41%** |
+| **TOTAL** | **12 998** | **10 136** | **−22%** |
+
+Critic `tokens_in`: 3759 → **2091 (−44%)**; a saída do critic fica em 341 (2432 − 2091).
+
+#### Conclusão
+
+- **O `opt` compensa: −22% real** no plano inteiro (−2 862 tokens). Fica a omissão, agora com dados.
+- **3 dos 4 passos melhoram, incluindo o primeiro:**
+  - **research −20%:** não tem inputs nem gera resumo, por isso o ganho vem todo do prompt-base mais curto (sem frontmatter nem secções de documentação, grounding `slim`).
+  - **copy −31%:** prompt-base mais curto e brief em JSON compacto.
+  - **critic −41%:** recebe o brief em resumo em vez de completo (a entrada cai 44%).
+- **Só o seo_brief piora (+9%):** é o passo que escreve o resumo extra para o critic, na mesma chamada. É o custo previsto do mecanismo (`context_policy.needs_summary`), e é pago uma vez e recuperado com folga no critic.
+- **A hipótese "o `opt` só compensa em planos com 4+ passos" fica refutada.** Os cortes do prompt-base valem desde o 1.º passo (research −20%). Só a parte dos resumos depende de haver um passo que consuma um artefacto que não é o seu último input. Em planos mais longos o ganho deve crescer, porque a projecção de 8 passos aponta para −31%; mas isso é projecção, não medição.
+- **A projecção (−16%) subestimou o ganho real (−22%).** Por passo, previa research −26%, seo_brief +1%, copy −11%, critic −31%. A lição de método mantém-se: decidir só com `usageMetadata` real.
+- **Meta <9k:** faltam **1 136 tokens** (10 136 contra 9 000). O caminho continua a ser o B1-bis-C (PLANO item 12), que fica para quando houver ordem.
+
+**Limite deste registo:** só o critic tem a separação entrada/saída. Nos outros passos registam-se os totais, e não se sabe quanto do −31% do copy vem da entrada e quanto vem da saída (o modelo pode ter escrito menos). O `pilots/run-opt2/token_usage.jsonl` do maestro tem os números para separar.
 
 ### Medição real (B1-bis-R, 2026-10-01, run do maestro)
 
@@ -186,6 +216,8 @@ Causa provável, por confirmar no `result.json` do run (ver "Medir a sério"):
 
 #### O padrão "research e seo_brief gastam mais no opt" (hipótese do maestro)
 
+> **Refutado pelo B1-bis-R2** (`opt` verificado): o research gasta −20% e só o seo_brief gasta mais (+9%, o resumo). A análise abaixo, feita sobre o B1-bis-R, previa isto.
+
 **Não confirmado: os dados não o mostram, e o mecanismo diz o contrário.**
 
 - **research +3%:** o `tokens_in` é igual (1426 = 1426). A diferença está toda na saída (511 → 564). Não há overhead nenhum do mecanismo. No `opt` real, o research **não gera resumo** (ninguém o consome como resumo: o seo_brief recebe-o como pin) e o prompt encolhe 34%. O research é, pelo contrário, o passo onde o `opt` deve poupar mais, em proporção.
@@ -222,7 +254,7 @@ Riscos de uma projecção por caracteres:
 - Para medir só a entrada sem gerar texto, há o endpoint `models/{model}:countTokens` da API Gemini. Dá a contagem exacta do tokenizer, e é uma alternativa barata a um run completo por cada hipótese (pendente: ver OPEN-ITEMS).
 - A `token_projection.py` fica no repo só como ferramenta exploratória, marcada como **não usar para decisões**.
 
-### Antes/depois: `seo-article-demo` (PROJECÇÃO, não verificada: o run "opt" do B1-bis-R usou o prompt `legacy`)
+### Antes/depois: `seo-article-demo` (PROJECÇÃO; o real, B1-bis-R2, deu −22% contra −16% projectado)
 
 | Passo | in antes | out antes | total antes | in depois | out depois | total depois | Δ total |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -252,7 +284,7 @@ Riscos de uma projecção por caracteres:
 - Em finance, legal e security o grounding fica completo, e isso é garantido pelo E7.
 - **Falta:** a qualidade real do texto só se vê num run real (ver abaixo).
 
-### Porque não chega aos 9k (análise feita sobre a projecção, ainda não verificada)
+### Porque não chega aos 9k (análise sobre a projecção; o real, B1-bis-R2, ficou em 10 136, a 1 136 da meta)
 Depois do `opt` ficam ~4,2k de prompt-base (conteúdo das skills e dos agentes), ~3,7k de saídas e ~3,3k de inputs. A maior parte destes é o copy completo para o critic, que a crítica precisa. As alavancas que restam mexem em conteúdo:
 
 | Alavanca adicional | Total projectado |
