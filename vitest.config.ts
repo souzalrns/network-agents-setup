@@ -6,6 +6,8 @@ import { resolve } from 'path';
  * (@network-agents/*), porque nenhum pacote tem build publicado em dist/.
  * Apontamos diretamente para o src de cada um.
  */
+// SEC-2d falso positivo: `name` vem dos nomes fixos de packages usados neste ficheiro.
+// nosemgrep: path-join-resolve-traversal
 const pkg = (name: string) => resolve(__dirname, `packages/${name}/src/index.ts`);
 
 export default defineConfig({

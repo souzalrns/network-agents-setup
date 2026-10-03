@@ -5,6 +5,7 @@
 # citado em docs/initiatives/STATUS.md (linha S20). Segundo esse registo, a chave
 # foi rotacionada e apagada no Supabase a 2026-09-19. O fragmento foi removido do
 # ficheiro actual a 2026-10-03; reescrever o histórico exigiria force-push (proibido).
-# Confirmar a revogação no Supabase: OPEN-ITEMS, SEC-2b.
+# Revogação CONFIRMADA (SEC-2b, maestro, 2026-10-03): no painel do Supabase a chave
+# service_role está marcada `rotated` / `rotated-2026-09-19`; o fragmento é inválido.
 b9ec8489bf573f9975e83d5b292f77282efc5d65:docs/initiatives/STATUS.md:generic-api-key:41
 3217917c24daa2f9946acbcd3f56cfa09d4dc009:docs/initiatives/STATUS.md:generic-api-key:41

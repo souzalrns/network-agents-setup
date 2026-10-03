@@ -105,6 +105,8 @@ def upsert_source(
 def delete_chunks(conn: psycopg.Connection, source_path: str) -> int:
     """Apaga todos os chunks de um source_path. Devolve o numero apagado."""
     with conn.cursor() as cur:
+        # SEC-2d falso positivo: a f-string so interpola a constante CHUNKS_TABLE (linha 30); os valores vao como parametros %s.
+        # nosemgrep: sqlalchemy-execute-raw-query
         cur.execute(
             f"DELETE FROM {CHUNKS_TABLE} WHERE source = %s AND project = %s",
             (source_path, PROJECT),
@@ -153,6 +155,8 @@ def insert_chunks(
                     "(esperado 768)"
                 )
             for agent in agents:
+                # SEC-2d falso positivo: `sql` so interpola CHUNKS_TABLE (linha 30); os valores vao como parametros %s.
+                # nosemgrep: sqlalchemy-execute-raw-query
                 cur.execute(
                     sql,
                     (
@@ -225,11 +229,15 @@ def count_chunks(conn: psycopg.Connection, source_path: str | None = None) -> in
     """Conta chunks (total ou por source_path). Util para verificacao."""
     with conn.cursor() as cur:
         if source_path:
+            # SEC-2d falso positivo: a f-string so interpola a constante CHUNKS_TABLE (linha 30); os valores vao como parametros %s.
+            # nosemgrep: sqlalchemy-execute-raw-query
             cur.execute(
                 f"SELECT COUNT(*) FROM {CHUNKS_TABLE} WHERE source = %s AND project = %s",
                 (source_path, PROJECT),
             )
         else:
+            # SEC-2d falso positivo: a f-string so interpola a constante CHUNKS_TABLE (linha 30); os valores vao como parametros %s.
+            # nosemgrep: sqlalchemy-execute-raw-query
             cur.execute(f"SELECT COUNT(*) FROM {CHUNKS_TABLE} WHERE project = %s", (PROJECT,))
         row = cur.fetchone()
         return int(row[0]) if row else 0

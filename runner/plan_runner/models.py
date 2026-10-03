@@ -8,6 +8,8 @@ from typing import Any
 class HumanGate:
     level: str = "step"
     kind: str = "confirmation"
+    # SEC-2d falso positivo: e uma lambda em default_factory, nao um return solto.
+    # nosemgrep: return-not-in-function
     allow: list[str] = field(default_factory=lambda: ["approve", "reject"])
 
     @classmethod
