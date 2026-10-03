@@ -57,7 +57,9 @@ requires: []
 - No production changes by security agents
 ```
 
-## JSON opcional (rodapé ou ficheiro irmão)
+## JSON opcional (só em rodapé)
+
+O passo escreve **um** artefacto (`output_artifact`); não há ficheiro irmão. Se quiseres o resumo máquina-legível, põe-no no fim do markdown, num bloco ```json.
 
 ```json
 {

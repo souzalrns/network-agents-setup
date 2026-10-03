@@ -33,7 +33,7 @@ Todo `*.agent.md` declara `description:` no frontmatter, a seguir ao `action:` (
 ## Security (Capability First)
 
 Pipeline operacional: `security.triage` → `meta.security-auditor` → `security.reporter`.  
-Capabilities (não 1 agente por capability): `config/security-capabilities.yaml`.  
+Capabilities (não 1 agente por capability): `config/security-capabilities.yaml`, validado pelo E7 (`python -m plan_runner.areas`: agente, skill e `action` têm de bater, sem nível `act` nem ofensiva). Inventário agente ↔ skill: `python -m plan_runner.areas --inventory`.  
 Docs: `docs/architecture/SECURITY-AGENTS.md`.
 
 ## Grounding

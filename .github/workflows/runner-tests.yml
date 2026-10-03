@@ -18,6 +18,10 @@ on:
       - 'scripts/create_recall_l4_rpc.sql'
       # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
       - 'config/councils.yaml'
+      # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
+      - 'config/*-capabilities.yaml'
+      - 'skills/**'
+      - 'docs/orchestration/**/*.plan.yaml'
       - 'scripts/alter_token_usage_council_kinds.sql'
   pull_request:
     branches: [main]
@@ -36,6 +40,10 @@ on:
       - 'scripts/create_recall_l4_rpc.sql'
       # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
       - 'config/councils.yaml'
+      # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
+      - 'config/*-capabilities.yaml'
+      - 'skills/**'
+      - 'docs/orchestration/**/*.plan.yaml'
       - 'scripts/alter_token_usage_council_kinds.sql'
   workflow_dispatch: {}
 

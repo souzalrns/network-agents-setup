@@ -4,6 +4,16 @@
 #   python -m plan_runner run ... --mode external --worker gemini --out ..\pilots\run-security-demo
 #
 # S34: cada passo de domínio declara `vertical:` (omissão do executor = marketing).
+#
+# LIMITE em --mode external (worker Gemini), verificado a 2026-10-03:
+#   - o worker NÃO tem tools: `tools_allowed: [read_repo_file]` é declarativo, e o
+#     prompt diz ao modelo "Nao tens tools neste passo" (runner/plan_runner/external_worker.py);
+#   - `knowledge_refs` (topo do plano) NÃO é lido pelo runner (AU-22; AUDIT-2 Y9).
+#   Por isso o auditor vê só o objectivo do plano e a triagem, e NENHUM ficheiro do
+#   repo. Em external, o resultado é um audit de âmbito e lacunas, não do código. A
+#   skill e o grounding obrigam a marcar o que falta como lacuna. Dar ficheiros ao
+#   auditor é uma decisão pendente (docs/architecture/SECURITY-AGENTS.md, "Limites").
+#   NUNCA injectar .env/segredos no prompt: segredos verificam-se com gitleaks local.
 
 id: example-security-audit-demo
 version: 1
@@ -51,6 +61,9 @@ steps:
     depends_on: [audit]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-triage.json, artifacts/02-audit.md]
+    # B1-bis (opt): sem isto, a triagem (JSON de ~100 tokens) seria pedida em resumo e o
+    # passo triage pagaria a geração do resumo (+ saída) para poupar quase nada.
+    context: {full: [artifacts/01-triage.json, artifacts/02-audit.md]}
     output_artifact: artifacts/03-security-report.md
     on_fail: human
 
