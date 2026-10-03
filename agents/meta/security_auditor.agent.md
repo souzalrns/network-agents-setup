@@ -20,6 +20,12 @@ Agente de segurança **defensivo, não ofensivo**. Audita código, infraestrutur
 
 **Defensivo, sem excepção:** este agente nunca executa uma acção ofensiva contra nenhum sistema, mesmo que uma ferramenta na sua caixa de ferramentas (`offsec-ai`) tenha essa capacidade. Os modos de ataque activo dessa ferramenta (`mcp-attack`, `openclaw-attack`, `k8s-attack`, `--i-have-authorization`) estão explicitamente fora do âmbito deste agente — nunca invocados, independentemente do pedido.
 
+## Pipeline da área security
+
+Ordem canónica: `security.triage` → **este agente** → `security.reporter` → HITL.  
+Capabilities adicionais (secrets, supply chain, MCP surface) reutilizam esta skill — ver `config/security-capabilities.yaml` e `docs/architecture/SECURITY-AGENTS.md`.  
+Este agente é **C3 domínio** (`kind: internal`), não chairman de conselho.
+
 ## Skill
 
 `skills/meta/security-audit/SKILL.md` — segue-a à letra.

@@ -1,5 +1,7 @@
 # Agents — marketing
 
+Coordenador: `marketing.marketing` (action `marketing`, `agents/marketing/marketing.agent.md`).
+
 ## P0
 research, seo_brief, copy_answer_first, copy_social, storytelling, trend_hunter, critic, critic_item13, creative_review, internal_brief
 

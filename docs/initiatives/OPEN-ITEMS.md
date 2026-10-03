@@ -243,3 +243,19 @@ Contrato arquitectural em `docs/architecture/META-AGENTS-PHASE-2.md`, a partir d
 - **Teste de validação: o caso Grok + Claude em paralelo.** Os dois executaram a mesma intenção no mesmo projecto. Com a lease, um executa e o outro observa; uma execução sem lease é recusada e registada. Critérios em `META-AGENTS-PHASE-2.md`, "Teste de validação".
 - **Pré-requisitos já registados:** o ledger J6 (existe) e a migração do `call_kind` dos conselhos no Supabase (C-2).
 
+## Security pipeline v1: Capability First (branch `feat/security-pipeline-v1`, 2026-10-03)
+
+- **Feito no branch (sem merge):**
+  - pipeline `security.triage` → `meta.security-auditor` → `security.reporter` → HITL;
+  - `config/security-capabilities.yaml` com 8 capabilities sobre 3 agentes; plano demo; `docs/architecture/SECURITY-AGENTS.md`.
+- **Revisão e correcções (2026-10-03):**
+  - E7 valida as capabilities e os `skill:` declarados (`runner/plan_runner/capabilities.py`), com 28 testes;
+  - `--inventory` lista agente ↔ skill;
+  - teste de ponta a ponta do pipeline (`tests/test_security_pipeline.py`, stub + external com Gemini falso);
+  - o `report` recebe a triagem completa (`context.full`): sem resumo inútil;
+  - a skill do reporter escreve o JSON só em rodapé;
+  - os limites e as regras de segredos ficam documentados.
+- **SEC-1 (decisão): dar ficheiros do repo ao auditor em `--mode external`.** Hoje o auditor não vê nenhum ficheiro: `tools_allowed` é declarativo e o `knowledge_refs` é ignorado (AU-22). Em external sai um audit de âmbito e lacunas, não do código. Opções em `docs/architecture/SECURITY-AGENTS.md`, "Limites"; nunca com `.env`/segredos.
+- **SEC-2 (DEV): J10, `gitleaks`/`semgrep` no CI.** É o caminho para a capability `secrets_hygiene` (hoje `partial`), sem mandar ficheiros a um LLM.
+- **SEC-3: pentest/red-team (`agent_redteam_lab`).** Continua `deferred` e fora do runner de produção.
+

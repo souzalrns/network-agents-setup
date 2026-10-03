@@ -11,8 +11,12 @@ Regras (do cabeçalho de config/areas.yaml):
     acentos) e cada uma numa só área; `routing:` com limiares em ]0, 1] e uma
     fallback_area que exista; `budget` null ou {max_steps?, max_tokens?: int > 0}; `hitl` null
     ou "required"; `delegation` (opcional) auto | agent | plan.
+  - um `skill:` declarado por um agente tem de existir;
+  - config/*-capabilities.yaml (Capability First) bate com agentes, skills e área
+    (regras em plan_runner/capabilities.py).
 
-CLI:  cd runner && python -m plan_runner.areas   (sai 1 e lista os erros)
+CLI:  cd runner && python -m plan_runner.areas               (sai 1 e lista os erros)
+      cd runner && python -m plan_runner.areas --inventory   (agente <-> skill, informativo)
 """
 from __future__ import annotations
 
@@ -195,11 +199,20 @@ def validate_areas(repo_root: Path) -> list[str]:
     chairs = {c.get("chairman") for c in councils if isinstance(c, dict)}
     for aid in sorted(meta - chairs):
         errors.append(f"agente meta órfão `{aid}` ({known[aid].relative_to(repo_root)}): não preside a nenhum conselho")
+
+    # Skills declaradas + capabilities por domínio (Capability First).
+    from .capabilities import declared_skill_errors, validate_capabilities
+
+    errors += declared_skill_errors(repo_root, known)
+    errors += validate_capabilities(repo_root, known, areas)
     return errors
 
 
 def main(argv: list[str] | None = None) -> int:
-    repo_root = Path(argv[0]) if argv else Path(__file__).resolve().parents[2]
+    args = list(argv or [])
+    want_inventory = "--inventory" in args
+    args = [a for a in args if a != "--inventory"]
+    repo_root = Path(args[0]) if args else Path(__file__).resolve().parents[2]
     errors = validate_areas(repo_root)
     if errors:
         print(f"✗ {AREAS_FILE} diverge dos agentes reais ({len(errors)} erro(s)):", file=sys.stderr)
@@ -211,8 +224,17 @@ def main(argv: list[str] | None = None) -> int:
     from .council_session import load_councils
 
     n_councils = len((load_councils(repo_root) or {}).get("councils") or [])
+    from .capabilities import capability_files, inventory
+
+    n_caps = len(capability_files(repo_root))
     print(f"✓ {AREAS_FILE} válido: {len(areas)} áreas, {n_agents} agentes, todos existentes e sem órfãos; "
-          f"{n_councils} conselho(s) válido(s).")
+          f"{n_councils} conselho(s) válido(s); {n_caps} ficheiro(s) de capabilities válido(s).")
+    if want_inventory:
+        known, _ = agent_ids(repo_root)
+        for key, items in inventory(repo_root, known).items():
+            print(f"\n{key} ({len(items)}):")
+            for item in items:
+                print(f"  - {item}")
     return 0
 
 

@@ -6,6 +6,7 @@ Definições de agent (identidade + skill + action).
 |----------|------|
 | **Marketing** P0/P1 | [marketing/](./marketing/) |
 | **Design** P0 (UX + UI + writer + critic) | [design/](./design/) |
+| **Security** (defensivo: triage / auditor / reporter) | [security/](./security/) |
 | **Shared** | [_shared/](./_shared/) — grounding obrigatório |
 | Meta | [meta/](./meta/) se existir |
 
@@ -28,6 +29,12 @@ Todo `*.agent.md` declara `description:` no frontmatter, a seguir ao `action:` (
 - 1–2 frases em português, a começar por um verbo ("Revê…", "Escreve…");
 - específica: o que o agente faz **e**, quando ajuda a desempatar, o que não faz (ex.: `ux_writer` não faz copy de marketing);
 - entre aspas duplas (as descrições têm `:`, `—`, `→`).
+
+## Security (Capability First)
+
+Pipeline operacional: `security.triage` → `meta.security-auditor` → `security.reporter`.  
+Capabilities (não 1 agente por capability): `config/security-capabilities.yaml`, validado pelo E7 (`python -m plan_runner.areas`: agente, skill e `action` têm de bater, sem nível `act` nem ofensiva). Inventário agente ↔ skill: `python -m plan_runner.areas --inventory`.  
+Docs: `docs/architecture/SECURITY-AGENTS.md`.
 
 ## Grounding
 

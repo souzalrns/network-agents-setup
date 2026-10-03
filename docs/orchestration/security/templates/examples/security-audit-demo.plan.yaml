@@ -1,0 +1,85 @@
+# Exemplo defensivo — não é pentest nem cliente real
+# Uso (a partir de runner/):
+#   python -m plan_runner run ..\docs\orchestration\security\templates\examples\security-audit-demo.plan.yaml --mode stub --out ..\pilots\run-security-demo
+#   python -m plan_runner run ... --mode external --worker gemini --out ..\pilots\run-security-demo
+#
+# S34: cada passo de domínio declara `vertical:` (omissão do executor = marketing).
+#
+# LIMITE em --mode external (worker Gemini), verificado a 2026-10-03:
+#   - o worker NÃO tem tools: `tools_allowed: [read_repo_file]` é declarativo, e o
+#     prompt diz ao modelo "Nao tens tools neste passo" (runner/plan_runner/external_worker.py);
+#   - `knowledge_refs` (topo do plano) NÃO é lido pelo runner (AU-22; AUDIT-2 Y9).
+#   Por isso o auditor vê só o objectivo do plano e a triagem, e NENHUM ficheiro do
+#   repo. Em external, o resultado é um audit de âmbito e lacunas, não do código. A
+#   skill e o grounding obrigam a marcar o que falta como lacuna. Dar ficheiros ao
+#   auditor é uma decisão pendente (docs/architecture/SECURITY-AGENTS.md, "Limites").
+#   NUNCA injectar .env/segredos no prompt: segredos verificam-se com gitleaks local.
+
+id: example-security-audit-demo
+version: 1
+deliverable_type: security_report
+objective: >
+  Triagem e auditoria defensiva do repositorio network-agents-setup com foco em
+  secrets, configs MCP, skills e superficie de agentes; produzir relatorio
+  estruturado sem alterar producao e sem qualquer accao ofensiva.
+audience: >
+  Maintainers do monorepo que precisam de um gate de seguranca antes de merge
+  ou de mudanca de infra/MCP.
+
+knowledge_refs:
+  - docs/architecture/SECURITY.md
+  - docs/architecture/SECURITY-AGENTS.md
+  - docs/knowledge/security-agents-stack.md
+  - agents/meta/security_auditor.agent.md
+  - skills/meta/security-audit/SKILL.md
+
+budget:
+  max_steps: 8
+  max_replans: 1
+  max_tokens: 40000
+
+steps:
+  - id: triage
+    action: security_triage
+    vertical: security
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-triage.json
+    on_fail: human
+
+  - id: audit
+    action: security_audit
+    vertical: meta
+    depends_on: [triage]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-triage.json]
+    output_artifact: artifacts/02-audit.md
+    on_fail: human
+
+  - id: report
+    action: security_report
+    vertical: security
+    depends_on: [audit]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-triage.json, artifacts/02-audit.md]
+    # B1-bis (opt): sem isto, a triagem (JSON de ~100 tokens) seria pedida em resumo e o
+    # passo triage pagaria a geração do resumo (+ saída) para poupar quase nada.
+    context: {full: [artifacts/01-triage.json, artifacts/02-audit.md]}
+    output_artifact: artifacts/03-security-report.md
+    on_fail: human
+
+  - id: hitl_security_decision
+    action: plan_approve
+    depends_on: [report]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-triage.json exists
+  - artifacts/02-audit.md exists
+  - artifacts/03-security-report.md exists
+  - human_gate_resolved on hitl_security_decision
+  - no production_write by security agents
