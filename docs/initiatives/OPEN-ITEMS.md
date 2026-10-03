@@ -316,8 +316,8 @@ Plano em `docs/architecture/EXECUTION-PLAN.md`; fontes arquivadas tal como foram
 - Depois: F0 passos `R` → PR → só então F0.4.
 
 **Achados do F0.8/F0.9 (entrada do F3; nada disto bloqueia o F0):**
-- 11 linhas inalcançáveis: `docs/item-13-ai-findability.md` está no MANIFEST com o `agent_id` composto `marketing+produto-tech-transversal`, e o retrieve filtra por igualdade (`agent-network-mcp/memory/schema.sql:55`).
-- 121 linhas no J3 contra 132 chunks esperados hoje: provavelmente porque 28 dos 38 ficheiros do MANIFEST nunca são re-ingeridos pelo workflow (orçamento de 50 chunks, sem salto por hash; `L5-F0-REVALIDATION.md` §2.1). Viola a regra T6 (§15.12) e gasta quota do Gemini em cada push de docs.
+- ~~11 linhas inalcançáveis (`agent_id` composto)~~ **Corrigido (2026-10-03):** não existem. A migração J3 e o writer desdobram `a+b` numa linha por agente (`scripts/migrate_t6_to_knowledge_chunks.sql:37-48`; `supabase_writer.py`, `insert_chunks`). Fica para o F3 só a query de confirmação (`agent_id LIKE '%+%'` = 0; `docs/ops/L5-F0-REVALIDATION.md` §0).
+- 121 linhas no J3 (= a t6 inteira, com o composto desdobrado) contra 143 linhas esperadas hoje (132 chunks): provavelmente porque 28 dos 38 ficheiros do MANIFEST nunca são re-ingeridos pelo workflow (orçamento de 50 chunks, sem salto por hash; `L5-F0-REVALIDATION.md` §2.1). Viola a regra T6 (§15.12) e gasta quota do Gemini em cada push de docs.
 - O pack `security-agents-stack.md` tem as §7 e §23 desactualizadas (CouncilSession e chairman existem desde o Bloco C); casos `stale:` no golden set.
 - Provenance: o `locator` não é gravado; o modelo do embedding não é gravado por linha; as fontes L5 não ficam no `result.json`.
 

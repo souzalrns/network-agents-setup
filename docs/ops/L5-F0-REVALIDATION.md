@@ -18,9 +18,10 @@
 | F0.3 | Última escrita = **2026-10-03 14:25 UTC** | ✅ O L5 está activo. Coincide com o merge do #62 (`e7a29ae`, 11:24 −03 = 14:24 UTC), que tocou em `docs/**/*.md` e disparou o `ingest-knowledge`. Ver §2.1: essa corrida re-embedou os 10 primeiros ficheiros do MANIFEST, não ficheiros novos |
 | F0.3 | `ultima_t6` | Não reportado (o passo 3 do J3 fica a meio: falta confirmar que a t6 parou) |
 
-**Queries que faltam** (só leitura; §3): `projecto`, a F0.1b por fonte, `ultima_t6`, e o `agent_id`/`project` da fonte ECC:
+**Queries que faltam** (só leitura; §3): `projecto`, a F0.1b por fonte, `ultima_t6`, o `agent_id`/`project` da fonte ECC e a confirmação de que não há `agent_id` composto:
 
 ```sql
+SELECT count(*) AS compostos FROM knowledge_chunks WHERE agent_id LIKE '%+%';   -- esperado 0
 SELECT agent_id, project, kb, count(*) FROM knowledge_chunks
 WHERE source ILIKE '%security%' GROUP BY agent_id, project, kb;
 ```
@@ -55,9 +56,9 @@ Modelo-alvo (EXECUTION-PLAN §3, ajuste 3): `SOURCE → DOCUMENT → CONTENT →
 | Medida | Valor | Como foi medido |
 |---|---|---|
 | Entradas no MANIFEST | **38** (todas existem no disco) | `scripts/ingest_delta.py:32-71` |
-| Chunks esperados se as 38 estiverem ingeridas, com o chunker actual | **132**: marketing 84, produto-tech-transversal 15, `marketing+produto-tech-transversal` 11, saude 11, legal 7, imobiliario 4 | `chunk_markdown` sobre os 38 ficheiros (o mesmo chunker do ingest) |
-| Comparação com o J3 | J3 = 121 linhas; esperado hoje = 132 | A diferença (11) **não está explicada**: ficheiros alterados ou acrescentados depois de 2026-09-30, ingest não corrido, ou chunker diferente. Explica-se com a query por fonte do F0.1 |
-| Linhas inalcançáveis | **11** (`docs/item-13-ai-findability.md` com `agent_id` composto `marketing+produto-tech-transversal`) | O retrieve filtra por igualdade de `agent_id` (`agent-network-mcp/memory/schema.sql:55`), por isso nenhum `kb` as encontra. Já detectado no J3 (`RAG-CANONICAL.md:16`) e **continua no MANIFEST** |
+| Chunks esperados se as 38 estiverem ingeridas, com o chunker actual | **132 chunks = 143 linhas**: marketing 84, produto-tech-transversal 15, item-13 11 (com `agent_id` composto `marketing+produto-tech-transversal`, que o writer grava como **2 linhas por chunk**, uma por agente: `runner/plan_runner/supabase_writer.py`, `insert_chunks`), saude 11, legal 7, imobiliario 4 | `chunk_markdown` sobre os 38 ficheiros (o mesmo chunker do ingest) |
+| Comparação com o J3 | J3 = 121 linhas = a t6 inteira (33 fontes): 99 linhas simples + 22 do composto desdobrado (`scripts/migrate_t6_to_knowledge_chunks.sql:13-15`); esperado hoje = 143 linhas | As 5 fontes do MANIFEST que não estavam na t6 e as diferenças de chunking só entram se o ingest lá chegar, e a §2.1 mostra que não chega. Confirma-se com a F0.1b |
+| Linhas com `agent_id` composto | ⚠ **Corrigido (2026-10-03):** a 1.ª versão deste doc dizia "11 linhas inalcançáveis". **Está errado.** A migração J3 desdobrou-as (`migrate_t6_to_knowledge_chunks.sql:37-48`), e o writer faz o mesmo desde o J3 (`supabase_writer.py`, `insert_chunks`: "agent_id composto ('a+b') gera uma linha por agente"). Como o item-13 é o 1.º do MANIFEST, é re-ingerido em todas as corridas. **Esperado: 0 linhas com `+` no `agent_id`** (query em §0) | Leitura do writer e do SQL da migração |
 | `.md` em `docs/knowledge/` fora do MANIFEST | **33** de 69: design 11, imported-from-production 11, marketing 7, raiz 4 (`README.md`, `imported-from-harnesses.md`, **`security-agents-stack.md`**, `skills-map.md`); inclui READMEs/MANIFEST | Varrimento de `docs/knowledge/**/*.md` contra o MANIFEST. O plano dizia "~31": o número exacto é 33 |
 | Pack de security no MANIFEST | **Não** | Daí o F0.4 (D-EP2 = A) |
 | Consumidores do L5 (planos com bloco `knowledge:`) | 9 ficheiros; `kb`: marketing 16 blocos, **security 1** (novo, F0.5) | `grep` em `docs/orchestration/**/*.yaml` |
@@ -87,7 +88,7 @@ Os 28 saltados incluem `saude/*`, `legal/direito-br-pt.md`, `imobiliario/fipezap
 3. **O F0.4 "à letra" não funciona:** com o pack (20 chunks) no fim do MANIFEST, a simulação dá `SKIPPED_QUOTA` em todas as corridas. Pô-lo no início funciona para ele, mas empurra mais 2 ficheiros para a zona saltada (30 em vez de 28).
 4. O `_kb_for("security")` devolve `"global"` (`scripts/ingest_apply.py:114-122`). O retrieve filtra por `agent_id`, por isso não parte nada, mas a coluna `kb` ficava errada.
 
-Explica provavelmente a diferença 121 (J3) contra 132 (esperado hoje), a confirmar com a F0.1b.
+Explica provavelmente porque as fontes que não estavam na t6 nunca entraram (121 linhas no J3 contra 143 esperadas hoje), a confirmar com a F0.1b.
 
 ## 3. F0.1–F0.3: queries só de leitura para o maestro
 
@@ -99,7 +100,7 @@ SELECT count(*) AS projecto FROM knowledge_chunks WHERE project = 'network-agent
 SELECT count(*) AS total    FROM knowledge_chunks;
 SELECT count(*) AS overloads FROM pg_proc WHERE proname = 'match_knowledge';      -- esperado 1
 
--- F0.1b por fonte (explica 121 vs 132 esperados): comparar com o quadro "Hoje"
+-- F0.1b por fonte (explica 121 vs 143 linhas esperadas): comparar com o quadro "Hoje"
 SELECT source, agent_id, count(*) AS chunks, max(updated_at) AS ultima
 FROM knowledge_chunks WHERE project = 'network-agents-setup'
 GROUP BY source, agent_id ORDER BY source;
@@ -116,8 +117,8 @@ SELECT source_path, chunk_count, git_sha, last_ingested_at FROM knowledge_source
 ```
 
 **Como ler:**
-- `projecto = 132` e por fonte igual ao quadro: cobertura completa;
-- `< 132`: ver no F0.1b que fontes faltam ou estão antigas;
+- `projecto = 143` e por fonte igual ao quadro: cobertura completa;
+- `< 143`: ver no F0.1b que fontes faltam ou estão antigas;
 - `ultima_t6` posterior ao J3: há um writer antigo activo (pára e reporta);
 - F0.2 `> 0`: alguém ingeriu à mão (registar).
 
@@ -126,7 +127,7 @@ SELECT source_path, chunk_count, git_sha, last_ingested_at FROM knowledge_source
 - **F0.4:** ver §5 (proposta; não executado).
 - **F0.6** (DEV): teste real no conector MCP.
 - **F0.7b** (DEV ou CI com segredos): `python -m plan_runner.l5_eval run --out <relatório>.json`, com `MCP_URL` + `MCP_API_KEY`. Antes do F0.4 o esperado é `chunk_hit@4 = 0`.
-- **F3:** os buracos de provenance da §1 (locator, modelo do embedding por linha, fontes no `result.json`), a validade (`stale:`) e as 11 linhas inalcançáveis.
+- **F3:** os buracos de provenance da §1 (locator, modelo do embedding por linha, fontes no `result.json`), e a validade (`stale:`). O ponto das "11 linhas inalcançáveis" foi retirado (ver a correcção no quadro "Hoje"); fica só a query de confirmação.
 
 ## 5. F0.4: proposta de PR (NÃO executado; escrita em produção no merge)
 
