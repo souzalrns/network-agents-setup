@@ -1,0 +1,64 @@
+# Exemplo defensivo — não é pentest nem cliente real
+# Uso: plan_runner run ... --mode stub|external --out ../pilots/run-security-demo
+
+id: example-security-audit-demo
+version: 1
+deliverable_type: security_report
+objective: >
+  Triagem e auditoria defensiva do repositorio network-agents-setup com foco em
+  secrets, configs MCP, skills e superficie de agentes; produzir relatorio
+  estruturado sem alterar producao e sem qualquer accao ofensiva.
+audience: >
+  Maintainers do monorepo que precisam de um gate de seguranca antes de merge
+  ou de mudanca de infra/MCP.
+
+knowledge_refs:
+  - docs/architecture/SECURITY.md
+  - docs/architecture/SECURITY-AGENTS.md
+  - docs/knowledge/security-agents-stack.md
+  - agents/meta/security_auditor.agent.md
+  - skills/meta/security-audit/SKILL.md
+
+budget:
+  max_steps: 8
+  max_replans: 1
+
+steps:
+  - id: triage
+    action: security_triage
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-triage.json
+    on_fail: human
+
+  - id: audit
+    action: security_audit
+    depends_on: [triage]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-triage.json]
+    output_artifact: artifacts/02-audit.md
+    on_fail: human
+
+  - id: report
+    action: security_report
+    depends_on: [audit]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-triage.json, artifacts/02-audit.md]
+    output_artifact: artifacts/03-security-report.md
+    on_fail: human
+
+  - id: hitl_security_decision
+    action: plan_approve
+    depends_on: [report]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-triage.json exists
+  - artifacts/02-audit.md exists
+  - artifacts/03-security-report.md exists
+  - human_gate_resolved on hitl_security_decision
+  - no production_write by security agents

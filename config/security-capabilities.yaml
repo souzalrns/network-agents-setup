@@ -1,0 +1,78 @@
+# Cyber Security capabilities v1 — Capability First
+# Não são agentes. O plan_runner corre actions; skills/profiles implementam.
+# Ver docs/architecture/SECURITY-AGENTS.md
+
+version: 1
+domain: security
+policy:
+  offensive: forbidden
+  act_in_production: forbidden
+  default_level: read
+  hitl: required
+
+capabilities:
+  - id: triage
+    description: Classificar severidade e superfícies; decidir needs_full_audit.
+    levels: [read]
+    action: security_triage
+    agent: security.triage
+    skill: skills/security/triage/SKILL.md
+    status: implemented
+
+  - id: defensive_audit
+    description: Auditoria defensiva OWASP LLM 2026 / NIST / ATLAS / MAESTRO.
+    levels: [read]
+    action: security_audit
+    agent: meta.security-auditor
+    skill: skills/meta/security-audit/SKILL.md
+    status: implemented
+
+  - id: security_report
+    description: Consolidar findings em relatório estruturado.
+    levels: [read, prepare]
+    action: security_report
+    agent: security.reporter
+    skill: skills/security/reporter/SKILL.md
+    status: implemented
+
+  - id: secrets_hygiene
+    description: Detecção e orientação sobre segredos (Gitleaks / review).
+    levels: [read]
+    action: security_audit
+    agent: meta.security-auditor
+    skill: skills/meta/security-audit/SKILL.md
+    tools_guidance: [gitleaks]
+    status: partial  # coberto pela skill audit; CI job opcional (J10)
+
+  - id: supply_chain
+    description: Dependências e imagens (OSV, Trivy guidance).
+    levels: [read]
+    action: security_audit
+    agent: meta.security-auditor
+    skill: skills/meta/security-audit/SKILL.md
+    tools_guidance: [osv-scanner, trivy]
+    status: partial
+
+  - id: mcp_surface
+    description: Superfície MCP / tools / excessive agency (LLM01, LLM03).
+    levels: [read]
+    action: security_audit
+    agent: meta.security-auditor
+    skill: skills/meta/security-audit/SKILL.md
+    status: partial
+
+  - id: hardening_recommend
+    description: Recomendações de hardening (PREPARE); ACT só engenharia pós-HITL.
+    levels: [prepare]
+    action: security_report
+    agent: security.reporter
+    skill: skills/security/reporter/SKILL.md
+    status: partial  # via next_steps do report
+
+  - id: agent_redteam_lab
+    description: Red-team dos próprios agentes (PyRIT/DeepTeam) em lab/CI isolado.
+    levels: [lab]
+    action: null
+    agent: null
+    skill: null
+    status: deferred  # proibido no runner de produção
