@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **ID** | ADR-INGESTION-PRIMITIVES |
-| **Estado** | **Proposto.** Só contrato: nenhum código (D-EP4). O spike (§9) só arranca com o F0 verde e a aceitação deste ADR |
+| **Estado** | **Aceite** (`PENDENCIAS.md` §10 P-13 = A, maestro, 2026-10-03, com consulta cruzada a uma 2.ª IA). Só contrato: nenhum código (D-EP4). O spike (§9) só arranca com o F0 verde |
 | **Data** | 2026-10-03 |
 | **Decisores** | Maestro (aceita ou rejeita); redigido pelo Claude |
 | **Item** | F1 em `docs/initiatives/PENDENCIAS.md` (alias ING-2) |
