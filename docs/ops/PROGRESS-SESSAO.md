@@ -5,12 +5,23 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/progresso-sessao` (este ficheiro). Antes: `docs/pendencias-ronda-2` (`35088cd`, PR #83).
-- **Último commit de trabalho:** `35088cd` (PENDENCIAS, 2.ª ronda), às 20:50.
-- **`main` de referência:** `2b27f66` (merge dos PRs #63–#78).
-- **Itens em trabalho:** nenhum em código. À espera do merge de #79–#84 (NAS) e #11–#14 (MCP); o CI destes 10 está **verde** (verificação das 21:07).
+- **Branch actual:** `docs/progresso-sessao` (este ficheiro). Antes: `docs/pendencias-ronda-2` (`869673f`, PR #83).
+- **Último commit de trabalho:** `869673f` (PENDENCIAS, revisão pós-merge).
+- **`main` de referência:** NAS `d79d7be` (merges até #79 e #81); MCP `d635945` (merges #11–#14).
+- **Itens em trabalho:** nenhum em código. Abertos só PRs de docs: NAS #80, #82, #83 e #84 (merge do maestro).
 
 ## Log (mais recente no topo)
+
+### Auto-auditoria (pedido do maestro: "nada ficou mal feito ou deixou de ser feito?")
+- **Mal feito, corrigido no #83 (`869673f`):**
+  - o §10 só marcava P-1, P-2, P-6 e P-9 como decididas; faltavam P-3 (B), P-4 (B), P-5 (A), P-7 (A) e P-8 (A);
+  - o P-9 mostrava a recomendação B (renomear), não a decisão do maestro (manter `H-01`); o `H-01` não foi tocado;
+  - o PENDENCIAS ainda tinha como EM CURSO itens cujos PRs já tiveram merge: W-005 (#79), S17 (MCP #11), AU-06 (MCP #13), S-001/S-002 (MCP #14). Passaram ao §7; o §11 e as contagens foram recalculados (113 vivos; 88 no histórico).
+- **Deixado por fazer, agora registado:**
+  - **H-004:** `graphify update .` (o `CLAUDE.md` pede-o depois de mudanças de código; a ferramenta não existe nesta sessão; local, do DEV);
+  - **S-003:** testar o Claude.ai connector depois dos tectos de input do S-001 (o `CLAUDE.md` do MCP pede-o; precisa do conector real).
+- **Verificado em leitura:** deploy do MCP `d635945` no Vercel a `success`; corridas #164 e #165 do `ingest-knowledge` a `success`; nenhuma corrida do `transcribe.yml` depois do merge do MCP #12 (o S28 continua à espera de 1 run).
+- **Por fazer (CLAUDE, viáveis, não iniciados):** R-004, E-003 e H-003.
 
 ### 21:07 — CI consolidado (D-EP10, verificação única)
 - **Feito:** lidos os check runs dos 10 PRs abertos, uma vez e sem polling.
@@ -141,20 +152,14 @@
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #79 | `fix/W-005-worker-langgraph` | W-005 | Aberto; CI verde (21:07) |
 | NAS #80 | `fix/INIT-094-harnesses` | INIT-094 | Aberto |
-| NAS #81 | `fix/F1-adr-ingestao` | F1 (ADR) | Aberto |
 | NAS #82 | `fix/ING-5-6-analise` | ING-5, ING-6 | Aberto |
-| NAS #83 | `docs/pendencias-ronda-2` | PENDENCIAS (2.ª ronda) | Aberto |
-| NAS (este) | `docs/progresso-sessao` | Protocolo de persistência | Aberto |
-| MCP #11 | `fix/S17-doc-vm-oracle` | S17 | Aberto |
-| MCP #12 | `fix/S28-transcribe-cache` | S28 | Aberto |
-| MCP #13 | `fix/AU-06-ingest-legado` | AU-06 (+ achado R-004) | Aberto |
-| MCP #14 | `fix/S-001-limites-input` | S-001, S-002 | Aberto |
+| NAS #83 | `docs/pendencias-ronda-2` | PENDENCIAS (2.ª ronda + revisão pós-merge) | Aberto |
+| NAS #84 | `docs/progresso-sessao` | Protocolo de persistência | Aberto |
 
-Já com merge: #63–#78.
+Já com merge: NAS #63–#79 e #81; MCP #10–#14. Os 4 abertos tocam em `docs/**/*.md`: cada merge dispara o `ingest-knowledge` (escreve em produção; incremental).
 
 ## Próximos 3 passos recomendados
 1. **DEV, só leitura:** o SELECT F0.1b (esperado: 163 linhas com `project='network-agents-setup'`) e as 5 queries do R-001 (`docs/ops/KNOWLEDGE-LOG.md` §3). Fecham o R-002 e o R-001.
-2. **DEV:** preencher os preços confirmados em `config/model-prices.yaml` (T-004), para o D6 funcionar.
-3. **Claude:** R-004, o filtro de `project` no `ingestDocument` do MCP (`ANM:lib/knowledge.js:163-169`), antes que as 2 pipelines colidam.
+2. **Claude:** R-004, o filtro de `project` no `ingestDocument` do MCP (`ANM:lib/knowledge.js:163-169`), antes que as 2 pipelines colidam.
+3. **DEV:** T-004 (preços em `config/model-prices.yaml`), S-003 (teste no connector) e 1 run do `transcribe.yml` (S28).
