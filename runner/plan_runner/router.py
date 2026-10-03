@@ -58,6 +58,7 @@ GOLDEN_FILE = Path("config") / "router-golden.yaml"
 DEFAULT_MAX_PLAN_STEPS = 6
 WHOLE_WORD_MAX_LEN = 5  # keywords ate 5 caracteres casam so a palavra inteira (areas.yaml)
 OUTCOMES = ("agent", "plan", "clarify", "hitl", "council", "error")
+MAX_CLARIFY_ROUNDS = 2  # W-002: respostas a `clarify` sem decisao antes de passar a HITL
 
 Embed = Callable[[str], list[float]]
 
@@ -80,6 +81,8 @@ class RouteDecision:
     question: str | None = None
     usage: list[dict[str, Any]] = field(default_factory=list)  # linhas do ledger J6
     council: str | None = None  # outcome council: id em config/councils.yaml
+    # W-002: {original_request, question, answer, rounds} quando a decisao responde a um `clarify`
+    clarification: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -367,6 +370,62 @@ class Router:
                 self.choose_agent(text, decision)
         except ew.WorkerError as e:  # embeddings
             decision.outcome, decision.reason = "error", f"embeddings: {e}"
+        return decision
+
+    # ---------------------------------------------------------- clarificacao
+    def clarify(self, previous: RouteDecision | dict[str, Any], answer: str) -> RouteDecision:
+        """W-002 (R3): continua uma decisao `clarify` com a resposta, sem perder o pedido original.
+
+        - Clarificacao do agente (a area ja estava escolhida): mantem a area e volta a
+          escolher o agente com o pedido + a resposta.
+        - Clarificacao da area: se a resposta nomeia uma so das areas candidatas (pelo id
+          ou pelas keywords dela), fica essa; senao o pedido + a resposta voltam a ser
+          classificados.
+        - Ao fim de MAX_CLARIFY_ROUNDS respostas ainda em `clarify`, passa a HITL.
+        `previous` pode ser a decisao ou o JSON que o `route` imprime ({"decision": {...}}).
+        """
+        prev = previous.to_dict() if isinstance(previous, RouteDecision) else dict(previous)
+        prev = prev.get("decision", prev)
+        before = prev.get("clarification") or {}
+        answer = answer.strip()
+        text = f"{prev.get('request') or ''}\n\nEsclarecimento (pergunta: {prev.get('question') or '-'}): {answer}"
+        decision = RouteDecision(request=text, outcome="error")
+        decision.clarification = {
+            "original_request": before.get("original_request") or prev.get("request"),
+            "question": prev.get("question"),
+            "answer": answer,
+            "rounds": int(before.get("rounds") or 0) + 1,
+        }
+        if prev.get("outcome") != "clarify":
+            decision.reason = f"so se responde a uma decisao `clarify` (veio {prev.get('outcome')!r})"
+            return decision
+        if not answer:
+            decision.reason = "resposta vazia"
+            return decision
+        try:
+            area = prev.get("area")
+            if area in self.areas:
+                decision.area, decision.area_method, decision.area_confidence = area, "clarification", 1.0
+                go = True
+            else:
+                norm = normalize(answer)
+                cands = [a for a in prev.get("candidates") or [] if a in self.areas]
+                picked = [a for a in cands if _kw_pattern(normalize(a)).search(norm)]  # nomeou a area
+                if not picked:  # ou usou keywords de uma so das candidatas
+                    hits = score_areas(answer, [self.areas[a] for a in cands])
+                    picked = [a for a in cands if hits.get(a)]
+                if len(picked) == 1:
+                    decision.area, decision.area_method, decision.area_confidence = picked[0], "clarification", 1.0
+                    go = True
+                else:
+                    go = self.classify_area(text, decision)
+            if go and not self.escalate(text, decision):
+                self.choose_agent(text, decision)
+        except ew.WorkerError as e:  # embeddings
+            decision.outcome, decision.reason = "error", f"embeddings: {e}"
+        if decision.outcome == "clarify" and decision.clarification["rounds"] >= MAX_CLARIFY_ROUNDS:
+            decision.outcome, decision.hitl_required = "hitl", True
+            decision.reason = f"{decision.reason}; {decision.clarification['rounds']} clarificacoes sem decisao: HITL"
         return decision
 
     # -------------------------------------------------------------- execucao
