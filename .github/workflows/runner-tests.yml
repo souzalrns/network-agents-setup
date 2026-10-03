@@ -16,6 +16,8 @@ on:
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
+      # AU-11: DDL canónico do RAG, carregado pelo test_rag_canonical.py
+      - 'scripts/rag_schema.sql'
       # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
@@ -38,6 +40,8 @@ on:
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
+      # AU-11: DDL canónico do RAG, carregado pelo test_rag_canonical.py
+      - 'scripts/rag_schema.sql'
       # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado

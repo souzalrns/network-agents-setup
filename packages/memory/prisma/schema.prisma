@@ -130,6 +130,10 @@ model LegalDocument {
 }
 
 // ===== T6 — Ingestao de knowledge (RAG L5) =====
+// AU-11 (2026-10-03): LEGADO. O DDL canonico do RAG e scripts/rag_schema.sql
+// (knowledge_sources + knowledge_chunks + match_knowledge), testado no job test-rag.
+// O KnowledgeChunk abaixo aponta para a knowledge_chunks_t6, abandonada no J3
+// (scripts/drop_knowledge_chunks_t6.sql); nenhum codigo do runner usa estes modelos.
 // Design: docs/T6-INGEST-PIPELINE.md secao 4 (Modelo de dados).
 // Tabelas exclusivas do network-agents-setup (nao partilha com agent-network-mcp).
 // Requer a extensao pgvector:

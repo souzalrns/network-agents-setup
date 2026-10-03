@@ -43,27 +43,9 @@ pytestmark = pytest.mark.skipif(
     "nunca o Supabase de producao)",
 )
 
-# Esquema minimo igual ao de producao (verificado em 2026-09-30) e o
-# match_knowledge versionado em agent-network-mcp/memory/schema.sql:45-58.
-SCHEMA_SQL = """
-CREATE TABLE knowledge_sources (
-  source_path text PRIMARY KEY, content_hash text NOT NULL, agent_id text NOT NULL,
-  priority text NOT NULL DEFAULT 'P1', last_ingested_at timestamptz NOT NULL DEFAULT now(),
-  chunk_count int NOT NULL DEFAULT 0, git_sha text, size_bytes int,
-  updated_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE knowledge_chunks (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), agent_id text NOT NULL, source text NOT NULL,
-  content text NOT NULL, embedding vector(768), created_at timestamptz DEFAULT now(),
-  project text, content_hash text, chunk_index integer, kb text DEFAULT 'marketing',
-  updated_at timestamptz DEFAULT now());
-CREATE FUNCTION match_knowledge(query_embedding vector(768), match_agent_id text,
-  match_count int DEFAULT 4)
-RETURNS TABLE (id uuid, content text, source text, similarity float)
-LANGUAGE sql STABLE AS $$
-  SELECT id, content, source, 1 - (embedding <=> query_embedding) AS similarity
-  FROM knowledge_chunks WHERE agent_id = match_agent_id OR agent_id = 'global'
-  ORDER BY embedding <=> query_embedding LIMIT match_count; $$;
-"""
+# AU-11: o schema vem do DDL canónico versionado (scripts/rag_schema.sql), o
+# mesmo que serve de referência para produção; não há uma cópia aqui.
+SCHEMA_SQL = (Path(__file__).resolve().parents[2] / "scripts" / "rag_schema.sql").read_text(encoding="utf-8")
 
 
 def _vec(i: int) -> list[float]:
@@ -112,6 +94,25 @@ def _ingest(connect, source: str, agent_id: str, dim: int) -> dict[str, int]:
         chunks=[{"content": f"conteudo {source}", "content_hash": "c0",
                  "chunk_index": 0, "embedding": _vec(dim)}],
     )
+
+
+def test_schema_canonico_e_idempotente(connect):
+    """AU-11: scripts/rag_schema.sql corre por cima do que existe sem erro nem perda
+    (e o que permite usa-lo como referencia de producao)."""
+    _ingest(connect, "docs/knowledge/geo-agent.md", "marketing", 7)
+    with connect() as c:
+        c.execute(SCHEMA_SQL)  # 2.a vez
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM knowledge_chunks")
+        assert cur.fetchone()[0] == 1
+        cur.execute(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_schema = current_schema() AND table_name = 'knowledge_chunks' ORDER BY ordinal_position"
+        )
+        assert [r[0] for r in cur.fetchall()] == [
+            "id", "agent_id", "source", "content", "embedding", "created_at",
+            "project", "content_hash", "chunk_index", "kb", "updated_at",
+        ]
 
 
 def test_ingested_doc_is_retrieved(connect):
