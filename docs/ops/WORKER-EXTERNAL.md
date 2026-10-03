@@ -12,6 +12,7 @@ Antes, o `plan_runner` em `--mode external` escrevia `pending_steps/<id>/request
    - o `knowledge_context.md` (S9) e o `CLIENT_MEMORY.md` (S30), se existirem.
 2. **Chama** o Gemini: `generateContent` do `gemini-flash-lite-latest`, que hoje responde como `gemini-3.5-flash-lite`.
    - O modelo muda com `AGENT_MODEL`, a mesma variável do MCP.
+   - **D5 (2026-10-03):** um passo com `model_tier: planner | executor | verifier` usa o modelo desse tier em `config/model-tiers.yaml` (`runner/plan_runner/model_tiers.py`). Tier a `null` (omissão) ou passo sem tier = o modelo normal (`AGENT_MODEL` ou `gemini-flash-lite-latest`); tier desconhecido = erro antes de chamar. O modelo usado fica no ledger e no `result.json` (`meta.model`, `meta.model_tier`).
    - A chave vai no header `x-goog-api-key`, nunca no URL.
    - Artefactos `.json` pedem `responseMimeType: application/json` e o JSON é validado antes de ser aceite.
 3. **Escreve** o `result.json` no formato que `executor.py` já lê: `{ok, detail, artifact_content}`. Junta-lhe um `meta` com o modelo, os tokens e o `responseId`. O executor escreve o artefacto em `output_artifact`.
