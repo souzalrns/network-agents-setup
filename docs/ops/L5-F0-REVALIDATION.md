@@ -3,7 +3,7 @@
 > **Estado (2026-10-03):**
 > - F0.5, F0.7a, F0.8 e F0.9 feitos neste repo, sem escrita em produção.
 > - F0.1–F0.3 corridos pelo maestro (resultados em §0).
-> - **F0.4 bloqueado tal como estava descrito:** o ingest não é incremental e salta o fim do MANIFEST (§2.1); proposta em §5.
+> - **F0.4:** opção A (P1) aprovada pelo maestro; **PR aberto, sem merge** (§5). O merge escreve em produção.
 > - F0.7b (medição real) só depois do F0.4.
 >
 > Base: main `e7a29ae` (pós-#62). Plano: [`docs/architecture/EXECUTION-PLAN.md`](../architecture/EXECUTION-PLAN.md) §7.
@@ -129,7 +129,7 @@ SELECT source_path, chunk_count, git_sha, last_ingested_at FROM knowledge_source
 - **F0.7b** (DEV ou CI com segredos): `python -m plan_runner.l5_eval run --out <relatório>.json`, com `MCP_URL` + `MCP_API_KEY`. Antes do F0.4 o esperado é `chunk_hit@4 = 0`.
 - **F3:** os buracos de provenance da §1 (locator, modelo do embedding por linha, fontes no `result.json`), e a validade (`stale:`). O ponto das "11 linhas inalcançáveis" foi retirado (ver a correcção no quadro "Hoje"); fica só a query de confirmação.
 
-## 5. F0.4: proposta de PR (NÃO executado; escrita em produção no merge)
+## 5. F0.4: proposta de PR (opção A aprovada; PR aberto, sem merge)
 
 **O que o F0.4 tem de garantir:**
 - o pack entra no `knowledge_chunks` com `agent_id = security`, o mesmo `kb` do F0.5 (`security-audit-demo.plan.yaml`) e do golden set (`config/l5-golden-security.yaml`);
@@ -145,7 +145,8 @@ O MANIFEST sozinho não chega (§2.1).
    - testes contra o Postgres descartável do job `test-rag` (como em `test_rag_canonical.py`).
 2. **MANIFEST:** `("docs/knowledge/security-agents-stack.md", "security", "P0")`.
 3. **`_kb_for`:** `security` → `kb = "security"`, em vez de `global`.
-4. **(Opcional, decisão separada)** corrigir as §7, §23 e §29 do pack, que estão desactualizadas (CouncilSession e chairman existem desde o Bloco C). Fazê-lo **antes** da primeira ingestão evita meter conhecimento inválido no L5.
+4. **Feito no mesmo PR (P2 = A):** pack corrigido (§7, §9, §23, §29 e o preâmbulo) **antes** da 1.ª ingestão.
+5. **Ordem no MANIFEST:** o pack fica no grupo P0. Mesmo que todos os P0 anteriores fossem novos, cabe no orçamento da 1.ª corrida (teste `test_pack_cabe_no_orcamento_da_primeira_corrida_no_pior_caso`).
 
 **Efeito no merge (W-prod):**
 - o workflow corre;

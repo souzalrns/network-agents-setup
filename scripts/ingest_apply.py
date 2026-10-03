@@ -65,6 +65,7 @@ from plan_runner.supabase_writer import (  # noqa: E402
     connect,
     purge_source,
     replace_chunks,
+    source_state,
 )
 
 # Importa o manifesto e helpers do ingest_delta (sem correr o main).
@@ -113,6 +114,8 @@ def embed_with_retry(text: str) -> list[float]:
 
 def _kb_for(agent_id: str) -> str:
     """Deriva o id da base de conhecimento a partir do agent_id."""
+    if "security" in agent_id:  # F0.4: o pack de security (antes caia em "global")
+        return "security"
     if "marketing" in agent_id:
         return "marketing"
     if "design" in agent_id:
@@ -136,10 +139,31 @@ class ChunkBudget:
         return self.used >= self.max_chunks
 
 
+def is_unchanged(state: dict | None, *, content_hash: str, agent_id: str) -> bool:
+    """F0.4 (regra T6: incremental por hash): a fonte ja esta gravada tal e qual?
+
+    Exige o mesmo content_hash, o mesmo agent_id e as linhas todas no knowledge_chunks
+    (um agent_id composto 'a+b' grava uma linha por agente). Se faltar alguma coisa,
+    re-ingere: e mais barato re-embedar um ficheiro do que deixar o L5 incompleto.
+    """
+    if not state or not state.get("chunk_count"):
+        return False
+    agents = [a for a in agent_id.split("+") if a] or [agent_id]
+    return (
+        state.get("content_hash") == content_hash
+        and state.get("agent_id") == agent_id
+        and state.get("rows") == state["chunk_count"] * len(agents)
+    )
+
+
 def apply_one(
-    rel: str, agent_id: str, priority: str, *, dry_run: bool, budget: ChunkBudget
+    rel: str, agent_id: str, priority: str, *, dry_run: bool, budget: ChunkBudget, force: bool = False
 ) -> dict:
-    """Processa um ficheiro: chunk + embed + write. Devolve contagens."""
+    """Processa um ficheiro: chunk + embed + write. Devolve contagens.
+
+    Salta (UNCHANGED, sem embeddings nem escrita) o ficheiro que ja esta gravado tal e
+    qual (is_unchanged), salvo com force=True. O orcamento so e gasto no que mudou.
+    """
     full = ROOT / rel
     if not full.is_file():
         return {"action": "MISSING", "chunks": 0, "deleted": 0}
@@ -159,6 +183,12 @@ def apply_one(
 
     if dry_run:
         return {"action": "DRY", "chunks": len(chunks), "deleted": 0}
+
+    if not force:
+        with connect() as conn:
+            state = source_state(conn, rel)
+        if is_unchanged(state, content_hash=content_hash, agent_id=agent_id):
+            return {"action": "UNCHANGED", "chunks": 0, "deleted": 0}
 
     if budget.exhausted():
         return {"action": "SKIPPED_QUOTA", "chunks": 0, "deleted": 0}
@@ -222,6 +252,11 @@ def main() -> int:
         default=50,
         help="Orcamento maximo de chunks a embeddar nesta corrida (protege a quota do Gemini). Default: 50.",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-ingere mesmo os ficheiros iguais (ex.: chunker ou embedder mudaram). Respeita o --max-chunks.",
+    )
     args = parser.parse_args()
 
     targets = MANIFEST
@@ -241,11 +276,12 @@ def main() -> int:
     budget = ChunkBudget(args.max_chunks)
     total_chunks = 0
     total_deleted = 0
+    unchanged = 0
     failures: list[tuple[str, str]] = []  # (path, motivo) -- para o resumo final
 
     for rel, agent_id, priority in targets:
         try:
-            out = apply_one(rel, agent_id, priority, dry_run=args.dry_run, budget=budget)
+            out = apply_one(rel, agent_id, priority, dry_run=args.dry_run, budget=budget, force=args.force)
         except QuotaExhaustedError as e:
             # Esgotou o retry a 429: para este ficheiro, reporta, e CONTINUA
             # para o proximo -- nao aborta a corrida inteira (pedido explicito).
@@ -266,9 +302,11 @@ def main() -> int:
         )
         total_chunks += out["chunks"]
         total_deleted += out["deleted"]
+        unchanged += out["action"] == "UNCHANGED"
 
     print()
-    print(f"TOTAL: chunks={total_chunks} deleted={total_deleted} orcamento_usado={budget.used}/{budget.max_chunks}")
+    print(f"TOTAL: chunks={total_chunks} deleted={total_deleted} unchanged={unchanged} "
+          f"orcamento_usado={budget.used}/{budget.max_chunks}")
 
     if failures:
         print()
