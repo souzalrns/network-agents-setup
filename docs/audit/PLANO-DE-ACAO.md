@@ -1,3 +1,5 @@
+> **HISTÓRICO.** O estado dos pendentes está em docs/initiatives/PENDENCIAS.md. Este documento não é actualizado.
+
 # PLANO DE ACÇÃO — porta de entrada da auditoria
 
 > **Branch:** `claude/audit-completo` · **Base auditada:** commit `3dc3b25` · **Data:** 2026-09-29.

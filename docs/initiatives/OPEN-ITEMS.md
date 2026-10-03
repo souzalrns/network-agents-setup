@@ -1,3 +1,5 @@
+> **HISTÓRICO.** O estado dos pendentes está em docs/initiatives/PENDENCIAS.md. Este documento não é actualizado.
+
 # Itens em Aberto — Relatório Consolidado (2026-09-20)
 
 Produzido na Tarefa 5 da auditoria autónoma desta sessão. Fontes lidas por completo: `STATUS.md` (446 linhas), `EXECUTION-PROMPTS.md` (2448 linhas, todos os Grupos A-J), `docs/architecture/meta-validation/AUDIT-SCOPE-2026-09-19.md` (192 linhas).

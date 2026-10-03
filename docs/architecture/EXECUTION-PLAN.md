@@ -1,3 +1,5 @@
+> **HISTÓRICO.** O estado dos pendentes está em docs/initiatives/PENDENCIAS.md. Este documento não é actualizado.
+
 # EXECUTION PLAN — Universal Core
 # network-agents-setup (+ agent-network-mcp onde indicado)
 
