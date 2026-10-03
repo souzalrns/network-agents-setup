@@ -2,7 +2,7 @@
 
 **Âmbito:** área `security` (defensivo). Pipeline: triage → `meta.security-auditor` → reporter.  
 **Não substitui:** `docs/architecture/SECURITY.md`, skill `security-audit`, agentes em `agents/security/`.  
-**Ingestão:** colocar em `docs/knowledge/` no `network-agents-setup` e correr o pipeline RAG habitual (markdown → chunk → embed → `knowledge_chunks`).
+**Ingestão:** entra no L5 pelo MANIFEST (`scripts/ingest_delta.py`, `agent_id: security`) e pelo workflow `ingest-knowledge` (markdown → chunk → embed → `knowledge_chunks`), incremental por `content_hash`. Consumido pelo bloco `knowledge:` (`kb: security`) do passo `audit` do plano demo.
 
 Este pack é **operacional para RAG**: cada secção numerada responde a uma pergunta isolada.
 
@@ -34,7 +34,7 @@ Adoptar como infraestrutura: LangGraph no `plan_runner` (planos + HITL), MCP Pyt
 
 ## 7. LangGraph — papel na security
 
-LangGraph orquestra passos e `interrupt` HITL. Não é um pack de agentes NICE. Security usa planos YAML no plan_runner; CouncilSession de security é desenho futuro (ADR-META-AGENTS), não runtime actual.
+LangGraph orquestra passos e `interrupt` HITL. Não é um pack de agentes NICE. Security usa planos YAML no plan_runner. O CouncilSession de security já existe (Fase 1, desde 2026-10-01: `runner/plan_runner/council_session.py`, conselho `security` em `config/councils.yaml`) para decisões estruturais como threat model, política de segredos ou de acessos; o router escala para ele. O pipeline diário triage → audit → report não passa pelo conselho.
 
 ## 8. MCP Python SDK — papel
 
@@ -42,7 +42,7 @@ SDK oficial para servidores/clientes MCP. Relevante quando se audita configs MCP
 
 ## 9. EXTRAIR — protocolo llm-council
 
-De `karpathy/llm-council` (e forks MIT) extrai-se só o protocolo: respostas em paralelo → peer-review anónimo → chairman. Não se adopta a app nem OpenRouter como maestro. Útil a um Security Council futuro, não ao pipeline triage/audit/report diário.
+De `karpathy/llm-council` (e forks MIT) extrai-se só o protocolo: respostas em paralelo → peer-review anónimo → chairman. Não se adopta a app nem OpenRouter como maestro. É o protocolo do CouncilSession (independent → peer_rank → synthesize), usado pelo conselho `security`; não pelo pipeline triage/audit/report diário.
 
 ## 10. EXTRAIR — papéis NICE / CIPHER
 
@@ -98,7 +98,7 @@ Tecto de tokens da área (freio): da ordem de 40k por pedido na fase B5-bis — 
 
 ## 23. security_auditor não é meta-agente
 
-Vive historicamente em `agents/meta/` mas é especialista C3 da área security (`kind: internal`). Chairman de Security Council futuro é `kind: meta` separado (ADR-META-AGENTS).
+Vive historicamente em `agents/meta/` mas é especialista C3 da área security (`kind: internal`). O chairman dos conselhos, incluindo o `security`, é o `meta.chairman` (`kind: meta`, `agents/meta/chairman.agent.md`), separado do auditor (ADR-META-AGENTS §10); no conselho `security` o auditor é membro obrigatório, com veto.
 
 ## 24. Knowledge refs úteis num plan security
 
@@ -122,7 +122,7 @@ Triage JSON válido; audit com cobertura OWASP LLM 2026 (N/A justificado conta);
 
 ## 29. O que este pack não cobre
 
-Instalação de scanners no PATH da VM · Contas VirusTotal/SIEM · Implementação CouncilSession · Ingestão automática neste chat · Garantias legais de conformidade.
+Instalação de scanners no PATH da VM · Contas VirusTotal/SIEM · Detalhes de implementação do CouncilSession (ver `docs/ops/COUNCIL.md`) · Ingestão fora do MANIFEST/workflow · Garantias legais de conformidade.
 
 ---
 

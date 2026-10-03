@@ -3,7 +3,8 @@
 # Para que serve: medir se o retrieve REAL (agent-network-mcp → match_knowledge →
 # knowledge_chunks) devolve o excerto certo do pack para perguntas típicas da área.
 # Mede retrieval relevante, não verdade: "retrieval relevante ≠ retrieval válido"
-# (EXECUTION-PLAN §15.8). Ver `stale:` abaixo.
+# (EXECUTION-PLAN §15.8). Um caso pode levar `stale: <motivo>` quando o pack estiver
+# desactualizado; os dois que havia (sec-07, sec-16) foram corrigidos no F0.4.
 #
 # Usado em dois sítios:
 #   - runner/tests/test_l5_eval.py (offline, sem rede): valida o próprio golden set
@@ -64,12 +65,8 @@ cases:
     section: "7. LangGraph — papel na security"
     question: O conselho de segurança já corre em produção ou é só desenho?
     anchor: CouncilSession de security
-    stale: >
-      O pack diz "CouncilSession de security é desenho futuro (ADR-META-AGENTS), não
-      runtime actual". Desde o Bloco C (2026-10-01) o CouncilSession existe
-      (runner/plan_runner/council_session.py) e config/councils.yaml tem o conselho
-      `security`. O retrieve pode acertar no chunk e o chunk estar desactualizado:
-      caso de validade do conhecimento (EXECUTION-PLAN §15.8, F3).
+    # Era `stale:` (o pack dizia "desenho futuro"); §7 do pack corrigida no F0.4,
+    # antes da 1.ª ingestão (EXECUTION-PLAN §15.8). Mantido: mede o chunk certo.
 
   - id: sec-08
     section: "9. EXTRAIR — protocolo llm-council"
@@ -115,9 +112,7 @@ cases:
     section: "23. security_auditor não é meta-agente"
     question: O auditor de segurança é um meta-agente ou um especialista?
     anchor: "`kind: internal`"
-    stale: >
-      O pack diz que o chairman de um Security Council é "futuro". O `meta.chairman`
-      (kind: meta) já existe (agents/meta/chairman.agent.md, Bloco C). Ver sec-07.
+    # Era `stale:` (chairman "futuro"); §23 do pack corrigida no F0.4.
 
   - id: sec-17
     section: "27. Done when de uma ronda security"
