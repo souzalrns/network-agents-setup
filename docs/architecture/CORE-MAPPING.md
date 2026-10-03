@@ -1,5 +1,11 @@
 # Core Mapping — `packages/core/src/`
 
+> **ERRATA (2026-10-03, AU-37).** Este mapeamento (commit `6ff59f8`) acerta no retrato geral, mas tem 2 classificações erradas e 1 omissão. Fonte: `docs/audit/AUDIT-4-modulos.md:8-12,22-26`, reconfirmado no código em 2026-10-03.
+> - **`orchestrator/Orchestrator.ts` é REAL, não MOCK.** É o pipeline de 14 passos que chama a deliberação, o `Planner` e o `Executor` (`Orchestrator.ts:194-374`). Os MOCK são módulos que ele usa. `git log 6ff59f8..main -- Orchestrator.ts` = 0 commits, por isso já era REAL quando foi mapeado. Contagens corrigidas: **REAL 6, MOCK 13**.
+> - **`security/SecurityManager.ts`: a password foi corrigida depois deste mapeamento.** `hashPassword` usa `bcrypt.hashSync(password, 10)` e `verifyPassword` faz `bcrypt.compareSync`, fail-closed (`SecurityManager.ts:491-506`; fix `d00cad5`, 2026-09-17). **Continua por corrigir:** `verifyMFA()` aceita o código fixo `'123456'` (`SecurityManager.ts:239`). Login, registo e MFA não têm chamadores fora do ficheiro; a auth HTTP real é `apps/api/src/middleware/auth.ts`.
+> - **`orchestrator/Executor.ts` está REAL, mas tem 3 bugs** (AUDIT-2, Q2–Q4).
+> - **Contexto:** pela decisão D1 (`docs/audit/DECISAO-1-runtimes.md`), o TS deixou de ser o runtime de produção. Este mapeamento vale como inventário, não como plano.
+
 Mapeamento de todos os módulos de `packages/core/src/`, produzido por leitura directa dos ficheiros (não por inferência a partir de nomes ou descrições). Objectivo: saber exactamente o que já funciona, o que funciona mas é volátil, e o que é só esqueleto, antes de planear qualquer trabalho em cima disto.
 
 ## 1. Resumo
@@ -46,7 +52,7 @@ Mapeamento de todos os módulos de `packages/core/src/`, produzido por leitura d
 | `opportunity/OpportunityRadar.ts` | MOCK | — |
 | `orchestrator/DeliberationOrchestrator.ts` | INCOMPLETO | Resultados de deliberação em `Map`, usa o `DeliberationEngine` (REAL) por baixo |
 | `orchestrator/Executor.ts` | **REAL** | Não guarda estado próprio; delega a `MemoryManager` (pacote externo, não auditado aqui) |
-| `orchestrator/Orchestrator.ts` | MOCK | — |
+| `orchestrator/Orchestrator.ts` | ~~MOCK~~ **REAL** (errata) | Ver a errata no topo |
 | `orchestrator/Planner.ts` | **REAL** | Chama `LLMService.chat()` de facto, com fallback determinístico se o parse falhar |
 | `orchestrator/ReflectionEngine.ts` | INCOMPLETO | Reflexões pós-execução em `Map` |
 | `orchestrator/Router.ts` | **REAL** | Routing por palavra-chave, autocontido |
@@ -85,8 +91,8 @@ Dois destes já têm o comportamento simulado documentado com detalhe (ver secç
 
 ## 6. Achados críticos
 
-- **`security/SecurityManager.ts` — `verifyPassword()` devolve sempre `true`.** Comentário explícito no código: `// Em produção, verificar contra hash armazenado`. Qualquer password passa.
-- **`security/SecurityManager.ts` — hash sem salt.** `hashPassword()` usa `SHA-256` puro (`crypto.createHash('sha256')`), sem salt — vulnerável a rainbow tables. O hash gerado nem chega a ser guardado no objecto `User`.
+- **[CORRIGIDO em `d00cad5`; ver a errata] `security/SecurityManager.ts` — `verifyPassword()` devolve sempre `true`.** Comentário explícito no código: `// Em produção, verificar contra hash armazenado`. Qualquer password passa.
+- **[CORRIGIDO em `d00cad5`; ver a errata] `security/SecurityManager.ts` — hash sem salt.** `hashPassword()` usa `SHA-256` puro (`crypto.createHash('sha256')`), sem salt — vulnerável a rainbow tables. O hash gerado nem chega a ser guardado no objecto `User`.
 - **`security/SecurityManager.ts` — `verifyMFA()` aceita o código fixo `'123456'`.** Não há verificação TOTP real.
 - **`infrastructure/InfrastructureManager.ts` — `implementTokenEconomy()` usa `Math.random()` para fabricar resultado.** Tanto a estratégia escolhida como o valor de "poupança" (`savings`) são gerados aleatoriamente, não medidos — isto é uma simulação sem o comentário habitual a admiti-lo.
 - **Parâmetros de construtor recebidos e nunca usados:**
