@@ -270,3 +270,49 @@ Contrato arquitectural em `docs/architecture/META-AGENTS-PHASE-2.md`, a partir d
   - **Os 49 que restam estão todos em código arquivado pela D1** (`packages/`, `apps/`): "arquivado, não aplicável", não bloqueia, e o relatório do `main` separa activo de arquivado.
   - Triagem completa em `docs/architecture/SECURITY-AGENTS.md`, "SEC-2d".
 
+
+## EXECUTION-PLAN: Universal Core, F0–F6 (aprovado pelo maestro, 2026-10-03)
+
+Plano em `docs/architecture/EXECUTION-PLAN.md`; fontes arquivadas tal como foram escritas em `docs/architecture/execution-plan-sources/`. O plano diz o que deve acontecer e porquê; **o estado vivo é registado aqui e no `STATUS.md`** (EXECUTION-PLAN §15.1).
+
+**Decisões D-EP (maestro, 2026-10-03), todas FECHADAS na opção A** (EXECUTION-PLAN §9.5):
+- **D-EP1:** plano gravado; fontes arquivadas; itens F0–F6 aqui; ponteiro no `BOOTSTRAP.md`.
+- **D-EP2:** lista de ingestão (`scripts/ingest_delta.py`): **só o pack de security no F0**; os ~31 ficheiros restantes decididos pack a pack (no F3), nunca em bloco.
+- **D-EP3:** C-2 corrida pelo DEV **já**, independente do F0 (ver C-2 abaixo).
+- **D-EP4:** o contrato/ADR do F1 pode avançar em paralelo; **o código do MarkItDown só com o F0 verde**.
+- **D-EP5:** ordem da Fase 2a/2b decidida só depois do F5; **nada de Broker/Lease antes de F0–F6 + C-2**.
+- **D-EP6:** neste plano, os conectores de ingestão (os "E1–E7" da linha 20 acima) passam a chamar-se **ING-1..7**. **E7 continua a ser o validador `areas.py`** (PLANO-DE-ACAO §13.2). O histórico não se reescreve.
+- **D-EP7:** `MASTER-PLAN.md` marcado como histórico, a apontar para o EXECUTION-PLAN.
+- **D-EP8:** domínio do F6 escolhido só depois do F5, com uso real.
+- **D-EP9:** **T6 canónico** (`ingest-knowledge.yml`); `agent-network-mcp/.github/workflows/ingest.yml` = JSON do MCP, legado documentado.
+
+**Decisões em aberto** (propostas pré-gravação que mexem em regras permanentes do maestro; EXECUTION-PLAN §9.5):
+- **D-EP10:** refinar "commit + push no fim de cada passo" e "uma só verificação de CI por PR". Recomendada A: passos `R` sem commit; commits lógicos; uma verificação por push, sem polling.
+- **D-EP11:** os passos `W-repo` do F0 (F0.5 bloco `knowledge:`; F0.7a golden set) entram na Etapa 2. Recomendada A: sim (reversíveis, sem efeito em produção).
+
+**Itens F0–F6** (detalhe e critérios de done no EXECUTION-PLAN §7; tipos `R` / `W-repo` / `W-prod`):
+
+| Fase | Item | Dono | Estado |
+|---|---|---|---|
+| F0 | F0.1–F0.3 revalidar o L5 canónico (contagens, pack de security no `knowledge_chunks`, passo 3 do J3) | Claude Code (SELECT, se autorizado) / DEV | Por fazer (Etapa 2, depois do merge do plano) |
+| F0 | F0.4 pack de security no MANIFEST (`W-prod` no merge, via workflow) | Claude Code prepara; maestro (D-EP2 = A) | Por fazer (Etapa 3) |
+| F0 | F0.5 bloco `knowledge:` no passo `audit` do plano demo de security (`W-repo`) | Claude Code | Por fazer (D-EP11) |
+| F0 | F0.6 passo 5 do J3: teste real no MCP | DEV | Por fazer |
+| F0 | F0.7a definir o golden set security, 10–20 perguntas (`W-repo`); F0.7b medir `hit@k` (credenciais) | Claude Code / DEV ou CI | Por fazer |
+| F0 | F0.8 provenance actual; F0.9 comparar C8 → J3 → hoje | Claude Code | Por fazer |
+| F0 | F0.12 apagar a t6 (passo 6 do J3, irreversível, opcional) | DEV | Por fazer |
+| F1 | Contrato *Universal Ingestion & Research Primitives* (ADR, em paralelo, D-EP4) + spike MarkItDown → T6 (só com o F0 verde; pins e mitigações da `AUDIT-INGESTION`) | Claude Code | Por fazer |
+| F1b | Docling, só se o benchmark o justificar | — | Condicional |
+| F2 | Web research: discover/fetch, a partir do `scrape.yml` existente; Crawl4AI `>=0.9.3` só se o superar | Claude Code | Por fazer |
+| F3 | Provenance formal + validade/conflitos + source authority + golden set alargado; cobertura dos packs restantes (D-EP2) | Claude Code + maestro | Por fazer |
+| F4 | `config/marketing-capabilities.yaml` validado no E7 + maturidade de capability | Claude Code | Por fazer |
+| F5 | Validação E2E de uma capability com **run real** | Claude Code + DEV | Por fazer |
+| F6 | UM domínio de prova, com o DOC medido (D-EP8) | maestro escolhe | Por fazer |
+
+**Ordem operacional imediata:**
+- Claude Code: Etapa 1 (este registo).
+- DEV: **C-2** (`scripts/alter_token_usage_council_kinds.sql` no Supabase e depois o CHECK em `agent-network-mcp/memory/token_usage.sql`).
+- DEV: confirmar **S27** (Oracle 12 vs 24 GB) e **S20** (bridge 401).
+- Depois: F0 passos `R` → PR → só então F0.4.
+
+**Pendentes acrescentados pela verificação do plano** (EXECUTION-PLAN §9.2): AU-44 (transcrições → RAG, candidato do F1); B7 (expor langgraph/edit no MCP, depois do F5); contrato do plano do runner (o `Plan.schema.json` é de outro formato e não declara `repo_files`/`context` por passo); gitingest revisto para ADAPT com reservas (`ingestion-audit/AUDIT-INGESTION.md:249,309`).
