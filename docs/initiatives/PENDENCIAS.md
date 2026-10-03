@@ -8,10 +8,10 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **128 itens vivos** (§4): ABERTO 78, EM CURSO 10, BLOQUEADO 40;
+> - **129 itens vivos** (§4): ABERTO 79, EM CURSO 10, BLOQUEADO 40;
 > - **66 linhas de histórico** (§7): 48 fechadas, 18 obsoletas;
-> - **33 contradições resolvidas** (§8): 26 da auditoria #65 + 7 novas;
-> - **8 decisões pendentes** em A/B/C (§10).
+> - **34 contradições resolvidas** (§8): 26 da auditoria #65 + 8 novas;
+> - **9 decisões pendentes** em A/B/C (§10).
 
 ## 0. Como usar este documento
 
@@ -87,7 +87,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (128 itens vivos)
+## 4. Tabela única (129 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -152,7 +152,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-003 | Robustez das keywords do router (negação, pesos) | FALTA-CONSTRUIR | BLOQUEADO | CLAUDE | Baixa | W-001 (casos reais) | O:166 | R4 | VERIFICADO |
 | W-004 | Ledger central: as linhas do worker também no Supabase | FALTA-LIGAR | ABERTO | DEV | Média | Escrita em produção (DEV) | O:149 | B2 (Bloco B) | VERIFICADO |
 | W-005 | Worker inline no engine langgraph (hoje só no `native`) | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — | O:151 | B4 (Bloco B) | VERIFICADO |
-| AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150) | VERIFICADO |
+| AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
 | AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | BUG | ABERTO | CLAUDE | Média | — | P:307; E:791; `runner/tests/test_security_pipeline.py` (AU-22) | — | VERIFICADO |
 | W-006 | Os planos YAML do runner não têm schema validado (o `Plan.schema.json` é de outro formato; `repo_files`/`context` não estão declarados) | FALTA-CONSTRUIR | ABERTO | CLAUDE | Média | — | E §9.2; `Plan.schema.json:7,83`; `security-audit-demo.plan.yaml:56,73` | — | VERIFICADO |
@@ -185,6 +185,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | AU-37 | `CORE-MAPPING.md` desactualizado (Orchestrator "MOCK" é REAL): falta a errata no próprio ficheiro | DOC-ERRADO | ABERTO | CLAUDE | Média | — | P:322; `docs/audit/AUDIT-4-modulos.md:10,24` | J8 (parte) | VERIFICADO |
 | H-001 | Ponteiros para este documento: `BOOTSTRAP.md`, `CLAUDE.md` e o papel do `STATUS.md` | DOC-ERRADO | ABERTO | AMBOS | Média | Decisão §10 P-6 | `docs/architecture/BOOTSTRAP.md`; `docs/initiatives/STATUS.md` (4.º documento com estado) | — | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:98` UP017; linhas de `main` `e7a29ae`), fora do lint do CI | BUG | ABERTO | CLAUDE | Baixa | Decisão §10 P-7 | ruff 0.16.10 local (03/10); `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
+| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | Nenhum; fazer depois do F0 fechar (o maestro decide o conteúdo, o agente executa) | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9 | — | VERIFICADO |
 | G1.1 | Trading: pesquisa padrão ouro de repos de trading/simulação | FALTA-DECIDIR | BLOQUEADO | AMBOS | Alta | F5 + D-EP8 (domínio só com uso real) | A5 §5.4 (grupos G–J); EP:1618-2428 | J9 (parte) | VERIFICADO |
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | BLOQUEADO | DEV | Média | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | BLOQUEADO | DEV | Alta | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
@@ -224,13 +225,75 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | I11 | Avaliar Soup (fine-tuning; a dependência "só após C8" já caiu) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão de âmbito | A5 §5.4; EP:2188-2383 | F12 (ST, ferramentas) | VERIFICADO |
 
 
+### 4.1 Detalhe do H-01 (adendo do maestro, 2026-10-03; registado, NÃO executado)
+
+**Âmbito (texto do maestro, sem cortes):**
+1. Limpeza de lixo:
+   - duplicados (2 `STATUS.md`, 2 `item-13-ai-findability.md`);
+   - ficheiros órfãos;
+   - `pilots/run-*` e `test-gemini.json` (lixo de teste);
+   - ficheiros gerados mal colocados.
+2. Arquivo dos históricos em `docs/archive/`, com o aviso HISTÓRICO no topo de cada um:
+   - `PLANO-DE-ACAO.md`;
+   - `OPEN-ITEMS.md`;
+   - `MASTER-PLAN.md`;
+   - `docs/STATUS.md` (o antigo);
+   - `STATUS-PROJETOS.md` e `STATUS-ECOSSISTEMA.md`.
+3. Índices:
+   - `docs/README.md` (o que está onde);
+   - `docs/architecture/README.md` (índice da arquitectura).
+4. README para portfólio (opção C):
+   - topo para negócio (o que é, o que resolve);
+   - baixo para técnico (como está construído, stack, decisões).
+5. Casos de estudo (3–5), com a evidência de partida na tabela abaixo.
+6. Métricas e timeline:
+   - métricas: n.º de PRs, testes, linhas, o que foi construído;
+   - timeline: Blocos A/B/C, L4, security, F0.
+
+**Factos do âmbito, verificados nesta sessão (`main` `e7a29ae`):**
+
+| Facto | Evidência |
+|---|---|
+| Há 2 `STATUS.md` | `docs/STATUS.md` e `docs/initiatives/STATUS.md` (`git ls-files`) |
+| Há 2 `item-13-ai-findability.md`, ambos ingeridos | `docs/item-13-ai-findability.md` e `docs/knowledge/item-13-ai-findability.md`; MANIFEST em `scripts/ingest_delta.py:33-34`, com `agent_id` diferentes |
+| `pilots/run-*` não está versionado | Ignorado pelo `.gitignore` (ex.: `:99`, `:101`); a limpeza é só no disco de quem corre os pilotos |
+| `test-gemini.json` | **NÃO VERIFICADO:** não está no git nem no disco desta sessão; pode existir no PC do maestro |
+| Locais dos históricos a arquivar | `docs/architecture/MASTER-PLAN.md`; `docs/STATUS-PROJETOS.md`; `docs/STATUS-ECOSSISTEMA.md`; P e O já têm o aviso HISTÓRICO (este PR) |
+
+**Casos de estudo (evidência de partida):**
+
+| Caso | IDs | Evidência |
+|---|---|---|
+| O RAG partido: o ingest escrevia numa tabela que o retrieve não lia | AU-19 / C8 → J3 | A5:190 (C8 "fechado só no papel"); PR #31 |
+| O ingest não incremental: 10 ficheiros re-embedados em cada corrida, 28 nunca | F0.4 / R-002 | L5F0 §2.1 (PR #63); correcção no PR #64 |
+| O CI que mentia: sem `pipefail`, o job não conseguia falhar | — | PR #36 (commit `f587cfb`) |
+| O `toolsAllowed` morto: dado como "DONE", mas sem fonte | S33 → AU-20 | ST:62 ("DONE"); A5:169 ("FECHADO-SÓ-NO-PAPEL") |
+| A hipótese refutada: −16% projectado contra −2,6% real | B1-bis-R | ST:554; PRs #45 e #55 |
+
+**Riscos para a execução** (não cortam o âmbito, condicionam o como):
+- **Mover `docs/STATUS.md` parte o CI.**
+  - O `packages/scripts/src/validate/check-consistency.ts:66-73` dá `error` quando o ficheiro falta, e corre no `ci.yml:129`.
+  - O validador tem de mudar no mesmo PR (é código).
+- **Mover `STATUS-PROJETOS.md` e `STATUS-ECOSSISTEMA.md` parte o bootstrap.**
+  - Apontam para eles: `CLAUDE.md:7,22-23,65` (este repo), `docs/architecture/BOOTSTRAP.md:9` e `agent-network-mcp/CLAUDE.md:9-10` (outro repo).
+  - 10 ficheiros citam um destes ficheiros ou o `MASTER-PLAN.md`.
+- **Tirar um dos `item-13` exige mudar o MANIFEST e purgar a `source` antiga no Supabase.**
+  - É escrita em produção, por isso é do DEV.
+  - Sem isso, os chunks antigos ficam órfãos no L5.
+- **Mover P e O muda os caminhos das siglas `P:` e `O:`** deste documento: actualizar o §0, item 7, no mesmo PR.
+- **O merge dispara o ingest:** qualquer merge que toque em `docs/**/*.md` corre o `ingest-knowledge`, que escreve em produção.
+
+**Relação com itens existentes** (sem duplicar):
+- O AU-12 (STATUS de 95 KB: partir ou arquivar) e o H-001 (papel do STATUS e ponteiros, §10 P-6) são decisões prévias ao passo 2.
+- O H-01 não os substitui: na execução, fecham em conjunto ou ficam citados.
+
 ## 5. Resumo por dono
 
 | Dono | N.º | IDs |
 |---|---:|---|
 | CLAUDE | 32 | F0.5, F0.7a, F0.8, F0.9, F1, F1b, F2, F4, R-001, AU-11, AU-06, ING-5, ING-6, S17, S28, D6, D5, W-002, W-003, W-005, EX-B7, AU-22, W-006, AU-32, W-007, INIT-094, AU-45, AU-46, AU-08, AU-10, AU-37, H-002 |
 | DEV | 68 | F0.1, F0.3, F0.6, F0.7b, F0.12, R-002, R-003, S20, S27, S19, S21, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, S-001, S-002, C-2, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11 |
-| AMBOS | 28 | F0.4, F3, F5, F6, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-001, G1.1, G2.1 |
+| AMBOS | 29 | F0.4, F3, F5, F6, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-001, H-01, G1.1, G2.1 |
 
 **Só do DEV, sem código:**
 - merges dos PRs #63, #64 (escreve em produção) e #65;
@@ -247,10 +310,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 18 | F0.4, F1, F3, F5, S20, C-2, D6, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 53 | F0.1, F0.3, F0.5, F0.6, F0.7a, F0.7b, F2, F4, F6, R-002, AU-11, AU-06, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, D5, B1-bis-C, W-001, W-004, EX-B7, AU-22, W-006, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-45, AU-46, AU-08, AU-12, AU-37, H-001, G1.2, G1.8, G1.9, G4.1, G4.2 |
+| Média | 54 | F0.1, F0.3, F0.5, F0.6, F0.7a, F0.7b, F2, F4, F6, R-002, AU-11, AU-06, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, D5, B1-bis-C, W-001, W-004, EX-B7, AU-22, W-006, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-45, AU-46, AU-08, AU-12, AU-37, H-001, H-01, G1.2, G1.8, G1.9, G4.1, G4.2 |
 | Baixa | 56 | F0.8, F0.9, F0.12, F1b, R-001, R-003, ING-5, ING-6, S17, S21, S28, SEC-3, A12, A19, B16, AU-25, S-001, S-002, T-001, T-002, T-003, W-002, W-003, W-005, AU-32, W-007, M-003, M-004, L4-2, L4-4, G6, INIT-094, E15, AU-10, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11 |
 
-**Por estado:** ABERTO 78 · EM CURSO 10 · BLOQUEADO 40.
+**Por estado:** ABERTO 79 · EM CURSO 10 · BLOQUEADO 40.
 **NÃO VERIFICADO (7):** S20, S27, A22, S-001, S-002, T-003, W-007.
 
 ## 7. Histórico (66 linhas: 48 FECHADO, 18 OBSOLETO)
@@ -328,7 +391,7 @@ Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou deci
 | P1–P5 / J1–J7 (backlog) | Constitution, META Compiler, AR-000…015, A2A, UI visual, Caveman | anterior a 2026-09-29 | A5 §5.2 e §5.4 (arquivados) | OBSOLETO | J1–J7 do backlog ≠ J1–J11 das frentes do P §4 |
 
 
-## 8. Contradições resolvidas (33)
+## 8. Contradições resolvidas (34)
 
 Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidência. V1–V26 são as 26 da auditoria cruzada (PR #65, `docs/ops/PENDENCIAS-CRUZADAS.md` §2.1); V27 em diante são novas desta consolidação.
 
@@ -368,6 +431,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | V31 | L4-3 vs ADR-M7 *(nova)* | O:198 diz "L4-3 … (ADR-M7)" | O ADR-M7 é "os 33 agentes do MCP no registo" (P:541) = E-002; o L4-3 é MCP → L4. Ficam separados | P:541 |
 | V32 | R1–R4 do router *(nova)* | O:163-166 usam R1–R4; o AUDIT-1 usa R1–R13 para outra coisa | W-001..W-003; o R2 passa a alias do F6 | P:500 (`AUDIT-1` R1–R13) |
 | V33 | "11 linhas inalcançáveis" *(nova; erro do PR #63, já corrigido lá)* | 1.ª versão do L5F0 §2 | Não existem: a migração J3 e o writer desdobram `a+b` | PR #63, commit `18616ad` |
+| V34 | S33 / S15b / C8 *(nova)* | ST:62 (S33 "DONE"); ST:37 (S15b "N/A, fechado"); ST:17 (C8 "fechado 6/6") | Fechados só no papel. O objectivo de cada um vive noutro item: S33 → AU-20 (aberto); S15b → AU-47/J1 (keep-alive, fechado); C8 → AU-19/J3 (fechado, #31). Nenhum é um item a mais | A5:163; A5:169; A5:190; A5:296 |
 
 
 ## 9. Como fechar um item
@@ -393,6 +457,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-6 | H-001: o papel do `STATUS.md` e os ponteiros | `BOOTSTRAP.md` e `CLAUDE.md` passam a apontar para este documento; o `STATUS.md` fica com o estado dos sistemas (Done/infra), sem lista de pendentes | Marcar também o `STATUS.md` como histórico | Não mexer | **A**: o STATUS tem valor (Done, credenciais, infra), mas dois sítios com pendentes recriam o problema |
 | P-7 | H-002: avisos do ruff que já existiam em `scripts/` | Registar e tratar no F3 | PR pequeno agora (o merge dispara o ingest; com o #64 é inofensivo) | Alargar o ruff do CI a `scripts/` | **A**: não alarga PRs em curso |
 | P-8 | PR #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`) | Fazer merge do #65 antes deste (fica como evidência histórica da auditoria) | Fechar o #65 sem merge (o §8 deste documento incorpora as 26 contradições) | Fazer merge depois deste | **A**: preserva a análise original citada no §8 e no §10 |
+| P-9 | ID do item de portfólio: o maestro deu `H-01`; o formato do P-1 é `<prefixo>-<NNN>` | **Aplicada:** manter `H-01` como dado (regra: não inventar IDs para itens que já têm ID) | Renomear para `H-003`, com `H-01` como alias no §11 | Passar H-001/H-002 a 2 dígitos | **B**: `H-01` e `H-001` lêem-se quase iguais e já há os `H1`–`H4` do backlog (três séries H); o formato fixo de 3 dígitos é o que torna o ID legível por máquina. É 1 linha e reversível |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
@@ -402,6 +467,9 @@ Para quem chega com um ID antigo. Uma linha por item com aliases (§4) e por lin
 
 | ID(s) antigo(s) | ID canónico | Onde |
 |---|---|---|
+| S33 | AU-20 | §4 (vivo); ver V34 |
+| S15b | AU-47 / J1 | fechado (§7); ver V34 |
+| C8 | AU-19 / J3 | fechado (§7); ver V34 |
 | J3 passo 3 | F0.3 | vivo (§4) |
 | J3 passo 5 | F0.6 | vivo (§4) |
 | J3 passo 6 | F0.12 | vivo (§4) |
@@ -556,5 +624,9 @@ Para quem chega com um ID antigo. Uma linha por item com aliases (§4) e por lin
 - **Verificação das citações (antes do commit):**
   - as 188 citações `P:`/`O:`/`E:`/`ST:` e as de código foram conferidas por script contra `e7a29ae`;
   - 16 estavam desfasadas e foram corrigidas: 11 em `ST:` (+1), `O:195`, `P:500`, `ci.yml:129`, `ingest_delta.py:98` e o `ST:174-178` do INIT-093.
+- **Lacuna corrigida depois do 1.º commit:**
+  - os 4 "FECHADO-SÓ-NO-PAPEL" do A5:296 (C8, keep-alive, S33, S15b) não tinham entrada própria;
+  - ficaram como aliases dos itens onde o objectivo vive (V34, §11).
+  - Foi encontrado ao verificar a evidência do H-01.
 - **Severidade dos grupos I/H/G3:** o A5 dá "Baixa–Média" em bloco; foi atribuída Baixa. Revisível sem decisão (não muda o âmbito).
 
