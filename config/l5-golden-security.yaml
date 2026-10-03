@@ -1,0 +1,130 @@
+# Golden set do L5, pack de security (F0.7a; docs/architecture/EXECUTION-PLAN.md §7, F0).
+#
+# Para que serve: medir se o retrieve REAL (agent-network-mcp → match_knowledge →
+# knowledge_chunks) devolve o excerto certo do pack para perguntas típicas da área.
+# Mede retrieval relevante, não verdade: "retrieval relevante ≠ retrieval válido"
+# (EXECUTION-PLAN §15.8). Ver `stale:` abaixo.
+#
+# Usado em dois sítios:
+#   - runner/tests/test_l5_eval.py (offline, sem rede): valida o próprio golden set
+#     contra o chunking real do pack (cada âncora tem de cair em EXACTAMENTE um chunk
+#     da fonte esperada) e prova as métricas com um backend falso;
+#   - `python -m plan_runner.l5_eval run` (F0.7b): mede contra o MCP real. Precisa de
+#     MCP_URL + MCP_API_KEY (credenciais autorizadas; o DEV ou o CI com segredos).
+#     Antes do F0.4 (pack ingerido com agent_id `security`) o resultado esperado é
+#     hit@k = 0: o pack ainda não está no `knowledge_chunks` (scripts/ingest_delta.py).
+#
+# Métricas (por pergunta, sobre os primeiros k hits devolvidos):
+#   - hit de fonte: algum hit tem `citation.source` == `source`;
+#   - hit de chunk: algum hit dessa fonte contém a `anchor` (comparação sem maiúsculas
+#     e com espaços normalizados). A âncora identifica o chunk de forma estável entre
+#     re-ingestões; os ids e o `chunk_index` podem mudar quando o ficheiro muda;
+#   - rank do primeiro hit de chunk (para MRR) e hit@1 / hit@3 / hit@k;
+#   - proveniência presente: todos os hits trazem `citation.source` não vazio.
+# As perguntas estão parafraseadas de propósito (não copiam o título da secção):
+# medem procura semântica, não correspondência literal.
+
+version: 1
+kb: security                                   # = agent_id no knowledge_chunks (lib/knowledge.js do MCP)
+source: docs/knowledge/security-agents-stack.md
+k: 4                                           # = match_count por omissão do match_knowledge (agent-network-mcp/memory/schema.sql:48)
+
+cases:
+  - id: sec-01
+    section: "1. Política da área security"
+    question: Os agentes de segurança podem fazer ataques activos ou alterar a produção?
+    anchor: Nunca ataque activo
+
+  - id: sec-02
+    section: "2. Pipeline de agentes security"
+    question: Em que ordem correm os agentes de segurança e quem corrige o código depois?
+    anchor: Ordem canónica
+
+  - id: sec-03
+    section: "3. O que o triage faz e não faz"
+    question: Que campos produz a classificação inicial de um pedido de segurança?
+    anchor: Triage classifica
+
+  - id: sec-04
+    section: "4. O que o security-auditor faz e não faz"
+    question: Que frameworks de referência usa a auditoria defensiva de agentes LLM?
+    anchor: MITRE ATLAS
+
+  - id: sec-05
+    section: "5. O que o reporter faz e não faz"
+    question: O relatório final volta a auditar o código ou aplica correcções?
+    anchor: Não re-audita
+
+  - id: sec-06
+    section: "6. ADOPTAR no stack"
+    question: Que peças de infraestrutura o projecto adopta para a área de segurança?
+    anchor: Adoptar como infraestrutura
+
+  - id: sec-07
+    section: "7. LangGraph — papel na security"
+    question: O conselho de segurança já corre em produção ou é só desenho?
+    anchor: CouncilSession de security
+    stale: >
+      O pack diz "CouncilSession de security é desenho futuro (ADR-META-AGENTS), não
+      runtime actual". Desde o Bloco C (2026-10-01) o CouncilSession existe
+      (runner/plan_runner/council_session.py) e config/councils.yaml tem o conselho
+      `security`. O retrieve pode acertar no chunk e o chunk estar desactualizado:
+      caso de validade do conhecimento (EXECUTION-PLAN §15.8, F3).
+
+  - id: sec-08
+    section: "9. EXTRAIR — protocolo llm-council"
+    question: O que se aproveita do llm-council do Karpathy?
+    anchor: peer-review anónimo
+
+  - id: sec-09
+    section: "10. EXTRAIR — papéis NICE / CIPHER"
+    question: Que ideia se extrai do CIPHER e dos papéis NICE?
+    anchor: separation of duties
+
+  - id: sec-10
+    section: "12. REJEITAR como núcleo"
+    question: Que frameworks de agentes não devem substituir o motor de planos?
+    anchor: AutoGen em maintenance
+
+  - id: sec-11
+    section: "13. Família B — red team dos vossos agentes"
+    question: Com que ferramentas se testa se os nossos próprios agentes podem ser manipulados?
+    anchor: PyRIT (MIT, Microsoft)
+
+  - id: sec-12
+    section: "15. DeepTeam em uma frase"
+    question: Para que serve o DeepTeam e onde entra?
+    anchor: DeepTeam (Apache-2.0)
+
+  - id: sec-13
+    section: "17. mem0 e L4"
+    question: Os achados de segurança podem ser guardados na memória de longo prazo?
+    anchor: Security findings em L4
+
+  - id: sec-14
+    section: "20. Quando usar needs_full_audit true"
+    question: Quando é que a triagem deve pedir uma auditoria completa?
+    anchor: Severity ≥ medium
+
+  - id: sec-15
+    section: "22. Budget da área security"
+    question: Quantos tokens pode gastar um pedido da área de segurança?
+    anchor: da ordem de 40k
+
+  - id: sec-16
+    section: "23. security_auditor não é meta-agente"
+    question: O auditor de segurança é um meta-agente ou um especialista?
+    anchor: "`kind: internal`"
+    stale: >
+      O pack diz que o chairman de um Security Council é "futuro". O `meta.chairman`
+      (kind: meta) já existe (agents/meta/chairman.agent.md, Bloco C). Ver sec-07.
+
+  - id: sec-17
+    section: "27. Done when de uma ronda security"
+    question: Quando é que uma ronda de segurança está concluída?
+    anchor: Triage JSON válido
+
+  - id: sec-18
+    section: "29. O que este pack não cobre"
+    question: O que fica fora deste pacote de conhecimento de segurança?
+    anchor: Instalação de scanners no PATH

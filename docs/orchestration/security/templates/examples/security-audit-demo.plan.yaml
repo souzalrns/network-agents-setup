@@ -8,7 +8,8 @@
 # Ficheiros do repo em --mode external (worker Gemini):
 #   - o worker NÃO tem tools: `tools_allowed: [read_repo_file]` é declarativo, e o
 #     prompt diz ao modelo "Nao tens tools neste passo" (runner/plan_runner/external_worker.py);
-#   - `knowledge_refs` (topo do plano) NÃO é lido pelo runner (AU-22; AUDIT-2 Y9);
+#   - `knowledge_refs` (topo do plano) NÃO é lido pelo runner (AU-22; AUDIT-2 Y9); o L5
+#     chega ao auditor só pelo bloco `knowledge:` do passo `audit` (F0.5, ver abaixo);
 #   - SEC-1 (2026-10-03): o que o auditor lê vem de `repo_files:` no passo (opt-in, só
 #     leitura, máx. 50 KB, exclusões fixas: .env*, *.pem, *.key, secrets/, .git/,
 #     node_modules/, …; plan_runner/repo_files.py). O auditor só vê esses ficheiros;
@@ -59,6 +60,18 @@ steps:
       - package.json
       - .github/workflows/runner-tests.yml
       - config/security-capabilities.yaml
+    # F0.5 (docs/architecture/EXECUTION-PLAN.md §7): consumidor do L5. O runner chama a tool
+    # `retrieve_knowledge` do agent-network-mcp (kb = agent_id em `knowledge_chunks`, mais as
+    # linhas `global`) e escreve pending_steps/audit/knowledge_context.md, que o worker
+    # external injecta no prompt ("Conhecimento recuperado (L5)"); plan_runner/knowledge_wiring.py.
+    # Precisa de MCP_URL + MCP_API_KEY no ambiente. Sem elas, ou se o MCP falhar, o passo
+    # continua com "[L5 CONTEXT: FALHA]" e o evento `knowledge_context_failed` (nunca aborta).
+    # Até ao F0.4 (pack security-agents-stack.md ingerido com agent_id `security`) só podem
+    # vir linhas `global`: a medição é o golden set (config/l5-golden-security.yaml, F0.7).
+    knowledge:
+      kb: security
+      query: "politica defensiva da area security, papel do security-auditor (OWASP LLM 2026, NIST AI RMF, MITRE ATLAS), scanners passivos e HITL"
+      top_k: 5
     output_artifact: artifacts/02-audit.md
     on_fail: human
 
