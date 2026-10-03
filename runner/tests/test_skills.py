@@ -67,3 +67,37 @@ def test_read_text_if_exists_none():
 
 def test_read_text_if_exists_missing(tmp_path):
     assert read_text_if_exists(tmp_path / "nada.txt") is None
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_planos_fora_de_marketing_declaram_vertical_em_cada_passo_de_dominio():
+    """AU-32 / S34: sem `vertical:`, o executor resolve contra "marketing"
+    (executor.py:88). Fora de docs/orchestration/marketing/ isso so funciona por
+    fallback; cada passo de dominio (sem human_gate) tem de declarar o seu."""
+    import yaml
+
+    faltam = []
+    for plan in sorted((REPO_ROOT / "docs" / "orchestration").glob("**/*.plan.yaml")):
+        if plan.relative_to(REPO_ROOT / "docs" / "orchestration").parts[0] == "marketing":
+            continue
+        for step in (yaml.safe_load(plan.read_text(encoding="utf-8")) or {}).get("steps") or []:
+            if not step.get("human_gate") and "vertical" not in step:
+                faltam.append(f"{plan.relative_to(REPO_ROOT).as_posix()}:{step.get('id')}")
+    assert faltam == []
+
+
+def test_design_flow_resolve_skills_e_agentes_de_design():
+    """AU-32: com `vertical: design`, cada passo resolve no proprio vertical."""
+    import yaml
+
+    plan = REPO_ROOT / "docs/orchestration/design/templates/design-flow.plan.yaml"
+    for step in yaml.safe_load(plan.read_text(encoding="utf-8"))["steps"]:
+        if step.get("human_gate"):
+            continue
+        assert step["vertical"] == "design"
+        skill = resolve_skill_path(REPO_ROOT, step["action"], step["vertical"])
+        agent = resolve_agent_path(REPO_ROOT, step["action"], step["vertical"])
+        assert skill is not None and skill.relative_to(REPO_ROOT).parts[:2] == ("skills", "design")
+        assert agent is not None and agent.relative_to(REPO_ROOT).parts[:2] == ("agents", "design")
