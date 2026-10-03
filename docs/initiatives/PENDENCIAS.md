@@ -112,8 +112,8 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | R-002 | Recuperar os 28 ficheiros do MANIFEST que o workflow nunca re-ingeriu (82 chunks) | FALTA-LIGAR | BLOQUEADO | DEV | Média | DEV: SELECT F0.1b (esperado 163 linhas com `project='network-agents-setup'`); §10 P-3 superada | Corrida #156: `unchanged=33`, 6 `OK` (42 chunks); corrida #163: `unchanged=39`; V38 | — | VERIFICADO |
 | R-003 | Confirmar `agent_id`/`project` das 8 linhas da fonte "ECC security-reviewer + database-reviewer" (se `global`, aparece em todas as pesquisas) | FALTA-TESTE | ABERTO | DEV | Baixa | `DATABASE_URL` | L5F0 §0 (PR #63) | — | VERIFICADO |
 | AU-44 | Reels/transcrições (yt-dlp + faster-whisper → `transcripts`) sem template nem ponte para o RAG | FALTA-LIGAR | ABERTO | AMBOS | Média | Candidato do F1 | P:329; E §9.2; `agent-network-mcp/.github/workflows/transcribe.yml` | ING-4 | VERIFICADO |
-| ING-5 | gitingest (repo → texto): ADAPT com reservas (pin `0.3.1`, só repos públicos) | FALTA-DECIDIR | EM CURSO | CLAUDE | Baixa | Merge do PR #82 + decisão §10 P-14 | AI:249,309; O:20; PR #82 (reverificado: 0.3.1 de 31/07/2025; #605 aberta) | "E5" conector (O:20) | VERIFICADO |
-| ING-6 | Reavaliar ScrapeGraphAI | FALTA-DECIDIR | EM CURSO | CLAUDE | Baixa | Merge do PR #82 + decisão §10 P-15 | O:20; PR #82 (exige LLM em cada extracção) | "E6" conector (O:20) | VERIFICADO |
+| ING-5 | gitingest (repo → texto): ADAPT com reservas (pin `0.3.1`, só repos públicos) | FALTA-DECIDIR | EM CURSO | CLAUDE | Baixa | Decisão §10 P-14 (análise com merge no #82) | AI:249,309; O:20; PR #82 (reverificado: 0.3.1 de 31/07/2025; #605 aberta) | "E5" conector (O:20) | VERIFICADO |
+| ING-6 | Reavaliar ScrapeGraphAI | FALTA-DECIDIR | EM CURSO | CLAUDE | Baixa | Decisão §10 P-15 (análise com merge no #82) | O:20; PR #82 (exige LLM em cada extracção) | "E6" conector (O:20) | VERIFICADO |
 | S20 | VM Oracle: o bridge-worker usa a chave antiga e falha com 401 | BUG | ABERTO | DEV | Alta | Acesso SSH (fora do âmbito do Claude) | P:347; O:32; E:794; ST:42 | J2 | NÃO VERIFICADO |
 | S27 | Oracle A1: reduzido para 2 OCPU/12 GB? (o S19 diz 24 GB) | FALTA-DECIDIR | ABERTO | DEV | Média | Consola Oracle | ST:46; E:795 | — | NÃO VERIFICADO |
 | S19 | Oracle Free Tier: decidir o âmbito de uso (desbloqueia Q-001/Q-002) | FALTA-DECIDIR | ABERTO | DEV | Média | S27 + acesso SSH | P:360; O:65; ST:41 | — | VERIFICADO |
@@ -160,7 +160,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | M7 | Piloto real de marketing | FALTA-DECIDIR | ABERTO | DEV | Média | Caso real do utilizador | P:358 | — | VERIFICADO |
 | G6 | Contradição `imobiliario-digital` no `MCP-MAPPING.md` (§3.2 vs §3.6) | DOC-ERRADO | ABERTO | DEV | Baixa | Decisão | A5 §5.2 (ST:201) | — | VERIFICADO |
 | INIT-093 | Adoptar `google/skills` (`media_buyer`, `ad_creative`) | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão | A5 §5.2 (ST:174-178); O:20 | ING-7 | VERIFICADO |
-| INIT-094 | Reavaliar os 6 harnesses multi-provider | FALTA-DECIDIR | EM CURSO | CLAUDE | Baixa | Merge do PR #80 + decisão §10 P-12 | O:23; PR #80 (`docs/research/harnesses-multi-provider-2026-10.md`) | F8; EX-F8 | VERIFICADO |
+| INIT-094 | Reavaliar os 6 harnesses multi-provider | FALTA-DECIDIR | EM CURSO | CLAUDE | Baixa | Decisão §10 P-12 (análise com merge no #80) | O:23; PR #80 (`docs/research/harnesses-multi-provider-2026-10.md`) | F8; EX-F8 | VERIFICADO |
 | E15 | Proveniência do esboço do CouncilSession/`councils.yaml`: substituir a reconstituição se aparecerem os originais | DOC-ERRADO | BLOQUEADO | DEV | Baixa | Aparecerem os originais | P:553; O:105 | — | VERIFICADO |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão (partir/arquivar) | P:297; A5 §5.1 | J8 (parte) | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:102` UP017; `main` `2b27f66`), fora do lint do CI | BUG | ABERTO | CLAUDE | Baixa | Decisão §10 P-7 | ruff 0.16.10 local (2.ª ronda, 03/10): 2 avisos, ambos `--fix`; `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
@@ -282,7 +282,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1 |
 
 **Só do DEV, sem código:**
-- merges dos PRs abertos: #80, #82, #83 e #84 (NAS; todos só docs, mas tocam em `docs/**/*.md`, por isso cada merge dispara o `ingest-knowledge`, que escreve em produção);
+- merges: nenhum PR desta sessão continua aberto (o último lote, #80 e #82–#84, teve merge a 2026-10-03);
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - F0.1 e F0.3 (SELECTs), incluindo o F0.1b que fecha o R-002 (esperado: 163 linhas);
 - as 5 queries do R-001 (`docs/ops/KNOWLEDGE-LOG.md` §3);
@@ -653,6 +653,7 @@ Para quem chega com um ID antigo. Uma linha por item com aliases (§4) e por lin
   - F1 continua EM CURSO (ADR com merge no #81; falta P-13 e o spike); S28 espera 1 run limpo;
   - novos: S-003 (connector) e H-004 (Graphify);
   - §10: P-1 a P-9 marcadas com a decisão do maestro (antes só P-1, P-2, P-6 e P-9 apareciam como decididas, e o P-9 mostrava a recomendação B, não a decisão).
+- **Depois do merge de #80, #82, #83 e #84 (`main` `b74ea42`):** INIT-094, ING-5 e ING-6 já só esperam pelas decisões P-12, P-14 e P-15; continuam EM CURSO (análise feita), sem mudança nas contagens.
   - novos: R-004, E-003, H-003, T-004, T-005;
   - estado de produção do L5 lido dos logs públicos do `ingest-knowledge` (corridas #156 e #163), sem acesso ao Supabase.
 - **Fontes lidas por completo:** P, O e E, mais o AUDIT-5 (inventário de ~175 itens, de onde vêm as linhas G/H/I e os S*/A* que o P e o O resumiam em bloco).

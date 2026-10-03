@@ -5,12 +5,20 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/progresso-sessao` (este ficheiro). Antes: `docs/pendencias-ronda-2` (`869673f`, PR #83).
-- **Último commit de trabalho:** `869673f` (PENDENCIAS, revisão pós-merge).
-- **`main` de referência:** NAS `d79d7be` (merges até #79 e #81); MCP `d635945` (merges #11–#14).
-- **Itens em trabalho:** nenhum em código. Abertos só PRs de docs: NAS #80, #82, #83 e #84 (merge do maestro).
+- **Branch actual:** `docs/pendencias-pos-merge-80-84` (este ficheiro e o PENDENCIAS, depois do último lote de merges).
+- **`main` de referência:** NAS `b74ea42` (merges até #84); MCP `d635945` (merges #11–#14).
+- **Itens em trabalho:** nenhum. Não há PRs desta sessão abertos, além do que leva esta actualização.
 
 ## Log (mais recente no topo)
+
+### Merges #80, #82, #83 e #84 (verificação, só leitura)
+- **Ordem dos merges:** #82 → #80 → #83 → #84. Ficheiros independentes, só docs; a ordem não muda nada.
+- **`ingest-knowledge`:**
+  - #166, #167 e #168 foram canceladas pelo próprio workflow: `concurrency` com `cancel-in-progress: true` (`.github/workflows/ingest-knowledge.yml:14-16`);
+  - a #169 (`b74ea42`) correu sobre a `main` final: `chunks=0 deleted=0 unchanged=39`, `success`. Nada escrito em produção (os 4 ficheiros não estão na lista do ingest).
+- **Antes destes, verificado também:** NAS #79/#81 (ingest #164/#165 com `chunks=0`; CI da `d79d7be` verde) e MCP #13 → #14 → #12 → #11 (Vercel `d635945` a `success`; 0 erros de runtime desde as 21:45 UTC; nenhum workflow do MCP disparado).
+- **CI da `main` `b74ea42`:** os 7 checks a `success` (`test`, `delta`, gitleaks, semgrep e CodeQL nas 3 linguagens).
+- **PENDENCIAS:** INIT-094, ING-5 e ING-6 deixam de esperar pelo merge; só falta a decisão (P-12, P-14, P-15).
 
 ### Auto-auditoria (pedido do maestro: "nada ficou mal feito ou deixou de ser feito?")
 - **Mal feito, corrigido no #83 (`869673f`):**
@@ -152,12 +160,9 @@
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #80 | `fix/INIT-094-harnesses` | INIT-094 | Aberto |
-| NAS #82 | `fix/ING-5-6-analise` | ING-5, ING-6 | Aberto |
-| NAS #83 | `docs/pendencias-ronda-2` | PENDENCIAS (2.ª ronda + revisão pós-merge) | Aberto |
-| NAS #84 | `docs/progresso-sessao` | Protocolo de persistência | Aberto |
+| NAS (este) | `docs/pendencias-pos-merge-80-84` | PENDENCIAS e diário depois dos merges #80, #82–#84 | Aberto |
 
-Já com merge: NAS #63–#79 e #81; MCP #10–#14. Os 4 abertos tocam em `docs/**/*.md`: cada merge dispara o `ingest-knowledge` (escreve em produção; incremental).
+Já com merge: NAS #63–#84; MCP #10–#14.
 
 ## Próximos 3 passos recomendados
 1. **DEV, só leitura:** o SELECT F0.1b (esperado: 163 linhas com `project='network-agents-setup'`) e as 5 queries do R-001 (`docs/ops/KNOWLEDGE-LOG.md` §3). Fecham o R-002 e o R-001.
