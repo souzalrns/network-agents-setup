@@ -83,14 +83,27 @@ Não se fundem sem decisão explícita: uma audita (READ), a outra guia a implem
 
 ## Limites (verificados a 2026-10-03)
 
-- **Em `--mode external` o auditor não vê o repositório.** O worker não tem tools: `tools_allowed: [read_repo_file]` é declarativo, e o prompt diz "Nao tens tools neste passo" (`runner/plan_runner/external_worker.py`). O `knowledge_refs` do plano não é lido pelo runner (AU-22; AUDIT-2 Y9).
-  - **Consequência:** em external, o resultado é um audit de âmbito e lacunas (a skill e o grounding obrigam a marcar lacunas), **não** uma auditoria do código.
-  - O teste `tests/test_security_pipeline.py` fixa este limite, para que uma mudança nele seja deliberada.
-  - **Decisão pendente (SEC-1):** como dar ficheiros ao auditor.
-    - **A (recomendada):** campo opt-in por passo (ex.: `repo_files: [...]`), só para os passos que o declarem. Paths dentro do repo, só leitura, cortados por tamanho, com uma denylist fixa (`.env*`, `*.pem`, `*.key`, `secrets/`…). Planos existentes ficam iguais; é uma parte do AU-22.
+- **Em `--mode external`, o auditor vê só os ficheiros que o passo declara em `repo_files` (SEC-1, implementado a 2026-10-03).** O worker continua sem tools: `tools_allowed: [read_repo_file]` é declarativo, e o prompt diz "Nao tens tools neste passo" (`runner/plan_runner/external_worker.py`). O `knowledge_refs` do plano continua sem ser lido (AU-22; AUDIT-2 Y9).
+  - **O que mudou:** o passo `audit` do plano demo declara 5 ficheiros (dependências, CI e política de capabilities). Com o Gemini falso, o prompt do auditor passou de **641 para 11 436 caracteres** (10 425 bytes de ficheiros). A triagem e o relatório não recebem ficheiros.
+  - **Consequência:** a auditoria cobre esses ficheiros. O resto do repo continua fora, e a skill e o grounding obrigam a marcá-lo como lacuna.
+  - `tests/test_security_pipeline.py` fixa este comportamento, e `tests/test_repo_files.py` (36 testes) cobre as regras.
+  - **SEC-1: decidido A (maestro, 2026-10-03) e implementado.** Regras:
+
+| Regra | Valor | Onde |
+|---|---|---|
+| Activação | **opt-in por passo**: `repo_files: [path, ...]` no passo do plano. Sem o campo, o prompt é igual ao de antes, nos dois modos (`opt`/`legacy`) | `runner/plan_runner/external_worker.py` (`build_prompt_ctx`) |
+| Acesso | **só leitura**; o worker lê e injecta o texto no fim do prompt do utilizador, na secção "Ficheiros do repo (so leitura)", marcada como dados e não instruções | `runner/plan_runner/repo_files.py` |
+| Paths | explícitos e relativos à raiz do repo; recusados: absolutos, `..`, globs, directórios, e symlinks que saiam do repo | idem |
+| Exclusões fixas | `.env*`, `*.pem`, `*.key`, `secrets/`, `.git/`, `node_modules/` (decisão do maestro), mais `*.p12`, `*.pfx`, `*.keystore`, `*.jks`, `id_rsa*`, `id_ecdsa*`, `id_ed25519*`, `id_dsa*`, `.npmrc`, `.pypirc`, `.netrc` e `credentials*`. Valem também no **destino** de um symlink. Comparação sem maiúsculas | `DENY_NAME_PATTERNS`, `DENY_DIRS` |
+| Limite | **50 KB no total** por passo (`MAX_TOTAL_BYTES`). O ficheiro que passa o limite é cortado, com marcador, e os seguintes ficam de fora (`over_limit`) | idem |
+| Binários | ficam de fora (`binary`) | idem |
+| Rastreio | `result.json → meta.context.repo_files`: por entrada, `status` (`included`, `truncated`, `excluded`, `invalid`, `missing`, `over_limit`, `binary`), bytes e motivo. **Nunca** o conteúdo de um excluído | idem |
+
+  - Opções que estavam em cima da mesa:
+    - **A (escolhida):** campo opt-in por passo (ex.: `repo_files: [...]`), só para os passos que o declarem. Paths dentro do repo, só leitura, cortados por tamanho, com uma denylist fixa (`.env*`, `*.pem`, `*.key`, `secrets/`…). Planos existentes ficam iguais; é uma parte do AU-22.
     - **B:** implementar o `knowledge_refs` para todos os planos (o AU-22 tal como está escrito). Muda os prompts de todos os planos com `knowledge_refs`, incluindo o `seo-article-demo`, e invalida a base medida no B1-bis-R2.
     - **C:** manter. Em external, o audit fica de âmbito e lacunas; a auditoria real faz-se com `gitleaks`/`semgrep` (J10) e revisão humana.
-- **Segredos nunca entram num prompt.** Qualquer solução futura que injecte ficheiros tem de excluir `.env*`, chaves e credenciais. A `secrets_hygiene` faz-se com `gitleaks` **local** ou no CI (J10), nunca mandando ficheiros a um LLM externo.
+- **Segredos nunca entram num prompt.** O `repo_files` recusa `.env*`, chaves e credenciais (lista acima), e um teste prova que o conteúdo de um `.env` declarado não chega ao prompt (`tests/test_repo_files.py`). A `secrets_hygiene` faz-se com `gitleaks` **local** ou no CI (J10), nunca mandando ficheiros a um LLM externo.
 - **Os conselhos usam só o AGENT.md, não a skill.** O `engenharia.revisor-codigo` (crítico nos conselhos `security`/`architecture`) aponta para uma skill do pack Claude (`code-review-and-quality`), que só é carregada quando corre como passo de plano.
 
 ## Verificação

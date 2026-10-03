@@ -5,7 +5,8 @@ Prova o que o plano demo promete e o que não promete:
 - cada passo recebe o AGENT.md e a SKILL.md certos (S34 `vertical:` + A8 path-first);
 - grounding `full` (área com `hitl: required`) e política `opt`;
 - a triagem (JSON pequeno) NÃO é pedida em resumo (override `context.full` no report);
-- em external o auditor não recebe ficheiros do repo (limite documentado: AU-22).
+- em external o auditor recebe SÓ os ficheiros que o passo declara em `repo_files` (SEC-1);
+  o `knowledge_refs` continua ignorado (AU-22) e os outros passos não recebem ficheiros.
 """
 from __future__ import annotations
 
@@ -104,8 +105,21 @@ def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir)
     report_inputs = json.loads((out / "pending_steps/report/result.json").read_text(encoding="utf-8"))["meta"]["context"]["inputs"]
     assert [i["mode"] for i in report_inputs] == ["full", "full"]
 
-    # Limite documentado (AU-22): nenhum ficheiro do repo entra no prompt do auditor.
-    assert "SECURITY.md" not in by_step["audit"]["user"] and "security-agents-stack" not in by_step["audit"]["user"]
+    # SEC-1: o auditor recebe os ficheiros declarados em `repo_files` (e só esses).
+    declared = ["runner/requirements.txt", "runner/requirements-langgraph.txt", "package.json",
+                ".github/workflows/runner-tests.yml", "config/security-capabilities.yaml"]
+    audit_user = by_step["audit"]["user"]
+    assert "## Ficheiros do repo (so leitura)" in audit_user
+    for rel in declared:
+        assert f"### {rel}" in audit_user, rel
+    assert "policy:\n  offensive: forbidden" in audit_user  # conteúdo real do security-capabilities.yaml
+    audit_ctx = json.loads((out / "pending_steps/audit/result.json").read_text(encoding="utf-8"))["meta"]["context"]
+    assert [(m["path"], m["status"]) for m in audit_ctx["repo_files"]] == [(r, "included") for r in declared]
+    assert sum(m["bytes_in_prompt"] for m in audit_ctx["repo_files"]) < 50 * 1024
+    for step in ("triage", "report"):  # só o passo que declara recebe ficheiros
+        assert "Ficheiros do repo" not in by_step[step]["user"], step
+    # AU-22 continua: o `knowledge_refs` do plano não é lido.
+    assert "security-agents-stack" not in audit_user and "### docs/architecture/SECURITY.md" not in audit_user
 
     rows = [json.loads(x) for x in (out / ew.LEDGER_FILE).read_text(encoding="utf-8").splitlines()]
     assert [r["step_id"] for r in rows] == ["triage", "audit", "report"]

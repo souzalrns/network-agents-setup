@@ -568,6 +568,6 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | D: L4, memória persistente | **Fechado** (#47) e **em produção** (L4-1, 4/4); falta o teste real mínimo (L4-1b) |
 | "Pernas" (PLANO §10: 4 junções + 3 decisões + 4 construções) | **11/11** ("6/6" na contagem do maestro) |
 | Bloco C — CouncilSession | **Merged** (#54); DONE com mock e **validado com o Gemini real** (C-1); falta a migração do ledger no Supabase (C-2, DEV) |
-| Security pipeline v1 (Capability First) | **Branch `feat/security-pipeline-v1`** (sem merge): triage → audit → report → HITL, 8 capabilities sobre 3 agentes, validadas no E7; plano demo verde em stub e em external com Gemini falso. Limite: em external o auditor não vê o repo (SEC-1) | `docs/architecture/SECURITY-AGENTS.md` |
+| Security pipeline v1 (Capability First) | **Merged (#57):** triage → audit → report → HITL, 8 capabilities sobre 3 agentes, validadas no E7. **SEC-1 (`repo_files`):** em external o auditor lê os ficheiros declarados pelo passo (só leitura, máx. 50 KB, sem segredos) | `docs/architecture/SECURITY-AGENTS.md`, `docs/ops/WORKER-EXTERNAL.md` |
 | Próximo-grande, NÃO agora | B1-bis-C (encurtar skills/prompt-base): com os tectos por área, o custo actual não é problema |
 

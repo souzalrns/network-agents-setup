@@ -255,7 +255,7 @@ Contrato arquitectural em `docs/architecture/META-AGENTS-PHASE-2.md`, a partir d
   - o `report` recebe a triagem completa (`context.full`): sem resumo inútil;
   - a skill do reporter escreve o JSON só em rodapé;
   - os limites e as regras de segredos ficam documentados.
-- **SEC-1 (decisão): dar ficheiros do repo ao auditor em `--mode external`.** Hoje o auditor não vê nenhum ficheiro: `tools_allowed` é declarativo e o `knowledge_refs` é ignorado (AU-22). Em external sai um audit de âmbito e lacunas, não do código. Opções em `docs/architecture/SECURITY-AGENTS.md`, "Limites"; nunca com `.env`/segredos.
+- ~~**SEC-1 (decisão): dar ficheiros do repo ao auditor em `--mode external`.**~~ **FEITO (opção A, 2026-10-03):** campo `repo_files` por passo (opt-in, só leitura, máx. 50 KB, exclusões fixas de segredos e credenciais), em `runner/plan_runner/repo_files.py`. O demo de security declara 5 ficheiros e o prompt do auditor passa de 641 para 11 436 caracteres. 36 testes novos. Regras em `docs/ops/WORKER-EXTERNAL.md` e `docs/architecture/SECURITY-AGENTS.md`. O `knowledge_refs` continua sem ser lido (AU-22).
 - **SEC-2 (DEV): J10, `gitleaks`/`semgrep` no CI.** É o caminho para a capability `secrets_hygiene` (hoje `partial`), sem mandar ficheiros a um LLM.
 - **SEC-3: pentest/red-team (`agent_redteam_lab`).** Continua `deferred` e fora do runner de produção.
 
