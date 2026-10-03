@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "network-agents-setup/runner-plan.schema.json",
+  "title": "Plano do plan_runner (W-006)",
+  "description": "Formato YAML dos planos que o runner executa (docs/orchestration/**/*.plan.yaml e os gerados pelo router). Nao e o docs/architecture/plan-execute/schemas/Plan.schema.json (outro formato). Campos desconhecidos sao erro, para apanhar gralhas.",
+  "type": "object",
+  "required": ["id", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "version": {"type": "integer"},
+    "deliverable_type": {"type": "string"},
+    "objective": {"type": "string"},
+    "audience": {"type": "string"},
+    "channels": {"type": "array", "items": {"type": "string"}},
+    "client_id": {"type": "string", "description": "Memoria de trabalho do cliente (working_memory.py)"},
+    "router": {"type": "object", "description": "Metadados do router (router.py build_plan)"},
+    "knowledge_refs": {"type": "array", "items": {"type": "string"}, "description": "Ignorado pelo runner (AU-22); o L5 entra pelo bloco knowledge: do passo"},
+    "done_when": {"type": "array", "items": {"type": "string"}, "description": "Ignorado pelo runner (AU-22)"},
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_steps": {"type": "integer", "minimum": 1},
+        "max_replans": {"type": "integer", "minimum": 0, "description": "Ignorado pelo runner (AU-22)"},
+        "max_tokens": {"type": "integer", "minimum": 0, "description": "docs/ops/BUDGET.md"},
+        "max_cost_usd": {"type": "number", "minimum": 0, "description": "D6 (docs/ops/BUDGET.md)"}
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "L4 (docs/ops/MEMORY-L4.md, memory_wiring.py)",
+      "additionalProperties": false,
+      "properties": {
+        "org": {"type": "string"},
+        "project": {"type": "string"},
+        "user": {"type": "string"},
+        "recall": {"$ref": "#/$defs/recall_cfg"}
+      }
+    },
+    "steps": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/step"}}
+  },
+  "$defs": {
+    "strings": {"type": "array", "items": {"type": "string"}},
+    "recall_cfg": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limit": {"type": "integer", "minimum": 1},
+        "tags": {"type": ["array", "null"], "items": {"type": "string"}},
+        "include_candidates": {"type": "boolean"}
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "action"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "action": {"type": "string", "minLength": 1},
+        "vertical": {"type": "string", "description": "S34: omissao = marketing"},
+        "task": {"type": "string"},
+        "agent_id": {"type": "string", "description": "Router: id do agente escolhido (informativo; o worker usa o id do AGENT.md)"},
+        "tools_allowed": {"$ref": "#/$defs/strings"},
+        "inputs": {"$ref": "#/$defs/strings"},
+        "depends_on": {"$ref": "#/$defs/strings"},
+        "output_artifact": {"type": "string"},
+        "output_schema": {"type": "string"},
+        "on_fail": {"enum": ["human", "retry"], "description": "Ignorado pelo runner (AU-22)"},
+        "model_tier": {"enum": ["planner", "executor", "verifier"], "description": "D5"},
+        "human_gate": {
+          "oneOf": [
+            {"type": "boolean"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "level": {"type": "string"},
+                "kind": {"type": "string"},
+                "allow": {"type": "array", "items": {"enum": ["approve", "reject", "edit"]}}
+              }
+            }
+          ]
+        },
+        "knowledge": {
+          "type": "object",
+          "description": "L5 (S9, knowledge_wiring.py)",
+          "required": ["kb", "query"],
+          "additionalProperties": false,
+          "properties": {
+            "kb": {"type": "string", "minLength": 1},
+            "query": {"type": "string", "minLength": 1},
+            "top_k": {"type": "integer", "minimum": 1},
+            "require_citations": {"type": "boolean"},
+            "filters": {"type": "object"}
+          }
+        },
+        "repo_files": {"$ref": "#/$defs/strings", "description": "SEC-1 (repo_files.py)"},
+        "context": {
+          "type": "object",
+          "description": "B1-bis (context_policy.py)",
+          "additionalProperties": false,
+          "properties": {"full": {"$ref": "#/$defs/strings"}, "summary": {"$ref": "#/$defs/strings"}}
+        },
+        "recall": {"oneOf": [{"type": "boolean"}, {"$ref": "#/$defs/recall_cfg"}]},
+        "remember": {
+          "oneOf": [
+            {"type": "boolean"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "scope": {"type": "string"},
+                "max": {"type": "integer", "minimum": 1},
+                "tags": {"$ref": "#/$defs/strings"}
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
