@@ -565,6 +565,6 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | B: worker, router, orçamento, optimização, tectos, testes lentos, ingest→retrieve no CI | **Fechado** (#40–#46) |
 | D: L4, memória persistente | **Fechado** (#47) e **em produção** (L4-1, 4/4); falta o teste real mínimo (L4-1b) |
 | "Pernas" (PLANO §10: 4 junções + 3 decisões + 4 construções) | **11/11** ("6/6" na contagem do maestro) |
-| Próximo item | **BLOCO C — CouncilSession** (Fase 1 do ADR-META-AGENTS, PLANO J5-c) |
+| Próximo item | **BLOCO C — CouncilSession** (Fase 1 do ADR-META-AGENTS, PLANO J5-c): **em PR #54**, DONE com mock; faltam o custo real (C-1) e a migração do ledger (C-2) |
 | Próximo-grande, NÃO agora | B1-bis-C (encurtar skills/prompt-base): com os tectos por área, o custo actual não é problema |
 

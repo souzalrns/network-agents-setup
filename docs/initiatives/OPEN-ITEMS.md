@@ -210,6 +210,9 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
 - **Registado:** a tabela por passo do B1-bis-R (com a análise acima) e o L4-1 (4/4).
 - **Por registar:** o R1 (`router eval` com o Gemini real), o B1-bis-R2 (run `opt` verificado) e o L4-1b (teste real mínimo).
 - **Próximo item: BLOCO C — CouncilSession** (deliberação interna entre meta-agentes, Fase 1 do ADR-META-AGENTS; PLANO J5-c). Decisão do maestro, 2026-10-01.
+  - **Em PR #54** (sem merge): `runner/plan_runner/council_session.py`, `config/councils.yaml`, `agents/meta/chairman.agent.md`; operação em `docs/ops/COUNCIL.md`. **DONE com mock** cumprido: conselho `architecture` de ponta a ponta, veredicto estruturado, HITL aprovado, L4 candidate → active.
+  - **C-1 (maestro): custo real.** `python -m plan_runner council cost architecture "<tema>"` (`countTokens`, grátis) e 1 run real (7 chamadas `flash-lite`). Só depois se decide se 3 membros compensam.
+  - **C-2 (DEV): migração do ledger** no Supabase (`scripts/alter_token_usage_council_kinds.sql`). Até lá, as linhas do conselho ficam só no `token_usage.jsonl` local.
 - **B1-bis-C (encurtar skills/prompt-base): próximo-grande, NÃO agora.** Com os tectos por área, o custo actual não é problema. Medir primeiro com o B1-bis-R2.
 - Outros candidatos, sem ordem: L4-2 (spike mem0), L4-3 (MCP de produção → L4).
 - **Novo, para o B1-bis-C:** medir com o endpoint `countTokens` da API Gemini (contagem exacta da entrada sem gerar texto) em vez de projecções por caracteres.
