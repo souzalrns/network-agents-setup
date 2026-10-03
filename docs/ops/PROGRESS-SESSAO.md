@@ -5,11 +5,32 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/pendencias-pos-merge-80-84` (este ficheiro e o PENDENCIAS, depois do último lote de merges).
-- **`main` de referência:** NAS `b74ea42` (merges até #84); MCP `d635945` (merges #11–#14).
-- **Itens em trabalho:** nenhum. Não há PRs desta sessão abertos, além do que leva esta actualização.
+- **Sessão:** "continuação operacional" do maestro (2026-10-03), com o adendo do C-2.
+- **Branch actual:** `docs/sessao-continuacao-r004` (NAS: PENDENCIAS, COUNCIL e este ficheiro).
+- **`main` de referência:** NAS `c9edd72` (merges até #85); MCP `d635945` (merges #11–#14).
+- **Itens em trabalho:** nenhum em código. 3 PRs abertos à espera de merge (tabela abaixo).
 
 ## Log (mais recente no topo)
+
+### Relatório da sessão "continuação operacional"
+- **Feito (com evidência):**
+  - **R-004** (MCP #15): `.is("project", null)` no delete do `ingestDocument`. Novo `tests/ingestDocument.test.mjs`, 3 testes; o 1.º falhava antes da correcção. `npm test` 19/19; `next build` OK.
+  - **C-2, lado repo** (MCP #16): o CHECK em `memory/token_usage.sql` passa a ter os 7 valores, os mesmos da produção. O lado DB já tinha sido feito pelo DEV (adendo do maestro). Validado num Postgres 16 local: ficheiro 2× sem erro; constraint `token_usage_call_kind_check` com 7 valores; valor inválido recusado.
+  - **Registo (NAS, este PR):**
+    - `PENDENCIAS.md`:
+      - R-004 e C-2 passam a EM CURSO;
+      - E-003 → decisão nova P-18;
+      - H-002 → BLOQUEADO pelo F3 (P-7 = A);
+      - H-003 com o inventário completo das actions em Node 20;
+      - F0.6 e F0.7b deixam de esperar pelo F0.4, que fechou no #64; o F0.7b passa a ABERTO;
+      - nota de que a recomendação do maestro para P-10 e P-12–P-15 é A, ainda pendente de confirmação.
+    - `docs/ops/COUNCIL.md`: o ALTER do conselho deixa de estar "por correr".
+  - **Testes do runner:** suite rápida 539 passed, 1 skipped (`mem0` não instalado), com o Postgres RAG local; `ruff` limpo; E7 (`python -m plan_runner.areas`) válido.
+- **Não feito, e porquê:**
+  - **E-003:** não é mecânico. `research`/`critic` resolvem sempre para agentes de marketing (`skills.py:28-39`), e mudar as actions mexe numa fixture dos testes. Fica na decisão P-18.
+  - **H-003:** para pinar SHA novos é preciso ler as tags dos repos `actions/*`, fora do âmbito da sessão. Não toquei em workflows.
+  - **H-002** (F3), **EX-B7** (depois do F5), **AU-22** (P-10): fora desta sessão, pelas decisões e pelo plano.
+  - **P-10 e P-12–P-15:** não marquei FECHADO; falta a confirmação do maestro.
 
 ### Merges #80, #82, #83 e #84 (verificação, só leitura)
 - **Ordem dos merges:** #82 → #80 → #83 → #84. Ficheiros independentes, só docs; a ordem não muda nada.
@@ -160,11 +181,53 @@
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (este) | `docs/pendencias-pos-merge-80-84` | PENDENCIAS e diário depois dos merges #80, #82–#84 | Aberto |
+| MCP #15 | `fix/R-004-ingest-project-filter` | R-004 | Aberto. Merge = redeploy na Vercel |
+| MCP #16 | `fix/C-2-token-usage-council-check` | C-2 (lado repo) | Aberto. Merge = redeploy na Vercel (sem mudança de comportamento) |
+| NAS (este) | `docs/sessao-continuacao-r004` | Registo da sessão | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
-Já com merge: NAS #63–#84; MCP #10–#14.
+Já com merge: NAS #63–#85; MCP #10–#14. **MCP: um merge de cada vez** (#15 e #16 mexem em ficheiros diferentes; a ordem não importa).
+
+## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
+
+**Supabase → `agent-network-memory` → SQL Editor. São só `SELECT`s:**
+
+```sql
+-- F0.1 / F0.1b (fecha o R-002): esperado 163 linhas do projecto
+SELECT count(*) AS projecto FROM knowledge_chunks WHERE project = 'network-agents-setup';
+SELECT count(*) AS compostos FROM knowledge_chunks WHERE agent_id LIKE '%+%';   -- esperado 0
+SELECT source, agent_id, count(*) AS chunks, max(updated_at) AS ultima
+FROM knowledge_chunks WHERE project = 'network-agents-setup'
+GROUP BY source, agent_id ORDER BY source;
+
+-- F0.3: a t6 parou (não deve ser posterior a 2026-09-30)
+SELECT max(updated_at) AS ultima_t6 FROM knowledge_chunks_t6;
+
+-- R-004 (MCP #15): só deve haver NULL (MCP) e 'network-agents-setup' (T6)
+SELECT project, count(*) AS linhas, count(DISTINCT source) AS fontes
+FROM knowledge_chunks GROUP BY project ORDER BY project NULLS FIRST;
+```
+
+As 5 queries do R-001 (`knowledge_log`) estão em `docs/ops/KNOWLEDGE-LOG.md` §3.
+
+**PowerShell (máquina local, com `MCP_URL` e `MCP_API_KEY` no ambiente; não colar os valores em lado nenhum):**
+
+```powershell
+# F0.7b: golden set security contra o MCP real (com o F0.4 fechado, espera-se chunk_hit@4 > 0)
+cd network-agents-setup\runner
+python -m plan_runner.l5_eval run --out ..\l5-eval-security.json
+
+# H-004: grafo de código local (os 2 repos)
+cd ..\..\network-agents-setup; graphify update .
+cd ..\agent-network-mcp;        graphify update .
+```
+
+**Manual:**
+- **F0.6 / S-003:** no Claude.ai connector, fazer 1 pergunta de security que deva citar a fonte, e 1 chamada normal a uma tool, para confirmar que os limites de tamanho dos inputs (S-001) não a recusam.
+- **S28:** GitHub → `agent-network-mcp` → Actions → "Transcrever vídeo/reel" → Run workflow (1 corrida limpa).
+- **T-004:** preencher os preços confirmados em `config/model-prices.yaml`.
+- **Não tocar sem decisão:** F0.12 (apagar a t6), S20/S27/S19 (Oracle), W-004.
 
 ## Próximos 3 passos recomendados
-1. **DEV, só leitura:** o SELECT F0.1b (esperado: 163 linhas com `project='network-agents-setup'`) e as 5 queries do R-001 (`docs/ops/KNOWLEDGE-LOG.md` §3). Fecham o R-002 e o R-001.
-2. **Claude:** R-004, o filtro de `project` no `ingestDocument` do MCP (`ANM:lib/knowledge.js:163-169`), antes que as 2 pipelines colidam.
-3. **DEV:** T-004 (preços em `config/model-prices.yaml`), S-003 (teste no connector) e 1 run do `transcribe.yml` (S28).
+1. **Maestro:** confirmar as decisões P-10, P-12, P-13, P-14 e P-15 (recomendação A em todas) e decidir o P-18 (E-003). Com P-12, P-14 e P-15, fecham INIT-094, ING-5 e ING-6.
+2. **DEV:** merge do MCP #15 e depois do #16 (um de cada vez); as queries da checklist acima.
+3. **Claude:** depois das decisões, o E-003 (se P-18 = A) e o `done_when` (se P-10 = A), com testes.
