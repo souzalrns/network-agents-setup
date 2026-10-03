@@ -1,5 +1,7 @@
 # Master Plan — Estrutura completa do sistema (2026-09-18)
 
+> **HISTÓRICO (desde 2026-10-03, decisão D-EP7).** Este documento é anterior à D1 (VIA A: runtime Python; `packages/` e `apps/` TS arquivados) e às auditorias que corrigiram o `CORE-MAPPING.md`. **O plano em vigor é [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md).** Mantido sem alterações de conteúdo, como registo.
+
 Mapa consolidado de tudo o que foi feito, o que precisa alterar, e o que precisa criar — juntando o trabalho de mapeamento (`CORE-MAPPING.md`, `MCP-MAPPING.md`), governança (`GOVERNANCE.md`, `ADR-001`), segurança (`SECURITY.md`, `SECURITY-AUDIT*.md`) e a análise de bootstrap de sessão feita nesta conversa.
 
 ## Diagrama da arquitectura completa

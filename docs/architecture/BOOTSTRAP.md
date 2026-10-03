@@ -20,6 +20,14 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 - `CLAUDE.md` (bootstrap) passou a listar `ECOSYSTEM.md` → `docs/initiatives/STATUS.md` → `GOVERNANCE.md` como os 3 primeiros ficheiros a ler, antes do rollup de 9 repos.
 - Este ficheiro (`BOOTSTRAP.md`) é o índice que faltava.
 
+## Plano de execução (2026-10-03)
+
+| Documento | Conteúdo |
+|---|---|
+| [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) | **Plano de execução aprovado pelo maestro (2026-10-03, D-EP1..9 = A).** Universal Core → Domain Packs, matrizes P0/P1/P2 corrigidas com evidência, roadmap F0–F6 (o F0 revalida o L5 existente), Fase 2 só como norte, governança do próprio plano. Diz o que deve acontecer e porquê; o estado vivo continua em `docs/initiatives/STATUS.md` / `OPEN-ITEMS.md` |
+| [`execution-plan-sources/`](./execution-plan-sources/README.md) | Fontes do plano, arquivadas tal como foram escritas (análises do maestro e externas) |
+| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | **Histórico** (2026-09-18, anterior à D1). Substituído pelo EXECUTION-PLAN (D-EP7) |
+
 ## Os 11 documentos de arquitectura produzidos em 2026-09-18
 
 | Documento | Conteúdo |
@@ -33,7 +41,7 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 | [`SECURITY.md`](./SECURITY.md) | Frameworks (OWASP LLM Top 10 2026, NIST AI RMF, MITRE ATLAS, MAESTRO) + 8 ferramentas |
 | [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md) / [`SECURITY-AUDIT-FULL.md`](./SECURITY-AUDIT-FULL.md) | Auditorias reais correlaes contra este repo |
 | [`RATE-LIMITS.md`](./RATE-LIMITS.md) | Causa raiz confirmada da falha do `ingest-knowledge` (quota Gemini) |
-| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | Diagrama completo FEITO/ALTERAR/CRIAR + repos a acoplar vs. extrair |
+| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | Diagrama completo FEITO/ALTERAR/CRIAR + repos a acoplar vs. extrair. **Histórico desde 2026-10-03:** ver [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) |
 | [`memory/FASE1-MEMORIA.md`](./memory/FASE1-MEMORIA.md), [`FASE2`](./memory/FASE2-MEMORIA.md), [`FASE3`](./memory/FASE3-MEMORIA.md), [`FASE4-SINTESE`](./memory/FASE4-SINTESE.md) | Auditoria de memória/federação (dsh-long-memory, Graphiti, Cognee, LightRAG, Mem0, Hindsight, MELD, Stigmem, ai-memory-mcp, sandbox, observabilidade) |
 | [`governance/audit/GOV-FASE1.md`](./governance/audit/GOV-FASE1.md) a [`GOV-FASE3.md`](./governance/audit/GOV-FASE3.md), [`AUDIT-GOVERNANCE.md`](./governance/audit/AUDIT-GOVERNANCE.md) | Auditoria de governança (ADR-001, AGT/AgentMesh, agentgateway, ContextForge, Cedar/OPA, SPIFFE/SPIRE) |
 | [`agents-audit/FASE1-AGENTES.md`](./agents-audit/FASE1-AGENTES.md) + [`agents-audit/deep/*.md`](./agents-audit/deep/) | Auditoria de agentes (2026-09-18, Fase 1): estado real do runtime próprio (TS `orchestrator/` + Python `plan_runner/`) + Microsoft Agent Framework, Google ADK, OpenAI Agents SDK, LlamaIndex, DSPy, smolagents — complementa `patterns-from-orchestrators/`, já existente e não refeito |
