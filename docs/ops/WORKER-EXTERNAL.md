@@ -391,5 +391,6 @@ steps:
 ## Limites actuais
 
 - **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A). Para ler ficheiros do repo, usa-se o `repo_files` (secção acima).
+- **Campos de plano que o runner não aplica (AU-22):** `knowledge_refs`, `done_when`, `budget.max_replans` e `steps[].on_fail` são lidos mas não têm efeito. O motor regista-os no evento `plan_fields_ignored` no arranque do run. O L5 entra pelo bloco `knowledge:` do passo (S9), não pelo `knowledge_refs`. Implementar ou remover os outros está por decidir. O `budget.max_steps` é aplicado nos 2 engines: no `native` passo a passo; no `langgraph` antes de arrancar (um plano com mais passos do que o tecto não corre nenhum, porque as ondas são paralelas).
 - **Worker inline só no engine `native`.** No `langgraph` usa-se o worker standalone e depois o `resume`.
 - **Orçamento:** tecto de tokens por run (`--max-tokens`, ou `budget.max_tokens` do plano ou da área), verificado pelo worker antes de cada chamada. O run pausa em `paused_budget` e retoma com `resume --max-tokens N`. Ver [BUDGET.md](./BUDGET.md).
