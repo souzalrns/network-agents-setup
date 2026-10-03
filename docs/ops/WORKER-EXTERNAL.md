@@ -114,7 +114,7 @@ order by created_at desc limit 10;
 > **Estado:** implementado (modo `opt`, a omissão) e testado offline: 18 testes em `runner/tests/test_context_opt.py`.
 > - **Run real (B1-bis-R, maestro, 2026-10-01): −2,6%, mas o run "opt" correu com o prompt `legacy`.** Os prompts-base dos dois runs são idênticos token a token em todos os passos, e o código actual corta 16–34% dos caracteres de cada prompt-base. O −2,6% é variância da saída do modelo, não efeito do `opt`.
 > - **Run real válido (B1-bis-R2, 2026-10-03, modo `opt` verificado): −22%** (12 998 → 10 136). research −20%, seo_brief +9% (gera o resumo), copy −31%, critic −41%. Ver "Medição real (B1-bis-R2)".
-> - **`opt` continua a omissão (decisão do maestro), agora confirmada por medição real.** A projecção (−16%) subestimou o ganho.
+> - **`opt` continua a omissão (decisão do maestro), agora confirmada por medição real.** Com as saídas do research e do copy fixadas nos valores do legacy, o ganho atribuível ao `opt` é ~**−16%** (10 914), em linha com a projecção. Os outros ~6 pontos vêm de o copy ter escrito menos (1 amostra).
 > - A meta de <9k passou para o item próprio B1-bis-C (PLANO item 12).
 
 ### Diagnóstico: onde estavam os 13 130 tokens do B1
@@ -149,32 +149,50 @@ Plano `seo-article-demo`, `--worker gemini` (`flash-lite`), run `opt` repetido c
 
 **Modo: MODO OPT CONFIRMADO.** `meta.context.policy = "opt"` nos 4 passos e `02-seo-brief.summary.md` existe. Este run é uma medição válida, ao contrário do braço "opt" do B1-bis-R.
 
-| Passo | Legacy total | Opt total | Δ |
-|---|---:|---:|---:|
-| research | 1937 | 1556 | **−20%** |
-| seo_brief | 3363 | 3655 | **+9%** |
-| copy | 3599 | 2493 | **−31%** |
-| critic | 4099 | 2432 | **−41%** |
-| **TOTAL** | **12 998** | **10 136** | **−22%** |
+Números do `pilots/run-opt2/token_usage.jsonl` do maestro (`usageMetadata` real):
 
-Critic `tokens_in`: 3759 → **2091 (−44%)**; a saída do critic fica em 341 (2432 − 2091).
+| Passo | Legacy in | Opt in | Δ in | Legacy out | Opt out | Δ out | Legacy total | Opt total | Δ total |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| research | 1426 | 911 | −36% | 511 | 645 | +26% | 1937 | 1556 | **−20%** |
+| seo_brief | 2233 | 2064 | −8% | 1130 | 1591 | +41% | 3363 | 3655 | **+9%** |
+| copy | 2174 | 1591 | −27% | 1425 | 902 | −37% | 3599 | 2493 | **−31%** |
+| critic | 3759 | 2091 | −44% | 340 | 341 | 0% | 4099 | 2432 | **−41%** |
+| **TOTAL** | **9592** | **6657** | **−31%** | **3406** | **3479** | **+2%** | **12 998** | **10 136** | **−22%** |
+
+#### Decomposição: o que é do `opt` e o que é variância da saída
+
+O `tokens_in` de cada passo é o prompt-base mais os inputs injectados, e cada input vale o `tokens_out` do passo que o produziu (análise do B1-bis-R):
+
+| Passo | Legacy | Opt | Δ | O que mede |
+|---|---:|---:|---:|---|
+| research (só prompt-base) | 1426 | 911 | **−515 (−36%)** | corte do prompt-base (frontmatter, secções de documentação, grounding `slim`) |
+| seo_brief, prompt-base (in − research out) | 2233 − 511 = 1722 | 2064 − 645 = 1419 | **−303 (−18%)** | corte do prompt-base |
+| critic, prompt-base + brief (in − copy out) | 3759 − 1425 = 2334 | 2091 − 902 = 1189 | **−1 145 (−49%)** | prompt-base + **brief em resumo** em vez de completo |
+| seo_brief out | 1130 | 1591 | **+461** | **custo do resumo** que o seo_brief escreve para o critic (mais variância) |
+| research out | 511 | 645 | +134 | variância (o research não gera resumo); entra também no `tokens_in` do seo_brief |
+| copy out | 1425 | 902 | **−523** | variância provável: o modelo escreveu um artigo mais curto. Conta 2×, porque também reduz o `tokens_in` do critic |
+
+**Ganho atribuível ao `opt`.** Fixando as saídas do research (511) e do copy (1425) nos valores do legacy, e mantendo tudo o resto como medido, o total fica em **10 914, −16%** contra os 12 998. É o número que a projecção dava (−16%).
+
+Os ~6 pontos que faltam até aos −22% medidos vêm do copy mais curto. Com uma amostra de cada lado não se distingue se isso é variância ou efeito do brief compacto (o copy recebe o brief inteiro, só sem indentação). Só repetições o dizem.
 
 #### Conclusão
 
-- **O `opt` compensa: −22% real** no plano inteiro (−2 862 tokens). Fica a omissão, agora com dados.
-- **3 dos 4 passos melhoram, incluindo o primeiro:**
-  - **research −20%:** não tem inputs nem gera resumo, por isso o ganho vem todo do prompt-base mais curto (sem frontmatter nem secções de documentação, grounding `slim`).
-  - **copy −31%:** prompt-base mais curto e brief em JSON compacto.
-  - **critic −41%:** recebe o brief em resumo em vez de completo (a entrada cai 44%).
-- **Só o seo_brief piora (+9%):** é o passo que escreve o resumo extra para o critic, na mesma chamada. É o custo previsto do mecanismo (`context_policy.needs_summary`), e é pago uma vez e recuperado com folga no critic.
-- **A hipótese "o `opt` só compensa em planos com 4+ passos" fica refutada.** Os cortes do prompt-base valem desde o 1.º passo (research −20%). Só a parte dos resumos depende de haver um passo que consuma um artefacto que não é o seu último input. Em planos mais longos o ganho deve crescer, porque a projecção de 8 passos aponta para −31%; mas isso é projecção, não medição.
-- **A projecção (−16%) subestimou o ganho real (−22%).** Por passo, previa research −26%, seo_brief +1%, copy −11%, critic −31%. A lição de método mantém-se: decidir só com `usageMetadata` real.
+- **O `opt` compensa:** −22% medido (−2 862 tokens) e ~**−16% atribuível ao mecanismo** com as saídas normalizadas. Fica a omissão, agora com dados.
+- **De onde vem o ganho:**
+  - **do prompt-base, em todos os passos:** −515 no research, −303 no seo_brief, e o copy também desce na entrada (−27%);
+  - **do resumo no critic:** −1 145 na parte prompt-base + brief da entrada do critic.
+- **O que custa:** o seo_brief escreve +461 de saída (o resumo). Recupera-se 2,5× no critic.
+- **A entrada do critic cai 44% (3759 → 2091).** Desses −1 668 tokens, −1 145 são do `opt` e −523 vêm de o copy ser mais curto.
+- **A hipótese "o `opt` só compensa em planos com 4+ passos" fica refutada:** o 1.º passo (research) já corta 36% na entrada. Só os resumos dependem de haver um passo que consuma um artefacto que não é o seu último input. Em planos mais longos o ganho deve crescer (a projecção de 8 passos dá −31%), mas isso é projecção, não medição.
+- **A projecção (−16%) acertou no ganho do mecanismo**, mas não previu a variância das saídas. Por passo previa: research −26%, seo_brief +1%, copy −11%, critic −31%. A lição de método mantém-se: decidir com `usageMetadata` real, e separar entrada e saída antes de atribuir causas.
+- **Só o seo_brief piora no total (+9%):** é o passo que escreve o resumo extra para o critic, na mesma chamada. É o custo previsto do mecanismo (`context_policy.needs_summary`).
 - **Meta <9k:** faltam **1 136 tokens** (10 136 contra 9 000). O caminho continua a ser o B1-bis-C (PLANO item 12), que fica para quando houver ordem.
 - **Análise do Grok (parceiro de design, 2026-10-03):**
   - ~10k em `opt` é saudável, e o critic deixou de ser o buraco do `tokens_in`;
   - **não abrir o B1-bis-C só porque não está <9k**: o ganho real já apareceu, e o patamar dos 13k ficou para trás.
 
-**Limite deste registo:** só o critic tem a separação entrada/saída. Nos outros passos registam-se os totais, e não se sabe quanto do −31% do copy vem da entrada e quanto vem da saída (o modelo pode ter escrito menos). O `pilots/run-opt2/token_usage.jsonl` do maestro tem os números para separar.
+**Limite deste registo:** 1 run por braço. A separação entre o efeito do `opt` e a variância das saídas usa a decomposição acima. Uma 2.ª repetição do `opt` diria quanto do copy mais curto é ruído.
 
 ### Medição real (B1-bis-R, 2026-10-01, run do maestro)
 

@@ -185,7 +185,34 @@ Conselho `architecture` (3 membros + chairman, `flash-lite`), 1 ronda.
 - **architecture:** 1 ronda usa 14,7% do tecto; com a ronda máxima (2), ≈ 29%. A regra de paragem 4 (custo > tecto) não se aplica.
 - **Não proponho cortar membros nem rondas.** O ganho de 2 membros (5 chamadas por ronda) não justifica perder o crítico. Fica como alavanca se o uso real crescer (opções abaixo).
 - **security** (tecto de 40k) não foi medido. Com um tamanho parecido, 1 ronda daria ~29% e 2 rondas ~59%: cabe, mas com menos folga. É uma estimativa; mede-se no primeiro run real de security.
-- **Por medir:** os tokens **por estágio** (independent / peer / synthesize). O run do maestro tem-nos em `council.json → ledger[]` (por participante) e no `token_usage.jsonl` (`call_kind`), mas este registo só traz os totais.
+
+#### Ledger por chamada (`council.json → ledger[]` do run do maestro)
+
+| Estágio | Participante | in | out | total |
+|---|---|---:|---:|---:|
+| independent | `meta.arquitetura-agentes` | 1 450 | 458 | 1 908 |
+| independent | `engenharia.desenvolvimento` | 1 022 | 474 | 1 496 |
+| independent | `engenharia.revisor-codigo` (critic) | 1 492 | 414 | 1 906 |
+| peer_rank | `meta.arquitetura-agentes` | 973 | 91 | 1 064 |
+| peer_rank | `engenharia.desenvolvimento` | 953 | 85 | 1 038 |
+| peer_rank | `engenharia.revisor-codigo` | 1 023 | 120 | 1 143 |
+| synthesize | `meta.chairman` | 2 589 | 616 | 3 205 |
+| **TOTAL** | 7 chamadas | **9 502** | **2 258** | **11 760** |
+
+| Estágio | Chamadas | in | out | total | % |
+|---|---:|---:|---:|---:|---:|
+| INDEPENDENT | 3 | 3 964 | 1 346 | **5 310** | **45%** |
+| PEER_RANK | 3 | 2 949 | 296 | **3 245** | **28%** |
+| SYNTHESIZE | 1 | 2 589 | 616 | **3 205** | **27%** |
+
+**Leitura:**
+- **INDEPENDENT (45%)** é o grosso, e é o valor do conselho: 3 posições a ~1,5–1,9k cada. As entradas (1 022–1 492) são dominadas pelo AGENT.md e pela directiva de grounding de cada membro.
+- **PEER_RANK (28%) é quase só entrada:** 91% do custo é ler as 2 posições dos outros mais o tema (as saídas têm 85–120 tokens). É a alavanca natural se um dia for preciso cortar; o COUNCIL.md já lista "B: PEER_RANK sem contexto".
+- **SYNTHESIZE (27%):** 1 chamada só, mas é a maior entrada (2 589): o AGENT.md do chairman, o grounding completo, as 3 posições e as críticas. A saída (616) é o veredicto estruturado.
+- **Saídas abaixo dos tectos:** as posições ficam em 414–474 tokens contra um tecto de 1 024; os ballots em 85–120 contra 512; o veredicto em 616 contra 1 536. Nenhuma chamada se aproximou do `maxOutputTokens`, por isso não houve risco de JSON truncado.
+- **Coerência com o `countTokens`:** entrada fixa de 5 860 contra 9 502 de entrada real. A diferença (3 642) são as posições e as críticas reinjectadas nos pares e no chairman: a parte que o `estimate_cost` marca como dependente das saídas.
+
+**Nenhuma alteração proposta.** O custo é viável e o Grok recomenda não mexer agora (ver "Análise do Grok").
 
 ### Regra de uso (maestro, 2026-10-03)
 
@@ -261,7 +288,23 @@ Os prompts dos membros e do chairman são dominados pelo AGENT.md e pela directi
 
 **Tema:** a migração dos checkpoints do LangGraph de SQLite para Postgres (segundo a análise do Grok, ponto 4). **Seguimento:** nenhum. O veredicto é `conditional`, as condições não estão validadas, e o SQLite fica (ver "Análise do Grok").
 
-**Por registar:** o texto das condições, dos kill criteria e dos próximos passos (`verdict.json` do run do maestro), e o estado da L4 neste run (`candidate` → `active`, ou `disabled` se correu com `--no-memory`).
+#### Evidência da deliberação (do `council.json` do run do maestro)
+
+- **As 3 posições são diferentes:** uma centrada no custo, outra na escala, outra na latência. Os membros não convergiram por imitação, porque a fase INDEPENDENT não deixa ver as outras posições.
+- **Ranking cego entre pares (Borda):** A = 0,5, B = 0,0, C = 1,0.
+  - Cada par ordena só as **2 posições dos outros**, nunca a sua (`council_session.py:542`, `exclude=member["id"]`; teste `test_peer_nao_ve_a_propria_posicao_e_letras_sao_coerentes`, `tests/test_council.py:359`). As letras são das **posições**, baralhadas por sessão (`council.json → rounds[0].labels`), e não da ordem dos membros no ledger.
+  - Com 2 posições por ballot, a 1.ª vale 1 e a 2.ª vale 0. Os scores dão exactamente esta leitura:
+    - **C foi a 1.ª escolha dos dois pares que a viram** (score 1,0);
+    - **B foi a última dos dois pares que a viram** (0,0);
+    - **A ficou dividida** (0,5): o autor de C pô-la em 1.º (A antes de B); o autor de B pô-la em 2.º (C antes de A).
+  - A ordem colectiva foi C > A > B, quase unânime.
+  - **Correcção a uma leitura anterior:** "B auto-desvalorizou-se" e "C rankeou-se primeiro" não podem ter acontecido, porque ninguém vê nem ordena a própria posição. O que aconteceu foi que os **outros** puseram C em 1.º e B em último.
+- **As críticas entre pares são reais:** cada ballot traz uma falha principal por posição.
+- **O chairman (anónimo) combinou as 3 perspectivas** num veredicto `conditional`, com 3 condições, 2 kill criteria e 2 próximos passos. Não seguiu só a posição mais bem classificada.
+
+**`verdict.json`: sem bug.** Os caracteres estranhos vistos no PowerShell eram do encoding do terminal; o ficheiro está bem. Para ler sem problemas no Windows: `Get-Content <dir>\verdict.json -Encoding UTF8` (o runner grava-o em UTF-8: `council_session.py:858`).
+
+**Por registar:** o estado da L4 neste run (`candidate` → `active`, ou `disabled` se correu com `--no-memory`).
 
 ## Evidência (2026-10-01, Gemini falso, L4 num Postgres 16 + pgvector local)
 

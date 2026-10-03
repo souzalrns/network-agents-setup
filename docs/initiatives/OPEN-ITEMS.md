@@ -183,7 +183,7 @@ A partir de 2026-09-30 nenhuma decisão humana fica em aberto: cada uma tem opç
   - `PLAN_RUNNER_CONTEXT=legacy` para A/B e rollback.
 - **Projecção calibrada no B1** (`python -m plan_runner.token_projection`): `seo-article-demo` 13,1k → **11,1k (−16%)**, critic `tokens_in` **−33%**. 8 passos (pior caso): 41,3k → 28,3k (−31%).
 - ~~**B1-bis-R (maestro): run real** legacy vs opt~~ **FEITO, sem exercitar o `opt`** (ver a secção L4 abaixo e `docs/ops/WORKER-EXTERNAL.md`).
-- ~~**B1-bis-R2 (maestro): repetir só o run `opt`**~~ **FEITO (2026-10-03), com o modo `opt` confirmado nos 4 passos: −22% real** (12 998 → 10 136). research −20%, seo_brief +9% (gera o resumo), copy −31%, critic −41% (entrada do critic −44%). `opt` fica a omissão, agora medido. A hipótese "só compensa em 4+ passos" fica refutada. Detalhe em `docs/ops/WORKER-EXTERNAL.md`, "Medição real (B1-bis-R2)".
+- ~~**B1-bis-R2 (maestro): repetir só o run `opt`**~~ **FEITO (2026-10-03), com o modo `opt` confirmado nos 4 passos: −22% real** (12 998 → 10 136; ~−16% atribuível ao `opt` com as saídas normalizadas, porque o copy escreveu 523 tokens a menos). research −20%, seo_brief +9% (gera o resumo), copy −31%, critic −41% (entrada do critic −44%). `opt` fica a omissão, agora medido. A hipótese "só compensa em 4+ passos" fica refutada. Detalhe em `docs/ops/WORKER-EXTERNAL.md`, "Medição real (B1-bis-R2)".
 - ~~**B1-bis-9k (decisão)**~~ **DECIDIDO: opção C (maestro, 2026-10-01).** Fica o modo `opt` (−16% projectado, não verificado), e o caminho para <9k passa a ser o item próprio **B1-bis-C — encurtar skills/prompt-base** (PLANO item 12). **Não começar sem ordem.**
 
 ## Bloco L4 — memória persistente (D3), 2026-10-01
