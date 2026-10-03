@@ -3,7 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
-> **Sessão "continuação operacional" (2026-10-03, `main` `c9edd72`):** R-004 com PR (MCP #15); C-2: lado DB feito pelo DEV, lado repo com PR (MCP #16); E-003 → P-18; H-002 e H-003 com o bloqueio actualizado; F0.6 e F0.7b deixam de esperar pelo F0.4 (fechado no #64; o F0.7b passa a ABERTO). Depois, a pedido do maestro: S-004 (PR MCP #17), factos do README no H-01 (§4.1) e V40 (ponteiros que o H-001 deixou).
+> **Sessão "continuação operacional" (2026-10-03, `main` `c9edd72`):** R-004 com PR (MCP #15); C-2: lado DB feito pelo DEV, lado repo com PR (MCP #16); E-003 → P-18; H-002 e H-003 com o bloqueio actualizado; F0.6 e F0.7b deixam de esperar pelo F0.4 (fechado no #64; o F0.7b passa a ABERTO). Depois, a pedido do maestro: S-004 (PR MCP #17), factos do README no H-01 (§4.1) e V40 (ponteiros que o H-001 deixou). Auto-auditoria: H-005 (STATUS do MCP desactualizado); `pnpm audit` do NAS = 0 (A22).
 > **Revisão pós-merge (2026-10-03):** `main` `d79d7be` (NAS, merges #79 e #81) e `d635945` (MCP, merges #11–#14); §10 com as decisões P-1 a P-9.
 > Substitui, **para o estado**, os três documentos que ficam históricos, sem alterações de conteúdo (só uma linha de aviso no topo):
 > - `docs/audit/PLANO-DE-ACAO.md` (P);
@@ -11,7 +11,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **114 itens vivos** (§4): ABERTO 61, EM CURSO 11, BLOQUEADO 42;
+> - **115 itens vivos** (§4): ABERTO 62, EM CURSO 11, BLOQUEADO 42;
 > - **88 linhas de histórico** (§7): 70 fechadas, 18 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-9 decididas pelo maestro; P-10 a P-18 pendentes.
@@ -90,7 +90,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (114 itens vivos)
+## 4. Tabela única (115 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -128,7 +128,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | A12 | Criptografia em repouso: decidir se há dado sensível | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão | O:40; A5 §5.5 #5 | checklist #5 | VERIFICADO |
 | A13 | RBAC/identidade no runtime (Identity = gap na matriz P0) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão do modelo; EX-C3/EX-C4 | P:354; O:41; E §4.1 | checklist #7 | VERIFICADO |
 | A19 | Restringir uploads: o alvo (`extrair-imagem`) está no repo MCP; mover o item para lá | DOC-ERRADO | ABERTO | DEV | Baixa | Decisão | O:43; A5 §5.4 | checklist #16 | VERIFICADO |
-| A22 | Alertas do Dependabot (o O diz 9; em 03/10 havia 0 PRs abertos; os alertas estão por confirmar) | FALTA-TESTE | ABERTO | DEV | Média | Aba Security do GitHub (a API devolve 403 a esta sessão); decisão §10 P-5 | O:44; E:800; A5 §5.4 ("A22 = M8 fechado") | M8 | NÃO VERIFICADO |
+| A22 | Alertas do Dependabot (o O diz 9; em 03/10 havia 0 PRs abertos; os alertas estão por confirmar) | FALTA-TESTE | ABERTO | DEV | Média | Aba Security do GitHub (a API devolve 403 a esta sessão); decisão §10 P-5 | O:44; E:800; A5 §5.4 ("A22 = M8 fechado"); `pnpm audit` do workspace TS (2026-10-03): 0 vulnerabilidades (não substitui os alertas do Dependabot nem cobre as dependências Python) | M8 | NÃO VERIFICADO |
 | EX-C3 | Adoptar AgentMesh (identidade/delegação) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão de dependência | P §9 (EX-C3); O:51 | C3 (O:51) | VERIFICADO |
 | EX-C4 | Adoptar Cedar (policy engine) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão de dependência | P §9 (EX-C4); O:52 | C4 (O:52) | VERIFICADO |
 | B16 | `ActionReceipt` com o contrato ADR-001 completo | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | EX-C3/EX-C4 | A5 §5.2 (ST:111,201) | G7 (ST) | VERIFICADO |
@@ -211,6 +211,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | S-003 | Testar no Claude.ai connector uma chamada real às tools do MCP depois dos tectos de input do S-001 (pedido normal passa; acima do tecto dá erro de validação legível) | FALTA-TESTE | ABERTO | DEV | Baixa | Conector real (só o DEV); pode ir no mesmo teste do F0.6 | `ANM:CLAUDE.md` ("Alterações ao router e tools MCP: verificar impacto no Claude.ai connector"); PR MCP #14 §Impacto | — | VERIFICADO |
 | S-004 | Triagem de segurança do MCP: vulnerabilidades de dependências (`npm audit`) e backlog com IDs e severidade (não reutiliza o S-003, que é o teste do connector) | BUG | EM CURSO | AMBOS | Média | Merge do PR MCP #17; depois, os alertas da aba Security do MCP (só o DEV vê; como o A22 no NAS) | `npm audit` na `main` MCP `d635945`: `next` 16.3.5 **crítica** (GHSA-vcvr-r3jv-pc5j, RCE no `next/og`; o código não usa `next/og`) e `ip-address` 10.5.0 moderada (transitiva); PR MCP #17 (`next` 16.3.8, `ip-address` 10.7.3; `npm audit` = 0; `npm test` 16/16; `next build` OK) | — | VERIFICADO |
 | H-004 | Correr `graphify update .` localmente nos 2 repos depois das mudanças de código desta ronda (o `graphify-out/` é gitignored; a ferramenta não existe na sessão cloud) | FALTA-LIGAR | ABERTO | DEV | Baixa | Máquina local do DEV | `ANM:CLAUDE.md` §Graphify ("Após mudanças relevantes de código: graphify update ."); `which graphify` vazio na sessão | — | VERIFICADO |
+| H-005 | O `docs/STATUS.md` do MCP está parado em 19/08 e diz que o GitHub Actions está "desligado", mas há workflows agendados a correr: `heartbeat.yml` (de 3 em 3 dias) e `audit-tools.yml` (dias 1 e 15) | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — (repo `agent-network-mcp`; um merge = redeploy na Vercel, juntar a outro PR do MCP) | `ANM:docs/STATUS.md:33,58`; `ANM:.github/workflows/heartbeat.yml:8-9`, `audit-tools.yml:16-17`; corridas "Manter Supabase ativo" #28 (2026-10-01) e "Auditoria quinzenal" #9 (2026-10-01), ambas `success` | — | VERIFICADO |
 
 
 ### 4.1 Detalhe do H-01 (adendo do maestro, 2026-10-03; registado, NÃO executado)
@@ -294,12 +295,12 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 13 | F1, F1b, F2, F4, ING-5, ING-6, W-003, EX-B7, INIT-094, H-002, R-004, E-003, H-003 |
+| CLAUDE | 14 | F1, F1b, F2, F4, ING-5, ING-6, W-003, EX-B7, INIT-094, H-002, R-004, E-003, H-003, H-005 |
 | DEV | 70 | F0.1, F0.3, F0.6, F0.7b, F0.12, R-002, R-003, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 31 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: PRs MCP #15 (R-004), #16 (C-2) e #17 (S-004), um de cada vez (cada merge faz um redeploy na Vercel), e o PR do NAS que leva esta actualização;
+- merges: PRs MCP #17 (S-004) → #16 (C-2) → #15 (R-004), um de cada vez (cada merge faz um redeploy na Vercel; com o #16 antes do #15, o `TOKEN-LEDGER.md` nunca cita linhas desfasadas), e o PR do NAS que leva esta actualização;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
 - F0.1 e F0.3 (SELECTs), incluindo o F0.1b que fecha o R-002 (esperado: 163 linhas);
@@ -317,9 +318,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, F3, F5, S20, C-2, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 46 | F0.1, F0.3, F0.6, F0.7b, F2, F4, F6, R-002, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
-| Baixa | 51 | F0.12, F1b, R-001, R-003, ING-5, ING-6, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, M-003, M-004, L4-2, L4-4, G6, INIT-094, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, E-003, H-003, T-005, S-003, H-004 |
+| Baixa | 52 | F0.12, F1b, R-001, R-003, ING-5, ING-6, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, M-003, M-004, L4-2, L4-4, G6, INIT-094, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, E-003, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 61 · EM CURSO 11 · BLOQUEADO 42.
+**Por estado:** ABERTO 62 · EM CURSO 11 · BLOQUEADO 42.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (88 linhas: 70 FECHADO, 18 OBSOLETO)

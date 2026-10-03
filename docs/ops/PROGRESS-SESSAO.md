@@ -12,6 +12,16 @@
 
 ## Log (mais recente no topo)
 
+### Auto-auditoria ("executou tudo com padrão ouro?")
+- **Erro meu, apanhado e corrigido:** o R-004 (MCP #15) desloca 3 linhas no `lib/knowledge.js`, e o `ANM:docs/ops/TOKEN-LEDGER.md` cita `:175` e `:231`.
+  - A 1.ª correcção, igual nos PRs #15 e #16, dava **conflito** entre eles. Vi-o na simulação local dos merges, antes de qualquer push.
+  - Correcção final: só no #16 (commit `5e5aa25`), a citar as funções (`ingestDocument`, `retrieveContextDetailed`, `retrieveKnowledgeHits`) em vez das linhas.
+  - Simulei os merges de #15, #16 e #17 por 3 ordens diferentes: sem conflitos.
+  - Ordem recomendada: #17 → #16 → #15.
+- **Achado novo, H-005:** o `docs/STATUS.md` do MCP diz que o GitHub Actions está "desligado", mas o `heartbeat` e o `audit-tools` correm por `schedule` (última corrida a 2026-10-01, `success`). Registado, sem correcção (seria mais um redeploy; juntar a outro PR do MCP).
+- **`pnpm audit` do NAS (workspace TS):** 0 vulnerabilidades. Registado no A22. As dependências Python e os alertas do Dependabot continuam NÃO VERIFICADOS.
+- **Ainda em falta do lado do maestro:** os factos 2 e 3 do adendo do C-2 (só chegou o 1.º) e o fim do prompt principal (cortado na Prioridade 4).
+
 ### Verificação pedida pelo maestro: README vs estado real, e inconsistências do meu trabalho
 - **README da raiz:** confirmadas as inconsistências da análise. Mais uma que ela não tinha: "50 chunks RAG" no `ai-findability.md`, quando o chunker actual dá 9. Os 10 factos, com evidência, estão no `PENDENCIAS.md` §4.1, no H-01; pela decisão do maestro, o H-01 cobre o README (A). Só corrigi já o ponteiro dos pendentes (`README.md:36`); o resto fica para o PR do H-01.
 - **Erro meu (V40):** o H-001 (#70) foi dado como FECHADO, mas deixou 4 ponteiros para o `STATUS.md` como fonte de pendentes: `README.md:36`, `BOOTSTRAP.md:75` (que contradizia a `:27` do mesmo ficheiro), `SECURITY.md:31` e `docs/STATUS.md:3`. Corrigidos neste PR. O `check-consistency.ts` só exige frases no `docs/STATUS.md`, e a alteração só acrescenta texto.
@@ -195,7 +205,7 @@
 | MCP #17 | `fix/S-004-next-ip-address` | S-004 | Aberto. Merge = redeploy na Vercel (Next sobe de patch) |
 | NAS #86 | `docs/sessao-continuacao-r004` | Registo da sessão + V40 + factos do README | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
-Já com merge: NAS #63–#85; MCP #10–#14. **MCP: um merge de cada vez** (#15, #16 e #17 mexem em ficheiros diferentes; recomendo o #17 primeiro, por ser uma correcção de segurança).
+Já com merge: NAS #63–#85; MCP #10–#14. **MCP: um merge de cada vez, por esta ordem: #17 → #16 → #15.** O #17 é uma correcção de segurança. Com o #16 antes do #15, o `TOKEN-LEDGER.md` nunca cita linhas desfasadas. Simulado sem conflitos em 3 ordens.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
