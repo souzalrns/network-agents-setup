@@ -140,14 +140,33 @@ areas:
       Auditoria de segurança defensiva (código, dependências, MCP, CI, secrets).
       Pipeline: triage → audit → report. Nunca ofensiva. Capabilities em
       config/security-capabilities.yaml (Capability First — não 8 agentes).
-    keywords: [seguranc, vulnerab, cve, owasp, auditoria de seguranca, auditoria, segredo, secrets, credencia, ataque, malware, threat model, surface, finding, hardening, triage]
+    keywords:
+      - seguranc
+      - vulnerab
+      - cve
+      - owasp
+      - auditoria de seguranca
+      - auditoria
+      - segredo
+      - secrets
+      - credencia
+      - ataque
+      - malware
+      - threat model
+      - modelo de ameacas
+      - superficie de ataque
+      - security finding
+      - hardening
+      - security triage
+      - pentest
+      - ciberseguranc
     agents:
       - security.triage
       - meta.security-auditor
       - security.reporter
     horizontals: [meta.planejador]
     budget: {max_tokens: 40000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
-    hitl: required   # achados de segurança não são aceites sem sinalizar (agents/meta/security_auditor.agent.md)
+    hitl: required   # achados de segurança não são aceites sem sinalizar
 
   - id: docs
     description: Documentação, ADRs, relatórios. Sem agente .agent.md dedicado na v1.

@@ -1,5 +1,9 @@
 # Exemplo defensivo — não é pentest nem cliente real
-# Uso: plan_runner run ... --mode stub|external --out ../pilots/run-security-demo
+# Uso (a partir de runner/):
+#   python -m plan_runner run ..\docs\orchestration\security\templates\examples\security-audit-demo.plan.yaml --mode stub --out ..\pilots\run-security-demo
+#   python -m plan_runner run ... --mode external --worker gemini --out ..\pilots\run-security-demo
+#
+# S34: cada passo de domínio declara `vertical:` (omissão do executor = marketing).
 
 id: example-security-audit-demo
 version: 1
@@ -22,16 +26,19 @@ knowledge_refs:
 budget:
   max_steps: 8
   max_replans: 1
+  max_tokens: 40000
 
 steps:
   - id: triage
     action: security_triage
+    vertical: security
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-triage.json
     on_fail: human
 
   - id: audit
     action: security_audit
+    vertical: meta
     depends_on: [triage]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-triage.json]
@@ -40,6 +47,7 @@ steps:
 
   - id: report
     action: security_report
+    vertical: security
     depends_on: [audit]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-triage.json, artifacts/02-audit.md]
