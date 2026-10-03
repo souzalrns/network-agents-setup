@@ -47,6 +47,7 @@ import yaml
 
 from . import context_policy as cp
 from . import memory_wiring as mw
+from . import repo_files as rf
 from .skills import _frontmatter, repo_root_from_out
 
 DEFAULT_MODEL = "gemini-flash-lite-latest"
@@ -326,13 +327,26 @@ def build_prompt(
 def build_prompt_ctx(
     out_root: Path, pending: Path, request: dict[str, Any], *, context: str | None = None
 ) -> dict[str, Any]:
-    """Prompt + o que entrou nele. `context`: opt (omissao, B1-bis) | legacy (prompt anterior)."""
+    """Prompt + o que entrou nele. `context`: opt (omissao, B1-bis) | legacy (prompt anterior).
+
+    SEC-1: se o passo declarar `repo_files`, os ficheiros (so leitura, com
+    exclusoes e limite: plan_runner/repo_files.py) entram no fim do prompt do
+    utilizador, nos dois modos. Sem `repo_files`, nada muda.
+    """
     mode = cp.context_mode(context)
     if mode == "opt":
-        return _build_prompt_opt(out_root, pending, request)
-    system, user, wants_json = _build_prompt_legacy(out_root, pending, request)
-    return {"system": system, "user": user, "wants_json": wants_json, "wants_summary": False,
-            "meta": {"policy": "legacy"}}
+        built = _build_prompt_opt(out_root, pending, request)
+    else:
+        system, user, wants_json = _build_prompt_legacy(out_root, pending, request)
+        built = {"system": system, "user": user, "wants_json": wants_json, "wants_summary": False,
+                 "meta": {"policy": "legacy"}}
+    step_raw = _plan_step(_load_plan_raw(out_root), str(request.get("step_id"))) or {}
+    if rf.FIELD in step_raw:
+        block, files_meta = rf.read_repo_files(repo_root_from_out(out_root), step_raw.get(rf.FIELD))
+        if block:
+            built["user"] += "\n" + _section("Ficheiros do repo (so leitura)", block)
+        built["meta"]["repo_files"] = files_meta
+    return built
 
 
 def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) -> dict[str, Any]:

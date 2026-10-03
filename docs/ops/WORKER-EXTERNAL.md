@@ -360,8 +360,36 @@ python -m plan_runner run ..\docs\orchestration\marketing\templates\examples\seo
 
 O mesmo fluxo está no teste `test_plano_seo_demo_do_inicio_ao_fim_com_worker`.
 
+## Ficheiros do repo por passo (`repo_files`, SEC-1, 2026-10-03)
+
+O worker não tem tools, por isso um passo não consegue ler o repo sozinho. Um passo pode declarar ficheiros do repo para entrarem no prompt, só de leitura:
+
+```yaml
+steps:
+  - id: audit
+    action: security_audit
+    vertical: meta
+    repo_files:
+      - runner/requirements.txt
+      - .github/workflows/runner-tests.yml
+```
+
+| Regra | Valor | Onde |
+|---|---|---|
+| Activação | **opt-in por passo**: `repo_files: [path, ...]` no passo do plano. Sem o campo, o prompt é igual ao de antes, nos dois modos (`opt`/`legacy`) | `runner/plan_runner/external_worker.py` (`build_prompt_ctx`) |
+| Acesso | **só leitura**; o worker lê e injecta o texto no fim do prompt do utilizador, na secção "Ficheiros do repo (so leitura)", marcada como dados e não instruções | `runner/plan_runner/repo_files.py` |
+| Paths | explícitos e relativos à raiz do repo; recusados: absolutos, `..`, globs, directórios, e symlinks que saiam do repo | idem |
+| Exclusões fixas | `.env*`, `*.pem`, `*.key`, `secrets/`, `.git/`, `node_modules/` (decisão do maestro), mais `*.p12`, `*.pfx`, `*.keystore`, `*.jks`, `id_rsa*`, `id_ecdsa*`, `id_ed25519*`, `id_dsa*`, `.npmrc`, `.pypirc`, `.netrc` e `credentials*`. Valem também no **destino** de um symlink. Comparação sem maiúsculas | `DENY_NAME_PATTERNS`, `DENY_DIRS` |
+| Limite | **50 KB no total** por passo (`MAX_TOTAL_BYTES`). O ficheiro que passa o limite é cortado, com marcador, e os seguintes ficam de fora (`over_limit`) | idem |
+| Binários | ficam de fora (`binary`) | idem |
+| Rastreio | `result.json → meta.context.repo_files`: por entrada, `status` (`included`, `truncated`, `excluded`, `invalid`, `missing`, `over_limit`, `binary`), bytes e motivo. **Nunca** o conteúdo de um excluído | idem |
+
+**Custo:** os ficheiros contam no `tokens_in` do passo, ~1 token por 3,3–3,5 caracteres (B1). Os 50 KB do limite dão no máximo ~15k tokens de entrada. Os 10 KB do demo de security dão ~3k. O tecto de tokens da área continua a aplicar-se ([BUDGET.md](./BUDGET.md)).
+
+**Não confundir com o `knowledge_refs`** do topo do plano, que continua sem ser lido (AU-22): o `repo_files` é por passo e explícito, para não mudar os prompts dos planos existentes (incluindo o `seo-article-demo`, base do B1-bis-R2).
+
 ## Limites actuais
 
-- **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A).
+- **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A). Para ler ficheiros do repo, usa-se o `repo_files` (secção acima).
 - **Worker inline só no engine `native`.** No `langgraph` usa-se o worker standalone e depois o `resume`.
 - **Orçamento:** tecto de tokens por run (`--max-tokens`, ou `budget.max_tokens` do plano ou da área), verificado pelo worker antes de cada chamada. O run pausa em `paused_budget` e retoma com `resume --max-tokens N`. Ver [BUDGET.md](./BUDGET.md).

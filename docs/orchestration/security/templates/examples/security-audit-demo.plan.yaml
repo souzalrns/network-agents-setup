@@ -5,15 +5,15 @@
 #
 # S34: cada passo de domínio declara `vertical:` (omissão do executor = marketing).
 #
-# LIMITE em --mode external (worker Gemini), verificado a 2026-10-03:
+# Ficheiros do repo em --mode external (worker Gemini):
 #   - o worker NÃO tem tools: `tools_allowed: [read_repo_file]` é declarativo, e o
 #     prompt diz ao modelo "Nao tens tools neste passo" (runner/plan_runner/external_worker.py);
-#   - `knowledge_refs` (topo do plano) NÃO é lido pelo runner (AU-22; AUDIT-2 Y9).
-#   Por isso o auditor vê só o objectivo do plano e a triagem, e NENHUM ficheiro do
-#   repo. Em external, o resultado é um audit de âmbito e lacunas, não do código. A
-#   skill e o grounding obrigam a marcar o que falta como lacuna. Dar ficheiros ao
-#   auditor é uma decisão pendente (docs/architecture/SECURITY-AGENTS.md, "Limites").
-#   NUNCA injectar .env/segredos no prompt: segredos verificam-se com gitleaks local.
+#   - `knowledge_refs` (topo do plano) NÃO é lido pelo runner (AU-22; AUDIT-2 Y9);
+#   - SEC-1 (2026-10-03): o que o auditor lê vem de `repo_files:` no passo (opt-in, só
+#     leitura, máx. 50 KB, exclusões fixas: .env*, *.pem, *.key, secrets/, .git/,
+#     node_modules/, …; plan_runner/repo_files.py). O auditor só vê esses ficheiros;
+#     o resto do repo continua fora, e a skill obriga a marcá-lo como lacuna.
+#   NUNCA declarar .env/segredos: são recusados, e segredos verificam-se com gitleaks.
 
 id: example-security-audit-demo
 version: 1
@@ -52,6 +52,13 @@ steps:
     depends_on: [triage]
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-triage.json]
+    # SEC-1: superfície de supply chain + CI + política de capabilities (~10 KB, ~3k tokens)
+    repo_files:
+      - runner/requirements.txt
+      - runner/requirements-langgraph.txt
+      - package.json
+      - .github/workflows/runner-tests.yml
+      - config/security-capabilities.yaml
     output_artifact: artifacts/02-audit.md
     on_fail: human
 
