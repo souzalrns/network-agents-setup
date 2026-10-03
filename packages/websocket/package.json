@@ -10,7 +10,7 @@
   "dependencies": {
     "@network-agents/shared": "workspace:*",
     "@network-agents/observability": "workspace:*",
-    "ws": "^8.14.0"
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@types/ws": "^8.5.0",
