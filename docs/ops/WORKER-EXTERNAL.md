@@ -112,9 +112,10 @@ order by created_at desc limit 10;
 ## Optimização de contexto (B1-bis, 2026-10-01)
 
 > **Estado:** implementado (modo `opt`, a omissão) e testado offline: 18 testes em `runner/tests/test_context_opt.py`.
-> - **Os números abaixo são uma PROJECÇÃO calibrada no B1, não um run real**: esta sessão não tinha `GEMINI_API_KEY`.
-> - A confirmação é um run real do maestro (ver "Medir a sério").
-> - **A meta de <9k não é atingível só com técnicas de contexto neste plano.** Ver "Porque não chega aos 9k".
+> - **Run real (B1-bis-R, maestro, 2026-10-01): −2,6%, mas o run "opt" correu com o prompt `legacy`.** Os prompts-base dos dois runs são idênticos token a token em todos os passos, e o código actual corta 16–34% dos caracteres de cada prompt-base. O −2,6% é variância da saída do modelo, não efeito do `opt`.
+> - **A projecção (−16%) fica NÃO VERIFICADA** (nem confirmada nem refutada). Ver "Medição real (B1-bis-R)".
+> - **Decisão do maestro:** `opt` continua a omissão. Próxima medição: repetir só o run `opt`, com a verificação de "Medir a sério".
+> - A meta de <9k passou para o item próprio B1-bis-C (PLANO item 12).
 
 ### Diagnóstico: onde estavam os 13 130 tokens do B1
 O `tokens_in` de cada passo é o prompt-base mais os artefactos injectados. A calibração dá 3,29–3,50 caracteres por token nos 4 passos, o que confirma a decomposição.
@@ -142,7 +143,86 @@ O contexto acumulado conta, mas o **prompt-base pesa mais** (41% vs 33%). A subi
 
 `PLAN_RUNNER_CONTEXT=legacy` repõe o prompt anterior, para A/B e rollback. Cada `result.json` tem `meta.context` com a política, o grounding, cada input (modo e tamanho) e o estado do resumo.
 
-### Antes/depois: `seo-article-demo` (projecção, `python -m plan_runner.token_projection`)
+### Medição real (B1-bis-R, 2026-10-01, run do maestro)
+
+Plano `seo-article-demo`, `--worker gemini` (`flash-lite`), os dois comandos de "Medir a sério". Números do `token_usage.jsonl` de cada run (`usageMetadata` real):
+
+| Passo | Legacy in | Legacy out | "Opt" in | "Opt" out | Leg total | "Opt" total | Δ |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| research | 1426 | 511 | 1426 | 564 | 1937 | 1990 | +3% |
+| seo_brief | 2233 | 1130 | 2286 | 1131 | 3363 | 3417 | +2% |
+| copy | 2174 | 1425 | 2175 | 1180 | 3599 | 3355 | −7% |
+| critic | 3759 | 340 | 3515 | 379 | 4099 | 3894 | −5% |
+| **TOTAL** | **9592** | **3406** | **9402** | **3254** | **12 998** | **12 656** | **−2,6%** |
+
+Critic `tokens_in`: 3759 → 3515 (−6,5%; projectado −33%).
+
+#### Análise: o run "opt" não exercitou o modo `opt`
+
+Separando o `tokens_in` em prompt-base + inputs injectados (cada input conta o `tokens_out` do passo que o produziu, no mesmo run):
+
+| Passo | Inputs | Base legacy | Base "opt" | Corte de caracteres do `opt` no código actual |
+|---|---|---:|---:|---:|
+| research | (nenhum) | 1426 | **1426** | 5004 → 3312 (**−34%**) |
+| seo_brief | research | 2233 − 511 = **1722** | 2286 − 564 = **1722** | 5827 → 4900 (−16%) |
+| copy | seo_brief | 2174 − 1130 = **1044** | 2175 − 1131 = **1044** | 3619 → 2464 (−32%) |
+| critic | seo_brief + copy | 3759 − 1130 − 1425 = **1204** | 3515 − 1131 − 1180 = **1204** | 4040 → 2869 (−29%) |
+
+A coluna dos cortes vem de construir os 4 prompts com o código actual nos dois modos (worker real, Gemini falso; mesmo método da `token_projection.py`, aqui só a contar caracteres e sem estimar tokens).
+
+Três factos, cada um suficiente, mostram que o run "opt" usou o prompt `legacy`:
+
+1. **Prompt-base idêntico ao token em todos os passos**, incluindo o `research`, que não tem inputs. Com o `opt` activo, o prompt do `research` perde 34% dos caracteres (sem frontmatter, sem secções de documentação, grounding `slim`). Isso não pode dar exactamente 0 tokens de diferença.
+2. **O critic recebeu o brief completo.** A base 1204 só fecha somando o brief **inteiro** (1131) ao copy (1180). No `opt`, o brief entra no critic como resumo (~300 tokens).
+3. **O seo_brief não gerou resumo:** saída 1131 contra 1130. No `opt`, o seo_brief escreve o resumo para o critic na mesma chamada (+~200–300 tokens de saída).
+
+**Logo, os −2,6% são variância da saída**, propagada pelos inputs:
+- o copy escreveu 1180 em vez de 1425 (−245), e esses mesmos −245 aparecem no `tokens_in` do critic;
+- o research escreveu +53, que aparecem no `tokens_in` do seo_brief.
+
+Causa provável, por confirmar no `result.json` do run (ver "Medir a sério"):
+- em PowerShell, `$env:PLAN_RUNNER_CONTEXT="legacy"` fica na sessão e aplica-se ao comando seguinte (em bash, o prefixo `VAR=x cmd` só vale para esse comando);
+- ou o run correu com um checkout anterior ao #45.
+
+#### O padrão "research e seo_brief gastam mais no opt" (hipótese do maestro)
+
+**Não confirmado: os dados não o mostram, e o mecanismo diz o contrário.**
+
+- **research +3%:** o `tokens_in` é igual (1426 = 1426). A diferença está toda na saída (511 → 564). Não há overhead nenhum do mecanismo. No `opt` real, o research **não gera resumo** (ninguém o consome como resumo: o seo_brief recebe-o como pin) e o prompt encolhe 34%. O research é, pelo contrário, o passo onde o `opt` deve poupar mais, em proporção.
+- **seo_brief +2%:** a entrada sobe +53, que é exactamente a saída extra do research. A saída fica igual (1131). No `opt` real, este é o único passo com overhead (gera o resumo do brief), compensado pelo corte de 16% do prompt-base.
+- **copy e critic:** os ganhos (−7%, −5%) vêm do copy mais curto (1180 contra 1425), não de resumos.
+
+**"O `opt` só compensa em planos com 4+ passos"** fica registado como **hipótese não verificada**, com esta contra-evidência:
+- 3 das 4 alavancas do `opt` (frontmatter, secções de documentação, grounding `slim`) cortam o prompt-base de **todos** os passos, incluindo o primeiro. Não dependem do comprimento do plano;
+- só a alavanca de resumos depende de haver 3+ passos encadeados (um passo que consome um artefacto que não é o seu último input).
+
+A medição que decide: o run `opt` repetido, com a verificação de "Medir a sério".
+
+**Decisão (maestro, 2026-10-01):** `opt` continua a omissão.
+
+### Lição de método: medir com usage real, não com proxies de caracteres
+
+> **Correcção (2026-10-01, depois da tabela por passo):** a comparação "−16% projectado vs −2,6% real" **não é válida**, porque o run "opt" não exercitou o `opt` (ver acima). As causas abaixo continuam a ser **riscos** de qualquer projecção por caracteres, e a regra mantém-se. Mas não ficou demonstrado que a projecção errou, nem por quanto.
+
+Riscos de uma projecção por caracteres:
+
+1. **Caracteres ≠ tokens, sobretudo no que se corta.**
+   - A projecção não usou ÷4: usou caracteres por token **calibrados no B1** (3,29–3,50, média do prompt inteiro).
+   - Mas aplicou essa média ao texto **cortado**: frontmatter YAML, cabeçalhos, tabelas, a directiva de grounding.
+   - Esse texto tem outra densidade no tokenizer do Gemini. Se o que saiu tem mais caracteres por token do que a média, poupa muito menos tokens do que os caracteres sugerem.
+   - Um rácio fixo é um proxy, não o tokenizer.
+2. **A saída não foi medida, foi assumida.**
+   - A projecção fixou as saídas nos valores do B1, mais 300 tokens de resumo.
+   - No run real, o modelo pode escrever mais (ou o resumo sair maior) com o prompt novo. Isso come o ganho na entrada.
+3. **O próprio legacy reproduzir o B1 (+0,4%) não validava nada sobre o opt.** Era circular: a calibração foi feita nesses mesmos números.
+4. **(Aprendido no B1-bis-R)** Um A/B real também engana se não se verificar que cada braço correu no modo pretendido. Cada run tem de provar o seu modo (`meta.context.policy` no `result.json`) antes de os números entrarem numa tabela.
+
+**Regra a partir daqui** (vale para o B1-bis-C e para qualquer optimização de tokens):
+- **Só se decide com `usageMetadata` real** (`promptTokenCount`, `candidatesTokenCount`).
+- Para medir só a entrada sem gerar texto, há o endpoint `models/{model}:countTokens` da API Gemini. Dá a contagem exacta do tokenizer, e é uma alternativa barata a um run completo por cada hipótese (pendente: ver OPEN-ITEMS).
+- A `token_projection.py` fica no repo só como ferramenta exploratória, marcada como **não usar para decisões**.
+
+### Antes/depois: `seo-article-demo` (PROJECÇÃO, não verificada: o run "opt" do B1-bis-R usou o prompt `legacy`)
 
 | Passo | in antes | out antes | total antes | in depois | out depois | total depois | Δ total |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -172,7 +252,7 @@ O contexto acumulado conta, mas o **prompt-base pesa mais** (41% vs 33%). A subi
 - Em finance, legal e security o grounding fica completo, e isso é garantido pelo E7.
 - **Falta:** a qualidade real do texto só se vê num run real (ver abaixo).
 
-### Porque não chega aos 9k
+### Porque não chega aos 9k (análise feita sobre a projecção, ainda não verificada)
 Depois do `opt` ficam ~4,2k de prompt-base (conteúdo das skills e dos agentes), ~3,7k de saídas e ~3,3k de inputs. A maior parte destes é o copy completo para o critic, que a crítica precisa. As alavancas que restam mexem em conteúdo:
 
 | Alavanca adicional | Total projectado |
@@ -194,6 +274,21 @@ python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo
   --mode external --worker gemini --out ../pilots/run-worker-ctx-opt          # opt = omissão
 # comparar token_usage.jsonl dos dois runs e ler os artefactos 03-copy.md e 04-critic.json lado a lado
 ```
+
+**PowerShell (Windows).** `$env:` persiste na sessão, por isso tem de se limpar antes do run `opt`:
+```powershell
+cd runner
+$env:PLAN_RUNNER_CONTEXT = "legacy"
+python -m plan_runner run ..\docs\orchestration\marketing\templates\examples\seo-article-demo.plan.yaml --mode external --worker gemini --out ..\pilots\run-worker-ctx-legacy
+Remove-Item Env:PLAN_RUNNER_CONTEXT          # <- sem isto, o run seguinte também é legacy
+python -m plan_runner run ..\docs\orchestration\marketing\templates\examples\seo-article-demo.plan.yaml --mode external --worker gemini --out ..\pilots\run-worker-ctx-opt
+```
+
+**Verificar o modo de cada run ANTES de comparar números** (obrigatório desde o B1-bis-R):
+- `pilots/run-worker-ctx-opt/pending_steps/<passo>/result.json` → `meta.context.policy` tem de ser `"opt"` em todos os passos (e `"legacy"` no outro run);
+- `pilots/run-worker-ctx-opt/artifacts/02-seo-brief.summary.md` tem de existir;
+- no `opt`, o `meta.context.inputs` do `critic` mostra `02-seo-brief.json` em modo `summary`;
+- sinal rápido: o `tokens_in` do `research` tem de **descer** no `opt` (é o mesmo pedido, sem inputs).
 
 ## Custo
 
