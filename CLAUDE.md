@@ -15,15 +15,20 @@ Não pedir lista de paths nem ler os 13 STATUS um a um a menos que peçam detalh
 No **início de cada sessão** ou antes da **primeira alteração de código**:
 
 1. Ler `docs/architecture/ECOSYSTEM.md` (ponto de entrada — visão geral do repo, setup vs. plugin MCP).
-2. Ler `docs/initiatives/STATUS.md` (pendências e trabalho actual deste repo — **esta é a fonte
-   corrente**, não `docs/STATUS.md`, que é histórico até 18/08/2026).
+2. Ler `docs/initiatives/PENDENCIAS.md` (**único documento com o estado dos pendentes** deste
+   repo, desde 2026-10-03: tabela §4, decisões §10, aliases de IDs antigos §11).
+   - `docs/initiatives/STATUS.md` fica com o estado dos sistemas (Done, infra, credenciais,
+     resumos do dia); as listas de pendentes dele são históricas.
+   - `docs/audit/PLANO-DE-ACAO.md`, `docs/initiatives/OPEN-ITEMS.md` e o estado do
+     `docs/architecture/EXECUTION-PLAN.md` são históricos (o plano em si continua válido).
+   - `docs/STATUS.md` é histórico até 18/08/2026.
 3. Ler `docs/architecture/GOVERNANCE.md` (camada de governança) se a tarefa tocar em
    `packages/core/`, segurança, ou políticas.
 4. Se a pergunta for transversal a vários repos: `docs/STATUS-PROJETOS.md` ou
    `docs/STATUS-ECOSSISTEMA.md` (histórico, ver `docs/architecture/BOOTSTRAP.md` antes de confiar
    nas datas).
 5. Se existirem, consultar `docs/generated/AGENTS.md` e `docs/generated/CODE_MAP.md`.
-6. Resumir em 3–5 linhas: camada, o que está real, pendências abertas, restrições.
+6. Resumir em 3–5 linhas: camada, o que está real, pendências abertas (do `PENDENCIAS.md`), restrições.
 7. Só depois propor ou executar trabalho.
 
 **Documentos de arquitectura produzidos em 2026-09-18** (mapeamento, governança, segurança,
@@ -55,8 +60,8 @@ pnpm --filter @network-agents/scripts validate:consistency
 
 - Preferir alterações mínimas e verificáveis.
 - Não misturar conhecimento privado de negócios neste repo.
-- Isolamento de banco para demo pública: ver pendência em STATUS (ainda aberta).
-- Commits claros; não inventar estado que o STATUS contradiz.
+- Isolamento de banco para demo pública: ver pendência em STATUS (ainda aberta; o estado vivo dos pendentes está em `docs/initiatives/PENDENCIAS.md`).
+- Commits claros; não inventar estado que o `PENDENCIAS.md` contradiz. Commits e PRs citam o ID do item (ex.: `AU-08: ...`).
 
 ## Onde está o resto
 

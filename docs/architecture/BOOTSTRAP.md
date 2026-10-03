@@ -20,11 +20,18 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 - `CLAUDE.md` (bootstrap) passou a listar `ECOSYSTEM.md` → `docs/initiatives/STATUS.md` → `GOVERNANCE.md` como os 3 primeiros ficheiros a ler, antes do rollup de 9 repos.
 - Este ficheiro (`BOOTSTRAP.md`) é o índice que faltava.
 
+## Estado dos pendentes (2026-10-03, H-001)
+
+**O único documento com o estado dos pendentes é [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md)** (decisão P-6 = A):
+- tabela única de itens vivos (§4), histórico (§7), contradições resolvidas (§8), decisões em A/B/C (§10) e índice de aliases de IDs antigos (§11);
+- `docs/initiatives/STATUS.md` fica com o estado dos sistemas (Done, infra, credenciais, resumos do dia); as listas de pendentes dele são históricas;
+- `docs/audit/PLANO-DE-ACAO.md`, `docs/initiatives/OPEN-ITEMS.md` e o estado do `EXECUTION-PLAN.md` são históricos (aviso no topo de cada um).
+
 ## Plano de execução (2026-10-03)
 
 | Documento | Conteúdo |
 |---|---|
-| [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) | **Plano de execução aprovado pelo maestro (2026-10-03, D-EP1..9 = A).** Universal Core → Domain Packs, matrizes P0/P1/P2 corrigidas com evidência, roadmap F0–F6 (o F0 revalida o L5 existente), Fase 2 só como norte, governança do próprio plano. Diz o que deve acontecer e porquê; o estado vivo continua em `docs/initiatives/STATUS.md` / `OPEN-ITEMS.md` |
+| [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) | **Plano de execução aprovado pelo maestro (2026-10-03, D-EP1..9 = A).** Universal Core → Domain Packs, matrizes P0/P1/P2 corrigidas com evidência, roadmap F0–F6 (o F0 revalida o L5 existente), Fase 2 só como norte, governança do próprio plano. Diz o que deve acontecer e porquê; o estado vivo está em [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md) (até 2026-10-03 estava em `STATUS.md` / `OPEN-ITEMS.md`) |
 | [`execution-plan-sources/`](./execution-plan-sources/README.md) | Fontes do plano, arquivadas tal como foram escritas (análises do maestro e externas) |
 | [`MASTER-PLAN.md`](./MASTER-PLAN.md) | **Histórico** (2026-09-18, anterior à D1). Substituído pelo EXECUTION-PLAN (D-EP7) |
 
