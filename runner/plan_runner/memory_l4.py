@@ -129,6 +129,8 @@ def _row(cur) -> dict[str, Any] | None:
 
 def get(conn, memory_id: str) -> dict[str, Any] | None:
     with conn.cursor() as cur:
+        # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
+        # nosemgrep: sqlalchemy-execute-raw-query
         cur.execute(f"SELECT {COLUMNS} FROM memory_l4 WHERE id = %s", (memory_id,))
         return _row(cur)
 
@@ -182,6 +184,8 @@ def remember(
     if embed_error:
         meta["embedding_error"] = embed_error
     with conn.cursor() as cur:
+        # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
+        # nosemgrep: sqlalchemy-execute-raw-query
         cur.execute(
             f"""INSERT INTO memory_l4 (scope_kind, scope_id, subject, statement, status, confidence,
                     source_run_id, tags, metadata, embedding, supersedes, created_by, expires_at,
@@ -238,6 +242,8 @@ def recall(
 def forget(conn, memory_id: str, *, actor: str, reason: str | None = None) -> dict[str, Any]:
     """Tombstone (contracts.md:54-68): status archived. Nunca apaga. Idempotente."""
     with conn.cursor() as cur:
+        # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
+        # nosemgrep: sqlalchemy-execute-raw-query
         cur.execute(
             f"""UPDATE memory_l4 SET status = 'archived', archived_at = now(), archived_by = %s, archived_reason = %s
                 WHERE id = %s AND status <> 'archived' RETURNING {COLUMNS}""",
@@ -264,6 +270,8 @@ def promote(conn, memory_id: str, *, actor: str) -> dict[str, Any]:
     if row["status"] != "candidate":
         raise L4Error(f"so candidate pode ser promovida (esta {row['status']})")
     with conn.cursor() as cur:
+        # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
+        # nosemgrep: sqlalchemy-execute-raw-query
         cur.execute(
             f"UPDATE memory_l4 SET status = 'active', promoted_at = now(), promoted_by = %s WHERE id = %s RETURNING {COLUMNS}",
             (actor, memory_id),
@@ -286,6 +294,8 @@ def candidates(conn, *, scopes: list[Scope] | None = None, limit: int = 50) -> l
     sql += " ORDER BY created_at LIMIT %s"
     params.append(limit)
     with conn.cursor() as cur:
+        # SEC-2d falso positivo: `sql` so junta COLUMNS e placeholders %s; os valores vao em `params`.
+        # nosemgrep: sqlalchemy-execute-raw-query
         cur.execute(sql, params)
         rows = [dict(r) for r in cur.fetchall()]
     conn.commit()

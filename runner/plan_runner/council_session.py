@@ -873,6 +873,8 @@ class CouncilSession:
 
     # ------------------------------------------------------------- L4
     def _statement(self, verdict: dict[str, Any]) -> str:
+        # SEC-2d: concatenacao implicita intencional (mensagem partida em 2 linhas), nao e uma virgula em falta.
+        # nosemgrep: string-concat-in-list
         lines = [f"Conselho {self.state['council_type']} ({self.state['session_id']}, ronda {self.state['round']}): "
                  f"{str(verdict.get('decision')).upper()} -- tema: {self.state['topic'][:300]}",
                  f"Resumo: {verdict.get('summary') or '-'}"]

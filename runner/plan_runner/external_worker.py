@@ -395,6 +395,8 @@ def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) ->
     user_parts = [
         _section(
             "Passo",
+            # SEC-2d: concatenacao implicita intencional (mensagem partida em 2 linhas), nao e uma virgula em falta.
+            # nosemgrep: string-concat-in-list
             f"- plano: {plan_raw.get('id', '?')}\n- passo: {step_id}\n"
             f"- action: {request.get('action')}\n- artefacto: {artifact or '(nenhum)'}",
         )
@@ -476,6 +478,8 @@ def _build_prompt_legacy(out_root: Path, pending: Path, request: dict[str, Any])
     user_parts = [
         _section(
             "Passo",
+            # SEC-2d: concatenacao implicita intencional (mensagem partida em 2 linhas), nao e uma virgula em falta.
+            # nosemgrep: string-concat-in-list
             f"- plano: {plan_raw.get('id', '?')}\n- passo: {request.get('step_id')}\n"
             f"- action: {request.get('action')}\n- artefacto: {artifact or '(nenhum)'}",
         )

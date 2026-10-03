@@ -10,7 +10,9 @@ name: Security scan (SEC-2)
 #     - pull_request: só os achados NOVOS em relação à base do PR (--baseline-commit),
 #       de severidade ERROR ou WARNING, falham o job;
 #     - push para main / manual: varrimento completo, só relatório (linha de base de
-#       2026-10-03: 85 achados; 65 depois do SEC-2c, triados em SECURITY-AGENTS.md).
+#       2026-10-03: 85 achados; 65 depois do SEC-2c; 49 depois do SEC-2d, TODOS em código
+#       arquivado pela D1 (packages/, apps/), e 0 em código activo. Triagem em SECURITY-AGENTS.md;
+#       falsos positivos em código activo marcados com `nosemgrep` + motivo).
 #
 # Actions fixadas por SHA (o próprio semgrep marca tags mutáveis como risco de supply chain).
 
@@ -107,10 +109,20 @@ jobs:
           from collections import Counter
           d = json.load(open("semgrep.json"))
           r = d["results"]
-          print(f"## semgrep: {len(r)} achados (linha de base depois do SEC-2c: 65)\n")
-          print("| Severidade | N |\n|---|---:|")
-          for sev, n in Counter(x["extra"]["severity"] for x in r).most_common():
-              print(f"| {sev} | {n} |")
+          # D1 (VIA A): apps/ e packages/ são TS arquivado (não apagado); achados lá = "arquivado, não aplicável"
+          archived = ("packages/", "apps/")
+          arch = [x for x in r if x["path"].startswith(archived)]
+          active = [x for x in r if not x["path"].startswith(archived)]
+          print(f"## semgrep: {len(r)} achados (linha de base depois do SEC-2d: 49, todos em código arquivado)\n")
+          print(f"- **código activo: {len(active)}** (esperado 0; falsos positivos marcados com `nosemgrep` + motivo)")
+          print(f"- código arquivado (D1: `packages/`, `apps/`): {len(arch)}, não aplicável e não bloqueia\n")
+          for x in active:
+              print(f"  - ACTIVO {x['extra']['severity']} `{x['check_id'].split('.')[-1]}` {x['path']}:{x['start']['line']}")
+          print("| Severidade | Activo | Arquivado |\n|---|---:|---:|")
+          for sev in ("ERROR", "WARNING", "INFO"):
+              a = sum(1 for x in active if x["extra"]["severity"] == sev)
+              b = sum(1 for x in arch if x["extra"]["severity"] == sev)
+              print(f"| {sev} | {a} | {b} |")
           print("\n| Regra | N |\n|---|---:|")
           for rule, n in Counter(x["check_id"].split(".")[-1] for x in r).most_common(15):
               print(f"| {rule} | {n} |")

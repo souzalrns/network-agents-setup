@@ -129,7 +129,7 @@ As actions estão fixadas por SHA, e o workflow passa no `actionlint` e nas regr
     - SQL (9): as f-strings só interpolam constantes (`COLUMNS`, `CHUNKS_TABLE`), e os valores vão como parâmetros `%s` (ex.: `runner/plan_runner/memory_l4.py:132`, `runner/plan_runner/supabase_writer.py:233`);
     - `subprocess.Popen` (2): lista de argumentos com `sys.executable`, num cliente de teste (`mcp/plan_runner/test_client.py:51`).
   - **20 WARNING reais (supply chain):** actions dos workflows existentes fixadas por tag e não por SHA (`runner-tests.yml` 8, `ci.yml` 5, `release.yml` 5, `ingest-knowledge.yml` 2). Pendente: SEC-2c. **FEITO (SEC-2c, 2026-10-03):** as 17 `uses:` por tag dos 4 workflows antigos ficaram fixadas por SHA, no commit para onde a tag móvel apontava, logo sem mudar de versão. O semgrep passou a 0 achados de GitHub Actions; o repo passou de 85 para 65 achados (WARNING de 63 para 43, todos de código, SEC-2d). Os SHAs são actualizados pelo Dependabot (`package-ecosystem: github-actions` em `.github/dependabot.yml`).
-  - **O resto** (path traversal / fs com nomes não literais, sobretudo em `packages/`, que é o TS arquivado pela D1; i18n; formatação) fica na linha de base. Só achados **novos** falham um PR.
+  - **O resto** (path traversal / fs com nomes não literais, sobretudo em `packages/`, que é o TS arquivado pela D1; i18n; formatação) fica na linha de base. Só achados **novos** falham um PR. **Triado no SEC-2d** (secção abaixo).
   - Teste do modo PR: um commit limpo passa (exit 0); um commit com `subprocess.call(cmd, shell=True)` falha (exit 1).
 
 **Reproduzir localmente:**
@@ -138,6 +138,47 @@ go install github.com/zricethezav/gitleaks/v8@v8.30.1 && "$(go env GOPATH)/bin/g
 pip install semgrep==1.179.0 && git clone https://github.com/semgrep/semgrep-rules /tmp/sr && git -C /tmp/sr checkout a84ff9cc2453ca91d581380de4b8b3f272f6f4be
 semgrep scan --metrics=off --config /tmp/sr/python --config /tmp/sr/yaml/github-actions --config /tmp/sr/generic/secrets --config /tmp/sr/javascript --config /tmp/sr/typescript .
 ```
+
+### SEC-2d: triagem da linha de base (2026-10-03)
+
+**Resultado:** 65 → **49 achados, todos em código arquivado pela D1** (`packages/`, `apps/`; `docs/audit/DECISAO-1-runtimes.md:89`). **Código activo: 0 ERROR, 0 WARNING, 0 INFO.**
+
+**Código activo: 16 falsos positivos marcados** (11 ERROR + 5 WARNING). Cada um tem duas linhas: o motivo e, logo por baixo, `# nosemgrep: <regra>` (`//` em TS).
+- O id curto da regra chega, e a marcação é **específica da regra**: um `nosemgrep` com outra regra não silencia esta. Isto foi testado localmente antes de aplicar.
+- Só se acrescentaram linhas de comentário (30 linhas, nenhuma alterada). Ruff limpo; 399 testes verdes.
+
+| Regra | Onde (linha do achado antes da marcação) | Porque é falso positivo |
+|---|---|---|
+| `sqlalchemy-execute-raw-query` (ERROR ×9) | `runner/plan_runner/memory_l4.py` 132, 185, 241, 267, 289; `runner/plan_runner/supabase_writer.py` 108, 156, 228, 233 | As f-strings só interpolam constantes do módulo (`COLUMNS`, `memory_l4.py:51`; `CHUNKS_TABLE`, `supabase_writer.py:30`); os valores vão sempre como parâmetros `%s`. O `candidates()` só junta placeholders |
+| `python36-compatibility-Popen2` + `dangerous-subprocess-use-audit` (ERROR ×2) | `mcp/plan_runner/test_client.py` 51 | Lista de argumentos fixa (`sys.executable`, sem shell), num cliente de teste do lab |
+| `string-concat-in-list` (WARNING ×3) | `runner/plan_runner/council_session.py` 876; `runner/plan_runner/external_worker.py` 398, 479 | Concatenação implícita **intencional** (mensagem partida em 2 linhas), não é uma vírgula em falta |
+| `return-not-in-function` (WARNING ×1) | `runner/plan_runner/models.py` 11 | É uma `lambda` num `default_factory` |
+| `path-join-resolve-traversal` (WARNING ×1) | `vitest.config.ts` 9 | `name` vem dos nomes fixos de packages do próprio ficheiro (linhas 14–20) |
+
+**Código arquivado (D1, VIA A: "arquivado, não apagado"): 49 achados. Decisão do maestro (opção A): "arquivado, não aplicável"; não bloqueia o CI.**
+
+| Package | Regra | Sev. | N |
+|---|---|---|---:|
+| `packages/mcp` | `path-join-resolve-traversal` | WARNING | 9 |
+| `packages/mcp` | `detect-non-literal-fs-filename` | WARNING | 8 |
+| `packages/mcp` | `jquery-insecure-selector` | WARNING | 1 |
+| `packages/mcp` | `unsafe-formatstring` | INFO | 1 |
+| `packages/scripts` | `path-join-resolve-traversal` | WARNING | 7 |
+| `packages/scripts` | `detect-non-literal-fs-filename` | WARNING | 6 |
+| `packages/scripts` | `detect-non-literal-regexp` | WARNING | 1 |
+| `packages/scripts` | `unsafe-formatstring` | INFO | 5 |
+| `packages/core` | `no-stringify-keys` | WARNING | 3 |
+| `packages/core` | `detect-non-literal-fs-filename` | WARNING | 2 |
+| `packages/core` | `missing-template-string-indicator` | INFO | 1 |
+| `packages/websocket` | `unsafe-dynamic-method` | WARNING | 1 |
+| `apps/web` | `jsx-not-internationalized` | INFO | 4 |
+| **Total** | | | **49** (38 WARNING, 11 INFO) |
+
+- **Porque continuam a ser varridos** (em vez de ficarem num `.semgrepignore`):
+  - um PR que **acrescente** um achado ERROR/WARNING em `packages/` ou `apps/` continua a falhar (modo diff-aware), por isso não se perde cobertura;
+  - um `.semgrepignore` substituiria as exclusões por omissão do semgrep.
+- **O relatório do `main` separa** o código activo (esperado 0, e cada achado listado) do código arquivado.
+- **Se o TS for reactivado** (revertendo a D1), estes 49 têm de ser triados um a um antes. O `packages/mcp` lê ficheiros com paths dinâmicos (`path-join-resolve-traversal`, `detect-non-literal-fs-filename`) e merece revisão real nesse caso.
 
 ## Verificação
 

@@ -48,6 +48,8 @@ def main() -> int:
     env["PLAN_RUNNER_MCP_PROFILE"] = "permissive"  # lab only
     env["PLAN_RUNNER_MCP_KEY"] = "sk_lab_change_me"
 
+    # SEC-2d falso positivo: argumentos fixos em lista (sys.executable, sem shell), cliente de teste do lab.
+    # nosemgrep: python36-compatibility-Popen2, dangerous-subprocess-use-audit
     proc = subprocess.Popen(
         [sys.executable, "-m", "mcp_plan_runner"],
         cwd=str(HERE),
