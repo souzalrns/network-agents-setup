@@ -1,0 +1,10 @@
+# SEC-2 (2026-10-03): achados históricos conhecidos, aceites de forma explícita.
+# Só commits antigos. Uma fuga nova (outro commit, ficheiro ou linha) falha o CI.
+#
+# Ambos: fragmento truncado (prefixo + "...") da antiga SUPABASE_SERVICE_ROLE_KEY,
+# citado em docs/initiatives/STATUS.md (linha S20). Segundo esse registo, a chave
+# foi rotacionada e apagada no Supabase a 2026-09-19. O fragmento foi removido do
+# ficheiro actual a 2026-10-03; reescrever o histórico exigiria force-push (proibido).
+# Confirmar a revogação no Supabase: OPEN-ITEMS, SEC-2b.
+b9ec8489bf573f9975e83d5b292f77282efc5d65:docs/initiatives/STATUS.md:generic-api-key:41
+3217917c24daa2f9946acbcd3f56cfa09d4dc009:docs/initiatives/STATUS.md:generic-api-key:41

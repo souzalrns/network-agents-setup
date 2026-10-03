@@ -42,7 +42,7 @@ capabilities:
     agent: meta.security-auditor
     skill: skills/meta/security-audit/SKILL.md
     tools_guidance: [gitleaks]
-    status: partial  # coberto pela skill audit; CI job opcional (J10)
+    status: partial  # skill audit no runner + gitleaks no CI (SEC-2, .github/workflows/security-scan.yml)
 
   - id: supply_chain
     description: Dependências e imagens (OSV, Trivy guidance).

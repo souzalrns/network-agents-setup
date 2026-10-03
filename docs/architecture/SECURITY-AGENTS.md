@@ -93,6 +93,39 @@ Não se fundem sem decisão explícita: uma audita (READ), a outra guia a implem
 - **Segredos nunca entram num prompt.** Qualquer solução futura que injecte ficheiros tem de excluir `.env*`, chaves e credenciais. A `secrets_hygiene` faz-se com `gitleaks` **local** ou no CI (J10), nunca mandando ficheiros a um LLM externo.
 - **Os conselhos usam só o AGENT.md, não a skill.** O `engenharia.revisor-codigo` (crítico nos conselhos `security`/`architecture`) aponta para uma skill do pack Claude (`code-review-and-quality`), que só é carregada quando corre como passo de plano.
 
+## CI de segurança: gitleaks + semgrep (SEC-2, 2026-10-03)
+
+Workflow `.github/workflows/security-scan.yml`, em cada PR para `main`, em cada push para `main` e à mão. O repo é público, por isso os minutos são gratuitos.
+
+| Job | O que faz | Bloqueia? |
+|---|---|---|
+| **gitleaks** `v8.30.1` (instalado com `go install`, verificado em `sum.golang.org`) | Segredos no **histórico git completo**, com valores redigidos | **Sim**, em qualquer fuga que não esteja no `.gitleaksignore` |
+| **semgrep** `1.179.0` + regras open source `semgrep/semgrep-rules` fixadas no commit `a84ff9cc` (python, github-actions, secrets, javascript, typescript; sem login, registo nem métricas) | SAST | **PR:** sim, mas só achados **novos** face à base do PR (`--baseline-commit`), de severidade ERROR/WARNING. **main/manual:** não; varrimento completo com relatório (resumo no job e artefacto `semgrep.json`) |
+
+As actions estão fixadas por SHA, e o workflow passa no `actionlint` e nas regras de GitHub Actions do próprio semgrep.
+
+**Linha de base medida localmente (2026-10-03), com as mesmas versões e regras do CI:**
+- **gitleaks:** 501 commits, **2 achados históricos**, mais 1 no ficheiro actual, todos da mesma linha.
+  - Era um **fragmento truncado** (prefixo + "...") da antiga `SUPABASE_SERVICE_ROLE_KEY`, citado no `docs/initiatives/STATUS.md` (S20) como "rotacionada e apagada no Supabase em 2026-09-19".
+  - O fragmento foi **removido** do ficheiro actual.
+  - As 2 ocorrências do histórico estão no `.gitleaksignore`, com o motivo; reescrever o histórico exigiria force-push.
+  - Depois disto: **0 achados**.
+  - Teste negativo: um token falso novo num commit faz o gitleaks sair com 1.
+- **semgrep:** **85 achados** (11 ERROR, 63 WARNING, 11 INFO). Triagem:
+  - **11 ERROR são falsos positivos:**
+    - SQL (9): as f-strings só interpolam constantes (`COLUMNS`, `CHUNKS_TABLE`), e os valores vão como parâmetros `%s` (ex.: `runner/plan_runner/memory_l4.py:132`, `runner/plan_runner/supabase_writer.py:233`);
+    - `subprocess.Popen` (2): lista de argumentos com `sys.executable`, num cliente de teste (`mcp/plan_runner/test_client.py:51`).
+  - **20 WARNING reais (supply chain):** actions dos workflows existentes fixadas por tag e não por SHA (`runner-tests.yml` 8, `ci.yml` 5, `release.yml` 5, `ingest-knowledge.yml` 2). Pendente: SEC-2c.
+  - **O resto** (path traversal / fs com nomes não literais, sobretudo em `packages/`, que é o TS arquivado pela D1; i18n; formatação) fica na linha de base. Só achados **novos** falham um PR.
+  - Teste do modo PR: um commit limpo passa (exit 0); um commit com `subprocess.call(cmd, shell=True)` falha (exit 1).
+
+**Reproduzir localmente:**
+```bash
+go install github.com/zricethezav/gitleaks/v8@v8.30.1 && "$(go env GOPATH)/bin/gitleaks" git --redact --no-banner .
+pip install semgrep==1.179.0 && git clone https://github.com/semgrep/semgrep-rules /tmp/sr && git -C /tmp/sr checkout a84ff9cc2453ca91d581380de4b8b3f272f6f4be
+semgrep scan --metrics=off --config /tmp/sr/python --config /tmp/sr/yaml/github-actions --config /tmp/sr/generic/secrets --config /tmp/sr/javascript --config /tmp/sr/typescript .
+```
+
 ## Verificação
 
 ```text
