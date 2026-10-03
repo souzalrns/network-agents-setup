@@ -13,9 +13,13 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 
 from . import hitl
 from .engine import (
+    _check_max_cost,
+    _check_max_tokens,
     _load_client_memory,
     _log_ignored_fields,
+    _paused_budget,
     _validate_out_dir,
+    _worker_for,
     load_plan,
     load_status,
     save_status,
@@ -38,6 +42,9 @@ def run_plan_langgraph(
     *,
     mode: str = "stub",
     out_dir: Path | None = None,
+    worker: str | None = None,
+    max_tokens: int | None = None,
+    max_cost_usd: float | None = None,
 ) -> dict[str, Any]:
     plan = load_plan(plan_path)
     report = compile_report(plan)
@@ -45,6 +52,9 @@ def run_plan_langgraph(
     if mode == "dry-run":
         return {"mode": "dry-run", **report, "order_flat": [s.id for w in parallel_groups(plan) for s in w]}
 
+    worker_obj = _worker_for(mode, worker)  # W-005: worker inline, como no native
+    _check_max_tokens(max_tokens)
+    _check_max_cost(max_cost_usd)
     run_id = f"run_{uuid4().hex[:10]}"
     out = _validate_out_dir(out_dir) if out_dir else Path("pilots") / run_id
     if out.exists() and any(out.iterdir()):
@@ -170,10 +180,7 @@ def run_plan_langgraph(
         if mode == "stub":
             result = execute_stub(out, step)
         else:
-            result = execute_external_request(out, step)
-            if result.detail == "waiting_external":
-                log.append("step_waiting_external", run_id, {"step_id": step.id})
-                raise _WaitExternal(step.id, partial_state=dict(state))
+            result = _external(out, step, worker_obj, log, run_id, state)
 
         if not result.ok:
             log.append("step_failed", run_id, {"step_id": step.id, "detail": result.detail})
@@ -203,6 +210,12 @@ def run_plan_langgraph(
         "waves": [[s.id for s in w] for w in waves],
         "thread_id": thread_id,
     }
+    if worker_obj is not None:
+        status["worker"] = worker_obj.name
+    if max_tokens is not None:
+        status["max_tokens"] = max_tokens
+    if max_cost_usd is not None:
+        status["max_cost_usd"] = max_cost_usd
     save_status(out, status)
 
     result: dict[str, Any] | None = None
@@ -255,9 +268,15 @@ def run_plan_langgraph(
         status["state"] = "waiting_external"
         status["paused_at_step"] = w.step_id
         status["current_step"] = w.step_id
+        if w.worker_error:
+            status["worker_error"] = w.worker_error
         if w.partial_state.get("completed"):
             status["completed"] = list(w.partial_state["completed"])
         save_status(out, status)
+        return status
+
+    except _PausedBudget as b:
+        _paused_budget(out, log, run_id, status, b.step_id, b.result, set(b.partial_state.get("completed") or []))
         return status
 
     except Exception as e:
@@ -268,7 +287,7 @@ def run_plan_langgraph(
             "error": str(e),
             "type": type(e).__name__,
         })
-        return _run_waves_fallback(plan, out, run_id, mode, log, status)
+        return _run_waves_fallback(plan, out, run_id, mode, log, status, worker_obj)
 
     # Sucesso do LangGraph
     completed = list(result.get("completed") or [])
@@ -294,10 +313,36 @@ def run_plan_langgraph(
 
 
 class _WaitExternal(Exception):
-    def __init__(self, step_id: str, partial_state: dict | None = None):
+    def __init__(self, step_id: str, partial_state: dict | None = None, worker_error: str | None = None):
         super().__init__(step_id)
         self.step_id = step_id
         self.partial_state = partial_state or {}
+        self.worker_error = worker_error
+
+
+class _PausedBudget(Exception):
+    """W-005: o worker inline encontrou um tecto (tokens ou custo); o run pausa em paused_budget."""
+
+    def __init__(self, step_id: str, result: Any, partial_state: dict | None = None):
+        super().__init__(step_id)
+        self.step_id = step_id
+        self.result = result
+        self.partial_state = partial_state or {}
+
+
+def _external(out: Path, step: Step, worker_obj: Any, log: EventLog, run_id: str, state: dict) -> Any:
+    """Passo external. W-005: com worker inline o passo corre ja, como no engine native;
+    sem worker fica em waiting_external (standalone + resume), como antes."""
+    result = execute_external_request(out, step, worker_obj)
+    if result.detail == "budget_exceeded":
+        raise _PausedBudget(step.id, result, partial_state=dict(state))
+    if result.detail == "waiting_external":
+        payload: dict[str, Any] = {"step_id": step.id}
+        if result.worker_error:
+            payload["worker_error"] = result.worker_error
+        log.append("step_waiting_external", run_id, payload)
+        raise _WaitExternal(step.id, partial_state=dict(state), worker_error=result.worker_error)
+    return result
 
 
 def _run_waves_fallback(
@@ -307,6 +352,7 @@ def _run_waves_fallback(
     mode: str,
     log: EventLog,
     status: dict[str, Any],
+    worker_obj: Any = None,
 ) -> dict[str, Any]:
     """Execute by parallel waves using the same stub/external executors (no LG runtime)."""
     waves = parallel_groups(plan)
@@ -336,8 +382,13 @@ def _run_waves_fallback(
             if mode == "stub":
                 result = execute_stub(out, step)
             else:
-                result = execute_external_request(out, step)
+                result = execute_external_request(out, step, worker_obj)
+                if result.detail == "budget_exceeded":  # W-005
+                    _paused_budget(out, log, run_id, status, step.id, result, completed)
+                    return status
                 if result.detail == "waiting_external":
+                    if result.worker_error:
+                        status["worker_error"] = result.worker_error
                     status["state"] = "waiting_external"
                     status["paused_at_step"] = step.id
                     status["completed"] = sorted(completed)
@@ -362,7 +413,14 @@ def _run_waves_fallback(
     return status
 
 
-def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = None) -> dict[str, Any]:
+def resume_plan_langgraph(
+    out_dir: Path,
+    decision: str,
+    payload: str | None = None,
+    worker: str | None = None,
+    max_tokens: int | None = None,
+    max_cost_usd: float | None = None,
+) -> dict[str, Any]:
     out_dir = _validate_out_dir(out_dir)
     """Resume a execuÃ§Ã£o usando o checkpoint real do LangGraph."""
 
@@ -379,6 +437,7 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
         "waiting_external",
         "running",
         "interrupted",
+        "paused_budget",
     }:
         raise PlanError(f"cannot resume from state {state!r}")
 
@@ -395,6 +454,28 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
     plan = load_plan(plan_path)
     mode = status.get("mode") or "stub"
     log = EventLog(out_dir / "events.jsonl")
+    # W-005: --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.
+    worker_obj = _worker_for(mode, worker if worker is not None else status.get("worker"))
+    if worker is not None:
+        if worker_obj is None:
+            status.pop("worker", None)
+        else:
+            status["worker"] = worker_obj.name
+    status.pop("worker_error", None)
+    _check_max_tokens(max_tokens)
+    _check_max_cost(max_cost_usd)
+    if max_tokens is not None:
+        status["max_tokens"] = max_tokens
+    if max_cost_usd is not None:
+        status["max_cost_usd"] = max_cost_usd
+    if state == "paused_budget":
+        resumed = {"step_id": status.get("paused_at_step"), "spent": status.get("budget_spent"), "max_tokens": status.get("max_tokens")}
+        if status.get("max_cost_usd") is not None:
+            resumed["max_cost_usd"] = status["max_cost_usd"]
+        log.append("budget_resumed", run_id, resumed, actor={"kind": "human", "id": "cli"})
+        status.pop("budget_spent", None)
+        status.pop("budget_unit", None)
+    save_status(out_dir, status)  # o worker le os tectos do status.json em disco (token_cap/cost_cap)
     # Crash recovery: state left as "running" mid-step — continue like waiting_external.
     # Mesmo evento do engine legacy (engine.py:183) para paridade de observabilidade.
     if state == "running":
@@ -552,15 +633,7 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
             if mode == "stub":
                 result = execute_stub(out_dir, step)
             else:
-                result = execute_external_request(out_dir, step)
-
-                if result.detail == "waiting_external":
-                    log.append(
-                        "step_waiting_external",
-                        run_id,
-                        {"step_id": step.id},
-                    )
-                    raise _WaitExternal(step.id, partial_state=dict(state))
+                result = _external(out_dir, step, worker_obj, log, run_id, state)
 
             if not result.ok:
                 log.append(
@@ -644,6 +717,8 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
         status["state"] = "waiting_external"
         status["paused_at_step"] = w.step_id
         status["current_step"] = w.step_id
+        if w.worker_error:
+            status["worker_error"] = w.worker_error
         # Uniao: completed anterior + completed novo (do partial_state)
         previous = set(status.get("completed") or [])
         new = set(w.partial_state.get("completed") or [])
@@ -651,6 +726,11 @@ def resume_plan_langgraph(out_dir: Path, decision: str, payload: str | None = No
         if union:
             status["completed"] = union
         save_status(out_dir, status)
+        return status
+
+    except _PausedBudget as b:
+        done = set(status.get("completed") or []) | set(b.partial_state.get("completed") or [])
+        _paused_budget(out_dir, log, run_id, status, b.step_id, b.result, done)
         return status
 
     except Exception as e:
