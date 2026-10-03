@@ -11,7 +11,7 @@
 |---|---|---|
 | Última versão | 0.3.1, de 31/07/2025 (`AUDIT-INGESTION.md:246`) | **Igual**: 0.3.1, de 31/07/2025 (PyPI). Mais de 14 meses sem release |
 | Issue #605: o token (PAT) vai para os logs e para as mensagens de `RuntimeError` | Aberta a 08/09/2026, sem resposta (`:247`) | **Continua aberta**, sem resposta de maintainer e sem PR |
-| Validação do host (`github.*`, por prefixo ou sufixo?) | NÃO VERIFICADO (`:243`) | Continua NÃO VERIFICADO (não li o código) |
+| Validação do host (`github.*`, por prefixo ou sufixo?) | NÃO VERIFICADO (`:244`) | Continua NÃO VERIFICADO (não li o código) |
 | Limites | 10 MB por ficheiro, 500 MB no total, 60 s de timeout; o clone pode encher o disco antes do timeout (`:242-243`) | Sem mudança conhecida |
 
 **Necessidade real neste repo:** nenhuma hoje.
@@ -20,7 +20,7 @@
 
 | | Opção |
 |---|---|
-| **A (recomendada)** | **Não adoptar.** Se aparecer a necessidade (ex.: indexar um repo público de referência), fazer um **EXTRACT**: um adapter próprio de `ingest_document` com `connector_ref=git`, usando `git clone --depth 1 --filter=blob:none` e um sparse-checkout com tecto de bytes. A mitigação vem do próprio AUDIT-INGESTION (`:250`) |
+| **A (recomendada)** | **Não adoptar.** Se aparecer a necessidade (ex.: indexar um repo público de referência), fazer um **EXTRACT**: um adapter próprio de `ingest_document` com `connector_ref=git`, usando `git clone --depth 1 --filter=blob:none` e um sparse-checkout com tecto de bytes. A mitigação vem do próprio AUDIT-INGESTION (`:252`) |
 | B | Adoptar com reservas, como o audit dizia: pin `==0.3.1`, só repos públicos e nunca com token enquanto a #605 estiver aberta |
 | C | Rejeitar de vez e retirar do backlog |
 
