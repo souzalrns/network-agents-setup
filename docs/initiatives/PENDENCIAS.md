@@ -3,7 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
-> **Sessão "continuação operacional" (2026-10-03, `main` `c9edd72`):** R-004 com PR (MCP #15); C-2: lado DB feito pelo DEV, lado repo com PR (MCP #16); E-003 → P-18; H-002 e H-003 com o bloqueio actualizado; F0.6 e F0.7b deixam de esperar pelo F0.4 (fechado no #64; o F0.7b passa a ABERTO).
+> **Sessão "continuação operacional" (2026-10-03, `main` `c9edd72`):** R-004 com PR (MCP #15); C-2: lado DB feito pelo DEV, lado repo com PR (MCP #16); E-003 → P-18; H-002 e H-003 com o bloqueio actualizado; F0.6 e F0.7b deixam de esperar pelo F0.4 (fechado no #64; o F0.7b passa a ABERTO). Depois, a pedido do maestro: S-004 (PR MCP #17), factos do README no H-01 (§4.1) e V40 (ponteiros que o H-001 deixou).
 > **Revisão pós-merge (2026-10-03):** `main` `d79d7be` (NAS, merges #79 e #81) e `d635945` (MCP, merges #11–#14); §10 com as decisões P-1 a P-9.
 > Substitui, **para o estado**, os três documentos que ficam históricos, sem alterações de conteúdo (só uma linha de aviso no topo):
 > - `docs/audit/PLANO-DE-ACAO.md` (P);
@@ -11,9 +11,9 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **113 itens vivos** (§4): ABERTO 61, EM CURSO 10, BLOQUEADO 42;
+> - **114 itens vivos** (§4): ABERTO 61, EM CURSO 11, BLOQUEADO 42;
 > - **88 linhas de histórico** (§7): 70 fechadas, 18 obsoletas;
-> - **39 contradições resolvidas** (§8): 26 da auditoria #65 + 13 novas;
+> - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-9 decididas pelo maestro; P-10 a P-18 pendentes.
 
 ## 0. Como usar este documento
@@ -90,7 +90,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (113 itens vivos)
+## 4. Tabela única (114 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -165,7 +165,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | E15 | Proveniência do esboço do CouncilSession/`councils.yaml`: substituir a reconstituição se aparecerem os originais | DOC-ERRADO | BLOQUEADO | DEV | Baixa | Aparecerem os originais | P:553; O:105 | — | VERIFICADO |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão (partir/arquivar) | P:297; A5 §5.1 | J8 (parte) | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:102` UP017; `main` `2b27f66`), fora do lint do CI | BUG | BLOQUEADO | CLAUDE | Baixa | F3 (§10 P-7 = A: registar e tratar no F3) | ruff 0.16.10 local (2.ª ronda, 03/10): 2 avisos, ambos `--fix`; `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
-| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | Nenhum; fazer depois do F0 fechar (o maestro decide o conteúdo, o agente executa) | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9 | — | VERIFICADO |
+| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | Nenhum; fazer depois do F0 fechar (o maestro decide o conteúdo, o agente executa) | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
 | G1.1 | Trading: pesquisa padrão ouro de repos de trading/simulação | FALTA-DECIDIR | BLOQUEADO | AMBOS | Alta | F5 + D-EP8 (domínio só com uso real) | A5 §5.4 (grupos G–J); EP:1618-2428 | J9 (parte) | VERIFICADO |
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | BLOQUEADO | DEV | Média | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | BLOQUEADO | DEV | Alta | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
@@ -209,6 +209,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | T-004 | Preencher os preços confirmados em `config/model-prices.yaml` (a `null`: um plano com `max_cost_usd` pára no 1.º passo) | FALTA-LIGAR | ABERTO | DEV | Média | Página oficial de preços (bloqueada na sessão do D6) | PR #72; `config/model-prices.yaml` | — | VERIFICADO |
 | T-005 | (Opcional) Escolher os modelos por tier em `config/model-tiers.yaml` | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão | PR #73; `config/model-tiers.yaml` | — | VERIFICADO |
 | S-003 | Testar no Claude.ai connector uma chamada real às tools do MCP depois dos tectos de input do S-001 (pedido normal passa; acima do tecto dá erro de validação legível) | FALTA-TESTE | ABERTO | DEV | Baixa | Conector real (só o DEV); pode ir no mesmo teste do F0.6 | `ANM:CLAUDE.md` ("Alterações ao router e tools MCP: verificar impacto no Claude.ai connector"); PR MCP #14 §Impacto | — | VERIFICADO |
+| S-004 | Triagem de segurança do MCP: vulnerabilidades de dependências (`npm audit`) e backlog com IDs e severidade (não reutiliza o S-003, que é o teste do connector) | BUG | EM CURSO | AMBOS | Média | Merge do PR MCP #17; depois, os alertas da aba Security do MCP (só o DEV vê; como o A22 no NAS) | `npm audit` na `main` MCP `d635945`: `next` 16.3.5 **crítica** (GHSA-vcvr-r3jv-pc5j, RCE no `next/og`; o código não usa `next/og`) e `ip-address` 10.5.0 moderada (transitiva); PR MCP #17 (`next` 16.3.8, `ip-address` 10.7.3; `npm audit` = 0; `npm test` 16/16; `next build` OK) | — | VERIFICADO |
 | H-004 | Correr `graphify update .` localmente nos 2 repos depois das mudanças de código desta ronda (o `graphify-out/` é gitignored; a ferramenta não existe na sessão cloud) | FALTA-LIGAR | ABERTO | DEV | Baixa | Máquina local do DEV | `ANM:CLAUDE.md` §Graphify ("Após mudanças relevantes de código: graphify update ."); `which graphify` vazio na sessão | — | VERIFICADO |
 
 
@@ -257,6 +258,21 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | O `toolsAllowed` morto: dado como "DONE", mas sem fonte | S33 → AU-20 | ST:62 ("DONE"); A5:169 ("FECHADO-SÓ-NO-PAPEL") |
 | A hipótese refutada: −16% projectado contra −2,6% real | B1-bis-R | ST:554; PRs #45 e #55 |
 
+**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). Só o ponteiro dos pendentes (`README.md:36`) foi corrigido já (V40); o resto fica para o PR do H-01.
+
+| README diz | Estado verificado | Evidência |
+|---|---|---|
+| Governança em `packages/core/` (TypeScript) (`README.md:18`; o mesmo em `docs/architecture/ECOSYSTEM.md:21`) | O TS está arquivado pela D1. A governança viva é Python + YAML: `config/areas.yaml`, capabilities, E7, HITL e orçamento do `plan_runner` | `docs/architecture/EXECUTION-PLAN.md:98`; `docs/audit/DECISAO-1-runtimes.md`; `python -m plan_runner.areas` |
+| "5 REAL, 19 INCOMPLETO, 14 MOCK" (`:28`) | Errata do AU-37: REAL 6, MOCK 13 | `docs/architecture/CORE-MAPPING.md:3-4` (#69) |
+| "RAG fechado (C8, 6/6): 110 chunks de 33 ficheiros" (`:27`) | O C8 estava "fechado só no papel" (→ J3). Hoje: tabela canónica `knowledge_chunks`, MANIFEST com 39 fontes, F0 em curso (F0.1, F0.3, F0.6, F0.7b e F0.12 por fechar); o n.º de linhas está por confirmar (F0.1b; esperado 163) | `scripts/ingest_delta.py` (`MANIFEST`: 39); corrida #169 do `ingest-knowledge` (`unchanged=39`); A5:190 |
+| "67 skills + 35 agentes, em 8 domínios" (`:29`) | 69 `SKILL.md` (claude 26, meta 21, marketing 16, design 4, security 2) e 38 `*.agent.md`; falta o domínio `security` na lista | `find skills -name SKILL.md`; `find agents -name '*.agent.md'` |
+| "Detalhe completo e actualizado: `docs/initiatives/STATUS.md`" (`:36`) | Pendentes só no `PENDENCIAS.md` (P-6 = A) | **Corrigido** (V40) |
+| Os verticais "não vivem aqui", vêm do MCP (`:22`; `ECOSYSTEM.md:13`) | Também há agentes de domínio no setup (ex.: `agents/security`, `agents/marketing`), ligados por áreas | `config/areas.yaml` (10 áreas, 37 agentes; E7) |
+| Requisitos "Node.js 18+" e "Redis 7+"; instalação `pnpm run build`/`dev` (`:107-122`) | O caminho operacional é o `runner/` (pip; Python 3.12 no CI). O TS precisa de Node 22 (`undici@8`), não 18. O Redis só aparece no TS arquivado (6 ficheiros em `packages/`), nada no `runner/`, `scripts/` ou `config/` | `.github/workflows/ci.yml` (Node 22 e comentário do `undici`); `runner-tests.yml:70`; `grep -ril redis` |
+| `docs/knowledge/ai-findability.md` "(50 chunks RAG)" (`:50`) | 9 chunks com o chunker actual | `plan_runner.chunking.chunk_markdown` sobre o ficheiro |
+| Sem menção a `PENDENCIAS.md`, `EXECUTION-PLAN.md`, pipeline de security, CouncilSession ou L4 | Lacuna, não contradição | — |
+| AgentMesh e Cedar por integrar (`:33-34`) | **Correcto** | EX-C3, EX-C4, B16 (§4) |
+
 **Riscos para a execução** (não cortam o âmbito, condicionam o como):
 - **Mover `docs/STATUS.md` parte o CI.**
   - O `packages/scripts/src/validate/check-consistency.ts:66-73` dá `error` quando o ficheiro falta, e corre no `ci.yml:129`.
@@ -280,10 +296,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | CLAUDE | 13 | F1, F1b, F2, F4, ING-5, ING-6, W-003, EX-B7, INIT-094, H-002, R-004, E-003, H-003 |
 | DEV | 70 | F0.1, F0.3, F0.6, F0.7b, F0.12, R-002, R-003, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
-| AMBOS | 30 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1 |
+| AMBOS | 31 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: PRs MCP #15 (R-004) e #16 (C-2), um de cada vez (cada merge faz um redeploy na Vercel), e o PR do NAS que leva esta actualização;
+- merges: PRs MCP #15 (R-004), #16 (C-2) e #17 (S-004), um de cada vez (cada merge faz um redeploy na Vercel), e o PR do NAS que leva esta actualização;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
 - F0.1 e F0.3 (SELECTs), incluindo o F0.1b que fecha o R-002 (esperado: 163 linhas);
@@ -300,10 +316,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, F3, F5, S20, C-2, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 45 | F0.1, F0.3, F0.6, F0.7b, F2, F4, F6, R-002, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004 |
+| Média | 46 | F0.1, F0.3, F0.6, F0.7b, F2, F4, F6, R-002, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
 | Baixa | 51 | F0.12, F1b, R-001, R-003, ING-5, ING-6, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, M-003, M-004, L4-2, L4-4, G6, INIT-094, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, E-003, H-003, T-005, S-003, H-004 |
 
-**Por estado:** ABERTO 61 · EM CURSO 10 · BLOQUEADO 42.
+**Por estado:** ABERTO 61 · EM CURSO 11 · BLOQUEADO 42.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (88 linhas: 70 FECHADO, 18 OBSOLETO)
@@ -403,7 +419,7 @@ Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou deci
 | P1–P5 / J1–J7 (backlog) | Constitution, META Compiler, AR-000…015, A2A, UI visual, Caveman | anterior a 2026-09-29 | A5 §5.2 e §5.4 (arquivados) | OBSOLETO | J1–J7 do backlog ≠ J1–J11 das frentes do P §4 |
 
 
-## 8. Contradições resolvidas (39)
+## 8. Contradições resolvidas (40)
 
 Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidência. V1–V26 são as 26 da auditoria cruzada (PR #65, `docs/ops/PENDENCIAS-CRUZADAS.md` §2.1); V27 em diante são novas desta consolidação.
 
@@ -449,6 +465,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | V37 | INIT-094 *(nova)* | ST, secção Harnesses: estrelas antigas, licenças em falta, `dsh-desktop` descrito como "desktop para DeepSeek" | Ver §2 do doc: omnigent e grok-build são Apache-2.0; o dsh-desktop é o cliente do deepseek-harness | `docs/research/harnesses-multi-provider-2026-10.md` (PR #80) |
 | V38 | R-002 *(nova)* | L5F0 §2.1: "28 dos 38 ficheiros nunca são actualizados" | O risco era real (o ingest não era incremental), mas os ficheiros estavam iguais: a 1.ª corrida incremental deu-os `UNCHANGED` | Corridas #156 (`unchanged=33`) e #163 (`unchanged=39`) |
 | V39 | AU-10 *(nova)* | A5: "0/30 cabeçalhos do sync" (parecia esquecimento) | O sync punha o cabeçalho antes do `---` (partia o frontmatter) e apagava o README | `scripts/sync-skills-from-prod.sh` antes do #68; `runner/plan_runner/skills.py:20` |
+| V40 | H-001 *(nova; erro desta consolidação)* | O fecho do H-001 (#70) deixou 4 ponteiros para o `STATUS.md` como fonte de pendentes: `README.md:36`, `docs/architecture/BOOTSTRAP.md:75` (que contradizia a própria `:27`), `docs/architecture/SECURITY.md:31` e `docs/STATUS.md:3` | Os pendentes estão só no `PENDENCIAS.md`; os 4 foram corrigidos no PR desta revisão. As referências históricas (ex.: `agents/meta/security_auditor.agent.md:44`) ficam | `grep -rn 'initiatives/STATUS.md'` na `main` `c9edd72` |
 
 
 ## 9. Como fechar um item

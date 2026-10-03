@@ -8,7 +8,7 @@ Documento produzido para corrigir a causa raiz da "amnésia entre sessões": o b
 |---|---|---|
 | `docs/STATUS.md` + `docs/STATUS-PROJETOS.md` + `docs/STATUS-ECOSSISTEMA.md` (rollup de 9 repos) | 18/08/2026 | Histórico — não editar sem necessidade, mantém a arquitectura PCU original |
 | Supabase `agent-network-memory` (`mpsuurqilnhsvbnjmrpm`), tabelas `system_inventory`/`pendencias_negocio` | **12-18/08/2026** — confirmado por query directa | **Mais desactualizado que o próprio ficheiro que o cita como "fonte canónica"** — não é uma fonte mais actual, é uma terceira cópia igualmente parada |
-| `docs/initiatives/STATUS.md` | 2026-09-18 (hoje) | **Fonte corrente para este repo** |
+| `docs/initiatives/STATUS.md` | 2026-09-18 (hoje) | **Fonte corrente para este repo** (até 2026-10-03; desde então os pendentes estão só no `PENDENCIAS.md`, ver abaixo) |
 
 Nenhum dos três sabia da existência dos outros dois antes desta correcção.
 
@@ -72,4 +72,4 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 
 ## Para a próxima sessão
 
-Se estiveres a ler isto porque seguiste o bootstrap do `CLAUDE.md`: já estás no sítio certo. Lê `docs/initiatives/STATUS.md` a seguir para as pendências correntes.
+Se estiveres a ler isto porque seguiste o bootstrap do `CLAUDE.md`: já estás no sítio certo. Lê [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md) a seguir para as pendências correntes (o `docs/initiatives/STATUS.md` só tem o estado dos sistemas).

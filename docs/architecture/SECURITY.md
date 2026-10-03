@@ -28,7 +28,7 @@ Lista oficial (publicada 3 Agosto 2026, substitui a de 2025):
 | **Govern** | `docs/architecture/GOVERNANCE.md` já existe — políticas de policy/identity/delegation/compliance definidas, mesmo que parcialmente implementadas |
 | **Map** | Este documento + `CORE-MAPPING.md`/`MCP-MAPPING.md` — mapear onde cada risco vive no sistema real, não em teoria |
 | **Measure** | Correr as 8 ferramentas listadas abaixo — medição concreta, não opinião |
-| **Manage** | `docs/initiatives/STATUS.md` — os achados desta skill entram no backlog como qualquer outro item, não ficam só num relatório esquecido |
+| **Manage** | `docs/initiatives/PENDENCIAS.md` (desde 2026-10-03; antes `docs/initiatives/STATUS.md`) — os achados desta skill entram no backlog como qualquer outro item, não ficam só num relatório esquecido |
 
 ## 3. MITRE ATLAS — aplicado ao setup
 

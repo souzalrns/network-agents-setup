@@ -12,6 +12,15 @@
 
 ## Log (mais recente no topo)
 
+### Verificação pedida pelo maestro: README vs estado real, e inconsistências do meu trabalho
+- **README da raiz:** confirmadas as inconsistências da análise. Mais uma que ela não tinha: "50 chunks RAG" no `ai-findability.md`, quando o chunker actual dá 9. Os 10 factos, com evidência, estão no `PENDENCIAS.md` §4.1, no H-01; pela decisão do maestro, o H-01 cobre o README (A). Só corrigi já o ponteiro dos pendentes (`README.md:36`); o resto fica para o PR do H-01.
+- **Erro meu (V40):** o H-001 (#70) foi dado como FECHADO, mas deixou 4 ponteiros para o `STATUS.md` como fonte de pendentes: `README.md:36`, `BOOTSTRAP.md:75` (que contradizia a `:27` do mesmo ficheiro), `SECURITY.md:31` e `docs/STATUS.md:3`. Corrigidos neste PR. O `check-consistency.ts` só exige frases no `docs/STATUS.md`, e a alteração só acrescenta texto.
+- **S-004** (novo; o S-003 já existia, é o teste do connector):
+  - `npm audit` no MCP deu `next` 16.3.5 com vulnerabilidade **crítica** (GHSA-vcvr-r3jv-pc5j, RCE no `next/og`; o código não o usa) e `ip-address` moderada;
+  - PR MCP #17: `next` 16.3.8 e `ip-address` 10.7.3, refeito com npm 11 para o lockfile mudar só versões (a 1.ª tentativa, com npm 10, apagava os campos `libc`);
+  - `npm audit` = 0; `npm test` 16/16; `next build` OK.
+- **Não verificado:** `pnpm audit` do TS arquivado (`packages/`) e a aba Security dos 2 repos (403 para esta sessão; A22 no NAS).
+
 ### Relatório da sessão "continuação operacional"
 - **Feito (com evidência):**
   - **R-004** (MCP #15): `.is("project", null)` no delete do `ingestDocument`. Novo `tests/ingestDocument.test.mjs`, 3 testes; o 1.º falhava antes da correcção. `npm test` 19/19; `next build` OK.
@@ -183,9 +192,10 @@
 |---|---|---|---|
 | MCP #15 | `fix/R-004-ingest-project-filter` | R-004 | Aberto. Merge = redeploy na Vercel |
 | MCP #16 | `fix/C-2-token-usage-council-check` | C-2 (lado repo) | Aberto. Merge = redeploy na Vercel (sem mudança de comportamento) |
-| NAS (este) | `docs/sessao-continuacao-r004` | Registo da sessão | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| MCP #17 | `fix/S-004-next-ip-address` | S-004 | Aberto. Merge = redeploy na Vercel (Next sobe de patch) |
+| NAS #86 | `docs/sessao-continuacao-r004` | Registo da sessão + V40 + factos do README | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
-Já com merge: NAS #63–#85; MCP #10–#14. **MCP: um merge de cada vez** (#15 e #16 mexem em ficheiros diferentes; a ordem não importa).
+Já com merge: NAS #63–#85; MCP #10–#14. **MCP: um merge de cada vez** (#15, #16 e #17 mexem em ficheiros diferentes; recomendo o #17 primeiro, por ser uma correcção de segurança).
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 

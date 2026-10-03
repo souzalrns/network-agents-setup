@@ -33,7 +33,7 @@ Os **verticais** (agentes por negócio/domínio) não vivem aqui — vêm do `ag
 - Governança: Delegation Graph e Context Sync continuam por construir (Action Receipts já tem uma versão inicial — hash encadeado, ver `packages/mcp/src/tools/ActionReceipt.ts` — mas não o contrato completo do `ADR-001`, que exige identidade DID/AgentMesh e decisões de autorização Cedar/OPA ainda não adoptados).
 - Adoptar AgentMesh (identidade/delegação) e Cedar (policy engine) — nenhum dos dois está integrado ainda no `agent-network-mcp` nem no `plan_runner`.
 
-Detalhe completo e actualizado: [`docs/initiatives/STATUS.md`](./docs/initiatives/STATUS.md).
+Estado dos pendentes (fonte única): [`docs/initiatives/PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md). O resto deste bloco "Estado actual" está desactualizado e é revisto no H-01 (factos verificados no §4.1 do PENDENCIAS).
 
 ---
 
