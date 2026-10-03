@@ -21,6 +21,7 @@ Hoje:
 
 1. **Fase 1 — deliberação interna.** Ligar a deliberação entre agentes internos **reimplementando** no `plan_runner` (Python) as ideias do `DeliberationEngine` e do `ArchitectureCouncil`. **Não** é um *drop-in* do TS: portam-se os critérios e o protocolo, não o código nem a escala partida.
 2. **Fase 2 — deliberação multi-IA.** Os mesmos protocolos, com participantes de `kind: external_ai` (campo introduzido em T2.3, ver `agents/README.md`). O agente-maestro de cada IA é um agente registado como os outros.
+   - **Registo 2026-10-03:** a Fase 2 também inclui a **execução** depois da deliberação. O Execution Broker escolhe um só executor e decide entre EXECUTE / REDIRECT / WAIT / DEFER / BLOCK; a Execution Lease impede execução concorrente; o Learning compara o estimado com o real. É um contrato, não está implementado: [META-AGENTS-PHASE-2.md](../META-AGENTS-PHASE-2.md).
 3. **Modo, forma e participantes** (T1.3; o Dev não respondeu, por isso executam-se as recomendadas A/A/A):
    - **Modo = assistido.** O Dev aprova o commit final.
    - **Forma = conselhos por tipo de decisão** (architecture, security, product).

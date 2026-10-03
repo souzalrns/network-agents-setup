@@ -323,6 +323,7 @@ ficheiros: council.json events.jsonl hitl-requests.jsonl hitl-decisions.jsonl me
 ## Limites
 
 - **Fase 1 só:** membros `internal`. A Fase 2 (IAs externas, `kind: external_ai`) fica para depois, sobre o mesmo protocolo (ADR §2).
+- **O conselho delibera, não executa.** O `approve` só promove o veredicto na L4 (`council_session.py:853-858`). Quem executa a decisão, e a garantia de que só um executa, é a **Fase 2: Execution Broker + Execution Lease**: contrato em [META-AGENTS-PHASE-2.md](../architecture/META-AGENTS-PHASE-2.md), registo, não implementado.
 - **Anonimato parcial:**
   - o texto livre de uma posição pode revelar o papel do autor ("como revisor…");
   - só os ids são apagados;
