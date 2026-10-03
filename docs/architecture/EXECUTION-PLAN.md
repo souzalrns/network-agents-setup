@@ -836,7 +836,7 @@ Exemplo real: o C-1 foi estimado com `countTokens` entre 5 860 (floor) e 22 756 
 | **D-EP8** | Domínio do F6 | Escolher só depois do F5, com uso real | Escolher já | Os 5 em paralelo | **A** → ✅ A |
 | **D-EP9** | Duas pipelines de ingestão (T6 runner vs `ANM:.github/workflows/ingest.yml`) | O T6 é canónico; o `ingest.yml` fica para JSON do MCP e é documentado como legado/adaptador | Fundir já | Deixar sem regra | **A** (fundir fica para depois do F1) → ✅ A: T6 canónico; `ANM:.github/workflows/ingest.yml` = JSON MCP / legado documentado |
 
-**Decisões em aberto (propostas da revisão pré-gravação, `execution-plan-sources/12-outra-ia-7-pontos-pre-gravacao.md`; mexem em regras permanentes do maestro, por isso não foram aplicadas):**
+**D-EP10 e D-EP11: FECHADAS na opção A (maestro, 2026-10-03).** Propostas pela revisão pré-gravação (`execution-plan-sources/12-outra-ia-7-pontos-pre-gravacao.md`); a tabela fica para registo:
 
 | ID | Decisão | A | B | C | Recomendada |
 |---|---|---|---|---|---|
@@ -909,7 +909,7 @@ Este documento é o baseline arquitectural consolidado.
    - acrescentar o EXECUTION-PLAN ao `NAS:docs/architecture/BOOTSTRAP.md`;
    - marcar `MASTER-PLAN.md` como histórico (D-EP7);
    - commit + push no branch + PR; sem merge, sem `--force`, sem código do F1, sem escrita em produção.
-3. **Etapa 2 (só depois do merge da Etapa 1, ou com ordem explícita):** F0, passos `R` (F0.1–F0.3 se houver autorização de SELECT, F0.8, F0.9; F0.6 e F0.7b pelo DEV). Os `W-repo` (F0.5, F0.7a) entram aqui se D-EP11 = A. PR, verificação de CI conforme as regras permanentes. **Não:** MarkItDown, Broker, agentes novos.
+3. **Etapa 2 (só depois do merge da Etapa 1, ou com ordem explícita):** F0, passos `R` (F0.1–F0.3 se houver autorização de SELECT, F0.8, F0.9; F0.6 e F0.7b pelo DEV). Os `W-repo` (F0.5, F0.7a) entram aqui (D-EP11 = A). PR, verificação de CI conforme as regras permanentes. **Não:** MarkItDown, Broker, agentes novos.
 4. **Etapa 3:** os passos `W-prod` do F0. O F0.4 (ingest do pack de security) segue D-EP2 = A, já decidida; o efeito em produção só acontece no merge. O F0.12 é irreversível e cabe ao DEV.
 5. **Não avançar** para o código do F1 sem o F0 verde (o contrato/ADR do F1 pode avançar em paralelo, D-EP4). **Não alterar** o core para adicionar domínios, salvo pela evolução explícita do core (§11).
 
@@ -932,9 +932,9 @@ Este documento é o baseline arquitectural consolidado.
 **Regras permanentes:**
 - Autonomia para APRIMORAR, nunca para CORTAR. Para cortar algo, propor em A/B/C com recomendada e esperar decisão.
 - Toda a apresentação de opções vem com recomendação explícita.
-- Sem merge, sem `--force`, sem polling; uma só verificação de CI por PR (refinamento proposto: D-EP10, em aberto).
+- Sem merge, sem `--force`, sem polling. Uma verificação consolidada de CI por push; nova verificação só quando uma alteração posterior o exigir (D-EP10 = A).
 - Evidência (ficheiro:linha) em cada afirmação.
-- Commit + push no fim de cada passo (refinamento proposto: D-EP10, em aberto).
+- Commit + push no fim de cada unidade de trabalho com alterações; passos `R` não geram commit; alterações relacionadas podem ir num commit lógico (D-EP10 = A).
 - **Regras de paragem:** decisão fora de D1–D3/ADR/PLANO; teste que não fica verde; escrita em produção (o SQL fica versionado, não executado); custo do conselho acima do tecto.
 - Não expor dados sensíveis; nunca imprimir valores de segredos.
 
