@@ -28,7 +28,7 @@ Um **passo de deliberação** que o maestro invoca (ADR §6), não uma segunda p
 | Chairman (`kind: meta`, só decide) | `agents/meta/chairman.agent.md` |
 | Validação (corre no E7 do CI) | `runner/plan_runner/areas.py:145-197` + `council_session.py:127` |
 | Escalada a partir do router | `runner/plan_runner/router.py:345` (`escalate`), `:442` (`execute`) |
-| `call_kind` do conselho no Supabase (por correr) | `scripts/alter_token_usage_council_kinds.sql` |
+| `call_kind` do conselho no Supabase (corrido pelo DEV a 2026-10-03; C-2) | `scripts/alter_token_usage_council_kinds.sql` |
 
 ## Desenho: técnicas escolhidas e descartadas
 
@@ -39,7 +39,7 @@ Um **passo de deliberação** que o maestro invoca (ADR §6), não uma segunda p
 | 3 | Papéis | **member**, **critic** e **chairman** | O `critic_item13` foi **descartado**: avalia o "Item 13" (citabilidade por IAs) de peças de marketing (`agents/marketing/critic_item13.agent.md`), não serve para arquitectura. Como críticos ficaram o `engenharia.revisor-codigo` (architecture, security) e o `design.design_critic` (product), com um prompt de ataque a riscos. **Chairman:** agente `meta.chairman` dedicado (`kind: meta`), o que o ADR §13 previa |
 | 4 | Protocolo | **Os 6 estágios** do ADR §11 | O veredicto vai para a L4 como `candidate` **quando o pedido HITL abre**, e o pedido leva o id da memória: uma só decisão humana fecha o conselho e a memória. Ver "Fluxo" |
 | 5 | `config/councils.yaml` | **Sim** (E12: ao lado do `areas.yaml`, validado pelo E7) | Diferenças para o esboço do ADR §13: 2–3 membros (decisão do maestro), por isso saem `meta.planejador` (architecture) e `marketing.marketing`/`gestao.gestao-empresarial` (product); acrescentam-se `area`, `hitl_category`, `role` e `escalation` |
-| 6 | Ledger | **Sim**: `call_kind` = `council_member` \| `council_peer` \| `council_chairman`, `step_id` = `council/r<ronda>/<estágio>/<participante>` | No Supabase, o `CHECK` do `token_usage` ainda recusa estes valores (`agent-network-mcp/memory/token_usage.sql:12`). Ver "Ledger" |
+| 6 | Ledger | **Sim**: `call_kind` = `council_member` \| `council_peer` \| `council_chairman`, `step_id` = `council/r<ronda>/<estágio>/<participante>` | No Supabase, o `CHECK` do `token_usage` aceita-os desde 2026-10-03 (ALTER corrido pelo DEV; o DDL do repo MCP fica alinhado no PR MCP #16). Ver "Ledger" |
 | 7 | Orçamento | **Sim**: o tecto é o `budget.max_tokens` da **área do conselho** (ou `--max-tokens`) | É o mesmo mecanismo do worker (`external_worker.check_budget`, antes de cada chamada). Quando vem do router, os tokens do router entram no mesmo ledger e contam no tecto |
 
 **Acrescentado** (não estava na lista):
@@ -150,9 +150,10 @@ Regra de escalada (`config/councils.yaml`, `escalation`):
 
 - **Local:** cada chamada grava uma linha em `<dir>/token_usage.jsonl` (`call_kind`, `step_id = council/r1/independent/<membro>`, `run_id` = uuid da sessão) e uma entrada em `council.json → ledger[]`, com ronda, estágio, participante, tokens e caracteres do prompt.
 - **Por ronda:** `council status` mostra `tokens_by_round`.
-- **Supabase (passo do DEV, por correr):**
-  - o `CHECK` actual só aceita `router|agent|embed_query|embed_doc` (`agent-network-mcp/memory/token_usage.sql:12`);
-  - até correr a migração, o envio das linhas do conselho falha e fica registado como `remote: "error: HTTP 400…"` no jsonl local; o conselho não pára.
+- **Supabase (C-2): feito pelo DEV a 2026-10-03.**
+  - O DEV correu a migração no SQL Editor do `agent-network-memory`. A verificação deu o `token_usage_call_kind_check` com os 7 valores (os 4 antigos + os 3 do conselho).
+  - O DDL do repo MCP (`agent-network-mcp/memory/token_usage.sql:12`) fica alinhado no PR MCP #16.
+  - Antes da migração, o envio das linhas do conselho falhava e ficava registado como `remote: "error: HTTP 400…"` no jsonl local; o conselho não parava.
 
   ```
   Supabase → agent-network-memory → SQL Editor → scripts/alter_token_usage_council_kinds.sql
