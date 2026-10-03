@@ -286,20 +286,20 @@ Plano em `docs/architecture/EXECUTION-PLAN.md`; fontes arquivadas tal como foram
 - **D-EP8:** domínio do F6 escolhido só depois do F5, com uso real.
 - **D-EP9:** **T6 canónico** (`ingest-knowledge.yml`); `agent-network-mcp/.github/workflows/ingest.yml` = JSON do MCP, legado documentado.
 
-**Decisões em aberto** (propostas pré-gravação que mexem em regras permanentes do maestro; EXECUTION-PLAN §9.5):
-- **D-EP10:** refinar "commit + push no fim de cada passo" e "uma só verificação de CI por PR". Recomendada A: passos `R` sem commit; commits lógicos; uma verificação por push, sem polling.
-- **D-EP11:** os passos `W-repo` do F0 (F0.5 bloco `knowledge:`; F0.7a golden set) entram na Etapa 2. Recomendada A: sim (reversíveis, sem efeito em produção).
+**D-EP10 e D-EP11: FECHADAS na opção A (maestro, 2026-10-03):**
+- **D-EP10:** passos `R` sem commit; commits lógicos; uma verificação de CI por push, sem polling.
+- **D-EP11:** os passos `W-repo` do F0 (F0.5, F0.7a) entram na Etapa 2.
 
 **Itens F0–F6** (detalhe e critérios de done no EXECUTION-PLAN §7; tipos `R` / `W-repo` / `W-prod`):
 
 | Fase | Item | Dono | Estado |
 |---|---|---|---|
-| F0 | F0.1–F0.3 revalidar o L5 canónico (contagens, pack de security no `knowledge_chunks`, passo 3 do J3) | Claude Code (SELECT, se autorizado) / DEV | Por fazer (Etapa 2, depois do merge do plano) |
-| F0 | F0.4 pack de security no MANIFEST (`W-prod` no merge, via workflow) | Claude Code prepara; maestro (D-EP2 = A) | Por fazer (Etapa 3) |
-| F0 | F0.5 bloco `knowledge:` no passo `audit` do plano demo de security (`W-repo`) | Claude Code | Por fazer (D-EP11) |
+| F0 | F0.1–F0.3 revalidar o L5 canónico (contagens, pack de security no `knowledge_chunks`, passo 3 do J3) | **maestro** (tem a `DATABASE_URL`) | Parcial (2026-10-03): 1 overload ✅; total 322; pack de security **não ingerido** (8 linhas "security" são de um pack ECC importado); última escrita 14:25 UTC ✅. Faltam `projecto`, F0.1b por fonte, `ultima_t6` e o `agent_id` da fonte ECC (`docs/ops/L5-F0-REVALIDATION.md` §0) |
+| F0 | F0.4 pack de security no MANIFEST (`W-prod` no merge, via workflow) | Claude Code prepara; maestro (D-EP2 = A) | **Bloqueado tal como estava descrito:** o `ingest_apply.py` não é incremental e salta tudo depois dos primeiros 50 chunks do MANIFEST, por isso o pack no fim nunca seria ingerido. Proposta A/B/C em `docs/ops/L5-F0-REVALIDATION.md` §5 (recomendada A: ingest incremental por hash + MANIFEST + `_kb_for`) |
+| F0 | F0.5 bloco `knowledge:` no passo `audit` do plano demo de security (`W-repo`) | Claude Code | ✅ Feito (Etapa 2): `kb: security`, top_k 5; testes em `runner/tests/test_security_pipeline.py` |
 | F0 | F0.6 passo 5 do J3: teste real no MCP | DEV | Por fazer |
-| F0 | F0.7a definir o golden set security, 10–20 perguntas (`W-repo`); F0.7b medir `hit@k` (credenciais) | Claude Code / DEV ou CI | Por fazer |
-| F0 | F0.8 provenance actual; F0.9 comparar C8 → J3 → hoje | Claude Code | Por fazer |
+| F0 | F0.7a definir o golden set security, 10–20 perguntas (`W-repo`); F0.7b medir `hit@k` (credenciais) | Claude Code / DEV ou CI | F0.7a ✅ Feito: `config/l5-golden-security.yaml` (18 casos) + `python -m plan_runner.l5_eval`; F0.7b por fazer (`run`, com `MCP_URL` + `MCP_API_KEY`; antes do F0.4 o esperado é 0) |
+| F0 | F0.8 provenance actual; F0.9 comparar C8 → J3 → hoje | Claude Code | ✅ Feito: `docs/ops/L5-F0-REVALIDATION.md` §1–§2 |
 | F0 | F0.12 apagar a t6 (passo 6 do J3, irreversível, opcional) | DEV | Por fazer |
 | F1 | Contrato *Universal Ingestion & Research Primitives* (ADR, em paralelo, D-EP4) + spike MarkItDown → T6 (só com o F0 verde; pins e mitigações da `AUDIT-INGESTION`) | Claude Code | Por fazer |
 | F1b | Docling, só se o benchmark o justificar | — | Condicional |
@@ -314,5 +314,11 @@ Plano em `docs/architecture/EXECUTION-PLAN.md`; fontes arquivadas tal como foram
 - DEV: **C-2** (`scripts/alter_token_usage_council_kinds.sql` no Supabase e depois o CHECK em `agent-network-mcp/memory/token_usage.sql`).
 - DEV: confirmar **S27** (Oracle 12 vs 24 GB) e **S20** (bridge 401).
 - Depois: F0 passos `R` → PR → só então F0.4.
+
+**Achados do F0.8/F0.9 (entrada do F3; nada disto bloqueia o F0):**
+- 11 linhas inalcançáveis: `docs/item-13-ai-findability.md` está no MANIFEST com o `agent_id` composto `marketing+produto-tech-transversal`, e o retrieve filtra por igualdade (`agent-network-mcp/memory/schema.sql:55`).
+- 121 linhas no J3 contra 132 chunks esperados hoje: provavelmente porque 28 dos 38 ficheiros do MANIFEST nunca são re-ingeridos pelo workflow (orçamento de 50 chunks, sem salto por hash; `L5-F0-REVALIDATION.md` §2.1). Viola a regra T6 (§15.12) e gasta quota do Gemini em cada push de docs.
+- O pack `security-agents-stack.md` tem as §7 e §23 desactualizadas (CouncilSession e chairman existem desde o Bloco C); casos `stale:` no golden set.
+- Provenance: o `locator` não é gravado; o modelo do embedding não é gravado por linha; as fontes L5 não ficam no `result.json`.
 
 **Pendentes acrescentados pela verificação do plano** (EXECUTION-PLAN §9.2): AU-44 (transcrições → RAG, candidato do F1); B7 (expor langgraph/edit no MCP, depois do F5); contrato do plano do runner (o `Plan.schema.json` é de outro formato e não declara `repo_files`/`context` por passo); gitingest revisto para ADAPT com reservas (`ingestion-audit/AUDIT-INGESTION.md:249,309`).
