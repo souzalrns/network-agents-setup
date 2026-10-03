@@ -10,7 +10,7 @@ name: Security scan (SEC-2)
 #     - pull_request: só os achados NOVOS em relação à base do PR (--baseline-commit),
 #       de severidade ERROR ou WARNING, falham o job;
 #     - push para main / manual: varrimento completo, só relatório (linha de base de
-#       2026-10-03: 85 achados, triados em SECURITY-AGENTS.md).
+#       2026-10-03: 85 achados; 65 depois do SEC-2c, triados em SECURITY-AGENTS.md).
 #
 # Actions fixadas por SHA (o próprio semgrep marca tags mutáveis como risco de supply chain).
 
@@ -107,7 +107,7 @@ jobs:
           from collections import Counter
           d = json.load(open("semgrep.json"))
           r = d["results"]
-          print(f"## semgrep: {len(r)} achados (linha de base 2026-10-03: 85)\n")
+          print(f"## semgrep: {len(r)} achados (linha de base depois do SEC-2c: 65)\n")
           print("| Severidade | N |\n|---|---:|")
           for sev, n in Counter(x["extra"]["severity"] for x in r).most_common():
               print(f"| {sev} | {n} |")

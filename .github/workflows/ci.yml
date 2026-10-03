@@ -57,17 +57,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0 (era @v4)
 
       - name: Setup pnpm
         # Sem "version:" aqui de propósito — o action-setup lê a versão do campo
         # "packageManager" do package.json raiz (pnpm@8.0.0). Especificar os dois ao
         # mesmo tempo é erro fatal do action ("Multiple versions of pnpm specified"),
         # descoberto na primeira execução real deste workflow no GitHub (run 32210472782).
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0 (era @v4)
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0 (era @v4)
         with:
           # 22: o undici@8 (packages/mcp, raiz) exige node >=22.19.0. Em Node 20 os
           # testes Executor/SsrfGuard/web nem carregavam (markAsUncloneable) e o smoke rebentava.
@@ -152,7 +152,7 @@ jobs:
           steps.typecheck.outcome == 'failure' || steps.vitest.outcome == 'failure' ||
           steps.coverage.outcome == 'failure' ||
           steps.consistency.outcome == 'failure' || steps.smoke.outcome == 'failure' )
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0 (era @v7)
         with:
           script: |
             const fs = require('fs');
