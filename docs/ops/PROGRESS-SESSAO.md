@@ -5,12 +5,30 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Sessão:** "continuação operacional" do maestro (2026-10-03), com o adendo do C-2.
-- **Branch actual:** `docs/sessao-continuacao-r004` (NAS: PENDENCIAS, COUNCIL e este ficheiro).
-- **`main` de referência:** NAS `c9edd72` (merges até #85); MCP `d635945` (merges #11–#14).
-- **Itens em trabalho:** nenhum em código. 3 PRs abertos à espera de merge (tabela abaixo).
+- **Branch actual:** `docs/decisoes-p10-p18` (decisões confirmadas pelo maestro).
+- **`main` de referência:** NAS `e4a9f5e` (merges até #86); MCP `4916872` (merges #15, #16 e #17).
+- **Itens em trabalho:** nenhum em código. 1 PR de docs aberto (este).
 
 ## Log (mais recente no topo)
+
+### Decisões confirmadas (consulta cruzada com uma 2.ª IA)
+- **Registo:** P-10, P-12, P-13, P-14 e P-15 = **A** (maestro, 2026-10-03). INIT-094, ING-5 e ING-6 → **OBSOLETO** no §7 (não FECHADO). Contagens: **112 vivos** (ABERTO 62, EM CURSO 8, BLOQUEADO 42), **91 no histórico** (70 FECHADO, 21 OBSOLETO).
+  - O prompt previa 110 vivos, mas partia de 113; o #86 já tinha acrescentado o S-004 e o H-005 (115 − 3 = 112).
+- **Nota da P-10:** as `description` do `done_when`, do `on_fail` e do `max_replans` no `runner/plan_runner/plan.schema.json` dizem agora "a remover; fora até ao F3, por decisão, não por esquecimento" (o `done_when`, "vai ser verificado no fim do run"). O AU-22 fica ABERTO, sem bloqueio, até haver código e testes.
+- **Condição da P-18:** verificada, e **não apliquei A**. O `ship-parallel.plan.yaml` é um exemplo do motor:
+  - criado com o engine LangGraph (`5cd7c27`) como "Template fan-out";
+  - "Generic plan" em `plug-in-agents.md:178`;
+  - fixture de `conftest.py:36` e `test_real_plans.py:116`;
+  - a pasta `marketing/` foi por conveniência.
+
+  Volta ao maestro em A/B/C. O E-003 continua BLOQUEADO.
+- **Acrescentado:**
+  - o ADR do F1 passa a "Aceite" (P-13);
+  - as 2 análises (#80, #82) levam a decisão no topo;
+  - o §11 tem os 3 aliases a apontar para o §7;
+  - validação nova: todos os aliases do §11 apontam para a secção certa (0 inconsistências).
+- **Verificado antes:** merges MCP #15 → #16 → #17 e NAS #86. Vercel `success` e 0 erros de runtime desde as 22:55 UTC; ingest #171 com `chunks=0`; `npm test` 19/19 na `main` do MCP.
+- **Testes:** runner 539 passed; `ruff` limpo; E7 válido; todos os `*.plan.yaml` validados contra o schema.
 
 ### Auto-auditoria ("executou tudo com padrão ouro?")
 - **Erro meu, apanhado e corrigido:** o R-004 (MCP #15) desloca 3 linhas no `lib/knowledge.js`, e o `ANM:docs/ops/TOKEN-LEDGER.md` cita `:175` e `:231`.
@@ -200,12 +218,9 @@
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| MCP #15 | `fix/R-004-ingest-project-filter` | R-004 | Aberto. Merge = redeploy na Vercel |
-| MCP #16 | `fix/C-2-token-usage-council-check` | C-2 (lado repo) | Aberto. Merge = redeploy na Vercel (sem mudança de comportamento) |
-| MCP #17 | `fix/S-004-next-ip-address` | S-004 | Aberto. Merge = redeploy na Vercel (Next sobe de patch) |
-| NAS #86 | `docs/sessao-continuacao-r004` | Registo da sessão + V40 + factos do README | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| NAS (este) | `docs/decisoes-p10-p18` | Decisões P-10, P-12–P-15; OBSOLETO de INIT-094/ING-5/ING-6; condição da P-18 | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
-Já com merge: NAS #63–#85; MCP #10–#14. **MCP: um merge de cada vez, por esta ordem: #17 → #16 → #15.** O #17 é uma correcção de segurança. Com o #16 antes do #15, o `TOKEN-LEDGER.md` nunca cita linhas desfasadas. Simulado sem conflitos em 3 ordens.
+Já com merge: NAS #63–#86; MCP #10–#17.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
@@ -248,6 +263,6 @@ cd ..\agent-network-mcp;        graphify update .
 - **Não tocar sem decisão:** F0.12 (apagar a t6), S20/S27/S19 (Oracle), W-004.
 
 ## Próximos 3 passos recomendados
-1. **Maestro:** confirmar as decisões P-10, P-12, P-13, P-14 e P-15 (recomendação A em todas) e decidir o P-18 (E-003). Com P-12, P-14 e P-15, fecham INIT-094, ING-5 e ING-6.
-2. **DEV:** merge do MCP #15 e depois do #16 (um de cada vez); as queries da checklist acima.
-3. **Claude:** depois das decisões, o E-003 (se P-18 = A) e o `done_when` (se P-10 = A), com testes.
+1. **Maestro:** P-18 em A/B/C (ver o relatório desta sessão; recomendada C), e P-11, P-16 e P-17.
+2. **Claude:** AU-22, a implementação da P-10 = A: verificar o `done_when` no fim do run e remover o `on_fail` e o `max_replans` do schema e dos 13 planos que os usam, com testes.
+3. **DEV:** a checklist acima (F0.1b, F0.3, R-004, F0.7b, F0.6/S-003, S28, T-004).

@@ -2,6 +2,7 @@
 
 > **Data:** 2026-10-03. **ID:** INIT-094 em `docs/initiatives/PENDENCIAS.md` (antes F8 no OPEN-ITEMS e EX-F8).
 > **Natureza:** análise e proposta. **Nada foi adoptado nem instalado.**
+> **Decisão (2026-10-03):** §10 P-12 = **A** (maestro, com consulta cruzada a uma 2.ª IA): não adoptar; opencodex + LiteLLM ficam como candidatos do F3/§8.6. INIT-094 → OBSOLETO no `PENDENCIAS.md` §7.
 > **Origem do item:** a tabela de `docs/initiatives/STATUS.md` (secção "Harnesses multi-provider") nunca tinha sido reverificada (`docs/initiatives/OPEN-ITEMS.md:23`).
 
 ## 1. Método e limites
