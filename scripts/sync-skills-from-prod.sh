@@ -38,3 +38,5 @@ N=$(find "$ROOT/skills/claude" -type f | wc -l)
 } > "$TMP/PROVENANCE.md"
 mv "$TMP/PROVENANCE.md" "$ROOT/skills/claude/PROVENANCE.md"
 echo "OK: $N ficheiros em skills/claude (origem $SRC_SHA)"
+# .claude/skills/ (sessoes Claude Code neste repo) e uma copia gerada de skills/meta + skills/claude
+python3 "$ROOT/scripts/sync_claude_skills.py"

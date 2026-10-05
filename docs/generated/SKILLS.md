@@ -3,9 +3,9 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:skills`
 >
-> Gerado em: 2026-09-28
+> Gerado em: 2026-10-05
 > Fonte: `skills/**/SKILL.md`
-> Total: **67** skills
+> Total: **72** skills
 >
 > **Nota (S35):** este catálogo é só documentação — a descoberta em runtime
 > continua Advisory (`skills/meta/using-agent-skills/SKILL.md`), nada aqui
@@ -18,7 +18,8 @@
 | claude | 26 |
 | design | 4 |
 | marketing | 16 |
-| meta | 21 |
+| meta | 24 |
+| security | 2 |
 
 ## Domínio `claude`
 
@@ -89,6 +90,7 @@
 | `article-writing` | meta_technique | P1 | Escrita de artigos -- comecar pelo concreto, frases directas, nunca inventar factos ou casos. Activar ao escrever conteudo editorial. | `skills/meta/article-writing/SKILL.md` |
 | `cheap-entity-extraction` | meta_technique | P1 | Decide quando extrair entidades ou classificar texto com um modelo pequeno local (GLiNER2) em vez de gastar uma chamada a um agente LLM completo. Activar para reconhecimento de padrao simples -- extraccao de nomes/datas, classificacao em categorias fixas, estruturacao de dados soltos. | `skills/meta/cheap-entity-extraction/SKILL.md` |
 | `deploy-discipline` | meta_technique | P1 | Confirmar health checks e o projecto/ambiente certo antes de confiar num deploy automatico. Activar antes de qualquer deploy ou edicao de env vars de producao. | `skills/meta/deploy-discipline/SKILL.md` |
+| `dispatching-parallel-agents` | meta_technique | P1 | Quando ha 2+ problemas independentes (sem estado partilhado nem dependencias), despachar um subagente por dominio, em paralelo, com um prompt focado e auto-suficiente; depois rever, verificar conflitos e correr a suite completa. Activar perante varias falhas ou tarefas independentes. | `skills/meta/dispatching-parallel-agents/SKILL.md` |
 | `error-handling` | meta_technique | P1 | Tratamento de erros -- falhar rapido, erros tipados, separar mensagem de utilizador de mensagem de developer. Activar ao escrever ou rever blocos try/catch. | `skills/meta/error-handling/SKILL.md` |
 | `frontend-a11y` | meta_technique | P1 | Acessibilidade basica de frontend -- labels, role/teclado em elementos custom, dimensoes de imagem. Activar ao escrever ou rever markup/componentes. | `skills/meta/frontend-a11y/SKILL.md` |
 | `github-actions-ops` | meta_technique | P1 | Diagnostico de falhas de workflow do GitHub Actions -- distinguir falha transitoria de erro de logica. Activar ao investigar um run que falhou. | `skills/meta/github-actions-ops/SKILL.md` |
@@ -100,12 +102,21 @@
 | `python-patterns` | meta_technique | P1 | Codigo Python legivel, com type hints e docstrings em calculo de dominio. Activar ao escrever codigo Python, sobretudo com calculo de engenharia. | `skills/meta/python-patterns/SKILL.md` |
 | `react-native-expo` | meta_technique | P1 | Padroes Expo Router e separacao de estado num app React Native. Activar ao trabalhar num app com Expo Router. | `skills/meta/react-native-expo/SKILL.md` |
 | `react-patterns` | meta_technique | P1 | Padroes React para estado derivado, waterfalls, listas longas e acessibilidade basica. Activar ao escrever ou rever componentes React web. | `skills/meta/react-patterns/SKILL.md` |
+| `receiving-code-review` | meta_technique | P1 | Como responder a feedback de code review (humano, bot ou outra IA): verificar contra o codigo antes de implementar, pedir clarificacao do que nao se percebe, contestar com razoes tecnicas, sem concordancia performativa. Activar ao receber comentarios de review num PR. | `skills/meta/receiving-code-review/SKILL.md` |
 | `rest-api-design` | meta_technique | P1 | Convencoes de desenho de API REST -- recursos no plural, sub-recursos, versionamento. Activar ao desenhar ou rever endpoints. | `skills/meta/rest-api-design/SKILL.md` |
 | `security-audit` | meta_technique | P0 | Auditoria de seguranca defensiva de codigo, infra, skills e configs MCP -- cobre os 10 riscos do OWASP LLM Top 10 2026, mapeado a NIST AI RMF, MITRE ATLAS e MAESTRO. Activar antes de aprovar mudancas de infra/skills/MCP, ou periodicamente como auditoria. | `skills/meta/security-audit/SKILL.md` |
 | `seo-tech-checklist` | meta_technique | P1 | Checklist de SEO tecnico -- rastreabilidade, indexabilidade, intencao de pesquisa por pagina. Activar ao rever ou planear SEO de um site. | `skills/meta/seo-tech-checklist/SKILL.md` |
 | `skill-self-optimization` | meta_technique | P2 | Usa um optimizador automatico (SkillOpt) para validar e melhorar o texto de SKILL.md com base em execucoes reais, em vez de reescrever skills manualmente as cegas. Activar quando ha skills instaladas cujo texto nunca foi validado na pratica. | `skills/meta/skill-self-optimization/SKILL.md` |
+| `subagent-driven-development` | meta_technique | P1 | Executar um plano com tarefas independentes despachando um subagente novo por tarefa, com review de cada tarefa (cumpre a spec + qualidade) e um review final do branch inteiro. Activar quando ha um plano aprovado e uma ferramenta de subagentes disponivel. | `skills/meta/subagent-driven-development/SKILL.md` |
 | `using-agent-skills` | orchestrator_meta | P0 | Meta-skill de descoberta: inventaria e selecciona as skills certas para uma tarefa (modo B, sessao livre) ou valida a action ja fixada num plan.yaml (modo A). Nao executa a tarefa, so devolve o mapa de invocacao. Activar como primeiro passo sempre que nao ha action ja decidida. | `skills/meta/using-agent-skills/SKILL.md` |
 | `vite-env-vars` | meta_technique | P2 | Regra do prefixo VITE_ para variaveis de ambiente expostas ao cliente. Activar ao adicionar ou rever env vars num projecto Vite. | `skills/meta/vite-env-vars/SKILL.md` |
+
+## Domínio `security`
+
+| Nome | Vertical/Role | Prioridade | Descrição | Ficheiro |
+|------|---------------|:----------:|-----------|----------|
+| `security-report` | security_technique | P1 | Consolida triage + audit defensivo num relatório estruturado (summary, findings mapeados, next_steps). Sem re-scan e sem patches. | `skills/security/reporter/SKILL.md` |
+| `security-triage` | security_technique | P1 | Triagem defensiva de pedidos de segurança: severidade, superfícies e se a auditoria completa (security_audit) é necessária. Sem scanners e sem escrita. | `skills/security/triage/SKILL.md` |
 
 ---
 *Gerado a partir de skills/**/SKILL.md — mesmo padrão do docs:agents (F6).*
