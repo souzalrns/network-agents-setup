@@ -7,20 +7,38 @@
 ## Estado actual
 - **Branch actual:** `docs/f0-7b-evidencia` (empilhado sobre o `fix/F0-7b-vercel-bypass`, PR #103).
 - **`main` de referência:** NAS `1415c8f` (merges até #102); MCP `880d492` (merge #18).
-- **Itens em trabalho:** gate M1 = F0 verde. O F0.7b passou; falta o F0.6 (DEV). O F1 código está bloqueado até lá.
+- **Itens em trabalho:** gate M1 FECHADO (2026-10-05, decisão do maestro). T6a (spike MarkItDown) em curso, no branch `feat/F1-markitdown-spike`.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
-1. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`). Risco: a Standard Protection da Vercel pode bloquear o conector (ver `L5-F0-REVALIDATION.md` §6.2).
+1. **CLAUDE — T6a (F1):** esqueleto do `ingest_document` com o adapter MarkItDown (contrato do ADR), sem ligar ao worker.
 2. **Maestro — P-19:** registar a opção do limiar. O 1.º run real cumpre as 3 opções, por isso a escolha já não muda o veredicto.
 3. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data (proposta 2026-10-12).
 4. **CLAUDE — R-005, só a causa:** ver as opções A/B/C no relatório de 2026-10-05 (P-20). A reclassificação das 201 linhas espera pelo F3.
 5. *(livre)*
 
-Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96); **F0.7b** (run do DEV, 3.ª tentativa).
+Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96); **F0.7b** (run do DEV, 3.ª tentativa); **gate M1**.
+Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não mostra tools).
 
-**Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 feito (o F0.7b já passou) (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
+**Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Decisão do maestro: F0.6 BLOQUEADO e gate M1 FECHADO (2026-10-05)
+
+`M1 F0 VERDE — F1 código autorizado (decisão do maestro, 2026-10-05: o F0.7b é prova suficiente; o F0.6 fica BLOQUEADO porque o conector do Claude.ai não mostra tools)`
+
+- **Facto (DEV, no Claude.ai):** o conector `agent-network-mcp` mostra "Este conector não possui ferramentas disponíveis."
+- **Causa provável:** a protecção da Vercel bloqueia o `tools/list`, e o conector não envia o `x-vercel-protection-bypass`. Não está verificada do lado da Vercel.
+- **Porque o F0.7b chega:**
+  - prova o mesmo caminho (`/api/mcp` com `Bearer` → `retrieve_knowledge` → `knowledge_chunks`) contra produção;
+  - foram 18 casos, todos com a fonte certa, e `provenance_ok` 1.0.
+- **Posto de parte por agora:** o bypass como query parameter nas settings do conector, porque guarda o segredo no conector.
+- **Registo:**
+  - PENDENCIAS: F0.6 ABERTO → BLOQUEADO, com o motivo; o S-003 (teste no conector) também → BLOQUEADO, pelo mesmo motivo; cabeçalho e §5 actualizados; nota na P-19;
+  - `L5-F0-REVALIDATION.md` §6.1: tabela preenchida com o veredicto BLOQUEADO, a causa provável e as 2 formas de desbloquear.
+- **Contagens:** 104 vivos (ABERTO 58 → 56, BLOQUEADO 41 → 43). Recontagem validada.
+- **Atenção (fora do M1):** sem tools no conector, todo o uso do MCP pelo Claude.ai está parado, e não só o F0.6.
+- **Próxima micro-tarefa:** T6a no branch `feat/F1-markitdown-spike`, empilhado sobre este.
 
 ### F0.7b PASSOU: `l5_eval run` contra o MCP de produção (2026-10-05, DEV)
 - **Run do DEV (3.ª tentativa):** venv com `mcp` 1.30.0 (guarda do #102) e `VERCEL_PROTECTION_BYPASS` definida (cabeçalho do #103).

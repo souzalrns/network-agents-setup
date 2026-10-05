@@ -9,7 +9,8 @@
 > **Actualização (2026-10-05):**
 > - F0.1, F0.2, F0.3 e F0.4 fechados (PENDENCIAS §7).
 > - Para o **gate M1 (F0 verde)** faltam o **F0.6** e o **F0.7b**, os 2 com credenciais que só o DEV tem.
-> - **F0.7b PASSOU (2026-10-05):** 18 casos, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@4` 0.944, `mrr_chunk` 0.736 (§6.2). **Para o M1 falta só o F0.6.**
+> - **F0.7b PASSOU (2026-10-05):** 18 casos, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@4` 0.944, `mrr_chunk` 0.736 (§6.2).
+> - **Gate M1 FECHADO (2026-10-05, decisão do maestro):** o F0.7b é prova suficiente. O F0.6 fica **BLOQUEADO**: o conector do Claude.ai não mostra tools (§6.1). O código do F1 (T6a) fica autorizado.
 > - Os moldes de evidência e os comandos estão na **§6**.
 >
 > Base: main `e7a29ae` (pós-#62). Plano: [`docs/architecture/EXECUTION-PLAN.md`](../architecture/EXECUTION-PLAN.md) §7.
@@ -168,9 +169,11 @@ O MANIFEST sozinho não chega (§2.1).
 - **B:** só a entrada no MANIFEST + `python scripts/ingest_apply.py --only docs/knowledge/security-agents-stack.md` corrido uma vez pelo DEV. Ingere o pack já, mas o workflow continua a não o actualizar e o problema da §2.1 fica.
 - **C:** pôr o pack no **início** do MANIFEST, sem mais nada. Ingere-o em cada corrida, mas empurra mais 2 ficheiros para a zona saltada e mantém o desperdício de quota.
 
-## 6. Gate M1: evidência do F0.6 e do F0.7b (moldes, 2026-10-05)
+## 6. Gate M1: evidência do F0.6 e do F0.7b (2026-10-05; M1 FECHADO)
 
 O gate M1 (F0 verde) autoriza o código do F1 (spike MarkItDown → T6). Fecha quando as 2 secções abaixo tiverem **evidência real colada neste ficheiro**, num PR. Uma conversa não conta.
+
+**Como fechou (2026-10-05):** o F0.7b tem evidência real (§6.2); o F0.6 ficou BLOQUEADO (§6.1), e o maestro decidiu que o F0.7b é prova suficiente para o M1.
 
 **Segurança:**
 - Nunca colar a `MCP_API_KEY`, o URL com credenciais nem tokens.
@@ -189,13 +192,28 @@ O gate M1 (F0 verde) autoriza o código do F1 (spike MarkItDown → T6). Fecha q
 
 | Campo | Valor |
 |---|---|
-| Data (UTC) | NÃO VERIFICADO |
-| Ambiente | NÃO VERIFICADO (produção `agent-network-mcp-oddn.vercel.app` ou preview; sem credenciais) |
-| Tool e parâmetros | NÃO VERIFICADO |
-| Pergunta | NÃO VERIFICADO |
-| Excerto da resposta | NÃO VERIFICADO |
-| **Fonte citada** (obrigatória para FECHADO) | NÃO VERIFICADO |
-| Veredicto | NÃO VERIFICADO |
+| Data (UTC) | 2026-10-05 |
+| Ambiente | Claude.ai, conector `agent-network-mcp` (produção `agent-network-mcp-oddn.vercel.app`) |
+| Tool e parâmetros | Não chegou a ser chamada |
+| Pergunta | Não chegou a ser feita |
+| Excerto da resposta | Nenhum. O Claude.ai mostra: "Este conector não possui ferramentas disponíveis." |
+| **Fonte citada** (obrigatória para FECHADO) | Nenhuma |
+| Veredicto | **BLOQUEADO** (decisão do maestro, 2026-10-05) |
+
+**Causa provável (não verificada do lado da Vercel):**
+- a protecção da Vercel bloqueia o `tools/list` antes da função, como fez com o `l5_eval` na 2.ª tentativa do F0.7b (§6.2);
+- o conector do Claude.ai só envia o `Authorization: Bearer`, e não o cabeçalho `x-vercel-protection-bypass`.
+
+**Porque o M1 fecha na mesma (decisão do maestro):**
+- o F0.7b já provou o que o F0.6 provaria, pelo mesmo caminho (`/api/mcp` com `Bearer` → `retrieve_knowledge` → `match_knowledge` → `knowledge_chunks`) e contra o MCP em produção;
+- foram 18 perguntas em vez de 1, e as 18 vieram com a fonte certa (`source_hit@4` 1.0, `provenance_ok` 1.0);
+- o que o F0.6 acrescentava era só o elo Claude.ai → conector, e esse é o que está bloqueado.
+
+**Como desbloquear (decisão do maestro; nenhuma escolhida):**
+- o bypass como query parameter no URL do conector, nas settings do Claude.ai. Funciona, mas guarda o segredo nas settings do conector;
+- outra forma de expor o MCP ao conector, sem a protecção nesse caminho. É uma mudança de produção na Vercel.
+
+Com o desbloqueio, o F0.6 corre com os passos acima, e o S-003 (PENDENCIAS §4) pode ir no mesmo teste.
 
 ### 6.2 F0.7b: golden set contra o MCP real
 
