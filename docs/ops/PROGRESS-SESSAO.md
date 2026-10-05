@@ -45,6 +45,11 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 - **Testes:** `runner/tests/test_ingest_security.py`, com 22 testes. Os alvos do filho que simulam o abuso (dormir, esgotar memória, `os.abort()`, lixo no stdout) são escritos em `tmp_path`, por isso a maioria corre sem o MarkItDown. O CI corre-os no job `test-ingest`.
   - Sem os extras: 629 passed, 18 skipped. Com os extras e `INGEST_TEST_REQUIRED=1`: 72 passed.
 - **Documentação:** `docs/ops/INGEST-DOCUMENT.md` (limites, a medição, códigos de erro, avisos, e o comportamento do MarkItDown por formato).
+- **CI do 1.º push: o semgrep falhou.** Reproduzi localmente com a mesma versão (1.179.0) e as regras no mesmo commit, e saíram 4 achados:
+  - 2 do T6d: o `globals()[func]` (substituído por uma lista branca de alvos) e o `subprocess.run(cmd)` (falso positivo de auditoria: lista sem shell e só com valores nossos; fica `nosemgrep` com o motivo);
+  - 1 do T6b: `import_module` no helper de testes, que passa a ter lista branca e `nosemgrep` com o motivo;
+  - 1 do T6a: concatenação implícita de bytes numa lista, que passa a `+` explícito.
+  - Depois disto, o semgrep com a configuração do CI e `--error` dá 0 achados em `scripts/`, `runner/` e nos workflows.
 
 ### T6c: DOCX e XLSX (2026-10-05)
 - **T6b fechado:** o PR #106 tem CI verde nas 2 cabeças, com 11 checks incluindo o `test-ingest`. Registo e mini-relatório no `PENDENCIAS_T6.md`.
