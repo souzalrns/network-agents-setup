@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/t6b-pdf-functional-fixture-and-test` (a partir da `main` `99b2cee`).
+- **Branch actual:** `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no T6b, PR #106).
 - **`main` de referência:** NAS `99b2cee` (merges até #105); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6b (PDF).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6c (DOCX/XLSX). T6b ✅ (PR #106, CI verde).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,21 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### T6c: DOCX e XLSX (2026-10-05)
+- **T6b fechado:** o PR #106 tem CI verde nas 2 cabeças, com 11 checks incluindo o `test-ingest`. Registo e mini-relatório no `PENDENCIAS_T6.md`.
+- **Fixtures** (`runner/tests/fixtures/ingest/`):
+  - `docx/simple_synthetic.docx` (34 652 bytes): heading 1, parágrafo, lista de 3 itens, tabela com cabeçalho;
+  - `xlsx/simple_synthetic.xlsx` (5 491 bytes): 2 folhas, texto, números, 1 fórmula e 1 célula vazia.
+- **Geradores reprodutíveis** (python-docx 1.2.0 e openpyxl 3.1.5, pins exactos):
+  - `reproducible_zip.py` re-empacota o ZIP com datas fixas;
+  - o openpyxl reescreve o `dcterms:modified` ao guardar, por isso é corrigido depois de guardar;
+  - o teste compara o conteúdo de cada entrada do ZIP, e não os bytes comprimidos, porque a zlib pode variar entre a máquina local e o CI.
+- **Achados com o MarkItDown 0.1.8:**
+  - DOCX: sem `w:tblHeader` na 1.ª linha, a tabela sai com um cabeçalho vazio e a 1.ª linha como dados. A fixture marca o cabeçalho, e o docstring do gerador explica porquê;
+  - DOCX: os headings saem como `#`. No PDF não saem, porque o PDF não tem headings semânticos;
+  - no meu código, apanhado pela suite sem extras: os geradores punham `fixtures/ingest/` no `sys.path`, e a pasta `docx/` passava a importar como `docx`, a fazer-se passar pelo python-docx. Agora carregam o helper pelo caminho, e há um teste de regressão;
+  - XLSX: uma fórmula sem valor em cache e uma célula vazia saem as 2 como `NaN`, e uma coluna inteira com `NaN` passa a float (300 aparece como `300.0`). O `ingest_document` passa a avisar com `xlsx_nan_cells=<n>`, sem alterar o conteúdo, e há 3 testes de contrato para o aviso.
 
 ### Cadeia F1 → F6: arranque e T6b (PDF) (2026-10-05)
 - **Pedido do maestro:** prompt único, fase a fase, com o estado sempre gravado ("não deixar só na memória").
@@ -664,7 +679,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (T6b) | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Por abrir |
+| NAS #106 | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Aberto, CI verde |
+| NAS (T6c) | `feat/t6c-docx-xlsx-fixtures-and-tests` | F1 / T6c: fixtures DOCX + XLSX + testes | Por abrir (empilhado no #106) |
 
 Já com merge: NAS #63–#105 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105); MCP #10–#18.
 
