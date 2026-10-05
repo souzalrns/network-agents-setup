@@ -94,6 +94,11 @@ jobs:
             --cov-report=xml:coverage.xml
 
       - name: Upload coverage to Codecov
+        # H-003: o envio da cobertura nao pode chumbar os testes. O
+        # fail_ci_if_error: false nao apanha um crash da propria action (v4.6.0,
+        # Node 20 forcado a Node 24): desde 2026-10-05 falha o handshake TLS
+        # ("EPROTO ... SSL alert number 40") antes de enviar o que quer que seja.
+        continue-on-error: true
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0 (era @v4)
         with:
           files: runner/coverage.xml
