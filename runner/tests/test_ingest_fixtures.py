@@ -15,8 +15,10 @@ Dependências opcionais (`tests/optional_deps.py`): skip em local sem elas, erro
 from __future__ import annotations
 
 import importlib.util
+import io
 import re
 import sys
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -39,7 +41,12 @@ def _load(name: str, path: Path):
 
 ing = _load("ingest_document", REPO_ROOT / "scripts" / "ingest_document.py")
 pdf_gen = _load("fixture_pdf_generator", FIXTURES / "pdf" / "generate_simple_synthetic.py")
+docx_gen = _load("fixture_docx_generator", FIXTURES / "docx" / "generate_simple_synthetic.py")
+xlsx_gen = _load("fixture_xlsx_generator", FIXTURES / "xlsx" / "generate_simple_synthetic.py")
 PDF = FIXTURES / "pdf" / "simple_synthetic.pdf"
+DOCX = FIXTURES / "docx" / "simple_synthetic.docx"
+XLSX = FIXTURES / "xlsx" / "simple_synthetic.xlsx"
+GENERATOR_TAG = b"network-agents-setup fixture generator"
 
 
 def _flat(text: str) -> str:
@@ -87,7 +94,7 @@ def test_fixture_pdf_cumpre_as_regras() -> None:
     assert len(data) <= MAX_FIXTURE_BYTES
     pages = len(re.findall(rb"/Type\s*/Page(?!s)", data))
     assert 1 <= pages <= 2
-    assert b"network-agents-setup fixture generator" in data  # gerada pelo script, não à mão
+    assert GENERATOR_TAG in data  # gerada pelo script, não à mão
 
 
 def test_golden_pdf_tem_a_estrutura_pedida() -> None:
@@ -136,3 +143,132 @@ def test_pdf_simple_synthetic_via_ingest_document() -> None:
     # com aviso. Se um dia o ler, este assert falha e o golden passa a ser o TITLE.
     assert meta["title"] == PDF.stem
     assert out["warnings"] == ["title_from_filename"]
+
+
+# --- T6c: DOCX e XLSX ------------------------------------------------------------------
+
+
+def _zip_entries(data: bytes) -> dict[str, bytes]:
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        return {name: zf.read(name) for name in zf.namelist()}
+
+
+def _assert_reproducible_zip(package: str, module: str, gen, fixture: Path) -> None:
+    """Compara o conteúdo de cada entrada do ZIP, não os bytes comprimidos.
+
+    A saída do deflate pode variar com a versão da zlib (local vs CI); o conteúdo não.
+    """
+    require(module)
+    from importlib.metadata import version
+
+    installed, pinned = version(package), _pinned(package)
+    if installed != pinned:
+        pytest.skip(f"{package} {installed} instalado; o conteúdo só é estável com o pin {pinned}")
+    assert _zip_entries(gen.build()) == _zip_entries(fixture.read_bytes()), (
+        f"a fixture {fixture.name} não é a saída do gerador: correr "
+        f"`python runner/tests/fixtures/ingest/{fixture.suffix[1:]}/generate_simple_synthetic.py`"
+        " e commitar"
+    )
+
+
+@pytest.mark.parametrize("fixture", [DOCX, XLSX], ids=["docx", "xlsx"])
+def test_fixtures_ooxml_cumprem_as_regras(fixture: Path) -> None:
+    data = fixture.read_bytes()
+    assert len(data) <= MAX_FIXTURE_BYTES
+    assert zipfile.is_zipfile(fixture)
+    entries = _zip_entries(data)
+    assert GENERATOR_TAG in entries["docProps/core.xml"]  # gerada pelo script, não à mão
+    # ZIP normalizado: datas fixas em todas as entradas
+    with zipfile.ZipFile(fixture) as zf:
+        assert {i.date_time for i in zf.infolist()} == {(2026, 1, 1, 0, 0, 0)}
+
+
+def test_golden_docx_e_xlsx_tem_a_estrutura_pedida() -> None:
+    assert len(docx_gen.ITEMS) == 3
+    assert len(docx_gen.TABLE) == 3 and all(len(row) == 3 for row in docx_gen.TABLE)
+    assert set(xlsx_gen.SHEETS) == {"Custos", "Notas"}
+    sheet, cell = xlsx_gen.FORMULA_CELL
+    col, row = ord(cell[0]) - ord("A"), int(cell[1:]) - 1
+    assert str(xlsx_gen.SHEETS[sheet][row][col]).startswith("=")
+
+
+def test_fixture_docx_e_reprodutivel() -> None:
+    _assert_reproducible_zip("python-docx", "docx", docx_gen, DOCX)
+
+
+def test_fixture_xlsx_e_reprodutivel() -> None:
+    _assert_reproducible_zip("openpyxl", "openpyxl", xlsx_gen, XLSX)
+
+
+def _assert_docx_golden(markdown: str) -> None:
+    assert markdown.strip(), "conversão vazia"
+    # Ao contrário do PDF, o DOCX tem headings semânticos: o título sai como `#`.
+    assert f"# {docx_gen.TITLE}" in markdown.splitlines()
+    assert docx_gen.PARAGRAPH in markdown
+    for item in docx_gen.ITEMS:
+        assert re.search(rf"^[*-] {re.escape(item)}$", markdown, re.MULTILINE), item
+    # Com o w:tblHeader, a 1.ª linha é o cabeçalho da tabela Markdown.
+    assert _table_rows(markdown) == [list(row) for row in docx_gen.TABLE]
+
+
+def test_docx_simple_synthetic_conversion() -> None:
+    """API pública do MarkItDown, com os conversores por omissão."""
+    require("markitdown")
+    from markitdown import MarkItDown
+
+    _assert_docx_golden(MarkItDown().convert(str(DOCX)).markdown)
+
+
+def test_docx_simple_synthetic_via_ingest_document() -> None:
+    require("markitdown")
+    out = ing.ingest_document(DOCX)
+    _assert_docx_golden(out["content"])
+    assert out["source_meta"]["document_type"] == "docx"
+
+
+def _cell_matches(expected, actual: str) -> bool:
+    """Texto igual; número igual em valor (o pandas mostra 300 como `300.0` numa coluna com
+    `NaN`); fórmula sem cache e célula vazia = `NaN`."""
+    if expected is None or (isinstance(expected, str) and expected.startswith("=")):
+        return actual == "NaN"
+    if isinstance(expected, int | float):
+        return float(actual) == float(expected)
+    return actual == expected
+
+
+def _assert_xlsx_golden(markdown: str) -> None:
+    assert markdown.strip(), "conversão vazia"
+    rows = _table_rows(markdown)
+    for name, sheet_rows in xlsx_gen.SHEETS.items():
+        assert f"## {name}" in markdown.splitlines()  # cada folha é uma secção
+        for expected in sheet_rows:
+            assert any(
+                len(actual) == len(expected)
+                and all(_cell_matches(e, a) for e, a in zip(expected, actual, strict=True))
+                for actual in rows
+            ), f"linha {expected} da folha {name} não está no Markdown"
+    assert markdown.index("## Custos") < markdown.index("## Notas")  # ordem das folhas
+
+
+def test_xlsx_simple_synthetic_conversion() -> None:
+    """API pública do MarkItDown: 2 folhas, texto, números, 1 fórmula e 1 célula vazia."""
+    require("markitdown")
+    from markitdown import MarkItDown
+
+    _assert_xlsx_golden(MarkItDown().convert(str(XLSX)).markdown)
+
+
+def test_xlsx_simple_synthetic_via_ingest_document() -> None:
+    """O mesmo golden set, e o aviso das 2 células `NaN` (fórmula sem cache + célula vazia)."""
+    require("markitdown")
+    out = ing.ingest_document(XLSX)
+    _assert_xlsx_golden(out["content"])
+    assert out["source_meta"]["document_type"] == "xlsx"
+    assert "xlsx_nan_cells=2" in out["warnings"]
+
+
+def test_geradores_nao_mexem_no_sys_path() -> None:
+    # Com `fixtures/ingest` no sys.path, a pasta `docx/` passava a importar como `docx`,
+    # a fazer-se passar pelo python-docx (achado no T6c).
+    ingest_dir = str(FIXTURES)
+    assert all(Path(p).resolve() != FIXTURES for p in sys.path if p), ingest_dir
