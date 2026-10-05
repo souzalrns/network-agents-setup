@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-05 20:10 UTC
+Última atualização: 2026-10-05 21:05 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -13,8 +13,8 @@
 | T6a  | (pré-existente)                                | ✅ Merged  | PR #105 (merge `99b2cee`)           | Sim                         |
 | T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
 | T6c  | DOCX + XLSX                                    | ✅         | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
-| T6d  | Segurança de entrada                           | ⏳         | Branch `feat/t6d-input-security-guards` (empilhado no T6c); PR por abrir | Não                         |
-| T6e  | Encaixe na pipeline T6                         | 🔒         |                                     | Não                         |
+| T6d  | Segurança de entrada                           | ✅         | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
+| T6e  | Encaixe na pipeline T6                         | ⏳         |                                     | Não                         |
 | T6f  | Fecho F1 no PENDENCIAS                         | 🔒         |                                     | Não                         |
 | F1b  | Docling (só se perda de estrutura)             | 🔒         |                                     | Não                         |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | 🔒         |                                     | Não                         |
@@ -27,6 +27,7 @@
 - 2026-10-05 · T6a · ✅ merged no #105 (`99b2cee`): esqueleto do `ingest_document` + adapter MarkItDown + 32 testes.
 - 2026-10-05 · T6b · ✅ PR #106 aberto, CI verde: fixture PDF + gerador reprodutível + testes + job `test-ingest`.
 - 2026-10-05 · T6c · ✅ PR #107 aberto, CI verde: fixtures DOCX e XLSX + geradores reprodutíveis + aviso `xlsx_nan_cells`.
+- 2026-10-05 · T6d · ✅ PR #108 aberto, CI verde: processo filho com timeout e `RLIMIT_DATA` (medido), 22 testes de segurança, limites documentados.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
@@ -85,4 +86,26 @@ TESTES: pytest 608 passed, 16 skipped (sem extras); 49 passed com extras e INGES
 PENDENCIAS.md: atualizado (sim)
 PRÓXIMO PASSO RECOMENDADO: T6d (segurança de entrada: processo filho com limite de memória e timeout, testes negativos)
 BLOQUEIOS: nenhum
+```
+
+```
+FASE: T6d
+DATA: 2026-10-05
+ESTADO ANTERIOR → NOVO ESTADO: ⏳ → ✅ (merge pendente, do maestro; empilhado no #107)
+ARTEFACTOS:
+- scripts/ingest_document.py: isolated_converter (processo filho, timeout 60 s, RLIMIT_DATA 1 GiB em Linux),
+  códigos timeout e memory_limit, aviso memory_limit_unavailable, ZIP corrompido ≠ formato errado,
+  mensagem certa quando o markitdown não carrega, CLI --timeout-s / --memory-limit-mb
+- runner/tests/test_ingest_security.py (22 testes; alvos de abuso injectados no filho)
+- docs/ops/INGEST-DOCUMENT.md (limites, medição, códigos, avisos, comportamento por formato)
+- ADR §9 (extensão do contrato), job test-ingest inclui os testes de segurança
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/108
+- Branch: feat/t6d-input-security-guards
+- Commits: 3c8bdba, ecfdefc, 052b096, eced32a (semgrep), fb0a49e
+TESTES: pytest 629 passed, 18 skipped (sem extras); 72 passed com extras e INGEST_TEST_REQUIRED=1; CI 11/11 verde
+PENDENCIAS.md: atualizado (sim)
+PRÓXIMO PASSO RECOMENDADO: T6e (encaixe na pipeline T6)
+BLOQUEIOS: nenhum. Nota: o 1.º push teve o semgrep vermelho (4 achados, 2 deles anteriores ao T6d);
+corrigido na raiz e verificado localmente com a versão e as regras do CI antes do 2.º push.
 ```
