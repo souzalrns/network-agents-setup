@@ -122,6 +122,13 @@ Classificação de risco: **MÉDIO** (zip bomb sem fix a caminho). Mitigações 
 
 **Estado do spike (2026-10-05, T6a, branch `feat/F1-markitdown-spike`):** o gate M1 fechou (decisão do maestro). O S1 está feito em esqueleto: `scripts/ingest_document.py`, pin em `runner/requirements-ingest.txt` e `runner/tests/test_ingest_document.py`. Ficam para o T6b: a mitigação 3 (processo filho com limite de memória), o evento de observabilidade (§3, item 8) e o S2 a S5.
 
+**T6d (2026-10-05): mitigação 3 feita.**
+- A conversão corre num processo filho, com timeout e, em Linux, `RLIMIT_DATA` (1 GiB por omissão).
+- O `RLIMIT_AS` foi medido e recusado: não é monótono com o onnxruntime do magika (768 MiB falhava sempre e 512 MiB só às vezes).
+- **Extensão do contrato (§3, item 6):** 2 códigos novos no `ingest_document`, `timeout` (o mesmo nome do `fetch`) e `memory_limit`.
+- Fora de Linux não há limite de memória, e isso fica no aviso `memory_limit_unavailable`.
+- Os limites, os códigos e os avisos estão em `docs/ops/INGEST-DOCUMENT.md`.
+
 Achados do T6a com o MarkItDown 0.1.8. Os 2 estão cobertos por testes:
 - com os conversores por omissão, um `.pdf` que é texto sai como texto, sem erro;
 - com os conversores por omissão, um PDF que o pdfminer não lê também cai no conversor de texto e volta em bruto como "Markdown". O adapter regista só o conversor do formato (`enable_builtins=False` + `register_converter`) e verifica a assinatura do ficheiro antes de converter.
