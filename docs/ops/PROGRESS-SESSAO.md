@@ -5,22 +5,62 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `fix/F0-7b-vercel-bypass`.
-- **`main` de referência:** NAS `098034e` (merges até #100); MCP `880d492` (merge #18).
-- **Itens em trabalho:** gate M1 = F0 verde (faltam o F0.6 e o F0.7b, ambos do DEV); o F1 código está bloqueado até lá.
+- **Branch actual:** `docs/f0-7b-evidencia` (empilhado sobre o `fix/F0-7b-vercel-bypass`, PR #103).
+- **`main` de referência:** NAS `1415c8f` (merges até #102); MCP `880d492` (merge #18).
+- **Itens em trabalho:** gate M1 = F0 verde. O F0.7b passou; falta o F0.6 (DEV). O F1 código está bloqueado até lá.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
-1. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
-2. **DEV — F0.7b:** `python -m plan_runner.l5_eval run` contra o MCP real (hit@k, MRR, proveniência).
-3. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data.
-4. **CLAUDE — R-005, só a causa:** ver as opções A/B/C no relatório de 2026-10-05. A reclassificação das 201 linhas espera pelo F3.
+1. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`). Risco: a Standard Protection da Vercel pode bloquear o conector (ver `L5-F0-REVALIDATION.md` §6.2).
+2. **Maestro — P-19:** registar a opção do limiar. O 1.º run real cumpre as 3 opções, por isso a escolha já não muda o veredicto.
+3. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data (proposta 2026-10-12).
+4. **CLAUDE — R-005, só a causa:** ver as opções A/B/C no relatório de 2026-10-05 (P-20). A reclassificação das 201 linhas espera pelo F3.
 5. *(livre)*
 
-Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
+Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96); **F0.7b** (run do DEV, 3.ª tentativa).
 
-**Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
+**Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 feito (o F0.7b já passou) (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F0.7b PASSOU: `l5_eval run` contra o MCP de produção (2026-10-05, DEV)
+- **Run do DEV (3.ª tentativa):** venv com `mcp` 1.30.0 (guarda do #102) e `VERCEL_PROTECTION_BYPASS` definida (cabeçalho do #103).
+- **Resultado** (`kb=security`, fonte `docs/knowledge/security-agents-stack.md`, k=4, 18 casos):
+
+| Métrica | Valor |
+|---|---|
+| `chunk_hit@1` / `@3` / `@4` | 0.611 (11/18) · 0.889 (16/18) · 0.944 (17/18) |
+| `source_hit@4` | 1.0 |
+| `mrr_chunk` | 0.736 |
+| `no_hits` | 0 |
+| `provenance_ok` | 1.0 |
+
+- **Veredicto:** PASSOU. Cumpre as 3 opções da P-19 (`chunk_hit@4 > 0`; ≥ 15 dos 18; `provenance_ok = 1.0`).
+- **O que o run também prova:**
+  - o caminho completo funciona com o código de produção (`880d492`): auth Bearer, protecção da Vercel com bypass, `retrieve_knowledge` e o pack `security` ingerido;
+  - a correcção do F0.4 chegou à produção (antes, `chunk_hit@4` era 0);
+  - 1 caso não tem o excerto esperado no top 4, mas a fonte está certa (`source_hit@4` = 1.0). O ID do caso não foi colado, por isso fica por identificar.
+- **Registo:**
+  - `L5-F0-REVALIDATION.md` §6.2: tabela preenchida, veredicto e o JSON do resumo;
+  - PENDENCIAS: F0.7b passa para o §7 como FECHADO; sai do §5 (DEV) e do §6 (Média); nota na P-19.
+- **Contagens:** 105 → 104 vivos (ABERTO 58, EM CURSO 5, BLOQUEADO 41); §7 104 → 105 linhas (84 FECHADO). Recontagem validada pelo script.
+- **Ingest:** nenhum dos 3 ficheiros está no MANIFEST de `scripts/ingest_delta.py`, por isso o merge dá `chunks=0`.
+
+**T5, reavaliação do gate M1:**
+
+`M1 INCOMPLETO — F1 bloqueado; faltam: F0.6 (evidência em docs/ops/L5-F0-REVALIDATION.md §6.1), P-19 por registar (o 1.º run do F0.7b cumpre qualquer opção)`
+
+| Critério do M1 | Estado | Evidência |
+|---|---|---|
+| F0.3 (t6 parada) | FEITO | PENDENCIAS §7; #95 |
+| F0.1 e R-002 | FEITO | PENDENCIAS §7; #97 |
+| F0.7b (`l5_eval run` contra o MCP real) | **FEITO** | §6.2; este PR |
+| F0.6 (conector MCP com a fonte citada) | **Falta** (DEV) | Molde em §6.1, campos NÃO VERIFICADO |
+| Limiar do F0.7b | Falta registar (maestro) | P-19; o resultado cumpre as 3 opções |
+| R-005 | Documentado | BLOQUEADO (F3); a causa é a P-20, pendente |
+
+O T6 (F1 MarkItDown) **não arrancou**, como pede o gate.
+
+- **Próxima micro-tarefa:** o DEV faz o F0.6 no Claude.ai. Se o conector receber um 400 da Vercel, a causa é a mesma protecção, e fica para decisão (A/B/C) como expor o MCP ao conector.
 
 ### F0.7b, 2.ª tentativa: 400 da Vercel "Standard Protection" (2026-10-05, ~14:10 UTC)
 - **Diagnóstico anterior (sem código):**
@@ -565,9 +605,10 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (este) | `docs/decisoes-p10-p18` | Decisões P-10, P-12–P-15; OBSOLETO de INIT-094/ING-5/ING-6; condição da P-18 | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| NAS #103 | `fix/F0-7b-vercel-bypass` | F0.7b: cabeçalho opcional `x-vercel-protection-bypass` | Aberto. Fazer o merge primeiro |
+| NAS #104 | `docs/f0-7b-evidencia` | F0.7b FECHADO (evidência do run) e T5 do gate M1 | Aberto, empilhado sobre o #103. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
-Já com merge: NAS #63–#86; MCP #10–#17.
+Já com merge: NAS #63–#102; MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
