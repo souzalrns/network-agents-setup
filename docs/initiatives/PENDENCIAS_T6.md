@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-05 22:40 UTC
+Última atualização: 2026-10-06 00:50 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -11,13 +11,13 @@
 | ID   | Descrição                                      | Estado     | Artefactos / Links                  | Critério de saída cumprido? |
 |------|------------------------------------------------|------------|-------------------------------------|-----------------------------|
 | T6a  | (pré-existente)                                | ✅ Merged  | PR #105 (merge `99b2cee`)           | Sim                         |
-| T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
-| T6c  | DOCX + XLSX                                    | ✅         | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
-| T6d  | Segurança de entrada                           | ✅         | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
-| T6e  | Encaixe na pipeline T6                         | ✅         | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
-| T6f  | Fecho F1 no PENDENCIAS                         | ⏳         |                                     | Não                         |
-| F1b  | Docling (só se perda de estrutura)             | 🔒         |                                     | Não                         |
-| F2   | Research web (Crawl4AI / scrape + provenance)  | 🔒         |                                     | Não                         |
+| T6b  | PDF funcional (fixture + teste + PR)           | ✅ Merged  | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
+| T6c  | DOCX + XLSX                                    | ✅ Merged  | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
+| T6d  | Segurança de entrada                           | ✅ Merged  | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
+| T6e  | Encaixe na pipeline T6                         | ✅ Merged  | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
+| T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
+| F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
+| F2   | Research web (Crawl4AI / scrape + provenance)  | ⏳         |                                     | Não                         |
 | F3   | Provenance no retrieve                         | 🔒         |                                     | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
@@ -29,6 +29,9 @@
 - 2026-10-05 · T6c · ✅ PR #107 aberto, CI verde: fixtures DOCX e XLSX + geradores reprodutíveis + aviso `xlsx_nan_cells`.
 - 2026-10-05 · T6d · ✅ PR #108 aberto, CI verde: processo filho com timeout e `RLIMIT_DATA` (medido), 22 testes de segurança, limites documentados.
 - 2026-10-05 · T6e · ✅ PR #109 aberto, CI verde: `write_ingested` + `validate_ingested` (regra 3), `uri` relativo ao repo, caminho completo até ao `match_knowledge` provado contra Postgres + pgvector.
+- 2026-10-06 · T6f · ✅ PR #110 aberto, CI verde: S5 (benchmark), balanço do "Done do F1", decisões P-21 a P-23. **F1 tecnicamente concluído**; no canónico fecha com o merge de #106 a #110.
+- 2026-10-06 · F1b · ✅ não necessário por agora (regra do prompt: sem benchmark de perda material em documentos reais). Reabre com a P-21 B.
+- 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
@@ -130,3 +133,54 @@ PENDENCIAS.md: atualizado (sim)
 PRÓXIMO PASSO RECOMENDADO: T6f (fecho do F1, com as medições do S5)
 BLOQUEIOS: nenhum. A entrada no MANIFEST (escrita em produção) fica para o maestro, como manda o ADR.
 ```
+
+```
+FASE: T6f (fecho do F1) + F1b
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: T6f ⏳ → ✅; F1b 🔒 → ✅ não necessário (regra do prompt)
+ARTEFACTOS:
+- scripts/ingest_benchmark.py (S5) + teste no CI; docs/ops/INGEST-DOCUMENT.md §8
+- ADR §9: balanço do "Done do F1"; PENDENCIAS.md: P-21 (F1b), P-22 (upstream), P-23 (F6), F1 e F1b actualizados
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/110
+- Branch: docs/t6f-close-f1
+- Commits: b25211d, 9b8d986
+TESTES: pytest 639 passed, 27 skipped (sem extras); 91 passed com MarkItDown + Postgres; semgrep 0; CI 11/11 verde
+PENDENCIAS.md: atualizado (sim)
+PRÓXIMO PASSO RECOMENDADO: F2 (research web: fetch com provenance)
+BLOQUEIOS: nenhum para o código. Para produção: merge de #106→#110 e a entrada no MANIFEST (maestro).
+```
+
+## Fecho do F1: PRs, fixtures e riscos
+
+**PRs da cadeia** (todos abertos com CI verde, empilhados; ordem de merge #106 → #107 → #108 → #109 → #110):
+
+| PR | Fase | O quê |
+|---|---|---|
+| #105 (merged) | T6a | Esqueleto do `ingest_document` + adapter MarkItDown |
+| #106 | T6b | Fixture PDF + gerador reprodutível + job `test-ingest` |
+| #107 | T6c | Fixtures DOCX e XLSX + aviso `xlsx_nan_cells` |
+| #108 | T6d | Processo filho com timeout e `RLIMIT_DATA` (medido) + 22 testes de segurança |
+| #109 | T6e | Saída para o T6 com proveniência + E2E contra Postgres + pgvector |
+| #110 | T6f | Benchmark S5, fecho do F1, P-21 a P-23 |
+
+**Fixtures** (`runner/tests/fixtures/ingest/`, sintéticas, reprodutíveis): `pdf/simple_synthetic.pdf` (1748 B), `docx/simple_synthetic.docx` (34 652 B) e `xlsx/simple_synthetic.xlsx` (5491 B), cada uma com o gerador ao lado; os pins estão em `runner/requirements-fixtures.txt`.
+
+**Riscos que restam:**
+- A 1.ª ingestão real de um documento convertido escreve em produção no merge (entrada no MANIFEST): é decisão do maestro.
+- O título dos metadados de PDF e DOCX não é lido (aviso `title_from_filename`). O F3 pode ler os metadados à parte.
+- Os PDFs longos são cortados por tamanho, e não por secções, porque o PDF não tem headings. Isto reabre o F1b com documentos reais (P-21 B).
+- Fora de Linux não há limite de memória (aviso `memory_limit_unavailable`); o timeout vale na mesma.
+- Antes de subir a versão do MarkItDown, ver `github.com/microsoft/markitdown/security` (ADR §5, mitigação 4).
+
+**Relatório executivo (portfólio, 10 linhas):**
+1. Construí a ingestão de documentos (PDF, DOCX, XLSX) de uma plataforma multi-agente com RAG, por cima do MarkItDown, sem pipeline paralela.
+2. O contrato vem de um ADR: `ingest_document(path) → {content, source_meta, warnings}`, com proveniência obrigatória e erros tipados.
+3. Encontrei e corrigi 2 falhas silenciosas do MarkItDown: PDFs ilegíveis ou com a extensão errada voltavam como "Markdown" em bruto.
+4. Segurança: recusa de bombas ZIP sem descomprimir, e conversão num processo filho com timeout e limite de memória do SO.
+5. O limite de memória foi medido: o `RLIMIT_AS` não é monótono com o onnxruntime, por isso escolhi o `RLIMIT_DATA` com 1 GiB.
+6. As fixtures sintéticas são reprodutíveis byte a byte (PDF) ou entrada a entrada (DOCX/XLSX), com o gerador versionado.
+7. O caminho completo, documento → T6 real → pgvector → retrieve, está provado no CI, e o hash do T6 é o da proveniência.
+8. O CI tem um job dedicado que falha (em vez de dar skip) se faltar o conversor ou a base de dados.
+9. As medições (S5) mostram listas e tabelas a 100%, e só os headings de PDF perdidos; isso orientou a decisão de não adoptar já o Docling.
+10. 6 PRs pequenos e empilhados, cada um com CI verde e relatório, sem tocar em produção.

@@ -15,6 +15,7 @@ on:
       - 'scripts/ingest_delta.py'
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
+      - 'scripts/ingest_benchmark.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
@@ -44,6 +45,7 @@ on:
       - 'scripts/ingest_delta.py'
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
+      - 'scripts/ingest_benchmark.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'

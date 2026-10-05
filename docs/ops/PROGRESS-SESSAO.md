@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/t6e-pipeline-integration` (empilhado no T6d, PR #108).
-- **`main` de referência:** NAS `99b2cee` (merges até #105); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6e (encaixe no T6). T6b ✅ (#106), T6c ✅ (#107) e T6d ✅ (#108), todos com CI verde.
+- **Branch actual:** `docs/t6f-close-f1` (empilhado no T6e, PR #109).
+- **`main` de referência:** NAS `cd8aeb3` (merges até #109); MCP `880d492` (merge #18).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6f (fecho do F1). T6b ✅ (#106), T6c ✅ (#107), T6d ✅ (#108) e T6e ✅ (#109), todos com CI verde.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,26 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### T6f: fecho do F1, S5 e decisões novas (2026-10-05)
+- **T6e fechado:** o PR #109 tem CI verde nas 2 cabeças, com o `test-ingest` a correr com o Postgres.
+- **S5 do ADR, que faltava:** `scripts/ingest_benchmark.py`, reprodutível, com um teste que o corre no CI e fixa a estrutura medida.
+  - Listas e tabelas ficam a 100% nos 3 formatos.
+  - O PDF perde os headings, e por isso o `chunk_markdown`, que corta por H2/H3, não divide um PDF por secções.
+  - Nem o PDF nem o DOCX devolvem o título dos metadados.
+  - Custo: cerca de 1 s e 150 MiB por documento.
+  - Resultados em `docs/ops/INGEST-DOCUMENT.md` §8.
+- **Corrigido antes do commit:**
+  - o script importava `resource` no topo, e isso partia em Windows, que é a máquina do DEV. Agora a coluna de memória sai `n/d` em Windows;
+  - o semgrep local apanhou uma concatenação implícita de f-strings numa lista; a linha da tabela passa a ser montada numa função.
+- **Done do F1, no ADR §9:** 3 formatos, E2E pelo T6 existente (provado contra Postgres com pgvector) e path estável.
+  - No canónico, o F1 **continua EM CURSO**: só fecha com o merge dos PRs da cadeia (providência 2).
+  - A 1.ª ingestão em produção espera pela entrada no MANIFEST, que é decisão do maestro.
+- **F1b:** não há documentos reais do domínio no repo, só fixtures sintéticas. Pela regra do prompt (Docling só com benchmark de perda material), o F1b fica **não necessário por agora** no `PENDENCIAS_T6.md`; no canónico continua BLOQUEADO, com o bloqueio exacto.
+- **Decisões novas no §10** (A/B/C com recomendada; 20 → 23):
+  - **P-21:** F1b; recomendada A (não necessário), que passa a B com PDFs reais;
+  - **P-22:** contribuição upstream no MarkItDown; recomendada B (issue primeiro, na conta do DEV);
+  - **P-23:** F6 do prompt vs F6 canónico; recomendada A (os 2, sem reabrir a D-EP8).
 
 ### T6e: encaixe na pipeline T6 (2026-10-05)
 - **T6d fechado:** o PR #108 ficou verde (11 checks) depois da correcção do semgrep; registo e mini-relatório no `PENDENCIAS_T6.md`.
@@ -725,12 +745,9 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #106 | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Aberto, CI verde |
-| NAS #107 | `feat/t6c-docx-xlsx-fixtures-and-tests` | F1 / T6c: fixtures DOCX + XLSX + testes | Aberto, CI verde (empilhado no #106) |
-| NAS #108 | `feat/t6d-input-security-guards` | F1 / T6d: segurança de entrada | Aberto, CI verde (empilhado no #107) |
-| NAS (T6e) | `feat/t6e-pipeline-integration` | F1 / T6e: encaixe no T6 | Por abrir (empilhado no #108) |
+| NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
 
-Já com merge: NAS #63–#105 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105); MCP #10–#18.
+Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
