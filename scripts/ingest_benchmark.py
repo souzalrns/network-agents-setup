@@ -100,7 +100,11 @@ def _peak_child_rss_mib() -> int | str:
 
 
 def run(repeats: int = 3) -> list[dict[str, Any]]:
-    ing = _load("ingest_document", REPO_ROOT / "scripts" / "ingest_document.py")
+    # Reutiliza o módulo já carregado: recarregá-lo trocaria a classe IngestError a quem já
+    # o tem (achado no F2: o `fetch` deixava de reconhecer o erro do conversor).
+    ing = sys.modules.get("ingest_document") or _load(
+        "ingest_document", REPO_ROOT / "scripts" / "ingest_document.py"
+    )
     results = []
     for fmt in FORMATS:
         gen = _load(f"bench_gen_{fmt}", FIXTURES / fmt / "generate_simple_synthetic.py")
