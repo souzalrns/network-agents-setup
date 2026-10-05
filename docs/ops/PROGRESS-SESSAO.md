@@ -793,7 +793,7 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 |---|---|---|---|
 | NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
 | NAS #111 | `feat/f2-web-fetch-provenance` | F2a: `fetch` com proveniência + P-24, P-25 | Aberto, CI verde (empilhado no #110) |
-| NAS (F3) | `docs/f3-provenance-adr` | ADR do F3 (proposta) + P-26 | Por abrir (empilhado no #111) |
+| NAS #112 | `docs/f3-provenance-adr` | ADR do F3 (proposta) + P-26 | Aberto (empilhado no #111) |
 
 Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
 

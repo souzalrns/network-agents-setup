@@ -18,7 +18,7 @@
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ✅         | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt; merge pendente) |
-| F3   | Provenance no retrieve                         | 🔒 aguarda P-26 | ADR proposto: `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` (branch `docs/f3-provenance-adr`, empilhado no #111). Muda o schema e a RPC de produção que o MCP chama: só com decisão | Não                         |
+| F3   | Provenance no retrieve                         | 🔒 aguarda P-26 | ADR proposto: `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` (PR #112, empilhado no #111). Muda o schema e a RPC de produção que o MCP chama: só com decisão | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
@@ -217,7 +217,8 @@ ARTEFACTOS:
 - docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md (proposta: opções A/B/C, contrato do F3a, F3b/F3c)
 - PENDENCIAS.md: P-26 no §10 (26 decisões), linha do F3 com o bloqueio
 LINKS:
-- Branch: docs/f3-provenance-adr (PR com o ADR, sem código)
+- PR: https://github.com/souzalrns/network-agents-setup/pull/112 (só o ADR, sem código)
+- Branch: docs/f3-provenance-adr
 TESTES: n/a (só documentação)
 PENDENCIAS.md: atualizado (sim)
 PRÓXIMO PASSO RECOMENDADO: o maestro decide a P-26 (recomendada A). Com A: F3a em 2 PRs (NAS: SQL versionado + v2 + ingest_apply lê o .meta.yaml + testes Postgres; MCP: retrieve_knowledge na v2, depois do DEV correr o SQL)
