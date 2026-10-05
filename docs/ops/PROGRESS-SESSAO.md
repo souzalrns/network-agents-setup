@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/resolver-possiveis` (NAS) e `claude/reels-analysis-tools-access-hwudk9` (MCP, PR #18).
-- **`main` de referência:** NAS `4056fb5` (merges até #98); MCP `4916872` (merges #15, #16 e #17).
+- **Branch actual:** `docs/portfolio-recruiters` (só documentação).
+- **`main` de referência:** NAS `5736621` (merges até #99); MCP `880d492` (merge #18); MCP `4916872` (merges #15, #16 e #17).
 - **Itens em trabalho:** gate F0 (faltam o F0.6 e o F0.7b); H-01 (partes 1, 2 e 3, depois do gate).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
@@ -21,6 +21,33 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Portfólio para recrutadores (2026-10-05)
+**Pedido do maestro:** confirmar e expandir o `docs/PORTFOLIO.md`, com um bloco "For recruiters / visitors" no README, só números verificáveis e sem duplicar o README.
+
+**Estado encontrado:**
+- o `docs/PORTFOLIO.md` já existia (#98);
+- o README tinha uma linha "Start here" com os mesmos links;
+- o portfólio repetia o Quickstart e 3 das 4 histórias do README.
+
+**Feito:**
+- **PORTFOLIO, expandido para complementar o README:**
+  - títulos bilingues;
+  - tabela "Números e fontes": cada número com o documento onde se confirma;
+  - linha do tempo de 10 marcos, com as datas de merge tiradas da API;
+  - guia do código em 6 passos;
+  - 4 histórias novas (o README fica com as suas 4);
+  - o Quickstart e as histórias repetidas passam a links.
+- **Números:**
+  - 13 130 → 12 998 → 10 136 tokens (B1 e B1-bis-R2, `WORKER-EXTERNAL.md`);
+  - 11 760 tokens (C-1, `COUNCIL.md`);
+  - 590+ testes, 75+ PRs, 38 agentes, 72 skills, 14 planos, `chunks=0 unchanged=39`.
+  - O "SEO ~13k" do pedido é o 1.º run real (13 130), e está no portfólio com a fonte.
+- **"Supabase para `council_*`":** escrito como está, ou seja, o schema aceita as chamadas dos conselhos (C-2), mas ainda não houve um run real de conselho a gravar lá (F5).
+- **README:** a linha "Start here" passa a bloco "For recruiters / visitors (60 seconds)", com os mesmos destinos. Links e âncoras verificados nos 2 ficheiros (0 partidos).
+- **PENDENCIAS:** H-003, W-009, H-005 e H-006 → FECHADO (#99 e MCP #18 merged).
+  - A corrida #182 do `ingest-knowledge`, a 1.ª com os pins novos, deu `success`, `chunks=0` e não mostrou o aviso de Node 20.
+  - Contagens: 108 → **104** vivos (ABERTO 58, EM CURSO 5, BLOQUEADO 41); histórico 100 → 104.
 
 ### "Resolve o que for possível" (maestro, 2026-10-05)
 **Feito (2 PRs):**

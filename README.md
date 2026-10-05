@@ -7,7 +7,13 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 
-**Start here:** [Portfolio](./docs/PORTFOLIO.md) (60-second English summary, then PT) · [Quickstart](#quickstart) (5 min, no API key) · [Production MCP server](https://github.com/souzalrns/agent-network-mcp) · [Open work](./docs/initiatives/PENDENCIAS.md)
+> **For recruiters / visitors (60 seconds)**
+> - **Portfolio:** [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md), with a 60-second English summary, the status of each capability, every number with its source, a timeline and a code tour.
+> - **Run it:** [Quickstart](#quickstart), 5 minutes, no API key, with a GIF of a real run.
+> - **Production companion:** [`agent-network-mcp`](https://github.com/souzalrns/agent-network-mcp), the MCP server on Vercel.
+> - **What is still open:** [`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md), the single source of truth for pending work.
+>
+> The legacy TypeScript under `packages/` and `apps/` is archived: the live runtime is Python (`runner/`).
 
 > Documentação interna e estado do projecto em português: [`docs/`](./docs/) · pendentes em [`docs/initiatives/PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md).
 
