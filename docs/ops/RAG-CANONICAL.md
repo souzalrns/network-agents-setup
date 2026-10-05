@@ -83,3 +83,33 @@ Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing`
 ```
 (colar aqui logs de falhas)
 ```
+
+## F3a: proveniência no retrieve (2026-10-06, P-26 = A)
+
+> ADR: `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md`. Migração: `scripts/migrations/f3_provenance_retrieve.sql`. Testes: `runner/tests/test_f3_provenance.py` (Postgres + pgvector, no job `test-rag`) e `runner/tests/test_provenance.py`.
+
+**O que muda (tudo aditivo):**
+- **`knowledge_sources` ganha** `uri`, `final_url`, `title`, `document_type`, `retrieved_at`, `status` (`active` por omissão; CHECK `active`/`superseded`/`revoked`/`expired`/`deleted`), `jurisdiction`, `effective_from`, `effective_until` e `meta` (jsonb).
+- **`knowledge_chunks` ganha** `locator` (`l.<início>-<fim>`, que o chunker já calculava).
+- **RPC nova `match_knowledge_v2(query_embedding, match_agent_id, match_count, filters jsonb)`:**
+  - devolve a proveniência por `LEFT JOIN` à `knowledge_sources`, só para linhas do T6 (`project = 'network-agents-setup'`);
+  - filtros: `status` (`active` por omissão, `any` desliga o filtro), `jurisdiction`, `document_type` e `valid_at` (por omissão, agora).
+- **O `match_knowledge` antigo não muda.**
+- **Writer** (`runner/plan_runner/supabase_writer.py`): `has_f3_columns` detecta a migração. Sem ela, escreve exactamente como antes; com ela, grava a proveniência do `<nome>.meta.yaml` e o `locator`.
+- **`scripts/ingest_apply.py`:**
+  - um sidecar inválido dá `INVALID_META`, sem escrita, e conta como falha da corrida (regra 3);
+  - com o `.md` igual e o sidecar mudado, dá `META_UPDATED`, sem embeddings (por exemplo, um documento revogado deixa de ser devolvido);
+  - sem sidecar, a proveniência vem do git (`uri` = path, `document_type` = `md`, `status` = `active`).
+
+**Ordem segura para o DEV** (nenhum passo parte produção):
+1. **Merge do PR do NAS.** O `ingest-knowledge` corre com o writer novo. Sem a migração, detecta-a em falta e escreve como antes.
+2. **Correr `scripts/migrations/f3_provenance_retrieve.sql`** no SQL Editor do Supabase (`agent-network-memory`). É idempotente e pode correr outra vez sem efeito. As queries de controlo estão no fim do ficheiro.
+3. **Esperado logo a seguir:**
+   - as linhas antigas da `knowledge_sources` ficam com `status = 'active'` e o resto `NULL`;
+   - o `locator` fica `NULL` nas linhas antigas.
+   - Na próxima corrida do `ingest-knowledge`, as fontes iguais passam de `UNCHANGED` a `META_UPDATED` **uma vez** (passam a ter `uri` e `document_type`), sem embeddings. O `locator` só aparece quando cada fonte for re-ingerida.
+4. **Merge do PR do MCP (`agent-network-mcp` #19) e ligar `KNOWLEDGE_RPC_V2=1`** nas env vars da Vercel (Production), seguido de redeploy. Até lá, o MCP usa o `match_knowledge` antigo. A flag desliga-se a qualquer momento (rollback sem SQL).
+   - Se a flag for ligada antes do passo 2, o MCP detecta `PGRST202` (a função não existe), regista um aviso e cai para o `match_knowledge`: o RAG não fica vazio.
+5. **Confirmar:** uma chamada a `retrieve_knowledge` traz `citation.uri`, `citation.locator`, `metadata.status`… e os `filters` passam a ter efeito.
+
+**Rollback:** desligar a flag (passo 4) devolve o MCP ao caminho antigo. As colunas novas e a v2 podem ficar: não mudam nada do que existia.
