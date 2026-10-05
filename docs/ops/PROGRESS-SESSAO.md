@@ -605,9 +605,10 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (este) | `docs/decisoes-p10-p18` | Decisões P-10, P-12–P-15; OBSOLETO de INIT-094/ING-5/ING-6; condição da P-18 | Aberto. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| NAS #103 | `fix/F0-7b-vercel-bypass` | F0.7b: cabeçalho opcional `x-vercel-protection-bypass` | Aberto. Fazer o merge primeiro |
+| NAS #104 | `docs/f0-7b-evidencia` | F0.7b FECHADO (evidência do run) e T5 do gate M1 | Aberto, empilhado sobre o #103. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
-Já com merge: NAS #63–#86; MCP #10–#17.
+Já com merge: NAS #63–#102; MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
