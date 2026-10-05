@@ -17,7 +17,6 @@ objective: "Validar mudanca com reviews paralelos e decisao GO/NO-GO"
 
 budget:
   max_steps: 8
-  max_replans: 1
 
 steps:
   - id: prepare

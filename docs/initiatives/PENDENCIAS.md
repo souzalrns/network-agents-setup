@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **AU-22, 2.ª metade da P-10 (2026-10-05, `main` `c15a6d8`):** AU-22 → EM CURSO (PR do branch `fix/AU-22-remover-on-fail-max-replans`); novo W-009 (exemplo de budget com um campo fora do schema); 6 prompts com `on_fail` registados no B1-bis-C.
 > **SELECTs do F0 (2026-10-05, `main` `81e6364`):** F0.3 e R-003 → FECHADO; C-2 → FECHADO (o MCP #16 já tinha entrado a 2026-10-03; a linha estava desactualizada); novo R-005 (`kb` errado na fonte ECC); F0.2 (já fechado) e AU-50 com a evidência nova; o F0.1 continua EM CURSO (falta a contagem `projecto` e a F0.1b com o filtro `project`, que fecham o R-002).
 > **Pós-merge (2026-10-05, `main` `92cc762`, merges #91 e #93):** H-01 continua EM CURSO (as partes 4, 5 e 6 entraram no #93; faltam as partes 1, 2 e 3); F2 com a evidência do Agent-Reach (#91). Contagens sem alteração.
 > **Pós-merge (2026-10-05, `main` `a52fc74`, merges #88, #89, #90 e #92):** E-003 → FECHADO (#90); AU-22 → ABERTO (o `done_when` entrou no #90; falta a 2.ª metade da P-10); H-003 com a mitigação do #89; H-01 EM CURSO (PR #93).
@@ -16,7 +17,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **111 itens vivos** (§4): ABERTO 62, EM CURSO 7, BLOQUEADO 42;
+> - **112 itens vivos** (§4): ABERTO 62, EM CURSO 8, BLOQUEADO 42;
 > - **95 linhas de histórico** (§7): 74 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
@@ -95,7 +96,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (111 itens vivos)
+## 4. Tabela única (112 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -135,7 +136,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | EX-C4 | Adoptar Cedar (policy engine) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão de dependência | P §9 (EX-C4); O:52 | C4 (O:52) | VERIFICADO |
 | B16 | `ActionReceipt` com o contrato ADR-001 completo | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | EX-C3/EX-C4 | A5 §5.2 (ST:111,201) | G7 (ST) | VERIFICADO |
 | AU-25 | `mcp/plan_runner` em `moderate` por omissão autoriza `run_plan` sem chave | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão (omissão `strict` fora de stdio) | `mcp/plan_runner/mcp_plan_runner/policy.py:33`; P:310 | — | VERIFICADO |
-| B1-bis-C | Encurtar skills/prompt-base (meta <9k no `seo-article-demo`; base medida 10 136) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | Ordem do maestro; depois de F0–F3 | P §6 #12; O:222; E §14.2 | — | VERIFICADO |
+| B1-bis-C | Encurtar skills/prompt-base (meta <9k no `seo-article-demo`; base medida 10 136) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | Ordem do maestro; depois de F0–F3 | P §6 #12; O:222; E §14.2; 6 prompts de agentes ainda dizem "Falha → `on_fail`" (`agents/design/ui`, `ux` e `ux_writer`; `agents/marketing/research`; `agents/security/security_report` e `security_triage`). O AU-22 não os mudou, para não mexer na base medida do `seo-article-demo`; reescrever aqui | — | VERIFICADO |
 | T-001 | Medir o custo do pack Claude (`revisor-codigo`, `guia-tdd`) antes de cortar | FALTA-TESTE | ABERTO | AMBOS | Baixa | Run real (`GEMINI_API_KEY`) | E §9.2 | — | VERIFICADO |
 | T-002 | Medir o conselho `security` no 1.º uso real | FALTA-TESTE | ABERTO | AMBOS | Baixa | 1.º uso real | E §9.2; `docs/ops/COUNCIL.md` | — | VERIFICADO |
 | T-003 | Confirmar a 1.ª linha real em `token_usage` (MCP de produção) | FALTA-TESTE | ABERTO | DEV | Baixa | Acesso ao Supabase | O:118 | J6 (sub-item) | NÃO VERIFICADO |
@@ -143,9 +144,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-003 | Robustez das keywords do router (negação, pesos) | FALTA-CONSTRUIR | BLOQUEADO | CLAUDE | Baixa | W-001 (casos reais) | O:166 | R4 | VERIFICADO |
 | W-004 | Ledger central: as linhas do worker também no Supabase | FALTA-LIGAR | ABERTO | DEV | Média | Escrita em produção (DEV) | O:149 | B2 (Bloco B) | VERIFICADO |
 | W-008 | O `docs/architecture/plan-execute/examples/piloto-netos.plan.yaml` não passa no schema dos planos (`on_fail: replan`; `done_when` e `name` por passo): é do formato antigo do plan-execute | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — | `python -m plan_runner.plan_schema` na `main` `492acff`: 1 plano, 1 com erros (já falhava antes do PR #90); os 14 planos de `docs/orchestration/` passam | — | VERIFICADO |
+| W-009 | O exemplo "Budget default" do `docs/orchestration/marketing/ORCHESTRATOR.md` §7 tem `max_retrieve_calls`, que não existe no schema dos planos (um plano que o copie falha a validação) | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — | `runner/plan_runner/plan.schema.json` (o `budget` aceita `max_steps`, `max_tokens` e `max_cost_usd`; `additionalProperties: false`); encontrado no AU-22 (2026-10-05), que tirou só o `max_replans` do exemplo | — | VERIFICADO |
 | AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
-| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | ABERTO | AMBOS | Média | — | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes); PR #90 (merged, `main` `388d86b`): `done_when` verificado no fim do run nos 2 engines (`runner/plan_runner/done_when.py`; `tests/test_done_when.py`, 16 testes; 10 falhavam sem a alteração). A remoção do `on_fail` e do `max_replans` (2.ª metade da P-10) fica por fazer | — | VERIFICADO |
+| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | EM CURSO | AMBOS | Média | Merge do PR do branch `fix/AU-22-remover-on-fail-max-replans` | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes); PR #90 (merged, `main` `388d86b`): `done_when` verificado no fim do run nos 2 engines (`runner/plan_runner/done_when.py`; `tests/test_done_when.py`, 16 testes; 10 falhavam sem a alteração). 2.ª metade da P-10, no PR do branch `fix/AU-22-remover-on-fail-max-replans`: o `on_fail` e o `max_replans` saem do `plan.schema.json` (com um `$comment` sobre a decisão), dos 13 planos de `docs/orchestration/` (48 linhas) e do `models.py` (campos sem leitor). Um passo que falha já parava o run em `failed` (`engine.py:290-291`). Testes: 4 novos falham sem a alteração (`test_plan_fields.py`, `test_plan_schema.py`), e um plano antigo continua a correr e a ser assinalado no `plan_fields_ignored` | — | VERIFICADO |
 | AU-22b | Reescrever numa das 2 formas verificáveis a condição de `done_when` em linguagem livre do `paid-pack.plan.yaml` ("no ad_account_mutation without approve"); o evento `done_when_unverifiable` é o gatilho para encontrar outras | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | F3 (decisão do maestro, 2026-10-04) | `docs/orchestration/marketing/templates/paid-pack.plan.yaml`; `runner/plan_runner/done_when.py` (evento `done_when_unverifiable` com `item: AU-22b`); PR #90 | — | VERIFICADO |
 | M-001 | Fase 2: Execution Broker (EXECUTE/REDIRECT/WAIT/DEFER/BLOCK) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | `docs/architecture/META-AGENTS-PHASE-2.md`; O §Fase 2; E §8.3 e §9.3 | — | VERIFICADO |
 | M-002 | Fase 2: Execution Lease (1 tarefa → 1 lease activa) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | E §8.7 e §9.3; O §Fase 2 | — | VERIFICADO |
@@ -296,12 +298,12 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 13 | F1, F1b, F2, F4, W-003, W-008, R-005, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
+| CLAUDE | 14 | F1, F1b, F2, F4, W-003, W-008, W-009, R-005, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
 | DEV | 68 | F0.1, F0.6, F0.7b, F0.12, R-002, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 30 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: o PR `docs/f0-selects` (só documentação); os #88 a #94 já entraram (2026-10-05, `main` `81e6364`);
+- merges: o PR do AU-22 (branch `fix/AU-22-remover-on-fail-max-replans`); os #88 a #95 já entraram (2026-10-05, `main` `c15a6d8`);
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
@@ -321,9 +323,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 15 | F1, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 46 | F0.1, F0.6, F0.7b, F2, F4, F6, R-002, R-005, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
-| Baixa | 49 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
+| Baixa | 50 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, W-009, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 62 · EM CURSO 7 · BLOQUEADO 42.
+**Por estado:** ABERTO 62 · EM CURSO 8 · BLOQUEADO 42.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (95 linhas: 74 FECHADO, 21 OBSOLETO)

@@ -23,14 +23,12 @@ knowledge_refs:
 
 budget:
   max_steps: 10
-  max_replans: 2
 
 steps:
   - id: research
     action: research
     tools_allowed: [read_repo_file, web_search]
     output_artifact: artifacts/01-research.md
-    on_fail: human
     knowledge:
       kb: marketing
       query: "AI findability item 13 estrutura de conteudo"
@@ -42,7 +40,6 @@ steps:
     tools_allowed: [read_repo_file, web_search]
     output_artifact: artifacts/02-seo-brief.json
     output_schema: SeoBrief
-    on_fail: human
     knowledge:
       kb: marketing
       query: "checklist SEO tecnico FAQ citavel"
@@ -54,7 +51,6 @@ steps:
     inputs: [artifacts/02-seo-brief.json]
     output_artifact: artifacts/03-copy.md
     output_schema: CopyAnswerFirst
-    on_fail: retry
 
   - id: critic
     action: critic_item13
@@ -63,7 +59,6 @@ steps:
     inputs: [artifacts/02-seo-brief.json, artifacts/03-copy.md]
     output_artifact: artifacts/04-critic.json
     output_schema: CriticReport
-    on_fail: human
     knowledge:
       kb: marketing
       query: "criterios de avaliacao AI findability"
