@@ -1,0 +1,5 @@
+# Opcional - F1 (T6b+): geradores das fixtures sintéticas de ingestão
+# (tests/fixtures/ingest/*/generate_simple_synthetic.py).
+# Pins exactos: com a mesma versão, o gerador dá os mesmos bytes que a fixture versionada
+# (test_ingest_fixtures.py verifica-o). Para subir a versão, regenerar a fixture no mesmo PR.
+fpdf2==2.8.9
