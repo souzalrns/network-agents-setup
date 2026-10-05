@@ -5,20 +5,53 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `fix/AU-22-remover-on-fail-max-replans` (AU-22, código + testes).
-- **`main` de referência:** NAS `c15a6d8` (merges até #95); MCP `4916872` (merges #15, #16 e #17).
-- **Itens em trabalho:** F0.1 (falta a contagem `projecto` e a F0.1b com o filtro `project`); H-01 (partes 1, 2 e 3).
+- **Branch actual:** `docs/f0-gate-selects` (só documentação).
+- **`main` de referência:** NAS `9531ec3` (merges até #96); MCP `4916872` (merges #15, #16 e #17).
+- **Itens em trabalho:** gate F0 (faltam o F0.6 e o F0.7b); H-01 (partes 1, 2 e 3, depois do gate).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
-1. **DEV — F0.1 + R-002 + R-005:** contagem `projecto`, F0.1b com o filtro `project` (esperado 163) e `kb` das linhas com `project` NULL. São só SELECTs (§5 do PENDENCIAS).
-2. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
-3. **DEV — F0.7b:** `python -m plan_runner.l5_eval run` contra o MCP real (hit@k, MRR, proveniência).
-4. **CLAUDE — AU-22:** 2.ª metade da P-10. **PR aberto** (branch `fix/AU-22-remover-on-fail-max-replans`); fecha com o merge.
-5. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data.
+1. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
+2. **DEV — F0.7b:** `python -m plan_runner.l5_eval run` contra o MCP real (hit@k, MRR, proveniência).
+3. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data.
+4. **CLAUDE — R-005, só a causa:** ver as opções A/B/C no relatório de 2026-10-05. A reclassificação das 201 linhas espera pelo F3.
+5. *(livre)*
 
-**Gate:** o código do F1 (spike MarkItDown) só arranca com 1, 2 e 3 feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
+Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
+
+**Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### 2 SELECTs do F0 (2.ª ronda, maestro, 2026-10-05)
+**Resultados (colados pelo maestro):**
+1. **F0.1b com `WHERE project = 'network-agents-setup'`:**
+   - lista completa das fontes do projecto;
+   - `security-agents-stack.md` com 20 chunks;
+   - ~8 ficheiros com contagens altas, re-embedados em todas as corridas até ao #64;
+   - ~28 ficheiros com 1–4 chunks, que ficaram iguais desde a 1.ª ingestão.
+2. **`SELECT kb, count(*) … WHERE project IS NULL GROUP BY kb`:** marketing = 201.
+
+**O que fecha:**
+- **F0.1 → FECHADO.** O total `projecto` não veio no resultado colado.
+  - Esperado: 163 (121 do J3 + 42 da corrida #156).
+  - Fica uma confirmação opcional: `SELECT project, count(*) … GROUP BY project`.
+- **R-002 → FECHADO.** Os 28 ficheiros estão na tabela. Batem com o V38: estavam iguais ao repo e a corrida incremental deu-os `UNCHANGED`.
+- **AU-22 → FECHADO.** O #96 entrou na `main` (`9531ec3`) durante esta ronda (providência 2).
+- **R-005 → actualizado.** Passa a cobrir as 201 linhas do MCP, com severidade **Alta** (decisão do maestro) e bloqueio no F3.
+  - Causa confirmada: `DEFAULT 'marketing'` (`scripts/rag_schema.sql:51`), e o insert do MCP não define o `kb`.
+  - Coerência: 201 = 322 − 121, ou seja, o MCP não ingeriu nada desde 2026-10-03.
+  - Nem todas estão erradas: as fontes de marketing estão certas por acaso. O trabalho é reclassificar as que não são de marketing.
+
+**`--max-chunks 150`:** registei como nota no F0.4, mas com a leitura corrigida.
+- Nas corridas incrementais, o valor por omissão (50) chega: as #174–#178 usaram 0/50 e nenhuma deu `SKIPPED_QUOTA`. Não há ficheiros de fora para recuperar.
+- Só uma re-ingestão total (`--force`) precisa de um orçamento ≥ ao total do projecto (163 esperado). Aí, 150 não chega.
+
+**Contagens:**
+- antes: 112 vivos (ABERTO 62, EM CURSO 8, BLOQUEADO 42);
+- depois: **109** (ABERTO 62, EM CURSO 6, BLOQUEADO 41);
+- histórico: 95 → 98 (77 FECHADO, 21 OBSOLETO).
+
+**Gate F0:** faltam o F0.6 e o F0.7b. O F0.12 (apagar a t6) é opcional e não bloqueia o gate.
 
 ### AU-22: `on_fail` e `max_replans` removidos (2.ª metade da P-10, 2026-10-05)
 - **Fila activa aprovada pelo maestro:** A + B em paralelo. O maestro faz os SELECTs, o F0.6 e o F0.7b; eu faço o AU-22. A opção C (H-01 parte 1) fica para depois do gate F0. O #95 entrou (`c15a6d8`).

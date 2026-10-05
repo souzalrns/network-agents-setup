@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **Gate F0, 2.ª ronda de SELECTs (2026-10-05, `main` `9531ec3`):** F0.1 e R-002 → FECHADO (F0.1b filtrada); AU-22 → FECHADO (#96 merged); R-005 sobe para Alta (201 linhas do MCP com `kb` = marketing por omissão); F0.4 com a nota do `--max-chunks`. No F0 faltam o F0.6, o F0.7b e o F0.12 (opcional).
 > **AU-22, 2.ª metade da P-10 (2026-10-05, `main` `c15a6d8`):** AU-22 → EM CURSO (PR do branch `fix/AU-22-remover-on-fail-max-replans`); novo W-009 (exemplo de budget com um campo fora do schema); 6 prompts com `on_fail` registados no B1-bis-C.
 > **SELECTs do F0 (2026-10-05, `main` `81e6364`):** F0.3 e R-003 → FECHADO; C-2 → FECHADO (o MCP #16 já tinha entrado a 2026-10-03; a linha estava desactualizada); novo R-005 (`kb` errado na fonte ECC); F0.2 (já fechado) e AU-50 com a evidência nova; o F0.1 continua EM CURSO (falta a contagem `projecto` e a F0.1b com o filtro `project`, que fecham o R-002).
 > **Pós-merge (2026-10-05, `main` `92cc762`, merges #91 e #93):** H-01 continua EM CURSO (as partes 4, 5 e 6 entraram no #93; faltam as partes 1, 2 e 3); F2 com a evidência do Agent-Reach (#91). Contagens sem alteração.
@@ -17,8 +18,8 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **112 itens vivos** (§4): ABERTO 62, EM CURSO 8, BLOQUEADO 42;
-> - **95 linhas de histórico** (§7): 74 fechadas, 21 obsoletas;
+> - **109 itens vivos** (§4): ABERTO 62, EM CURSO 6, BLOQUEADO 41;
+> - **98 linhas de histórico** (§7): 77 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
 
@@ -96,14 +97,13 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (112 itens vivos)
+## 4. Tabela única (109 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
 
 | ID | Título | Tipo | Estado | Dono | Sev | Bloqueio | Evidência | IDs antigos | Verif. |
 |---|---|---|---|---|---|---|---|---|---|
-| F0.1 | Revalidar a tabela canónica do L5: falta `projecto` e a F0.1b **com o filtro** `project = 'network-agents-setup'`; já confirmados 1 overload de `match_knowledge`, 322 linhas e 0 `agent_id` compostos | FALTA-TESTE | EM CURSO | DEV | Média | `DATABASE_URL` de produção (só o DEV) | E §7 F0; L5F0 §0 e §3 (PR #63); SELECTs do maestro (2026-10-05): `agent_id LIKE '%+%'` = 0 (esperado 0); contagem por fonte da tabela inteira (top: `docs/knowledge/13_ai_findability.md` 22, `security-agents-stack.md` 20, ECC planner+architect+… 13, `06_INGEST_PIPELINE.md` 12). Inclui fontes com `project` NULL (a ECC, ver R-003), por isso não substitui a F0.1b, que filtra por `project` (`docs/ops/L5-F0-REVALIDATION.md` §3) | — | VERIFICADO |
 | F0.6 | Passo 5 do J3: teste real no conector MCP (a resposta tem de citar a fonte) | FALTA-TESTE | ABERTO | DEV | Média | Conector MCP real (só o DEV); o F0.4 já fechou (#64) | RC:69-70; E §7 F0 | J3 passo 5 | VERIFICADO |
 | F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | FALTA-TESTE | ABERTO | DEV | Média | `MCP_URL`/`MCP_API_KEY` (só o DEV); o F0.4 já fechou (#64) | `python -m plan_runner.l5_eval run` (PR #63) | — | VERIFICADO |
 | F0.12 | Passo 6 do J3: apagar a `knowledge_chunks_t6` (irreversível, com backup; opcional) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Backup + decisão (o F0.3 fechou: a t6 parou a 2026-09-29, com 110 linhas) | RC:72-75; E §7 F0 | J3 passo 6 | VERIFICADO |
@@ -115,8 +115,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | F5 | Validação E2E de uma capability com **run real** | FALTA-TESTE | BLOQUEADO | AMBOS | Alta | F4 | E §7 F5 | — | VERIFICADO |
 | F6 | UM domínio de prova, com o Domain Onboarding Cost medido; escolhido só depois do F5, com uso real | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F5 + D-EP8 | E §7 F6 e §9.5 (D-EP8); P:320 (AU-35) | AU-35; B1 (ST:100, "2.º domínio"); R2 (O:164) | VERIFICADO |
 | R-001 | Investigar e documentar a tabela `knowledge_log` (existe no Supabase, 7 colunas, sem dono) | DOC-ERRADO | BLOQUEADO | AMBOS | Baixa | DEV corre as 5 queries só de leitura de `docs/ops/KNOWLEDGE-LOG.md` §3; depois A/B/C (§4 do doc) | #77 (`docs/ops/KNOWLEDGE-LOG.md`: 0 leitores/escritores nos 2 repos); A5 §5.2 (B12); O:22 (E9) | B12 (ST); E9 (O:22) | VERIFICADO |
-| R-002 | Recuperar os 28 ficheiros do MANIFEST que o workflow nunca re-ingeriu (82 chunks) | FALTA-LIGAR | BLOQUEADO | DEV | Média | DEV: SELECT F0.1b (esperado 163 linhas com `project='network-agents-setup'`); §10 P-3 superada | Corrida #156: `unchanged=33`, 6 `OK` (42 chunks); corrida #163: `unchanged=39`; V38; SELECTs do maestro (2026-10-05): a contagem por fonte recebida é da tabela inteira, sem o filtro `project`; continua a faltar a F0.1b filtrada (163 esperado) | — | VERIFICADO |
-| R-005 | Reclassificar as 8 linhas da fonte "ECC security-reviewer + database-reviewer": `kb` marketing → security; `agent_id` revisor-codigo → security-reviewer (destino a confirmar) | BUG | BLOQUEADO | CLAUDE | Média | F3 (provenance formal) | SELECTs do maestro (2026-10-05): `agent_id` = revisor-codigo, `project` NULL, `kb` = marketing. Causa provável: `kb text DEFAULT 'marketing'` (`scripts/rag_schema.sql:51`), e o insert do MCP não define o `kb` (`ANM:lib/knowledge.js`, `ingestDocument`); se for isso, todas as linhas com `project` NULL têm `kb` = marketing (confirmar: `SELECT kb, count(*) FROM knowledge_chunks WHERE project IS NULL GROUP BY kb`). Hoje o `match_knowledge` filtra só por `agent_id` (`scripts/rag_schema.sql:68`), por isso o `kb` errado não muda a pesquisa. `security-reviewer` não é um `agent_id` existente: o pack de security usa `security` (`scripts/ingest_delta.py:40`), e o `docs/knowledge/imported-from-production/MANIFEST.md:9` mapeia esta fonte para `revisor-codigo`. Sucessor do R-003 | — | VERIFICADO |
+| R-005 | Reclassificar o `kb` das 201 linhas do MCP (`project` NULL), todas com `kb` = marketing por omissão; as que não são de marketing (ex.: as 8 da fonte ECC "security-reviewer + database-reviewer", que vão para security) ficam com o `kb` errado. O destino do `agent_id` da ECC fica a confirmar | BUG | BLOQUEADO | CLAUDE | Alta | F3 (provenance formal) | SELECTs do maestro (2026-10-05, 2.ª ronda): `SELECT kb, count(*) … WHERE project IS NULL GROUP BY kb` → marketing = 201, sem outro valor. **Causa confirmada:** `kb text DEFAULT 'marketing'` (`scripts/rag_schema.sql:51`), e o insert do MCP não define o `kb` (`ANM:lib/knowledge.js`, `ingestDocument`). Enquanto a causa não for corrigida, cada novo ingest do MCP grava `marketing`. 201 = 322 − 121: as linhas do MCP são as mesmas da revalidação de 2026-10-03 (L5F0 §0). Hoje o `match_knowledge` filtra só por `agent_id` (`scripts/rag_schema.sql:68`), por isso o `kb` errado ainda não muda a pesquisa; passa a mudar quando o retrieve filtrar por `kb` (F3). 1.ª ronda: a fonte ECC tem `agent_id` = revisor-codigo, `project` NULL e `kb` = marketing; `security-reviewer` não é um `agent_id` existente (o pack de security usa `security`, `scripts/ingest_delta.py:40`; o `docs/knowledge/imported-from-production/MANIFEST.md:9` mapeia a fonte para `revisor-codigo`). Severidade Alta por decisão do maestro (2026-10-05). Sucessor do R-003 | — | VERIFICADO |
 | AU-44 | Reels/transcrições (yt-dlp + faster-whisper → `transcripts`) sem template nem ponte para o RAG | FALTA-LIGAR | ABERTO | AMBOS | Média | Candidato do F1 | P:329; E §9.2; `agent-network-mcp/.github/workflows/transcribe.yml` | ING-4 | VERIFICADO |
 | S20 | VM Oracle: o bridge-worker usa a chave antiga e falha com 401 | BUG | ABERTO | DEV | Alta | Acesso SSH (fora do âmbito do Claude) | P:347; O:32; E:794; ST:42 | J2 | NÃO VERIFICADO |
 | S27 | Oracle A1: reduzido para 2 OCPU/12 GB? (o S19 diz 24 GB) | FALTA-DECIDIR | ABERTO | DEV | Média | Consola Oracle | ST:46; E:795 | — | NÃO VERIFICADO |
@@ -147,7 +146,6 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-009 | O exemplo "Budget default" do `docs/orchestration/marketing/ORCHESTRATOR.md` §7 tem `max_retrieve_calls`, que não existe no schema dos planos (um plano que o copie falha a validação) | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — | `runner/plan_runner/plan.schema.json` (o `budget` aceita `max_steps`, `max_tokens` e `max_cost_usd`; `additionalProperties: false`); encontrado no AU-22 (2026-10-05), que tirou só o `max_replans` do exemplo | — | VERIFICADO |
 | AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
-| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | EM CURSO | AMBOS | Média | Merge do PR do branch `fix/AU-22-remover-on-fail-max-replans` | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes); PR #90 (merged, `main` `388d86b`): `done_when` verificado no fim do run nos 2 engines (`runner/plan_runner/done_when.py`; `tests/test_done_when.py`, 16 testes; 10 falhavam sem a alteração). 2.ª metade da P-10, no PR do branch `fix/AU-22-remover-on-fail-max-replans`: o `on_fail` e o `max_replans` saem do `plan.schema.json` (com um `$comment` sobre a decisão), dos 13 planos de `docs/orchestration/` (48 linhas) e do `models.py` (campos sem leitor). Um passo que falha já parava o run em `failed` (`engine.py:290-291`). Testes: 4 novos falham sem a alteração (`test_plan_fields.py`, `test_plan_schema.py`), e um plano antigo continua a correr e a ser assinalado no `plan_fields_ignored` | — | VERIFICADO |
 | AU-22b | Reescrever numa das 2 formas verificáveis a condição de `done_when` em linguagem livre do `paid-pack.plan.yaml` ("no ad_account_mutation without approve"); o evento `done_when_unverifiable` é o gatilho para encontrar outras | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | F3 (decisão do maestro, 2026-10-04) | `docs/orchestration/marketing/templates/paid-pack.plan.yaml`; `runner/plan_runner/done_when.py` (evento `done_when_unverifiable` com `item: AU-22b`); PR #90 | — | VERIFICADO |
 | M-001 | Fase 2: Execution Broker (EXECUTE/REDIRECT/WAIT/DEFER/BLOCK) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | `docs/architecture/META-AGENTS-PHASE-2.md`; O §Fase 2; E §8.3 e §9.3 | — | VERIFICADO |
 | M-002 | Fase 2: Execution Lease (1 tarefa → 1 lease activa) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | E §8.7 e §9.3; O §Fase 2 | — | VERIFICADO |
@@ -299,16 +297,16 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Dono | N.º | IDs |
 |---|---:|---|
 | CLAUDE | 14 | F1, F1b, F2, F4, W-003, W-008, W-009, R-005, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
-| DEV | 68 | F0.1, F0.6, F0.7b, F0.12, R-002, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
-| AMBOS | 30 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
+| DEV | 66 | F0.6, F0.7b, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
+| AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: o PR do AU-22 (branch `fix/AU-22-remover-on-fail-max-replans`); os #88 a #95 já entraram (2026-10-05, `main` `c15a6d8`);
+- merges: o PR `docs/f0-gate-selects` (só documentação); os #88 a #96 já entraram (2026-10-05, `main` `9531ec3`);
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
-- F0.1: a contagem `projecto` e a F0.1b com o filtro `project = 'network-agents-setup'`, que fecham o R-002 (esperado: 163 linhas); o F0.3 fechou a 2026-10-05;
-- R-005: `SELECT kb, count(*) FROM knowledge_chunks WHERE project IS NULL GROUP BY kb` (só leitura; confirma a causa);
+- F0.1, F0.3 e R-002 fecharam a 2026-10-05. Confirmação opcional do total: `SELECT project, count(*) FROM knowledge_chunks GROUP BY project` (esperado: NULL 201, `network-agents-setup` 163);
+- gate F0: falta o F0.6 (pergunta no conector MCP com a fonte citada) e o F0.7b (`l5_eval` contra o MCP real);
 - as 5 queries do R-001 (`docs/ops/KNOWLEDGE-LOG.md` §3);
 - T-004 (preços em `config/model-prices.yaml`);
 - S20, S27, S19;
@@ -321,20 +319,23 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Sev | N.º | IDs |
 |---|---:|---|
 | Crítica | 1 | G1.5 |
-| Alta | 15 | F1, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 46 | F0.1, F0.6, F0.7b, F2, F4, F6, R-002, R-005, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
+| Alta | 16 | F1, R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
+| Média | 42 | F0.6, F0.7b, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
 | Baixa | 50 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, W-009, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 62 · EM CURSO 8 · BLOQUEADO 42.
+**Por estado:** ABERTO 62 · EM CURSO 6 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (95 linhas: 74 FECHADO, 21 OBSOLETO)
+## 7. Histórico (98 linhas: 77 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| AU-22 | Campos de plano mortos: `done_when` verificado; `on_fail` e `max_replans` removidos (P-10 = A) | 2026-10-05 | #90 (`done_when.py`; `tests/test_done_when.py`, 16 testes) e #96 (merged, `9531ec3`): schema, 13 planos e `models.py` sem `on_fail`/`max_replans`; `test_plan_fields.py` e `test_plan_schema.py` (4 testes falham sem a alteração) | FECHADO | O `knowledge_refs` continua ignorado e assinalado no `plan_fields_ignored` (o L5 entra pelo bloco `knowledge:`). Seguem-se o AU-22b (condição livre do `paid-pack`, F3), o W-009 e os 6 prompts com `on_fail` (B1-bis-C) |
+| F0.1 | Revalidar a tabela canónica do L5 (overload de `match_knowledge`, total, linhas do projecto por fonte, `agent_id` compostos) | 2026-10-05 | SELECTs do maestro (2026-10-05, 2.ª ronda): F0.1b com `WHERE project = 'network-agents-setup'`, lista completa das fontes do projecto (`security-agents-stack.md` 20 chunks; ~8 ficheiros com mais chunks e ~28 com 1–4); 1.ª ronda: compostos = 0; 2026-10-03: 1 overload e 322 linhas | FECHADO | O total `projecto` não veio no resultado colado: esperado 163 (121 do J3 + 42 da corrida #156), com total 364 e 201 do MCP. Confirmação opcional: `SELECT project, count(*) FROM knowledge_chunks GROUP BY project` |
+| R-002 | Recuperar os 28 ficheiros do MANIFEST que o workflow nunca re-ingeriu (82 chunks) | 2026-10-05 | SELECTs do maestro (2026-10-05, 2.ª ronda): a F0.1b filtrada lista todas as fontes do projecto, incluindo os ~28 ficheiros com 1–4 chunks; corridas #156 (`unchanged=33`) e #163–#178 (`unchanged=39`, `orcamento_usado=0/50`) | FECHADO | Não faltava nada: os 28 ficheiros estavam na tabela desde a 1.ª ingestão e iguais ao repo (V38). Nenhuma corrida incremental deu `SKIPPED_QUOTA` |
 | C-2 | Ledger dos conselhos: CHECK do `token_usage` com os 3 `council_*` | 2026-10-05 | DB: ALTER corrido pelo DEV a 2026-10-03 (`token_usage_call_kind_check` com 7 valores); repo: MCP #16 (merged 2026-10-03, `a4f46e1`; `ANM:memory/token_usage.sql:14-16`) | FECHADO | Fechado com atraso: o #16 entrou a 2026-10-03, mas a linha ficou EM CURSO até à revisão de 2026-10-05. Ainda não há a prova por um run real de conselho com linhas no ledger (entra no F5) |
 | F0.3 | Passo 3 do J3: confirmar que a t6 parou (`ultima_t6`) | 2026-10-05 | SELECT do maestro (2026-10-05): `ultima_t6` = 2026-09-29 10:06:33+00 (≤ 2026-09-30), `total_t6` = 110 | FECHADO | A t6 está congelada; as 110 linhas batem com o C8 (F0.9). Desbloqueia o F0.12 (apagar a t6, com backup e decisão) |
 | R-003 | Confirmar `agent_id`/`project` das 8 linhas da fonte "ECC security-reviewer + database-reviewer" | 2026-10-05 | SELECT do maestro (2026-10-05): `agent_id` = revisor-codigo, `project` NULL, `kb` = marketing | FECHADO | Não é `global`, por isso não aparece em todas as pesquisas. O `kb` está errado → R-005 |
@@ -358,7 +359,7 @@ Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou deci
 | AU-08 | `.env.example` omite as variáveis lidas pelo código (ex.: `GEMINI_API_KEY`, `MCP_API_KEY`, `MCP_URL`) | 2026-10-03 | #67 | FECHADO | 26 variáveis acrescentadas (41 no total) |
 | AU-46 | `OPEN-ITEMS.md` desactualizado | 2026-10-03 | #66 | FECHADO | O OPEN-ITEMS tem o aviso HISTÓRICO |
 | AU-45 | Colisões de IDs entre documentos | 2026-10-03 | #66 | FECHADO | IDs canónicos (§3) e índice de aliases (§11) |
-| F0.4 | Pack de security no L5: ingest incremental por `content_hash` + entrada no MANIFEST + `_kb_for(security)` + pack corrigido antes da 1.ª ingestão | 2026-10-03 | #64; corrida #156 do `ingest-knowledge` (`security-agents-stack.md chunks=20`); corrida #163 (`unchanged=39`) | FECHADO | Prova em produção do ingest incremental |
+| F0.4 | Pack de security no L5: ingest incremental por `content_hash` + entrada no MANIFEST + `_kb_for(security)` + pack corrigido antes da 1.ª ingestão | 2026-10-03 | #64; corrida #156 do `ingest-knowledge` (`security-agents-stack.md chunks=20`); corrida #163 (`unchanged=39`) | FECHADO | Prova em produção do ingest incremental. **Orçamento (`--max-chunks`, 2026-10-05):** o workflow usa o valor por omissão, 50 (`scripts/ingest_apply.py:250-253`; `.github/workflows/ingest-knowledge.yml:42`). Nas corridas incrementais chega: as #174–#178 usaram 0/50 e nenhuma deu `SKIPPED_QUOTA`. Só uma re-ingestão total (`--force`, ex.: troca de embedder ou de chunker) precisa de um orçamento ≥ ao total de chunks do projecto (163 esperado), ou de várias corridas; 150 não chegaria |
 | F0.9 | Comparação C8 (110, t6) → J3 (121/322) → hoje | 2026-10-03 | #63 (L5F0 §2) | FECHADO | — |
 | F0.8 | Documentar a provenance actual, camada a camada | 2026-10-03 | #63 (L5F0 §1) | FECHADO | — |
 | F0.7a | Golden set do L5 security (18 casos) + `python -m plan_runner.l5_eval` | 2026-10-03 | #63; `runner/tests/test_l5_eval.py` (14 testes); `l5_eval validate`: 18 casos, 0 erros | FECHADO | A medição (F0.7b) continua do DEV |
