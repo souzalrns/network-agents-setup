@@ -135,6 +135,18 @@ Classificação de risco: **MÉDIO** (zip bomb sem fix a caminho). Mitigações 
 - O caminho completo (conversão → `apply_one` real → `match_knowledge`) está provado contra Postgres com pgvector no CI. O `content_hash` do T6 é o do `source_meta`.
 - Pôr ficheiros no MANIFEST continua a ser decisão do maestro (W-prod).
 
+**T6f (2026-10-05): S5 feito e balanço do "Done do F1".**
+- **S5:** `scripts/ingest_benchmark.py`. Nas fixtures sintéticas, listas e tabelas ficam a 100% nos 3 formatos; o PDF perde os headings; cerca de 1 s e 150 MiB por documento. Resultados em `docs/ops/INGEST-DOCUMENT.md` §8.
+- **Done do F1 (EXECUTION-PLAN §7):**
+  - 3 formatos processados: sim (PDF, DOCX, XLSX, com fixtures, golden set e testes);
+  - ingestão E2E pela pipeline existente: sim, provada contra Postgres com pgvector no CI. A 1.ª ingestão em produção espera pela entrada no MANIFEST (W-prod, maestro);
+  - path de knowledge estável: `docs/knowledge/ingested/`, com o validador da regra 3.
+- **O que fica fora do F1:**
+  - o evento de observabilidade do §3, item 8;
+  - `url` e `connector_ref` (F2 e seguintes);
+  - os campos novos do `source_meta` na `knowledge_sources`, que é o F3;
+  - o F1b, que depende da P-21.
+
 Achados do T6a com o MarkItDown 0.1.8. Os 2 estão cobertos por testes:
 - com os conversores por omissão, um `.pdf` que é texto sai como texto, sem erro;
 - com os conversores por omissão, um PDF que o pdfminer não lê também cai no conversor de texto e volta em bruto como "Markdown". O adapter regista só o conversor do formato (`enable_builtins=False` + `register_converter`) e verifica a assinatura do ficheiro antes de converter.

@@ -124,3 +124,20 @@ python scripts/ingest_document.py caminho/doc.pdf --out-dir docs/knowledge/inges
 - **Sem sobreposição:** `write_ingested` recusa ficheiros existentes sem `overwrite=True` / `--overwrite`.
 - **Orçamento e incremental:** os do T6, sem mudanças. Sem orçamento, o ficheiro fica `SKIPPED_QUOTA`, sem escrita parcial; a 2.ª corrida igual é `UNCHANGED`, sem embeddings. Os 2 casos estão testados com o documento convertido.
 - **Gate humano:** o T6 não tem HITL próprio. O gate é o PR que põe o `.md` no MANIFEST, cujo merge é do maestro.
+
+## 8. Medições do S5 (T6f)
+
+`python scripts/ingest_benchmark.py --repeats 5` (MarkItDown 0.1.8, Linux, 4 CPUs, processo filho do T6d). A estrutura esperada vem das constantes dos geradores das fixtures, que são o golden set dos testes:
+
+| Formato | Bytes | Chars | Título como heading | Lista | Linhas de tabela | Tempo (mediana) | RSS máx. filhos | Avisos |
+|---|---|---|---|---|---|---|---|---|
+| PDF | 1748 | 370 | não (texto simples) | 3/3 | 3/3 | 0.85 s | 141 MiB | title_from_filename |
+| DOCX | 34652 | 319 | sim | 3/3 | 3/3 | 1.03 s | 156 MiB | title_from_filename |
+| XLSX | 5491 | 225 | 2/2 folhas como ## | n/a | 6/6 | 0.87 s | 156 MiB | title_from_filename, xlsx_nan_cells=2 |
+
+- **Estrutura:** listas e tabelas a 100% nos 3 formatos. A única perda é o título do PDF, que sai como texto simples. Consequência para o T6: o `chunk_markdown` corta por H2/H3, por isso um PDF longo é cortado por tamanho e não por secções.
+- **Título:** nem o `PdfConverter` nem o `DocxConverter` devolvem o título dos metadados (o DOCX tem-no), e o `source_meta.title` vem do nome do ficheiro, com aviso.
+- **Custo:** cerca de 1 s e 150 MiB por documento, quase tudo do arranque do processo filho e do MarkItDown/magika. Os documentos são pequenos; documentos grandes medem-se no benchmark real do P-21 B.
+- **Ressalva:** são fixtures sintéticas e pequenas, e não documentos reais do domínio. A decisão do F1b (Docling) está na P-21 do `PENDENCIAS.md`.
+- Em Windows, a coluna de memória sai `n/d` (sem `resource`).
+- O teste `test_benchmark_s5_mede_os_3_formatos_e_fixa_a_estrutura` corre o script no CI e fixa a estrutura medida.
