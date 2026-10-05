@@ -126,6 +126,11 @@ Achados do T6a com o MarkItDown 0.1.8. Os 2 estão cobertos por testes:
 - com os conversores por omissão, um `.pdf` que é texto sai como texto, sem erro;
 - com os conversores por omissão, um PDF que o pdfminer não lê também cai no conversor de texto e volta em bruto como "Markdown". O adapter regista só o conversor do formato (`enable_builtins=False` + `register_converter`) e verifica a assinatura do ficheiro antes de converter.
 
+Achados do T6b e do T6c, com as fixtures sintéticas de `runner/tests/fixtures/ingest/`:
+- PDF: o título sai como texto simples, sem `#`, e o `/Title` dos metadados não é lido. A tabela com bordas é reconstruída em Markdown;
+- DOCX: os headings saem como `#`. Uma tabela sem `w:tblHeader` na 1.ª linha sai com um cabeçalho vazio;
+- XLSX: as células vazias e as fórmulas sem valor em cache saem como `NaN`. O `ingest_document` avisa com `xlsx_nan_cells=<n>`, sem alterar o conteúdo.
+
 **Done do F1** (EXECUTION-PLAN §7): 3 formatos processados; ingestão E2E pela pipeline existente; path de knowledge estável.
 
 ## 10. Decisão pedida ao maestro

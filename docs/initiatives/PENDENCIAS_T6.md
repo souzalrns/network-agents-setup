@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-05 18:05 UTC
+Última atualização: 2026-10-05 19:20 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -12,8 +12,8 @@
 |------|------------------------------------------------|------------|-------------------------------------|-----------------------------|
 | T6a  | (pré-existente)                                | ✅ Merged  | PR #105 (merge `99b2cee`)           | Sim                         |
 | T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
-| T6c  | DOCX + XLSX                                    | ⏳         |                                     | Não                         |
-| T6d  | Segurança de entrada                           | 🔒         |                                     | Não                         |
+| T6c  | DOCX + XLSX                                    | ✅         | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
+| T6d  | Segurança de entrada                           | ⏳         |                                     | Não                         |
 | T6e  | Encaixe na pipeline T6                         | 🔒         |                                     | Não                         |
 | T6f  | Fecho F1 no PENDENCIAS                         | 🔒         |                                     | Não                         |
 | F1b  | Docling (só se perda de estrutura)             | 🔒         |                                     | Não                         |
@@ -26,6 +26,7 @@
 ## Histórico de fases
 - 2026-10-05 · T6a · ✅ merged no #105 (`99b2cee`): esqueleto do `ingest_document` + adapter MarkItDown + 32 testes.
 - 2026-10-05 · T6b · ✅ PR #106 aberto, CI verde: fixture PDF + gerador reprodutível + testes + job `test-ingest`.
+- 2026-10-05 · T6c · ✅ PR #107 aberto, CI verde: fixtures DOCX e XLSX + geradores reprodutíveis + aviso `xlsx_nan_cells`.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
@@ -63,4 +64,25 @@ TESTES: pytest 602 passed, 10 skipped (sem extras); 37 passed com extras e INGES
 PENDENCIAS.md: atualizado (sim: PENDENCIAS_T6.md e a linha F1 do canónico)
 PRÓXIMO PASSO RECOMENDADO: T6c (DOCX + XLSX)
 BLOQUEIOS: nenhum para a plataforma; o PR upstream no microsoft/markitdown fica como decisão do maestro
+```
+
+```
+FASE: T6c
+DATA: 2026-10-05
+ESTADO ANTERIOR → NOVO ESTADO: ⏳ → ✅ (merge pendente, do maestro; empilhado no #106)
+ARTEFACTOS:
+- runner/tests/fixtures/ingest/docx/simple_synthetic.docx (34652 bytes) + generate_simple_synthetic.py
+- runner/tests/fixtures/ingest/xlsx/simple_synthetic.xlsx (5491 bytes) + generate_simple_synthetic.py
+- runner/tests/fixtures/ingest/reproducible_zip.py; requirements-fixtures.txt (python-docx==1.2.0, openpyxl==3.1.5)
+- scripts/ingest_document.py: aviso xlsx_nan_cells=<n> (conteúdo inalterado)
+- runner/tests/test_ingest_fixtures.py (+10 testes), test_ingest_document.py (+3 de contrato)
+- ADR §9 (achados), PENDENCIAS.md (linha F1), PROGRESS-SESSAO.md
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/107
+- Branch: feat/t6c-docx-xlsx-fixtures-and-tests
+- Commits: 4c93618, a76c525, 69f837b
+TESTES: pytest 608 passed, 16 skipped (sem extras); 49 passed com extras e INGEST_TEST_REQUIRED=1; CI 11/11 verde
+PENDENCIAS.md: atualizado (sim)
+PRÓXIMO PASSO RECOMENDADO: T6d (segurança de entrada: processo filho com limite de memória e timeout, testes negativos)
+BLOQUEIOS: nenhum
 ```
