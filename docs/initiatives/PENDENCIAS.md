@@ -12,7 +12,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **112 itens vivos** (§4): ABERTO 62, EM CURSO 8, BLOQUEADO 42;
+> - **112 itens vivos** (§4): ABERTO 61, EM CURSO 9, BLOQUEADO 42;
 > - **91 linhas de histórico** (§7): 70 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-10 e P-12 a P-15 decididas pelo maestro; pendentes P-11, P-16, P-17 e P-18.
@@ -163,7 +163,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | E15 | Proveniência do esboço do CouncilSession/`councils.yaml`: substituir a reconstituição se aparecerem os originais | DOC-ERRADO | BLOQUEADO | DEV | Baixa | Aparecerem os originais | P:553; O:105 | — | VERIFICADO |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão (partir/arquivar) | P:297; A5 §5.1 | J8 (parte) | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:102` UP017; `main` `2b27f66`), fora do lint do CI | BUG | BLOQUEADO | CLAUDE | Baixa | F3 (§10 P-7 = A: registar e tratar no F3) | ruff 0.16.10 local (2.ª ronda, 03/10): 2 avisos, ambos `--fix`; `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
-| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | Nenhum; fazer depois do F0 fechar (o maestro decide o conteúdo, o agente executa) | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
+| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Merge do PR #93 (partes 4, 5 e 6: README para portfólio em inglês, casos de estudo e números verificados, `LICENSE`, `SECURITY.md`, avisos de arquivado em `packages/` e `apps/`). Faltam as partes 1 (limpeza), 2 (arquivo dos históricos) e 3 (índices), com os riscos do §4.1 | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
 | G1.1 | Trading: pesquisa padrão ouro de repos de trading/simulação | FALTA-DECIDIR | BLOQUEADO | AMBOS | Alta | F5 + D-EP8 (domínio só com uso real) | A5 §5.4 (grupos G–J); EP:1618-2428 | J9 (parte) | VERIFICADO |
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | BLOQUEADO | DEV | Média | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | BLOQUEADO | DEV | Alta | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
@@ -255,9 +255,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | O ingest não incremental: 10 ficheiros re-embedados em cada corrida, 28 nunca | F0.4 / R-002 | L5F0 §2.1 (PR #63); correcção no PR #64 |
 | O CI que mentia: sem `pipefail`, o job não conseguia falhar | — | PR #36 (commit `f587cfb`) |
 | O `toolsAllowed` morto: dado como "DONE", mas sem fonte | S33 → AU-20 | ST:62 ("DONE"); A5:169 ("FECHADO-SÓ-NO-PAPEL") |
-| A hipótese refutada: −16% projectado contra −2,6% real | B1-bis-R | ST:554; PRs #45 e #55 |
+| A medição inválida apanhada a tempo: o 1.º run real deu −2,6% contra −16% projectado, mas o braço "opt" tinha corrido com o prompt `legacy` (detectado ao comparar os prompts token a token); repetido, deu **−22% real** | B1-bis-R / B1-bis-R2 | `docs/ops/WORKER-EXTERNAL.md:116,259`; PRs #45 e #55 (corrigido a 2026-10-05: antes dizia "hipótese refutada") |
 
-**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). Só o ponteiro dos pendentes (`README.md:36`) foi corrigido já (V40); o resto fica para o PR do H-01.
+**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). **Todos corrigidos no PR #93 (2026-10-05):** README reescrito em inglês para portfólio, com factos verificáveis, quickstart testado e os casos de estudo; o histórico fica abaixo.
 
 | README diz | Estado verificado | Evidência |
 |---|---|---|
@@ -319,7 +319,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Média | 46 | F0.1, F0.3, F0.6, F0.7b, F2, F4, F6, R-002, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
 | Baixa | 49 | F0.12, F1b, R-001, R-003, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, E-003, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 62 · EM CURSO 8 · BLOQUEADO 42.
+**Por estado:** ABERTO 61 · EM CURSO 9 · BLOQUEADO 42.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (91 linhas: 70 FECHADO, 21 OBSOLETO)

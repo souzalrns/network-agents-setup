@@ -1,167 +1,137 @@
 # Network Agents Setup
 
-**Núcleo do sistema** — motor de execução + governança + capacidades horizontais + RAG. Os verticais (agentes específicos de negócio/domínio) ligam-se como plug-in a partir do `agent-network-mcp`.
+**A governed runtime for AI agent workflows.** Declarative plans, human approval gates, token and cost budgets, and an append-only audit trail for every run.
 
-> **Mudança de escopo (2026-09-17):** este repo deixou de ser só o laboratório de método para se tornar o núcleo do produto. Ver [`docs/architecture/ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) para a visão completa e o antes/depois.
+[![Runner tests](https://github.com/souzalrns/network-agents-setup/actions/workflows/runner-tests.yml/badge.svg)](https://github.com/souzalrns/network-agents-setup/actions/workflows/runner-tests.yml)
+[![Security scan](https://github.com/souzalrns/network-agents-setup/actions/workflows/security-scan.yml/badge.svg)](https://github.com/souzalrns/network-agents-setup/actions/workflows/security-scan.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 
-> **Motor de execucao:** [`runner/`](./runner/README.md) — `plan_runner`, um motor de planos YAML com HITL, crash recovery e external workers.
+> Documentação interna e estado do projecto em português: [`docs/`](./docs/) · pendentes em [`docs/initiatives/PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md).
 
 ---
 
-## O que é este repo
+## What it is
 
-Não é a produção a servir clientes directamente — é onde se desenha, testa e depois liga (plug-in) os verticais. Contém 4 camadas, todas domain-agnostic:
+The core of a multi-agent network (LRNSdigital). This repository holds the **engine** (`plan_runner`, Python), the **governance** around it, and the **horizontal capabilities** (agents and skills) that any business domain can plug in. The production entry point is a separate MCP server ([`agent-network-mcp`](https://github.com/souzalrns/agent-network-mcp), on Vercel), which exposes the agents to Claude.ai.
 
-| Camada | Onde vive | Tecnologia |
+**Design choice:** most agent frameworks optimise for autonomy. This one optimises for **control and evidence**. A run cannot spend past its budget, cannot skip a human gate, and cannot claim to be done without leaving a verifiable record.
+
+## How a run works
+
+```mermaid
+flowchart LR
+    R[Request] --> RT[Router<br/>areas.yaml + clarification]
+    RT --> P[Plan YAML<br/>schema-validated]
+    P --> E{plan_runner}
+    E -->|native| N[Sequential steps]
+    E -->|LangGraph| L[Parallel waves]
+    N & L --> S[Step = agent + skill]
+    S --> W[Worker<br/>stub or Gemini]
+    S --> G{Human gate?}
+    G -->|approve / reject / edit| H[HITL]
+    W --> B{Budget<br/>tokens / USD}
+    B -->|over the ceiling| PB[paused_budget]
+    S --> O[(status.json<br/>events.jsonl<br/>artifacts/)]
+    S -.-> K[(L5 knowledge<br/>pgvector RAG)]
+    S -.-> M[(L4 memory<br/>Postgres)]
+```
+
+## Capabilities
+
+| Capability | What it guarantees | Code |
 |---|---|---|
-| **Motor** | [`runner/`](./runner/) | Python (`plan_runner`) |
-| **Governança** | [`packages/core/`](./packages/core/) | TypeScript |
-| **Horizontais** | [`skills/`](./skills/) + [`agents/`](./agents/) | Markdown |
-| **RAG** | Supabase + Gemini (chamado a partir daqui) | pgvector + embeddings |
+| Declarative plans | Steps, dependencies, artifacts and gates declared in YAML; validated against a JSON Schema | [`plan.schema.json`](./runner/plan_runner/plan.schema.json), [`plan_schema.py`](./runner/plan_runner/plan_schema.py) |
+| Two engines | Native (sequential) and LangGraph (independent steps run as parallel waves) | [`engine.py`](./runner/plan_runner/engine.py), [`langgraph_engine.py`](./runner/plan_runner/langgraph_engine.py) |
+| Human-in-the-loop | Approve / reject / edit, durable across processes; a run pauses until a human decides | [`hitl.py`](./runner/plan_runner/hitl.py) |
+| Crash recovery | `resume` continues from `status.json` after an interruption | [`engine.py`](./runner/plan_runner/engine.py) (`resume_run`) |
+| Budgets | Token and USD ceilings checked before every model call; fails closed when a price is unknown | [`cost.py`](./runner/plan_runner/cost.py), [`external_worker.py`](./runner/plan_runner/external_worker.py), [`BUDGET.md`](./docs/ops/BUDGET.md) |
+| Token ledger | One row per model call (tokens in/out, model, run, step) | [`external_worker.py`](./runner/plan_runner/external_worker.py) |
+| Model tiers | Planner / executor / verifier tier per step | [`model_tiers.py`](./runner/plan_runner/model_tiers.py) |
+| Router | Maps a free-text request to an area and agent, with bounded clarification rounds | [`router.py`](./runner/plan_runner/router.py), [`areas.yaml`](./config/areas.yaml) |
+| Council | Multi-agent deliberation: independent positions, anonymous peer ranking, chairman synthesis, human sign-off | [`council_session.py`](./runner/plan_runner/council_session.py), [`councils.yaml`](./config/councils.yaml) |
+| L4 memory | Persistent memory in Postgres + pgvector; candidates promoted only through human approval | [`memory_l4.py`](./runner/plan_runner/memory_l4.py) |
+| L5 knowledge | Incremental RAG ingest (content hash, only changed files are re-embedded) and retrieval through the MCP server | [`ingest_apply.py`](./scripts/ingest_apply.py), [`knowledge_wiring.py`](./runner/plan_runner/knowledge_wiring.py) |
+| Config validation | Areas, agents, councils and capabilities validated in CI | [`areas.py`](./runner/plan_runner/areas.py) |
 
-Os **verticais** (agentes por negócio/domínio) não vivem aqui — vêm do `agent-network-mcp` como plug-in. Ver [`docs/architecture/ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) secções 1–4 para o detalhe da relação setup ↔ MCP.
+**Domain packs, not special agents.** 38 agents and about 70 skills (Markdown) are organised by domain (marketing, design, engineering, security, meta…). A domain plugs in through `config/areas.yaml` and plan templates in [`docs/orchestration/`](./docs/orchestration/), without changing the engine.
 
-## Estado actual
+## Engineering quality
 
-**Feito:**
-- RAG fechado (C8, 6/6): 110 chunks de 33 ficheiros ingeridos; pipeline completo markdown → chunk → embed (Gemini, 768 dims) → Supabase → retrieve via MCP.
-- Governança mapeada por inteiro: 39 ficheiros em `packages/core/` — 5 REAL, 19 INCOMPLETO, 14 MOCK, 1 BARREL.
-- Horizontais: 67 skills + 35 agentes já no setup, em 8 domínios (`marketing`, `design`, `meta`, `engenharia`, `gestao`, `atendimento`, `produto`, `_shared`).
-- 3 documentos de mapeamento produzidos por leitura directa dos ficheiros: `CORE-MAPPING.md`, `MCP-MAPPING.md`, `ROADMAP-GOVERNANCE.md`.
+Everything below can be checked in the repository and its Actions history:
 
-**Falta:**
-- Governança: Delegation Graph e Context Sync continuam por construir (Action Receipts já tem uma versão inicial — hash encadeado, ver `packages/mcp/src/tools/ActionReceipt.ts` — mas não o contrato completo do `ADR-001`, que exige identidade DID/AgentMesh e decisões de autorização Cedar/OPA ainda não adoptados).
-- Adoptar AgentMesh (identidade/delegação) e Cedar (policy engine) — nenhum dos dois está integrado ainda no `agent-network-mcp` nem no `plan_runner`.
+- **530+ automated tests** (pytest), including an ingest → retrieve test against a disposable Postgres + pgvector, and slow end-to-end runs of real plans. See [`runner-tests.yml`](./.github/workflows/runner-tests.yml).
+- **Security on every PR:** gitleaks, semgrep and CodeQL. Every GitHub Action is pinned to a commit SHA.
+- **65+ merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
 
-Estado dos pendentes (fonte única): [`docs/initiatives/PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md). O resto deste bloco "Estado actual" está desactualizado e é revisto no H-01 (factos verificados no §4.1 do PENDENCIAS).
+### Selected engineering stories
 
----
+| Problem | How it was found | Fix |
+|---|---|---|
+| Retrieval read a table that ingestion never wrote to: the RAG was "done" only on paper | Audit of the full write → read path | Canonical knowledge table (#31) |
+| Ingestion re-embedded the same 10 files on every run and never reached 28 others | Revalidation against the ingestion manifest | Content-hash incremental ingest (#64). Production runs now log `chunks=0 unchanged=39` |
+| The CI job could never fail (a pipeline without `pipefail`) | A failing test that still came out green | `pipefail` enabled (#36) |
+| A token-saving optimisation looked like it had failed: −2.6% measured vs −16% projected | Token-by-token prompt comparison: the "optimised" arm had run the legacy prompt | Corrected re-run: **−22% measured** (#45, #55) |
 
-> **Nota de nomenclatura:** "Item 13" e o identificador histórico interno. O nome canónico e **AI Visibility** (SEO + GEO + AEO + LLMO). Ver [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md).
+## Domain showcase: a multi-agent marketing agency
 
-## Portfolio (começar aqui)
+The first domain pack built on this core. Horizontal specialists (SEO, AI Visibility, UI/UX, copy, media, UGC…) are coordinated by an orchestrator that plans and hands off work but never replaces the specialist. Each role keeps its prompt separate from its knowledge (checklists and anti-patterns per role).
 
-| Documento | Conteúdo |
-|-----------|----------|
-| **[docs/PORTFOLIO.md](./docs/PORTFOLIO.md)** | Narrativa completa: problema, solução, diagrama, diferenciais |
-| **[docs/ONE-PAGER-MARKETING-AGENTS.md](./docs/ONE-PAGER-MARKETING-AGENTS.md)** | Resumo de 1 página (LinkedIn / proposta) |
-| [docs/marketing-agency-agents.md](./docs/marketing-agency-agents.md) | System prompts + limites de todos os agentes |
-| [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md) | **Item 13 — AI Findability** (playbook canónico P0/P1/P2) |
-| [docs/knowledge/ai-findability.md](./docs/knowledge/ai-findability.md) | Item 13 knowledge operacional (50 chunks RAG) |
-| [docs/knowledge/](./docs/knowledge/) | Knowledge packs por especialidade |
-| [docs/CONCLUSAO-SETUP-MARKETING.md](./docs/CONCLUSAO-SETUP-MARKETING.md) | Fecho documental e próximos passos |
+| Document | Contents |
+|---|---|
+| [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md) | Full narrative: problem, solution, diagram, differentiators |
+| [`docs/ONE-PAGER-MARKETING-AGENTS.md`](./docs/ONE-PAGER-MARKETING-AGENTS.md) | One-page summary |
+| [`docs/marketing-agency-agents.md`](./docs/marketing-agency-agents.md) | System prompts and limits for every agent |
+| [`docs/item-13-ai-findability.md`](./docs/item-13-ai-findability.md) | AI Visibility playbook (SEO + GEO + AEO + LLMO; internal name "Item 13") |
+| [`docs/knowledge/`](./docs/knowledge/) | Knowledge packs per specialty, ingested into the RAG |
+| [`docs/CONCLUSAO-SETUP-MARKETING.md`](./docs/CONCLUSAO-SETUP-MARKETING.md) | Close-out and next steps |
 
-### Destaques do desenho
-
-- **Horizontais** (SEO, AI Visibility, UI/UX, copy, mídia, UGC…) + **verticais** por cliente  
-- **Orquestrador** que planeia e faz handoffs — não substitui o especialista  
-- **Prompt ≠ knowledge** — checklists e anti-padrões por papel  
-- **Item 13 — AI Findability** — estruturar projetos para IA encontrar e recomendar  
-- Regras portáteis de harnesses (Ruflo / Hermes / Orca) sem lock-in de runtime  
-
-```text
-Objetivo → marketing-orquestrador → horizontais / verticais
-                ↓
-         [KNOWLEDGE] + [CLIENT]
-```
-
----
-
-## Outra documentação no repo
-
-| Doc | Nota |
-|-----|------|
-| [docs/estrutura-geral-agentes.md](./docs/estrutura-geral-agentes.md) | Especificação ampla (providências / estrutura geral) |
-| [docs/item-13-ai-findability.md](./docs/item-13-ai-findability.md) | Playbook operacional Item 13 (PASS/FAIL, bots, handoffs) |
-| [docs/knowledge/ai-findability.md](./docs/knowledge/ai-findability.md) | Chunks RAG para agents responderem perguntas Item 13 |
-
----
-
-## Plataforma (código / infra — monorepo)
-
-> Alguns módulos podem conter stubs; ver [`docs/architecture/CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) para o mapeamento exacto de que está REAL, INCOMPLETO ou MOCK antes de usar em produção.
-
-### Estrutura
-
-```
-network-agents-setup/
-├── runner/            # motor (plan_runner, Python)
-├── packages/          # governança + infra (TypeScript)
-│   ├── core/
-│   ├── memory/
-│   ├── mcp/
-│   ├── observability/
-│   ├── websocket/
-│   ├── langgraph/
-│   └── shared/
-├── skills/            # horizontais (marketing, claude, design, meta)
-├── agents/            # horizontais (marketing, design, meta, engenharia, gestao, atendimento, produto)
-├── docs/
-│   └── architecture/  # ECOSYSTEM, CORE-MAPPING, MCP-MAPPING, governance/
-├── apps/api/
-├── config/
-├── tests/
-└── k8s/
-```
-
-### Requisitos
-
-- Node.js 18+
-- pnpm 8+
-- PostgreSQL 16+
-- Redis 7+
-- Python 3.10+ (para o `runner/`)
-
-### Instalação
+## Quickstart
 
 ```bash
-pnpm install
-cp .env.example .env
-pnpm run build
-pnpm run dev
+git clone https://github.com/souzalrns/network-agents-setup
+cd network-agents-setup/runner
+pip install -r requirements.txt            # + requirements-langgraph.txt for the LangGraph engine
+
+# Run a demo plan without calling any model (stub mode). It pauses at a human gate.
+python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml \
+  --mode stub --out ../pilots/demo
+
+# Approve the gate and finish the run
+python -m plan_runner resume ../pilots/demo --decision approve
 ```
 
-### Licença
+Inspect `../pilots/demo/status.json` (final state), `events.jsonl` (the full audit log) and `artifacts/`. Full CLI reference: [`runner/README.md`](./runner/README.md).
 
-MIT
+## Repository map
 
----
+| Path | Status | Contents |
+|---|---|---|
+| [`runner/`](./runner/) | **Active** | `plan_runner` engine and its tests |
+| [`agents/`](./agents/), [`skills/`](./skills/) | **Active** | Horizontal agents and skills, by domain |
+| [`config/`](./config/) | **Active** | Areas, councils, capabilities, model tiers and prices |
+| [`docs/orchestration/`](./docs/orchestration/) | **Active** | Plan templates per domain |
+| [`scripts/`](./scripts/) | **Active** | RAG schema, ingestion, migrations |
+| [`docs/`](./docs/) | **Active** (PT) | Architecture, ADRs, operations, open items |
+| [`packages/`](./packages/), [`apps/`](./apps/), [`k8s/`](./k8s/), `Dockerfile`, `docker-compose.yml` | **Archived** | Earlier TypeScript runtime, replaced by `plan_runner` (decision D1). Kept for history; CI still builds it |
 
-## Como usar (motor `plan_runner`)
+## Status
 
-Quickstart real (ver [`runner/README.md`](./runner/README.md) para a referência completa de CLI):
+- **Operational and tested:** the runtime and everything listed under Capabilities.
+- **In progress:** revalidation of the knowledge layer (phase F0). An [ingestion-primitives ADR](./docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md) has been accepted.
+- **Not built yet:** an identity and authorization layer (delegation graph, action receipts). It is designed in [ADR-001](./docs/architecture/adr/ADR-001-governance-runtime.md) and not implemented.
+- **Plan:** [`EXECUTION-PLAN.md`](./docs/architecture/EXECUTION-PLAN.md) (Universal Core → Domain Packs). **Open work:** [`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md).
 
-```bash
-cd runner
+### Architecture references (PT)
 
-# 1. Instalar (motor nativo, mínimo)
-pip install -r requirements.txt
+| Document | Contents |
+|---|---|
+| [`ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) | How this repo and the production MCP server fit together |
+| [`MCP-MAPPING.md`](./docs/architecture/MCP-MAPPING.md) | The agents of `agent-network-mcp`: horizontals migrated here, verticals kept there |
+| [`CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) | Module-by-module inventory of the archived TypeScript core |
+| [`ROADMAP-GOVERNANCE.md`](./docs/architecture/governance/ROADMAP-GOVERNANCE.md) | Governance layer roadmap |
+| [`estrutura-geral-agentes.md`](./docs/estrutura-geral-agentes.md) | Overall agent structure specification |
 
-# 2. Instalar (com engine LangGraph — recomendado)
-pip install -r requirements-langgraph.txt
+## License
 
-# 3. Correr um plano de exemplo
-python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml --mode stub --out ../pilots/demo
-```
-
-Depois de correr, ver `../pilots/demo/status.json` (estado final), `events.jsonl` (log completo) e `artifacts/` (o que foi gerado).
-
----
-
-## Nota de maturidade
-
-- **Documentação da agência multi-agente (portfolio):** pronta para partilha e testes com o padrão `[SYSTEM]+[KNOWLEDGE]+[CLIENT]+[TASK]`.
-- **Código da plataforma neste repo:** inclui módulos MOCK/INCOMPLETO — ver [`CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) antes de assumir que algo está pronto para produção.
-- **Verticais (agentes por negócio/domínio):** vivem no repo plug-in `agent-network-mcp` — ver [`MCP-MAPPING.md`](./docs/architecture/MCP-MAPPING.md).
-
-## Referências
-
-- [`docs/architecture/ECOSYSTEM.md`](./docs/architecture/ECOSYSTEM.md) — visão geral do ecossistema, a ler primeiro
-- [`docs/architecture/CORE-MAPPING.md`](./docs/architecture/CORE-MAPPING.md) — os 39 ficheiros de `packages/core/`
-- [`docs/architecture/MCP-MAPPING.md`](./docs/architecture/MCP-MAPPING.md) — os 33 agentes do `agent-network-mcp`
-- [`docs/architecture/governance/ROADMAP-GOVERNANCE.md`](./docs/architecture/governance/ROADMAP-GOVERNANCE.md) — cronograma da camada de governança
-- [`docs/initiatives/STATUS.md`](./docs/initiatives/STATUS.md) — pendências consolidadas, o que está feito e o que falta
-
----
-
-*LRNSdigital*
+[MIT](./LICENSE) · LRNSdigital
