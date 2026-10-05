@@ -18,7 +18,7 @@
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅ Merged  | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ✅ Merged  | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt) |
-| F3   | Provenance no retrieve                         | ⏳         | P-26 = A (maestro, 2026-10-06). Branch `feat/f3-provenance-retrieve` (NAS) + MCP atrás de feature flag; ADR aceite (#112) | Não                         |
+| F3   | Provenance no retrieve                         | ⏳         | P-26 = A (maestro, 2026-10-06). NAS: branch `feat/f3-provenance-retrieve` (migração aditiva, `match_knowledge_v2`, writer, 21 testes); MCP: flag `KNOWLEDGE_RPC_V2`; ADR aceite (#112) | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |

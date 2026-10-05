@@ -23,6 +23,31 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F3a, etapas 2 a 4: SQL, writer e testes no NAS (2026-10-06)
+- **Migração aditiva:** `scripts/migrations/f3_provenance_retrieve.sql` acrescenta 10 colunas à `knowledge_sources` (com um CHECK do status), o `locator` à `knowledge_chunks` e a função `match_knowledge_v2`, com filtros e proveniência por `LEFT JOIN`, só nas linhas do T6. O `match_knowledge` antigo fica igual.
+  - Verificada à mão e no CI: corre 2 vezes sobre dados antigos sem erro.
+- **Risco tratado:**
+  - o merge deste PR toca em `docs/**/*.md` e dispara o `ingest-knowledge` contra produção antes de o DEV correr o SQL;
+  - por isso o writer **detecta** a migração (`has_f3_columns`) e, sem ela, escreve exactamente como antes;
+  - está testado nos 2 schemas.
+- **`runner/plan_runner/provenance.py`:**
+  - valida o `.meta.yaml`: campos, hash, status e datas, incluindo comparar datas com e sem fuso sem `TypeError`;
+  - converte-o nas colunas.
+- **`ingest_apply`:**
+  - `INVALID_META` não escreve nada e conta como falha da corrida;
+  - `META_UPDATED` acontece quando o `.md` é igual e só o sidecar muda, sem embeddings, e é o que torna possível uma revogação ter efeito;
+  - sem sidecar, a proveniência vem do git.
+- **Testes:**
+  - `test_f3_provenance.py` (11, Postgres): a migração 2 vezes sobre dados antigos, o CHECK, o writer sem e com a migração, a v2 com proveniência e cada filtro, o `match_knowledge` antigo igual, as linhas do MCP sem herdar proveniência, `INVALID_META` e `META_UPDATED`;
+  - `test_provenance.py` (10).
+  - Verificação por mutação: sem a detecção, ou sem a condição `project` no JOIN, os testes respectivos falham.
+- **Defeitos meus apanhados na validação:**
+  - acrescentei uma chave ao retorno do `replace_chunks`, o que partia um contrato testado (revertido);
+  - o `has_f3_columns` não tratava um cursor sem linha;
+  - o refactor separou o `nosemgrep` da chamada a que se aplicava (o semgrep apanhou).
+- **Validação:** sem extras, `pytest` 700 passed e 29 skipped; com extras e Postgres, 144 passed; semgrep 0; gitleaks limpo.
+- **Documentação:** runbook do DEV em `docs/ops/RAG-CANONICAL.md` § F3a (ordem merge → SQL → MCP → flag; rollback desligando a flag).
+
 ### F3a, etapa 1: P-26 = A, F1 FECHADO (2026-10-06)
 - **Maestro:** o merge do #110, do #111 e do #112 está feito, e a **P-26 = A**. Pedido explícito: implementar o F3 (SQL aditivo, v2, writer, testes e MCP mínimo ou com feature flag) e só depois o F4.
 - **Pergunta do maestro, "porque não levou o prompt até ao fim":** parei no F3 por excesso de cautela. A opção A é aditiva e o SQL só corre pela mão do DEV, por isso podia ter implementado num PR sem merge. Fica registado como lição: com uma opção aditiva e sem escrita em produção, avança-se em PR e a decisão fica para o merge.

@@ -45,6 +45,21 @@
 | 7 | Produção | O SQL fica em `scripts/migrations/`, e o DEV corre-o (W-prod). Antes e depois, há queries só de leitura de controlo no PR |
 | 8 | MCP (2.º PR) | O `retrieve_knowledge` chama a v2, e a `citation` passa a trazer `uri`, `title`, `retrieved_at`, `locator` e `status`; os `filters` passam a ter efeito. Verificar o impacto no conector do Claude.ai (`ANM:CLAUDE.md`) |
 
+## 3.1 Implementação do F3a (2026-10-06)
+
+- **NAS** (branch `feat/f3-provenance-retrieve`):
+  - migração `scripts/migrations/f3_provenance_retrieve.sql`;
+  - `runner/plan_runner/provenance.py` (sidecar → colunas);
+  - writer com detecção da migração (`has_f3_columns`): o merge pode vir antes do SQL;
+  - `ingest_apply` com `INVALID_META` e `META_UPDATED`;
+  - testes `test_f3_provenance.py` (11, Postgres) e `test_provenance.py` (10).
+  - Runbook do DEV em `docs/ops/RAG-CANONICAL.md` § F3a.
+- **MCP:** o `retrieve_knowledge` passa para a v2 atrás da flag `KNOWLEDGE_RPC_V2`, desligada por omissão.
+- **Diferenças face ao §3:**
+  - a coluna `final_url` foi acrescentada (vem do F2);
+  - `effective_*` ficou `timestamptz`, como o resto do schema;
+  - o filtro `valid_at` aceita qualquer instante ISO 8601.
+
 ## 4. Consequências
 
 - **Positivas:**
