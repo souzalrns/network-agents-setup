@@ -8,14 +8,12 @@ channels: []  # ex. instagram, tiktok
 
 budget:
   max_steps: 10
-  max_replans: 2
 
 steps:
   - id: trends
     action: trend_hunter
     tools_allowed: [web_search, read_repo_file]
     output_artifact: artifacts/01-trends.md
-    on_fail: human
     knowledge:
       kb: marketing
       query: "identificação de tendências redes sociais"
@@ -31,7 +29,6 @@ steps:
     depends_on: [research]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/03-social-copy.md
-    on_fail: retry
 
   - id: storytelling
     action: storytelling
@@ -47,7 +44,6 @@ steps:
     depends_on: [storytelling]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/05-critic.json
-    on_fail: human
 
   - id: hitl
     action: plan_approve

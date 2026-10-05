@@ -36,7 +36,6 @@ knowledge_refs:
 
 budget:
   max_steps: 8
-  max_replans: 1
   max_tokens: 40000
 
 steps:
@@ -45,7 +44,6 @@ steps:
     vertical: security
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-triage.json
-    on_fail: human
 
   - id: audit
     action: security_audit
@@ -73,7 +71,6 @@ steps:
       query: "politica defensiva da area security, papel do security-auditor (OWASP LLM 2026, NIST AI RMF, MITRE ATLAS), scanners passivos e HITL"
       top_k: 5
     output_artifact: artifacts/02-audit.md
-    on_fail: human
 
   - id: report
     action: security_report
@@ -85,7 +82,6 @@ steps:
     # passo triage pagaria a geração do resumo (+ saída) para poupar quase nada.
     context: {full: [artifacts/01-triage.json, artifacts/02-audit.md]}
     output_artifact: artifacts/03-security-report.md
-    on_fail: human
 
   - id: hitl_security_decision
     action: plan_approve

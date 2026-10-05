@@ -3,6 +3,7 @@
   "$id": "network-agents-setup/runner-plan.schema.json",
   "title": "Plano do plan_runner (W-006)",
   "description": "Formato YAML dos planos que o runner executa (docs/orchestration/**/*.plan.yaml e os gerados pelo router). Nao e o docs/architecture/plan-execute/schemas/Plan.schema.json (outro formato). Campos desconhecidos sao erro, para apanhar gralhas.",
+  "$comment": "P-10 = A (AU-22): steps[].on_fail e budget.max_replans foram removidos. O runner nunca os aplicou: um passo que falha pára o run em failed e quem decide é o humano. Ficam fora até ao F3 (replanning), por decisão, não por esquecimento. Um plano que ainda os declare falha este schema; no run, o evento plan_fields_ignored continua a assinalá-los.",
   "type": "object",
   "required": ["id", "steps"],
   "additionalProperties": false,
@@ -16,13 +17,12 @@
     "client_id": {"type": "string", "description": "Memoria de trabalho do cliente (working_memory.py)"},
     "router": {"type": "object", "description": "Metadados do router (router.py build_plan)"},
     "knowledge_refs": {"type": "array", "items": {"type": "string"}, "description": "Ignorado pelo runner (AU-22); o L5 entra pelo bloco knowledge: do passo"},
-    "done_when": {"type": "array", "items": {"type": "string"}, "description": "Ignorado pelo runner até ao AU-22. P-10 = A (2026-10-03): vai ser verificado no fim do run"},
+    "done_when": {"type": "array", "items": {"type": "string"}, "description": "Verificado no fim do run, nos 2 engines (done_when.py; P-10 = A). Formas: '<caminho> exists' e 'human_gate_resolved on <passo>'; noutra forma gera done_when_unverifiable e não falha o run (AU-22b)"},
     "budget": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "max_steps": {"type": "integer", "minimum": 1},
-        "max_replans": {"type": "integer", "minimum": 0, "description": "Ignorado pelo runner (AU-22). P-10 = A (2026-10-03): a remover; fora até ao F3 (replanning), por decisão, não por esquecimento"},
         "max_tokens": {"type": "integer", "minimum": 0, "description": "docs/ops/BUDGET.md"},
         "max_cost_usd": {"type": "number", "minimum": 0, "description": "D6 (docs/ops/BUDGET.md)"}
       }
@@ -66,7 +66,6 @@
         "depends_on": {"$ref": "#/$defs/strings"},
         "output_artifact": {"type": "string"},
         "output_schema": {"type": "string"},
-        "on_fail": {"enum": ["human", "retry"], "description": "Ignorado pelo runner (AU-22). P-10 = A (2026-10-03): a remover; fora até ao F3 (replanning), por decisão, não por esquecimento"},
         "model_tier": {"enum": ["planner", "executor", "verifier"], "description": "D5"},
         "human_gate": {
           "oneOf": [

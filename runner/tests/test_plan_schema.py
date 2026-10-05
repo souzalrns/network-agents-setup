@@ -56,6 +56,9 @@ BASE = {"id": "p", "steps": [{"id": "a", "action": "research"}]}
     ({"steps": [{"id": "a", "action": "x", "knowledge": {"kb": "security"}}]}, "'query' is a required property"),
     ({"steps": [{"id": "a", "action": "x", "human_gate": {"allow": ["aprovar"]}}]}, "human_gate"),
     ({"steps": [{"id": "a", "action": "x", "model_tier": "chefe"}]}, "model_tier"),
+    # P-10 = A (AU-22): campos removidos do schema; um plano que os declare falha
+    ({"steps": [{"id": "a", "action": "x", "on_fail": "human"}]}, "'on_fail' was unexpected"),
+    ({"budget": {"max_replans": 2}}, "'max_replans' was unexpected"),
 ])
 def test_erros_tipicos_sao_apanhados(patch, erro):
     errs = ps.plan_errors({**BASE, **patch})

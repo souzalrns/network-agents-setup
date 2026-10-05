@@ -9,7 +9,6 @@ audience: "(preencher)"
 
 budget:
   max_steps: 10
-  max_replans: 2
 
 steps:
   - id: ux
@@ -17,7 +16,6 @@ steps:
     vertical: design
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-ux-flow.md
-    on_fail: human
 
   - id: ui
     action: ui_spec
@@ -26,7 +24,6 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-ux-flow.md]
     output_artifact: artifacts/02-ui-spec.md
-    on_fail: human
 
   - id: copy_ui
     action: ux_writing
@@ -35,7 +32,6 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-ux-flow.md, artifacts/02-ui-spec.md]
     output_artifact: artifacts/03-ux-writing.md
-    on_fail: human
 
   - id: critic
     action: design_critic
@@ -47,7 +43,6 @@ steps:
       - artifacts/02-ui-spec.md
       - artifacts/03-ux-writing.md
     output_artifact: artifacts/04-design-critic.json
-    on_fail: human
 
   - id: hitl
     action: plan_approve

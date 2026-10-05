@@ -110,9 +110,10 @@ Meta: `using_agent_skills` — so descoberta.
 ```yaml
 budget:
   max_steps: 12
-  max_replans: 2
   max_retrieve_calls: 20
 ```
+
+O `max_replans` saiu (P-10 = A, AU-22): o runner não faz replanning até ao F3.
 
 ---
 

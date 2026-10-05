@@ -5,20 +5,41 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f0-selects` (só documentação).
-- **`main` de referência:** NAS `81e6364` (merges até #94); MCP `4916872` (merges #15, #16 e #17).
+- **Branch actual:** `fix/AU-22-remover-on-fail-max-replans` (AU-22, código + testes).
+- **`main` de referência:** NAS `c15a6d8` (merges até #95); MCP `4916872` (merges #15, #16 e #17).
 - **Itens em trabalho:** F0.1 (falta a contagem `projecto` e a F0.1b com o filtro `project`); H-01 (partes 1, 2 e 3).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **DEV — F0.1 + R-002 + R-005:** contagem `projecto`, F0.1b com o filtro `project` (esperado 163) e `kb` das linhas com `project` NULL. São só SELECTs (§5 do PENDENCIAS).
 2. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
 3. **DEV — F0.7b:** `python -m plan_runner.l5_eval run` contra o MCP real (hit@k, MRR, proveniência).
-4. **CLAUDE — AU-22:** 2.ª metade da P-10 (retirar o `on_fail` e o `max_replans` dos planos e do schema, com testes).
+4. **CLAUDE — AU-22:** 2.ª metade da P-10. **PR aberto** (branch `fix/AU-22-remover-on-fail-max-replans`); fecha com o merge.
 5. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data.
 
 **Gate:** o código do F1 (spike MarkItDown) só arranca com 1, 2 e 3 feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### AU-22: `on_fail` e `max_replans` removidos (2.ª metade da P-10, 2026-10-05)
+- **Fila activa aprovada pelo maestro:** A + B em paralelo. O maestro faz os SELECTs, o F0.6 e o F0.7b; eu faço o AU-22. A opção C (H-01 parte 1) fica para depois do gate F0. O #95 entrou (`c15a6d8`).
+- **Feito:**
+  - `plan.schema.json`: sem `steps[].on_fail` nem `budget.max_replans`; um `$comment` regista a decisão (P-10 = A; fora até ao F3). A `description` do `done_when` já não diz "ignorado".
+  - 13 planos de `docs/orchestration/`: 48 linhas retiradas.
+  - `models.py`: sem `Step.on_fail` nem `Plan.budget_max_replans` (nada os lia).
+  - Um plano antigo que ainda os declare corre na mesma e fica no evento `plan_fields_ignored`. Só falha o `plan_schema`.
+- **Porque não muda o comportamento:**
+  - um passo que falha já parava o run em `failed` (`engine.py:290-291`);
+  - o prompt do worker só lê `objective`, `audience` e `task` (`external_worker.py:452-455`), por isso os tokens medidos não mudam.
+- **Testes:**
+  - 4 novos falham sem a alteração (os 2 casos do schema, o guarda "nenhum plano do repo os declara" e o modelo sem os campos); o 5.º (plano antigo continua a correr) passa nas duas versões, como devia;
+  - o `test_planos_reais_declaram_campos_ignorados` (premissa antiga) foi substituído pelo guarda;
+  - totais: `pytest` 566 passed, `-m slow` 34 passed, `ruff` limpo, E7 válido, `plan_schema` 14 planos sem erros;
+  - quickstart do README: `paused_human_gate` → `approve` → `done`.
+- **Não mudei, e registei:**
+  - os 6 prompts de agentes com "Falha → `on_fail`", para não mexer na base medida do B1-bis → B1-bis-C;
+  - o `max_retrieve_calls` do exemplo de budget do `ORCHESTRATOR.md`, que não está no schema → W-009 (novo);
+  - o formato antigo do plan-execute (`piloto-netos`) → W-008.
+- **Contagens:** 111 → 112 vivos (ABERTO 62, EM CURSO 8, BLOQUEADO 42). O AU-22 passa a EM CURSO e entra o W-009.
 
 ### Análise externa do projecto: confronto com o estado real (2026-10-05)
 O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PENDENCIAS na `main` `81e6364`. Várias acções já estavam feitas:

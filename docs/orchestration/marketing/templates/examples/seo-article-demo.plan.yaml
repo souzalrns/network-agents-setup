@@ -19,14 +19,12 @@ knowledge_refs:
 
 budget:
   max_steps: 10
-  max_replans: 2
 
 steps:
   - id: research
     action: research
     tools_allowed: [read_repo_file, web_search]
     output_artifact: artifacts/01-research.md
-    on_fail: human
 
   - id: seo_brief
     action: seo_brief
@@ -34,7 +32,6 @@ steps:
     tools_allowed: [read_repo_file, web_search]
     output_artifact: artifacts/02-seo-brief.json
     output_schema: SeoBrief
-    on_fail: human
 
   - id: copy
     action: copy_answer_first
@@ -43,7 +40,6 @@ steps:
     inputs: [artifacts/02-seo-brief.json]
     output_artifact: artifacts/03-copy.md
     output_schema: CopyAnswerFirst
-    on_fail: retry
 
   - id: critic
     action: critic_item13
@@ -52,7 +48,6 @@ steps:
     inputs: [artifacts/02-seo-brief.json, artifacts/03-copy.md]
     output_artifact: artifacts/04-critic.json
     output_schema: CriticReport
-    on_fail: human
 
   - id: hitl_publish_decision
     action: plan_approve

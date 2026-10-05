@@ -5,7 +5,6 @@ objective: "(preencher)"
 
 budget:
   max_steps: 6
-  max_replans: 1
 
 steps:
   - id: gather

@@ -52,13 +52,39 @@ def test_plano_sem_campos_mortos_nao_regista_nada(tmp_path, tmp_run_dir):
     assert _events(tmp_run_dir, "plan_fields_ignored") == []
 
 
-def test_planos_reais_declaram_campos_ignorados():
-    """Os planos de exemplo usam on_fail: o evento existe para os runs reais (o done_when ja nao e ignorado)."""
+REPO_ROOT = Path(__file__).resolve().parents[2]
+REMOVED = ("budget.max_replans", "steps[].on_fail")
+
+
+def test_planos_do_repo_nao_declaram_campos_removidos():
+    """P-10 = A: o on_fail e o max_replans sairam de todos os planos do repo (fora ate ao F3)."""
     import yaml
 
-    plan = Path(__file__).resolve().parents[2] / "docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml"
-    fields = ignored_plan_fields(yaml.safe_load(plan.read_text(encoding="utf-8")))
-    assert "steps[].on_fail" in fields and "done_when" not in fields
+    plans = sorted((REPO_ROOT / "docs" / "orchestration").glob("**/*.plan.yaml"))
+    assert len(plans) >= 13
+    for plan in plans:
+        fields = ignored_plan_fields(yaml.safe_load(plan.read_text(encoding="utf-8")))
+        assert not set(fields) & set(REMOVED), f"{plan.relative_to(REPO_ROOT)}: {fields}"
+
+
+def test_plano_antigo_com_campos_removidos_continua_a_correr_e_e_assinalado(tmp_path, tmp_run_dir):
+    """Um plano de fora do repo com on_fail/max_replans corre como antes (sem efeito) e fica no evento."""
+    steps = (
+        "steps:\n"
+        "  - {id: a, action: research, output_artifact: artifacts/a.md, on_fail: retry}\n"
+        "  - {id: b, action: internal_brief, depends_on: [a], output_artifact: artifacts/b.md}\n"
+    )
+    status = run_plan(_plan(tmp_path, "budget:\n  max_replans: 2\n", steps), mode="stub", out_dir=tmp_run_dir)
+    assert status["state"] == "done"
+    [ev] = _events(tmp_run_dir, "plan_fields_ignored")
+    assert ev["payload"]["fields"] == list(REMOVED)
+
+
+def test_plan_ja_nao_expoe_os_campos_removidos():
+    from plan_runner.models import Plan
+
+    plan = Plan.from_dict({"id": "p", "budget": {"max_replans": 2}, "steps": [{"id": "a", "on_fail": "human"}]})
+    assert not hasattr(plan, "budget_max_replans") and not hasattr(plan.steps[0], "on_fail")
 
 
 def test_langgraph_respeita_max_steps(tmp_path, tmp_run_dir):
