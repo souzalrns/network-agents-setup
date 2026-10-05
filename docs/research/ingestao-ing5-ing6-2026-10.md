@@ -2,6 +2,7 @@
 
 > **Data:** 2026-10-03. **IDs:** ING-5 e ING-6 em `docs/initiatives/PENDENCIAS.md` (antes "E5"/"E6" em `OPEN-ITEMS.md:20`).
 > **Natureza:** análise técnica, pronta para o maestro decidir. **Nada instalado.**
+> **Decisão (2026-10-03):** §10 P-14 = **A** e P-15 = **A** (maestro, com consulta cruzada a uma 2.ª IA): não adoptar o gitingest nem o ScrapeGraphAI. ING-5 e ING-6 → OBSOLETO no `PENDENCIAS.md` §7.
 > **Base:** `docs/architecture/ingestion-audit/AUDIT-INGESTION.md` (2026-09-19), reverificada hoje na página pública de cada projecto (resumo automático; confirmar antes de adoptar).
 > **Enquadramento:** o ADR do F1 (`docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md`, PR #81) trata qualquer ferramenta de aquisição como **adapter** de `ingest_document`/`fetch`, a alimentar o T6.
 
