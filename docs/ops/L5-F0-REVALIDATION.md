@@ -221,11 +221,31 @@ Depois, no mesmo terminal:
 ```powershell
 $env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"   # base; o código acrescenta /api/mcp
 $env:MCP_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'MCP_API_KEY' -AsSecureString)).Password
+$env:VERCEL_PROTECTION_BYPASS = [System.Net.NetworkCredential]::new('', (Read-Host 'VERCEL_PROTECTION_BYPASS' -AsSecureString)).Password
 python -m plan_runner.l5_eval run --out "$env:TEMP\f0-7b-report.json"
-Remove-Item Env:MCP_API_KEY
+Remove-Item Env:MCP_API_KEY, Env:VERCEL_PROTECTION_BYPASS
 ```
 
-Em bash: `MCP_URL=https://agent-network-mcp-oddn.vercel.app MCP_API_KEY=… python -m plan_runner.l5_eval run --out /tmp/f0-7b-report.json`, com a chave lida sem ficar no histórico.
+Em bash: `MCP_URL=https://agent-network-mcp-oddn.vercel.app MCP_API_KEY=… VERCEL_PROTECTION_BYPASS=… python -m plan_runner.l5_eval run --out /tmp/f0-7b-report.json`, com os segredos lidos sem ficarem no histórico.
+
+#### Vercel "Standard Protection" e o segredo de bypass (2026-10-05)
+
+**O que bloqueia:** o projecto Vercel do MCP tem a **Standard Protection** activa. No plano Hobby não se pode desligar. Segundo o DEV, bloqueia os pedidos ao `/api/mcp` com **400**, antes de chegarem à função; por isso o 400 não aparecia nos logs de runtime nem tinha corpo do servidor.
+
+**Como passa:** com a "Protection Bypass for Automation" da Vercel.
+- **Onde se cria o segredo:** Vercel → projecto `agent-network-mcp-oddn` → Settings → Deployment Protection → Protection Bypass for Automation.
+- **Onde fica:** só na variável de ambiente local `VERCEL_PROTECTION_BYPASS`, lida como acima. **Nunca** no repo, num `.env` com commit, no histórico do terminal nem em mensagens.
+- **O que o cliente faz** (`runner/plan_runner/mcp_knowledge.py`, `_request_headers`):
+  - com a variável definida (e não vazia), envia o cabeçalho `x-vercel-protection-bypass` em **todos** os pedidos da sessão MCP;
+  - sem ela, não envia nada, por isso os runs locais e os servidores sem protecção ficam iguais.
+
+**Verificação (2026-10-05):**
+- 4 testes em `runner/tests/test_mcp_knowledge.py`: sem a variável não há cabeçalho; vazia é ignorada; com ela o cabeçalho vai; o segredo nunca aparece numa mensagem de erro.
+- Um run contra um servidor MCP local (`mcp` 1.30.0) que regista os cabeçalhos recebidos: o cabeçalho foi nos 4 pedidos da sessão (`initialize`, notificação, `tools/call`, `tools/list`) e não foi em nenhum sem a variável.
+
+**Rotação:** se o segredo vazar, gera-se um novo no mesmo ecrã da Vercel; o antigo deixa de valer.
+
+**Atenção ao F0.6:** a mesma protecção pode bloquear o conector do Claude.ai, que não envia este cabeçalho. Se o F0.6 falhar com 400, a causa é provavelmente a mesma; decide-se então à parte (por exemplo, uma regra da Vercel para o caminho `/api/mcp`).
 
 **O que colar abaixo:**
 - o bloco `summary` que o comando imprime em JSON;

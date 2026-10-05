@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `fix/F0-7b-mcp-versao` (empilhado sobre o #101).
+- **Branch actual:** `fix/F0-7b-vercel-bypass`.
 - **`main` de referência:** NAS `098034e` (merges até #100); MCP `880d492` (merge #18).
 - **Itens em trabalho:** gate M1 = F0 verde (faltam o F0.6 e o F0.7b, ambos do DEV); o F1 código está bloqueado até lá.
 
@@ -21,6 +21,20 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F0.7b, 2.ª tentativa: 400 da Vercel "Standard Protection" (2026-10-05, ~14:10 UTC)
+- **Diagnóstico anterior (sem código):**
+  - o protocolo completa de ponta a ponta com o código de produção (`880d492`) a correr localmente;
+  - os logs de produção da última hora só tinham 401 (`POST`, `GET` e `HEAD` às 13:50:51–53 UTC) e nenhum 400.
+- **Causa (DEV):** a Vercel tem a **Standard Protection** activa (plano Hobby, não se desliga) e bloqueia os pedidos com 400 antes da função. Isso explica a falta de corpo do servidor e de linhas nos logs de runtime.
+- **Correcção (PR do branch `fix/F0-7b-vercel-bypass`):**
+  - `mcp_knowledge.py` (`_request_headers`): se a env `VERCEL_PROTECTION_BYPASS` estiver definida e não vazia, envia `x-vercel-protection-bypass` em todos os pedidos; senão, nada muda;
+  - 4 testes: ausente, vazia, presente, e o segredo nunca numa mensagem de erro;
+  - **verificação real** contra um servidor MCP local (`mcp` 1.30.0) que regista os cabeçalhos: o bypass foi nos 4 pedidos da sessão (`initialize`, notificação, `tools/call`, `tools/list`) e em nenhum sem a variável;
+  - `L5-F0-REVALIDATION.md` §6.2: o segredo é lido sem ficar no histórico e apagado no fim; onde se cria e como se roda.
+- **Atenção (F0.6):** o conector do Claude.ai não envia este cabeçalho; se a protecção o bloquear, o F0.6 falha pela mesma razão. Fica registado no §6.2.
+- **Testes:** `pytest` 574 passed (569 + 5 casos novos); `ruff` limpo.
+- **Próxima micro-tarefa:** o DEV repete o F0.7b com a env `VERCEL_PROTECTION_BYPASS` definida.
 
 ### F0.7b, 1.ª tentativa do DEV: `not enough values to unpack` (2026-10-05, ~13:30 UTC)
 - **Erro do DEV:** `ValueError: not enough values to unpack (expected 3, got 2)` em `runner/plan_runner/mcp_knowledge.py:138`, com Python 3.14 global.
