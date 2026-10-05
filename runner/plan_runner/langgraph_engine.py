@@ -30,6 +30,7 @@ from .graph import PlanError
 from .knowledge_wiring import inject_knowledge_context
 from .langgraph_compile import build_graph, compile_report, parallel_groups
 from .models import Plan, Step
+from .skills import skill_ref
 
 
 def merge_artifacts(left: dict | None, right: dict | None) -> dict:
@@ -103,7 +104,7 @@ def run_plan_langgraph(
         if step.id in completed:
             return {}
         if not log.has_event("step_started", run_id, step_id=step.id):
-            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph"})
+            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph", "skill": skill_ref(out, step)})
             inject_knowledge_context(out, step, log, run_id)
 
         if step.human_gate:
@@ -368,7 +369,7 @@ def _run_waves_fallback(
                 continue
             status["current_step"] = step.id
             save_status(out, status)
-            log.append("step_started", run_id, {"step_id": step.id, "action": step.action})
+            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "skill": skill_ref(out, step)})
             inject_knowledge_context(out, step, log, run_id)
 
             if step.human_gate:
@@ -542,6 +543,7 @@ def resume_plan_langgraph(
                         "step_id": step.id,
                         "action": step.action,
                         "engine": "langgraph",
+                        "skill": skill_ref(out_dir, step),
                     },
                 )
                 inject_knowledge_context(out_dir, step, log, run_id)
