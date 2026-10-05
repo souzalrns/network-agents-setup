@@ -577,7 +577,7 @@ Estado verificado no fim do dia (git, GitHub, Vercel e SELECT read-only ao Supab
 | Orçamento de tokens por run | **Merged** (#42); B5-bis aplicado (ver abaixo) | `docs/ops/BUDGET.md` |
 | Testes lentos no CI | **Merged** (#43, `9a273d4`) | job `test-slow` |
 | ingest→retrieve no CI | **Merged** (#44, `c4d02fe`): PLANO item 10 completo | job `test-rag` |
-| Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`). **Real (B1-bis-R): −2,6%**; a projecção de −16% foi refutada (lição de método registada) | `docs/ops/WORKER-EXTERNAL.md` |
+| Contexto por resumo (B1-bis) | **Merged** (#45, `810d1fe`). **Real (B1-bis-R2, #55): −22%** contra −16% projectado. O 1.º run (B1-bis-R, −2,6%) era inválido: o braço `opt` correu com o prompt `legacy` (corrigido a 2026-10-05; antes dizia "projecção refutada") | `docs/ops/WORKER-EXTERNAL.md` |
 | Tectos por área (B5-bis) | **Aplicado** (opção A): 80k/40k/30k/20k | `config/areas.yaml`, `docs/ops/BUDGET.md` |
 | B1-bis-C: encurtar skills/prompt-base | **Registado** (PLANO item 12); não começar sem ordem | `docs/audit/PLANO-DE-ACAO.md` |
 | **L4: memória persistente (D3)** | **Merged** (#47, `a941147`) **e em produção**: L4-1 feito pelo maestro (verificação 4/4: tabela=1, rls=true, anon=0, rpc=1). Falta o teste real mínimo (L4-1b) | `docs/ops/MEMORY-L4.md` |

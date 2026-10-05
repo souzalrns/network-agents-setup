@@ -5,11 +5,30 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/decisoes-p10-p18` (decisões confirmadas pelo maestro).
-- **`main` de referência:** NAS `e4a9f5e` (merges até #86); MCP `4916872` (merges #15, #16 e #17).
-- **Itens em trabalho:** nenhum em código. 1 PR de docs aberto (este).
+- **Branch actual:** `docs/H-01-readme-porta-de-entrada` (PR #93), com a `main` `a52fc74` fundida.
+- **`main` de referência:** NAS `a52fc74` (merges até #92; o #91 e o #93 estão abertos); MCP `4916872` (merges #15, #16 e #17).
+- **Itens em trabalho:** H-01 (PR #93, partes 4, 5 e 6) e a evidência do F2 (PR #91).
 
 ## Log (mais recente no topo)
+
+### PR #93 sem merge possível: conflito resolvido (2026-10-05)
+- **Causa:** o #90 e o #93 mudavam as mesmas 2 linhas de contagens do `PENDENCIAS.md` (cabeçalho e "Por estado"). Era o conflito previsto; mais nada colidia.
+- **Correcção:** merge da `main` `a52fc74` na branch do #93 (merge commit, sem rebase nem `--force`). As contagens foram recalculadas a partir da tabela §4 fundida, e não escolhidas de um dos lados.
+- **Fecho dos merges #88, #89, #90 e #92 (providência 2):**
+  - E-003 → FECHADO no §7 (#90, `test_engenharia_ship_gate.py`, 3 testes);
+  - AU-22 → ABERTO sem bloqueio: o `done_when` entrou no #90, mas a remoção do `on_fail` e do `max_replans` (2.ª metade da P-10) continua por fazer;
+  - H-003 continua ABERTO: o #89 é uma mitigação (Codecov com `continue-on-error`), e o re-pin das actions Node 20 continua por fazer.
+- **Contagens:** 113 vivos (ABERTO 63, EM CURSO 9, BLOQUEADO 41); 92 no histórico (71 FECHADO, 21 OBSOLETO). §5 e §6 batem com a §4, e não há IDs repetidos nem sobreposição §4/§7.
+- **README** (a somar ao que já estava no #93):
+  - linhas "Completion criteria" (`done_when.py`) e "Skill usage" (`skill_ref`) nas Capabilities;
+  - `.claude/skills/` (gerado) no mapa do repositório;
+  - números actualizados: 590+ testes (562 + 34 lentos) e 70+ PRs merged (70 contados pela API);
+  - 57 links relativos verificados, 0 partidos.
+- **Ingest pós-merge:** corrida #174 (`388d86b`) com `chunks=0 deleted=0 unchanged=39`; a #173 foi cancelada pela concorrência. Os ficheiros deste PR não estão no `scripts/ingest_delta.py`.
+- **Testes na branch fundida:**
+  - `pytest -q`: 562 passed;
+  - `pytest -q -m slow`: 34 passed;
+  - `ruff` limpo; E7 válido; `sync_claude_skills.py --check` sem drift.
 
 ### Decisões confirmadas (consulta cruzada com uma 2.ª IA)
 - **Registo:** P-10, P-12, P-13, P-14 e P-15 = **A** (maestro, 2026-10-03). INIT-094, ING-5 e ING-6 → **OBSOLETO** no §7 (não FECHADO). Contagens: **112 vivos** (ABERTO 62, EM CURSO 8, BLOQUEADO 42), **91 no histórico** (70 FECHADO, 21 OBSOLETO).

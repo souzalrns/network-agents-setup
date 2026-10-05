@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **Pós-merge (2026-10-05, `main` `a52fc74`, merges #88, #89, #90 e #92):** E-003 → FECHADO (#90); AU-22 → ABERTO (o `done_when` entrou no #90; falta a 2.ª metade da P-10); H-003 com a mitigação do #89; H-01 EM CURSO (PR #93).
 > **AU-22/E-003 (2026-10-05, `main` `492acff`):** P-18 = C; AU-22 e E-003 EM CURSO (PR #90); novos AU-22b e W-008.
 > **Decisões confirmadas (2026-10-03, `main` `e4a9f5e`):** P-10 e P-12 a P-15 = A, com consulta cruzada; INIT-094, ING-5 e ING-6 → OBSOLETO; a condição da P-18 devolveu-a a A/B/C.
 > **Sessão "continuação operacional" (2026-10-03, `main` `c9edd72`):** R-004 com PR (MCP #15); C-2: lado DB feito pelo DEV, lado repo com PR (MCP #16); E-003 → P-18; H-002 e H-003 com o bloqueio actualizado; F0.6 e F0.7b deixam de esperar pelo F0.4 (fechado no #64; o F0.7b passa a ABERTO). Depois, a pedido do maestro: S-004 (PR MCP #17), factos do README no H-01 (§4.1) e V40 (ponteiros que o H-001 deixou). Auto-auditoria: H-005 (STATUS do MCP desactualizado); `pnpm audit` do NAS = 0 (A22).
@@ -13,8 +14,8 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **114 itens vivos** (§4): ABERTO 63, EM CURSO 10, BLOQUEADO 41;
-> - **91 linhas de histórico** (§7): 70 fechadas, 21 obsoletas;
+> - **113 itens vivos** (§4): ABERTO 63, EM CURSO 9, BLOQUEADO 41;
+> - **92 linhas de histórico** (§7): 71 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
 
@@ -92,7 +93,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (114 itens vivos)
+## 4. Tabela única (113 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -144,7 +145,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-008 | O `docs/architecture/plan-execute/examples/piloto-netos.plan.yaml` não passa no schema dos planos (`on_fail: replan`; `done_when` e `name` por passo): é do formato antigo do plan-execute | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — | `python -m plan_runner.plan_schema` na `main` `492acff`: 1 plano, 1 com erros (já falhava antes do PR #90); os 14 planos de `docs/orchestration/` passam | — | VERIFICADO |
 | AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
-| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | EM CURSO | AMBOS | Média | Merge do PR #90 | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes); PR #90: `done_when` verificado no fim do run nos 2 engines (`runner/plan_runner/done_when.py`; `tests/test_done_when.py`, 16 testes; 10 falhavam sem a alteração). A remoção do `on_fail` e do `max_replans` (2.ª metade da P-10) fica por fazer | — | VERIFICADO |
+| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | ABERTO | AMBOS | Média | — | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes); PR #90 (merged, `main` `388d86b`): `done_when` verificado no fim do run nos 2 engines (`runner/plan_runner/done_when.py`; `tests/test_done_when.py`, 16 testes; 10 falhavam sem a alteração). A remoção do `on_fail` e do `max_replans` (2.ª metade da P-10) fica por fazer | — | VERIFICADO |
 | AU-22b | Reescrever numa das 2 formas verificáveis a condição de `done_when` em linguagem livre do `paid-pack.plan.yaml` ("no ad_account_mutation without approve"); o evento `done_when_unverifiable` é o gatilho para encontrar outras | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | F3 (decisão do maestro, 2026-10-04) | `docs/orchestration/marketing/templates/paid-pack.plan.yaml`; `runner/plan_runner/done_when.py` (evento `done_when_unverifiable` com `item: AU-22b`); PR #90 | — | VERIFICADO |
 | M-001 | Fase 2: Execution Broker (EXECUTE/REDIRECT/WAIT/DEFER/BLOCK) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | `docs/architecture/META-AGENTS-PHASE-2.md`; O §Fase 2; E §8.3 e §9.3 | — | VERIFICADO |
 | M-002 | Fase 2: Execution Lease (1 tarefa → 1 lease activa) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | E §8.7 e §9.3; O §Fase 2 | — | VERIFICADO |
@@ -166,7 +167,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | E15 | Proveniência do esboço do CouncilSession/`councils.yaml`: substituir a reconstituição se aparecerem os originais | DOC-ERRADO | BLOQUEADO | DEV | Baixa | Aparecerem os originais | P:553; O:105 | — | VERIFICADO |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão (partir/arquivar) | P:297; A5 §5.1 | J8 (parte) | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:102` UP017; `main` `2b27f66`), fora do lint do CI | BUG | BLOQUEADO | CLAUDE | Baixa | F3 (§10 P-7 = A: registar e tratar no F3) | ruff 0.16.10 local (2.ª ronda, 03/10): 2 avisos, ambos `--fix`; `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
-| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | Nenhum; fazer depois do F0 fechar (o maestro decide o conteúdo, o agente executa) | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
+| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Merge do PR #93 (partes 4, 5 e 6: README para portfólio em inglês, casos de estudo e números verificados, `LICENSE`, `SECURITY.md`, avisos de arquivado em `packages/` e `apps/`). Faltam as partes 1 (limpeza), 2 (arquivo dos históricos) e 3 (índices), com os riscos do §4.1 | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
 | G1.1 | Trading: pesquisa padrão ouro de repos de trading/simulação | FALTA-DECIDIR | BLOQUEADO | AMBOS | Alta | F5 + D-EP8 (domínio só com uso real) | A5 §5.4 (grupos G–J); EP:1618-2428 | J9 (parte) | VERIFICADO |
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | BLOQUEADO | DEV | Média | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | BLOQUEADO | DEV | Alta | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
@@ -205,8 +206,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | I10 | Avaliar as Karpathy Skills (identificar o repo exacto) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão de âmbito | A5 §5.4; EP:2188-2383 | F15 (ST, ferramentas) | VERIFICADO |
 | I11 | Avaliar Soup (fine-tuning; a dependência "só após C8" já caiu) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão de âmbito | A5 §5.4; EP:2188-2383 | F12 (ST, ferramentas) | VERIFICADO |
 | R-004 | O `ingestDocument` do MCP apaga por `agent_id`+`source` sem filtrar `project`: pode apagar linhas do T6 com a mesma `source` | BUG | EM CURSO | CLAUDE | Média | Merge do PR MCP #15 | `ANM:lib/knowledge.js:163-169`; `runner/plan_runner/supabase_writer.py:111`; PR MCP #13; PR MCP #15 (`.is("project", null)` no delete; `tests/ingestDocument.test.mjs`, 3 testes; `npm test` 19/19) | — | VERIFICADO |
-| E-003 | `ship-parallel.plan.yaml` (reviews de código/segurança/testes) em `docs/orchestration/marketing/`: `action: research`/`critic` resolvem sempre para agentes de marketing, com ou sem `vertical:` | BUG | EM CURSO | CLAUDE | Baixa | Merge do PR #90 | `docs/orchestration/marketing/templates/examples/ship-parallel.plan.yaml`; PR #71; `runner/plan_runner/skills.py:28-39` (procura por `action:`; sem agente no vertical, cai no 1.º encontrado); fixture de `runner/tests/test_real_plans.py:116` e `conftest.py:36`; PR #90 (P-18 = C): `docs/orchestration/engenharia/templates/ship-gate.plan.yaml` (revisor_codigo, security_audit, guia_tdd; `tests/test_engenharia_ship_gate.py`, 3 testes; coberto pelo guarda do AU-32) + nota de exemplo do motor no topo do `ship-parallel.plan.yaml` (só comentário) | — | VERIFICADO |
-| H-003 | Actions pinadas em versões Node 20 (deprecado; o runner já as força a Node 24 com aviso): NAS `actions/checkout` v4.4.0/v4.2.2, `setup-python` v5.6.0, `setup-node` v4.4.0, `setup-go` v5.5.0, `upload-artifact` v4.6.2, `github-script` v7.1.0, `pnpm/action-setup`, `codecov-action` v4.6.0, `action-gh-release`; MCP `actions/checkout@v4` (`ingest.yml`) e `actions/cache@v4` (`transcribe.yml`) | BUG | ABERTO | CLAUDE | Baixa | Ler as tags upstream para pinar os SHA novos (repos `actions/*`, fora do âmbito da sessão de 2026-10-03) | `grep -rn 'uses:' .github/workflows/` nos 2 repos (`main` `c9edd72` / `d635945`); logs: run MCP #108, corridas NAS #163–#169 ("Node.js 20 is deprecated") | — | VERIFICADO |
+| H-003 | Actions pinadas em versões Node 20 (deprecado; o runner já as força a Node 24 com aviso): NAS `actions/checkout` v4.4.0/v4.2.2, `setup-python` v5.6.0, `setup-node` v4.4.0, `setup-go` v5.5.0, `upload-artifact` v4.6.2, `github-script` v7.1.0, `pnpm/action-setup`, `codecov-action` v4.6.0, `action-gh-release`; MCP `actions/checkout@v4` (`ingest.yml`) e `actions/cache@v4` (`transcribe.yml`) | BUG | ABERTO | CLAUDE | Baixa | Ler as tags upstream para pinar os SHA novos (repos `actions/*`, fora do âmbito da sessão de 2026-10-03) | `grep -rn 'uses:' .github/workflows/` nos 2 repos (`main` `c9edd72` / `d635945`); logs: run MCP #108, corridas NAS #163–#169 ("Node.js 20 is deprecated"); PR #89 (merged): o envio para o Codecov passou a `continue-on-error` (a `codecov-action` v4.6.0 rebentava com erro TLS e chumbava os testes); é mitigação, o re-pin continua por fazer | — | VERIFICADO |
 | T-004 | Preencher os preços confirmados em `config/model-prices.yaml` (a `null`: um plano com `max_cost_usd` pára no 1.º passo) | FALTA-LIGAR | ABERTO | DEV | Média | Página oficial de preços (bloqueada na sessão do D6) | PR #72; `config/model-prices.yaml` | — | VERIFICADO |
 | T-005 | (Opcional) Escolher os modelos por tier em `config/model-tiers.yaml` | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão | PR #73; `config/model-tiers.yaml` | — | VERIFICADO |
 | S-003 | Testar no Claude.ai connector uma chamada real às tools do MCP depois dos tectos de input do S-001 (pedido normal passa; acima do tecto dá erro de validação legível) | FALTA-TESTE | ABERTO | DEV | Baixa | Conector real (só o DEV); pode ir no mesmo teste do F0.6 | `ANM:CLAUDE.md` ("Alterações ao router e tools MCP: verificar impacto no Claude.ai connector"); PR MCP #14 §Impacto | — | VERIFICADO |
@@ -258,9 +258,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | O ingest não incremental: 10 ficheiros re-embedados em cada corrida, 28 nunca | F0.4 / R-002 | L5F0 §2.1 (PR #63); correcção no PR #64 |
 | O CI que mentia: sem `pipefail`, o job não conseguia falhar | — | PR #36 (commit `f587cfb`) |
 | O `toolsAllowed` morto: dado como "DONE", mas sem fonte | S33 → AU-20 | ST:62 ("DONE"); A5:169 ("FECHADO-SÓ-NO-PAPEL") |
-| A hipótese refutada: −16% projectado contra −2,6% real | B1-bis-R | ST:554; PRs #45 e #55 |
+| A medição inválida apanhada a tempo: o 1.º run real deu −2,6% contra −16% projectado, mas o braço "opt" tinha corrido com o prompt `legacy` (detectado ao comparar os prompts token a token); repetido, deu **−22% real** | B1-bis-R / B1-bis-R2 | `docs/ops/WORKER-EXTERNAL.md:116,259`; PRs #45 e #55 (corrigido a 2026-10-05: antes dizia "hipótese refutada") |
 
-**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). Só o ponteiro dos pendentes (`README.md:36`) foi corrigido já (V40); o resto fica para o PR do H-01.
+**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). **Todos corrigidos no PR #93 (2026-10-05):** README reescrito em inglês para portfólio, com factos verificáveis, quickstart testado e os casos de estudo; o histórico fica abaixo.
 
 | README diz | Estado verificado | Evidência |
 |---|---|---|
@@ -296,12 +296,12 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 13 | F1, F1b, F2, F4, W-003, W-008, EX-B7, AU-22b, H-002, R-004, E-003, H-003, H-005 |
+| CLAUDE | 12 | F1, F1b, F2, F4, W-003, W-008, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
 | DEV | 70 | F0.1, F0.3, F0.6, F0.7b, F0.12, R-002, R-003, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 31 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: NAS #89 (Codecov), #88 (Superpowers) e #90 (AU-22/E-003), um de cada vez;
+- merges: NAS #93 (H-01, README) e #91 (F2, evidência do Agent-Reach); os #88, #89, #90 e #92 já entraram (2026-10-05);
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
@@ -320,18 +320,19 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, F3, F5, S20, C-2, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 46 | F0.1, F0.3, F0.6, F0.7b, F2, F4, F6, R-002, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
-| Baixa | 51 | F0.12, F1b, R-001, R-003, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, E-003, H-003, T-005, S-003, H-004, H-005 |
+| Baixa | 50 | F0.12, F1b, R-001, R-003, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 63 · EM CURSO 10 · BLOQUEADO 41.
+**Por estado:** ABERTO 63 · EM CURSO 9 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (91 linhas: 70 FECHADO, 21 OBSOLETO)
+## 7. Histórico (92 linhas: 71 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| E-003 | `ship-parallel.plan.yaml` (reviews de código/segurança/testes) resolvia sempre para agentes de marketing | 2026-10-05 | #90 (§10 P-18 = C); `runner/tests/test_engenharia_ship_gate.py` (3 testes) | FECHADO | Os 3 reviews passam a agentes reais em `docs/orchestration/engenharia/templates/ship-gate.plan.yaml` (`revisor_codigo`, `security_audit`, `guia_tdd`), com `done_when` verificável; o `ship-parallel` fica como exemplo do motor (só comentário) |
 | INIT-094 | Reavaliar os 6 harnesses multi-provider | 2026-10-03 | §10 P-12 = A (maestro, consulta cruzada); análise: PR #80 (`docs/research/harnesses-multi-provider-2026-10.md`) | OBSOLETO | Não adoptar; opencodex + LiteLLM ficam como candidatos do F3/§8.6 |
 | ING-5 | gitingest (repo → texto): ADAPT com reservas (pin `0.3.1`, só repos públicos) | 2026-10-03 | §10 P-14 = A (maestro, consulta cruzada); análise: PR #82 (`docs/research/ingestao-ing5-ing6-2026-10.md`) | OBSOLETO | Não adoptar; EXTRACT próprio se houver necessidade |
 | ING-6 | Reavaliar ScrapeGraphAI | 2026-10-03 | §10 P-15 = A (maestro, consulta cruzada); análise: PR #82 (`docs/research/ingestao-ing5-ing6-2026-10.md`) | OBSOLETO | Não adoptar; `fetch` + worker no F2 |
