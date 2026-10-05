@@ -13,6 +13,8 @@ on:
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
       - 'scripts/ingest_delta.py'
+      # F1: primitiva ingest_document (testada pelo job test-ingest)
+      - 'scripts/ingest_document.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
@@ -40,6 +42,8 @@ on:
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
       - 'scripts/ingest_delta.py'
+      # F1: primitiva ingest_document (testada pelo job test-ingest)
+      - 'scripts/ingest_document.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
@@ -205,3 +209,37 @@ jobs:
       # Bloco C: veredicto do conselho -> L4 candidate -> HITL -> active (criterio de DONE)
       - name: conselho + L4 (Postgres + pgvector, Gemini falso)
         run: python -m pytest tests/test_council_l4.py -v -rs
+
+  # F1 (T6b): conversão real com o MarkItDown (runner/requirements-ingest.txt) e as fixtures
+  # sintéticas versionadas (tests/fixtures/ingest/), com o gerador no pin exacto
+  # (runner/requirements-fixtures.txt) para provar que a fixture é a saída do gerador.
+  # INGEST_TEST_REQUIRED=1 faz da falta de uma dependência opcional um erro, não um skip:
+  # o job nunca fica verde sem ter convertido. Sem rede nem credenciais.
+  test-ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: runner
+
+    env:
+      INGEST_TEST_REQUIRED: '1'
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0 (H-003: Node 24; era v4.4.0)
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0 (H-003: Node 24; era v5.6.0)
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: runner/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt -r requirements-ingest.txt -r requirements-fixtures.txt
+          python -m pip install pytest
+
+      - name: ingest_document + fixtures (MarkItDown real)
+        run: python -m pytest tests/test_ingest_document.py tests/test_ingest_fixtures.py -v -rs
