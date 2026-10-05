@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f3-provenance-adr` (empilhado no #111).
-- **`main` de referência:** NAS `cd8aeb3` (merges até #109); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: F3, **à espera da P-26** (ADR proposto). F1: #106–#109 merged, #110 aberto com CI verde. F2a: #111 aberto com CI verde.
+- **Branch actual:** `feat/f3-provenance-retrieve` (a partir da `main` `e10f772`).
+- **`main` de referência:** NAS `e10f772` (merges até #112); MCP `880d492` (merge #18).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F3a** (P-26 = A, 2026-10-06). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,17 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F3a, etapa 1: P-26 = A, F1 FECHADO (2026-10-06)
+- **Maestro:** o merge do #110, do #111 e do #112 está feito, e a **P-26 = A**. Pedido explícito: implementar o F3 (SQL aditivo, v2, writer, testes e MCP mínimo ou com feature flag) e só depois o F4.
+- **Pergunta do maestro, "porque não levou o prompt até ao fim":** parei no F3 por excesso de cautela. A opção A é aditiva e o SQL só corre pela mão do DEV, por isso podia ter implementado num PR sem merge. Fica registado como lição: com uma opção aditiva e sem escrita em produção, avança-se em PR e a decisão fica para o merge.
+- **Canónico:**
+  - o F1 passa para o §7 como FECHADO (merge do #105 ao #110; providência 2);
+  - o F3 passa a EM CURSO;
+  - a P-26 fica decidida;
+  - o alias ING-2 aponta para o §7.
+  - Ficam 103 vivos (ABERTO 56, EM CURSO 6, BLOQUEADO 41) e 106 linhas no §7 (85 FECHADO). Recontagem validada.
+- **ADR do F3:** o estado passa a Aceite (opção A). **`PENDENCIAS_T6.md`:** o T6f e o F2 ficam ✅ Merged, e o F3 fica ⏳.
 
 ### F3: ADR proposto e paragem na decisão P-26 (2026-10-06)
 - **F2 fechado:** o PR #111 tem CI verde nas 2 cabeças. Registo e mini-relatório no `PENDENCIAS_T6.md`.
@@ -791,11 +802,10 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
-| NAS #111 | `feat/f2-web-fetch-provenance` | F2a: `fetch` com proveniência + P-24, P-25 | Aberto, CI verde (empilhado no #110) |
-| NAS #112 | `docs/f3-provenance-adr` | ADR do F3 (proposta) + P-26 | Aberto (empilhado no #111) |
+| NAS (F3a) | `feat/f3-provenance-retrieve` | F3a: SQL aditivo + `match_knowledge_v2` + writer com proveniência | Em curso |
+| MCP (F3a) | `claude/reels-analysis-tools-access-hwudk9` | F3a: `retrieve_knowledge` na v2 atrás de feature flag | Por fazer |
 
-Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
+Já com merge: NAS #63–#112 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC); MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 

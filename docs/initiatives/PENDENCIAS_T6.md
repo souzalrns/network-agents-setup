@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 03:00 UTC
+Última atualização: 2026-10-06 04:00 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -15,10 +15,10 @@
 | T6c  | DOCX + XLSX                                    | ✅ Merged  | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
 | T6d  | Segurança de entrada                           | ✅ Merged  | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
 | T6e  | Encaixe na pipeline T6                         | ✅ Merged  | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
-| T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
+| T6f  | Fecho F1 no PENDENCIAS                         | ✅ Merged  | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
-| F2   | Research web (Crawl4AI / scrape + provenance)  | ✅         | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt; merge pendente) |
-| F3   | Provenance no retrieve                         | 🔒 aguarda P-26 | ADR proposto: `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` (PR #112, empilhado no #111). Muda o schema e a RPC de produção que o MCP chama: só com decisão | Não                         |
+| F2   | Research web (Crawl4AI / scrape + provenance)  | ✅ Merged  | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt) |
+| F3   | Provenance no retrieve                         | ⏳         | P-26 = A (maestro, 2026-10-06). Branch `feat/f3-provenance-retrieve` (NAS) + MCP atrás de feature flag; ADR aceite (#112) | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
@@ -32,10 +32,11 @@
 - 2026-10-06 · T6f · ✅ PR #110 aberto, CI verde: S5 (benchmark), balanço do "Done do F1", decisões P-21 a P-23. **F1 tecnicamente concluído**; no canónico fecha com o merge de #106 a #110.
 - 2026-10-06 · F1b · ✅ não necessário por agora (regra do prompt: sem benchmark de perda material em documentos reais). Reabre com a P-21 B.
 - 2026-10-06 · F2 · ✅ PR #111 aberto, CI verde: `fetch` com allowlist por redirect, robots.txt (RFC 9309), SSRF, tectos de bytes e de tempo, proveniência e saída pelo T6; 42 testes com servidor local; corrida real no pypi.org.
+- 2026-10-05 19:09–19:22 UTC · **merge do maestro: #110, #111 e #112** (`main` `e10f772`). **F1 FECHADO** no canónico (§7). P-26 = A (2026-10-06): o F3 arranca.
 - 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
-- **F3 bloqueado pela decisão P-26** (regra 9 do prompt). O F3 muda o schema e a RPC `match_knowledge` de produção, que o MCP chama; o ADR propõe a via aditiva (`match_knowledge_v2`, a antiga intacta), com o SQL corrido pelo DEV. Sem a P-26 não há código do F3, e por isso também não há F4, F5 e F6 (cada fase exige a anterior concluída).
+- ~~**F3 bloqueado pela decisão P-26**~~ — **resolvido: P-26 = A (maestro, 2026-10-06)**; F3a em curso. O F3 muda o schema e a RPC `match_knowledge` de produção, que o MCP chama; o ADR propõe a via aditiva (`match_knowledge_v2`, a antiga intacta), com o SQL corrido pelo DEV. Sem a P-26 não há código do F3, e por isso também não há F4, F5 e F6 (cada fase exige a anterior concluída).
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
 - **F5 precisa de credenciais** (run real com Gemini): só o DEV o pode correr. O Claude prepara o comando e o molde de evidência.
 - **F2, rede da sessão cloud:** a política de rede deste ambiente recusa (403 no proxy) `example.com`, `python.org` e `wikipedia.org`. A corrida real do F2 foi feita no `pypi.org`, que é acessível. Para outros hosts: acrescentá-los em Network access nas definições do ambiente (https://code.claude.com/docs/en/cloud-environments#network-access), ou correr na máquina do DEV.

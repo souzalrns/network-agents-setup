@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **F1 FECHADO e P-26 = A (2026-10-06):** merges #106–#112 (`main` `e10f772`). O F1 passa para o §7. O F3 arranca (EM CURSO) com a opção A do ADR-F3-PROVENANCE-RETRIEVE: SQL aditivo, `match_knowledge_v2` e o MCP atrás de feature flag.
 > **Gate M1 FECHADO (2026-10-05, decisão do maestro):** o F0.7b é prova suficiente (18 de 18 com a fonte certa contra produção, `provenance_ok` 1.0). O F0.6 passa a BLOQUEADO: o conector do Claude.ai não mostra tools (causa provável: a protecção da Vercel no `tools/list`, sem o cabeçalho de bypass); o S-003 fica com o mesmo bloqueio. O código do F1 (T6a, spike MarkItDown) fica autorizado.
 > **F0.7b PASSOU (2026-10-05):** 18 casos contra produção, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@4` 0.944, `mrr_chunk` 0.736 → F0.7b FECHADO. Para o gate M1 falta o F0.6 (e a decisão da P-19, que o resultado já cumpre em qualquer opção).
 > **F0.7b, 2.ª tentativa (2026-10-05):** 400 da Vercel "Standard Protection"; o cliente passa a enviar o cabeçalho de bypass se a env `VERCEL_PROTECTION_BYPASS` existir (PR do branch `fix/F0-7b-vercel-bypass`). Atenção: a mesma protecção pode bloquear o conector do Claude.ai (F0.6).
@@ -26,10 +27,10 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **104 itens vivos** (§4): ABERTO 56, EM CURSO 6, BLOQUEADO 42;
-> - **105 linhas de histórico** (§7): 84 fechadas, 21 obsoletas;
+> - **103 itens vivos** (§4): ABERTO 56, EM CURSO 6, BLOQUEADO 41;
+> - **106 linhas de histórico** (§7): 85 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
-> - **26 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16, P-17, P-19, P-20, P-21 (F1b), P-22 (upstream MarkItDown), P-23 (F6 do prompt vs canónico), P-24 (`scrape.yml`), P-25 (allowlist por área) e P-26 (F3, proveniência no retrieve).
+> - **26 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro e P-26 = A (2026-10-06) decididas pelo maestro; pendentes P-11, P-16, P-17, P-19, P-20, P-21 (F1b), P-22 (upstream MarkItDown), P-23 (F6 do prompt vs canónico), P-24 (`scrape.yml`) e P-25 (allowlist por área).
 
 ## 0. Como usar este documento
 
@@ -105,7 +106,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (104 itens vivos)
+## 4. Tabela única (103 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -114,10 +115,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---|---|---|---|---|---|---|---|---|
 | F0.6 | Passo 5 do J3: teste real no conector MCP (a resposta tem de citar a fonte) | FALTA-TESTE | BLOQUEADO | DEV | Média | **Conector do Claude.ai sem tools** (2026-10-05, no Claude.ai: "Este conector não possui ferramentas disponíveis"). Causa provável: a protecção da Vercel bloqueia o `tools/list`, e o conector não envia o cabeçalho `x-vercel-protection-bypass`. Desbloqueia com o bypass como query parameter nas settings do conector (posto de parte por agora: guarda o segredo no conector) ou com outra forma de expor o MCP ao conector | RC:69-70; E §7 F0; **decisão do maestro (2026-10-05): BLOQUEADO**, e o gate M1 fecha com o F0.7b como prova suficiente (o mesmo `retrieve_knowledge` contra produção: 18 de 18 com a fonte certa, `provenance_ok` 1.0). Registo em `docs/ops/L5-F0-REVALIDATION.md` §6.1. Tem de usar a tool `retrieve_knowledge` com `kb` = `security`: nenhum dos 33 agentes do MCP tem `agent_id` = `security`, por isso o `ask_agent_network` não chega ao pack | J3 passo 5 | VERIFICADO |
 | F0.12 | Passo 6 do J3: apagar a `knowledge_chunks_t6` (irreversível, com backup; opcional) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Backup + decisão (o F0.3 fechou: a t6 parou a 2026-09-29, com 110 linhas) | RC:72-75; E §7 F0 | J3 passo 6 | VERIFICADO |
-| F1 | Ingestão universal: ADR do contrato *Universal Ingestion & Research Primitives* (pode avançar já) + spike MarkItDown → T6 (só com o F0 verde; pin `>=0.1.4` e mitigações) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Alta | ADR aceite (#81; §10 P-13 = A). Gate M1 fechado (2026-10-05). T6a merged (#105). **Critério técnico do F1 cumprido (T6f, 2026-10-05):** 3 formatos, ingestão E2E pelo T6 existente (provada contra Postgres + pgvector no CI), path estável (`docs/knowledge/ingested/`). Fecha (FECHADO) com o merge dos PRs #106 a #110 (providência 2). Detalhe em `docs/initiatives/PENDENCIAS_T6.md` | E §7 F1; AI:140-156; PR #81 (`docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md`); **T6a (2026-10-05):** `scripts/ingest_document.py` (path → `content`, `source_meta`, `warnings`), pin `markitdown[docx,pdf,xlsx]>=0.1.4` em `runner/requirements-ingest.txt`, `runner/tests/test_ingest_document.py` (26 testes de contrato; 6 smoke com o MarkItDown real, em skip documentado no CI); PR #105 (merged, `99b2cee`); **T6b (2026-10-05):** fixture PDF sintética versionada + gerador reprodutível (`runner/tests/fixtures/ingest/pdf/`), `runner/tests/test_ingest_fixtures.py`, job `test-ingest` no CI (MarkItDown real; `INGEST_TEST_REQUIRED=1`); PR #106; **T6c (2026-10-05):** fixtures DOCX e XLSX sintéticas + geradores reprodutíveis, aviso `xlsx_nan_cells` no `ingest_document`; PR #107; **T6d (2026-10-05):** mitigação 3 do ADR §5 (processo filho com timeout e `RLIMIT_DATA` 1 GiB, medido), códigos `timeout` e `memory_limit`, ZIP corrompido distinguido de formato errado, `runner/tests/test_ingest_security.py`, `docs/ops/INGEST-DOCUMENT.md`; PR #108; **T6e (2026-10-05):** S4 do ADR sem a entrada no MANIFEST (`write_ingested`, `validate_ingested` da regra 3, `uri` relativo ao repo), caminho completo provado contra Postgres + pgvector no CI (`test_ingest_pipeline_rag.py`); branch `feat/t6e-pipeline-integration` | ING-2 (= "E2" conector, O:20) | VERIFICADO |
 | F1b | Docling, só se o benchmark do F1 o justificar (`docling-core>=2.48.4`) | FALTA-DECIDIR | BLOQUEADO | CLAUDE | Baixa | Documentos reais do domínio com perda de estrutura medida (P-21). O S5 do F1 (2026-10-05, fixtures sintéticas) mostra listas e tabelas a 100% e só os headings do PDF perdidos | E §7 F1b; AI:189 | ING-3 | VERIFICADO |
 | F2 | Web research universal (discover/fetch) a partir do `scrape.yml` existente; Crawl4AI `>=0.9.3` só se o superar | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Média | F2a (`fetch`) feito em PR (2026-10-06); faltam o `discover`, o fallback JavaScript e as decisões P-24 (`scrape.yml`) e P-25 (allowlist por área) | E §7 F2; AI:304; **F2a (2026-10-06):** `scripts/web_fetch.py` (allowlist em cada redirect, robots.txt RFC 9309, SSRF, tectos de bytes e de tempo, HTML → Markdown pelo adapter do F1 com `strict=True`, proveniência com `final_url`), `runner/tests/test_web_fetch.py` (42, servidor local), `docs/ops/WEB-FETCH.md` (corrida real no pypi.org); branch `feat/f2-web-fetch-provenance`; **candidato a adaptador de `fetch` (2026-10-05): Agent-Reach** (`Panniantong/Agent-Reach`, MIT, v1.5.0, commit `a19a171`): não acede por si, escolhe e testa ferramentas que já existem (Jina Reader, `yt-dlp`, `feedparser`, `gh`, Exa…); dependências `requests`, `feedparser`, `yt-dlp`, `pyyaml`; o `cookie_extract.py` lê cookies do browser localmente, sem envio de rede; o `install` usa `pipx`/`npm -g` (não corrido). Instalado num venv isolado: `agent-reach doctor` = 2/16 canais (RSS, web). **NÃO VERIFICADO:** os canais reais, porque a política de rede da sessão cloud recusa `r.jina.ai`, `www.youtube.com` e `github.com` (403 do proxy). Canais com cookies (Twitter/X, Reddit, XiaoHongShu, Facebook, Instagram) precisam de decisão de segurança antes de qualquer uso | ING-1 | VERIFICADO |
-| F3 | Provenance formal + validade/conflitos + source authority + golden set alargado + cobertura dos 33 ficheiros fora do MANIFEST, pack a pack (D-EP2) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Alta | F0–F2; **P-26** (ADR-F3-PROVENANCE-RETRIEVE, proposta 2026-10-06: RPC aditiva `match_knowledge_v2`, F3a/F3b/F3c) | E §7 F3; L5F0 §1–§2 (PR #63); `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` | — | VERIFICADO |
+| F3 | Provenance formal + validade/conflitos + source authority + golden set alargado + cobertura dos 33 ficheiros fora do MANIFEST, pack a pack (D-EP2) | FALTA-CONSTRUIR | EM CURSO | AMBOS | Alta | **P-26 = A** (maestro, 2026-10-06). F3a em curso: SQL aditivo + `match_knowledge_v2` + writer com proveniência (NAS) e MCP atrás de feature flag; o DEV corre o SQL. Faltam o F3b (validade e conflitos, autoridade, golden set) e o F3c (33 ficheiros fora do MANIFEST) | E §7 F3; L5F0 §1–§2 (PR #63); `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` | — | VERIFICADO |
 | F4 | `config/marketing-capabilities.yaml` validado no E7 + maturidade de capability | FALTA-CONSTRUIR | BLOQUEADO | CLAUDE | Média | F3 | E §7 F4 | — | VERIFICADO |
 | F5 | Validação E2E de uma capability com **run real** | FALTA-TESTE | BLOQUEADO | AMBOS | Alta | F4 | E §7 F5 | — | VERIFICADO |
 | F6 | UM domínio de prova, com o Domain Onboarding Cost medido; escolhido só depois do F5, com uso real | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F5 + D-EP8 | E §7 F6 e §9.5 (D-EP8); P:320 (AU-35) | AU-35; B1 (ST:100, "2.º domínio"); R2 (O:164) | VERIFICADO |
@@ -299,7 +299,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 10 | F1, F1b, F2, W-010, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
+| CLAUDE | 9 | F1b, F2, W-010, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
 | DEV | 65 | F0.6, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
@@ -324,20 +324,21 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Sev | N.º | IDs |
 |---|---:|---|
 | Crítica | 1 | G1.5 |
-| Alta | 16 | F1, R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
+| Alta | 15 | R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 40 | F0.6, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004 |
 | Baixa | 47 | F0.12, F1b, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004 |
 
-**Por estado:** ABERTO 56 · EM CURSO 6 · BLOQUEADO 42.
+**Por estado:** ABERTO 56 · EM CURSO 6 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (105 linhas: 84 FECHADO, 21 OBSOLETO)
+## 7. Histórico (106 linhas: 85 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| F1 / ING-2 | Ingestão universal: ADR + spike MarkItDown → T6 | 2026-10-05 | PRs #105 (T6a), #106 (T6b), #107 (T6c), #108 (T6d), #109 (T6e), #110 (T6f), todos com merge (o último a 2026-10-05 19:09 UTC, `main` `f217f02`); CI verde, incluindo o job `test-ingest` | FECHADO | 3 formatos (PDF, DOCX, XLSX) com fixtures reprodutíveis; processo filho com timeout e `RLIMIT_DATA` medido; E2E pelo T6 provado contra Postgres + pgvector; S5 em `scripts/ingest_benchmark.py`. A 1.ª ingestão real em produção espera pela entrada no MANIFEST (DEV). Detalhe em `docs/initiatives/PENDENCIAS_T6.md` |
 | F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | 2026-10-05 | Run do DEV (`python -m plan_runner.l5_eval run`, branch do PR #103) contra produção: 18 casos, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@1/3/4` 0.611/0.889/0.944, `mrr_chunk` 0.736, `no_hits` 0. Registado em `docs/ops/L5-F0-REVALIDATION.md` §6.2 (PR do branch `docs/f0-7b-evidencia`) | FECHADO | 3.ª tentativa. A 1.ª falhou por `mcp` 2.x no ambiente (#102) e a 2.ª pela Vercel Standard Protection (#103). Cumpre as 3 opções da P-19. 1 caso (ID não colado) sem o excerto nos 4 primeiros, mas com a fonte certa |
 | H-003 | Actions pinadas em versões Node 20 (NAS e MCP) | 2026-10-05 | #99 (merged, `5736621`): 23 pins no NAS; PR MCP #18 (merged, `880d492`): `checkout` e `cache`. Em cada Action, a última versão da 1.ª linha principal com `using: node24`, lida no `action.yml` da tag. Prova: CI do #99 sem o aviso "Node.js 20 is deprecated"; corrida #182 do `ingest-knowledge` (1.ª com os pins novos) `success`, `chunks=0 unchanged=39` | FECHADO | Só o `release.yml` (corre com tags) e os 2 workflows do MCP (`ingest.yml`, `transcribe.yml`) ficam por provar numa corrida real |
 | W-009 | O exemplo de budget do `ORCHESTRATOR.md` tinha o `max_retrieve_calls`, que não está no schema | 2026-10-05 | #99 (merged): o exemplo fica com o `max_steps`, e uma nota explica o campo (nunca implementado; limite de retrieves no F3) | FECHADO | — |
@@ -506,7 +507,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 
 ## 10. Decisões (A/B/C, com recomendada)
 
-**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03) e P-18 = C (2026-10-04).** **Pendentes:** P-11, P-16, P-17, P-19 (limiar do F0.7b), P-20 (causa do R-005), P-21 (F1b), P-22 (upstream MarkItDown), P-23 (F6 do prompt vs canónico), P-24 (`scrape.yml`), P-25 (allowlist por área) e P-26 (F3). Nenhuma decisão pendente foi assumida.
+**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03), P-18 = C (2026-10-04) e P-26 = A (2026-10-06).** **Pendentes:** P-11, P-16, P-17, P-19 (limiar do F0.7b), P-20 (causa do R-005), P-21 (F1b), P-22 (upstream MarkItDown), P-23 (F6 do prompt vs canónico), P-24 (`scrape.yml`) e P-25 (allowlist por área). Nenhuma decisão pendente foi assumida.
 
 
 | # | Decisão | A | B | C | Recomendada |
@@ -536,7 +537,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-23 | F6: o F6 do prompt da cadeia ("hardening final + portfolio package") é diferente do F6 deste documento ("UM domínio de prova, com o Domain Onboarding Cost medido; depois do F5", D-EP8) | **Os 2:** o do prompt fica como etapa final da cadeia no `PENDENCIAS_T6.md` (sem ID novo no §4); o F6 canónico mantém-se como está | Substituir o F6 canónico pelo do prompt (reabre a D-EP8) | Fundir: o pacote de portfólio passa a ser parte do "done" do F6 canónico | **A** (proposta, 2026-10-05): não reabre a D-EP8 e não corta nada. **Pendente** |
 | P-24 | F2: o destino do `ANM:.github/workflows/scrape.yml` (lê a página inteira, sem allowlist nem robots, e grava directamente na tabela `scrapes` do Supabase, por fora do T6) | **Manter como legado:** como o `ingest.yml` na D-EP9 = A; o que vai para o L5 passa pelo `scripts/web_fetch.py` e pelo T6 | Migrar o `scrape.yml` para chamar o `web_fetch.py` (allowlist, robots, tectos) e continuar a gravar em `scrapes` | Desactivar o `scrape.yml` | **A** (proposta, 2026-10-06): não mexe em produção e não corta nada; o `scrape.yml` só corre à mão (`workflow_dispatch`) com a URL dada pelo DEV. Rever para B se passar a ser usado com URLs que não são do DEV. **Pendente** |
 | P-25 | F2: allowlist por área (ADR §3, item 4: "`fetch`: PREPARE, com allowlist por área") | `config/web-allowlist.yaml` por área do `config/areas.yaml`, com os domínios escolhidos pelo maestro e validados no E7 | **Só `--allow` por chamada**, como no F2a (a allowlist é explícita em cada uso e fica no registo do comando) | Uma allowlist global única | **B** (proposta, 2026-10-06) até ao 1.º uso real de research por uma área; nessa altura, A com os domínios dessa área. **Pendente** |
-| P-26 | F3: como levar a proveniência ao retrieve (`docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md`). Hoje o `match_knowledge` devolve só `id, content, source, similarity`, e o MCP chama-o (`ANM:lib/knowledge.js:68`) | **Aditiva, em 2 PRs:** colunas novas, RPC nova `match_knowledge_v2` com filtros e proveniência, o `ingest_apply` lê o `.meta.yaml`, SQL em `scripts/migrations/` corrido pelo DEV; depois, o MCP passa para a v2. O `match_knowledge` antigo fica intacto. Âmbito: F3a (critério do prompt), F3b (validade e conflitos, autoridade, golden set) e F3c (33 ficheiros fora do MANIFEST) | Mudar a assinatura do `match_knowledge` existente (o MCP parte entre o SQL e o deploy) | Proveniência só no runner, lida do `.meta.yaml` no git (o MCP fica sem ela, e os filtros continuam sem efeito) | **A** (proposta, 2026-10-06): nada parte em produção durante a transição, e o F3 canónico fica inteiro, por fases. **Pendente; bloqueia o F3 da cadeia F1–F6** |
+| P-26 | F3: como levar a proveniência ao retrieve (`docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md`). Hoje o `match_knowledge` devolve só `id, content, source, similarity`, e o MCP chama-o (`ANM:lib/knowledge.js:68`) | **Aditiva, em 2 PRs:** colunas novas, RPC nova `match_knowledge_v2` com filtros e proveniência, o `ingest_apply` lê o `.meta.yaml`, SQL em `scripts/migrations/` corrido pelo DEV; depois, o MCP passa para a v2. O `match_knowledge` antigo fica intacto. Âmbito: F3a (critério do prompt), F3b (validade e conflitos, autoridade, golden set) e F3c (33 ficheiros fora do MANIFEST) | Mudar a assinatura do `match_knowledge` existente (o MCP parte entre o SQL e o deploy) | Proveniência só no runner, lida do `.meta.yaml` no git (o MCP fica sem ela, e os filtros continuam sem efeito) | **A** (**decidida pelo maestro, 2026-10-06**): nada parte em produção durante a transição, e o F3 canónico fica inteiro, por fases |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
@@ -552,7 +553,7 @@ Para quem chega com um ID antigo. Uma linha por item com aliases (§4) e por lin
 | J3 passo 3 | F0.3 | fechado (§7) |
 | J3 passo 5 | F0.6 | vivo (§4) |
 | J3 passo 6 | F0.12 | vivo (§4) |
-| ING-2 (= "E2" conector, O:20) | F1 | vivo (§4) |
+| ING-2 (= "E2" conector, O:20) | F1 | fechado (§7) |
 | ING-3 | F1b | vivo (§4) |
 | ING-1 | F2 | vivo (§4) |
 | AU-35; B1 (ST:100, "2.º domínio"); R2 (O:164) | F6 | vivo (§4) |

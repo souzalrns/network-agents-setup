@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **ID** | ADR-F3-PROVENANCE-RETRIEVE |
-| **Estado** | **Proposta**, à espera da decisão P-26 (`docs/initiatives/PENDENCIAS.md` §10). Só contrato: nenhum código, nenhum SQL executado |
+| **Estado** | **Aceite: opção A** (P-26 = A, maestro, 2026-10-06). O F3a está a ser implementado; o SQL de produção é corrido pelo DEV |
 | **Data** | 2026-10-06 |
 | **Decisores** | Maestro (aceita ou rejeita); redigido pelo Claude |
 | **Item** | F3 no `PENDENCIAS.md` (AMBOS, Alta) e F3 da cadeia F1–F6 (`docs/initiatives/PENDENCIAS_T6.md`) |
@@ -58,4 +58,4 @@
 
 ## 5. Decisão pedida
 
-A P-26 no `PENDENCIAS.md` §10. Sem decisão, **nada é implementado**: a cadeia F1–F6 pára no F3 (regra 9 do prompt: documentar o bloqueio, parar e esperar).
+A P-26 no `PENDENCIAS.md` §10: **decidida A pelo maestro a 2026-10-06**. O F3a é implementado em 2 PRs (NAS e MCP), sem escrita em produção: o SQL fica em `scripts/migrations/` para o DEV correr, e o MCP usa a v2 só com a feature flag ligada.
