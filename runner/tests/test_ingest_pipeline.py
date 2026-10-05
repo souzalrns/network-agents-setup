@@ -155,3 +155,24 @@ def test_cli_out_dir_grava_e_resume(tmp_path: Path, capsys) -> None:
     assert "MANIFEST" in summary["next"]
     assert ing.main([str(pdf), "--out-dir", str(tmp_path)]) == 1  # não sobrepõe
     assert ing.main([str(pdf), "--out-dir", str(tmp_path), "--overwrite"]) == 0
+
+
+# --- S5: medições (scripts/ingest_benchmark.py) ---------------------------------------------
+
+
+def test_benchmark_s5_mede_os_3_formatos_e_fixa_a_estrutura() -> None:
+    """O script do S5 não apodrece, e a estrutura medida fica fixada (base do F1b)."""
+    require("markitdown")
+    bench = _load("ingest_benchmark", "scripts/ingest_benchmark.py")
+    results = {r["format"]: r for r in bench.run(repeats=1)}
+    assert set(results) == {"pdf", "docx", "xlsx"}
+    # listas e tabelas: nada perdido nos 3 formatos
+    assert results["pdf"]["list"] == results["docx"]["list"] == "3/3"
+    assert results["pdf"]["table_rows"] == results["docx"]["table_rows"] == "3/3"
+    assert results["xlsx"]["table_rows"] == "6/6"
+    assert results["xlsx"]["heading"] == "2/2 folhas como ##"
+    # a perda conhecida: o PDF não tem headings semânticos (ver o F1b)
+    assert results["pdf"]["heading"] == "não (texto simples)"
+    assert results["docx"]["heading"] == "sim"
+    table = bench.to_markdown(list(results.values()))
+    assert table.count("\n") == 4  # cabeçalho, separador e 3 formatos
