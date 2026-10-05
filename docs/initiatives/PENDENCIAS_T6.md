@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 00:50 UTC
+Última atualização: 2026-10-06 01:40 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -17,7 +17,7 @@
 | T6e  | Encaixe na pipeline T6                         | ✅ Merged  | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
-| F2   | Research web (Crawl4AI / scrape + provenance)  | ⏳         |                                     | Não                         |
+| F2   | Research web (Crawl4AI / scrape + provenance)  | ⏳         | Branch `feat/f2-web-fetch-provenance` (empilhado no #110); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; PR por abrir | Não                         |
 | F3   | Provenance no retrieve                         | 🔒         |                                     | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
@@ -36,6 +36,8 @@
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
 - **F5 precisa de credenciais** (run real com Gemini): só o DEV o pode correr. O Claude prepara o comando e o molde de evidência.
+- **F2, rede da sessão cloud:** a política de rede deste ambiente recusa (403 no proxy) `example.com`, `python.org` e `wikipedia.org`. A corrida real do F2 foi feita no `pypi.org`, que é acessível. Para outros hosts: acrescentá-los em Network access nas definições do ambiente (https://code.claude.com/docs/en/cloud-environments#network-access), ou correr na máquina do DEV.
+- **F2, Crawl4AI:** o prompt diz "Crawl4AI preferencial"; a decisão canónica do F2 é "a partir do `scrape.yml`; Crawl4AI só se o superar". Seguiu-se a canónica: o F2a não instala o Crawl4AI.
 - **F6 do prompt ≠ F6 do canónico.** No `PENDENCIAS.md`, o F6 é "UM domínio de prova, com o Domain Onboarding Cost medido; escolhido só depois do F5" (D-EP8). Neste ficheiro, F6 é "hardening final + portfolio package". Não se redefine um ID decidido: quando se chegar lá, o maestro escolhe (A/B/C) entre fazer os 2, renomear o do prompt ou fundi-los.
 - **F4 do prompt ≈ F4 do canónico**, que também pede validação no E7 e maturidade de capability; e **F3 do canónico é mais largo** (validade/conflitos, source authority, golden set alargado, 33 ficheiros fora do MANIFEST). Cada fase cumpre o critério do prompt **e** regista o que falta do canónico, sem o cortar.
 - **Escrita em produção:** pôr ficheiros convertidos no MANIFEST (`scripts/ingest_delta.py`) faz o merge escrever no Supabase. É decisão do maestro e fica fora do T6e (o T6e prova o encaixe contra Postgres local).

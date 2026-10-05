@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/t6f-close-f1` (empilhado no T6e, PR #109).
+- **Branch actual:** `feat/f2-web-fetch-provenance` (empilhado no #110).
 - **`main` de referência:** NAS `cd8aeb3` (merges até #109); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6f (fecho do F1). T6b ✅ (#106), T6c ✅ (#107), T6d ✅ (#108) e T6e ✅ (#109), todos com CI verde.
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: F2a (`fetch`). F1: #106–#109 merged; #110 (T6f) aberto com CI verde.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,38 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F2a: `fetch` com proveniência (2026-10-06)
+- **Contexto:**
+  - o maestro fez o merge do #106 ao #109 (17:39–17:40 UTC). A `main` `cd8aeb3` ficou com o CI verde, e o `ingest-knowledge` correu com sucesso;
+  - o registo dos merges foi para o #110 (`5afbd34`, CI verde).
+- **Decisão de base:** a canónica do F2 é "a partir do `scrape.yml`; Crawl4AI só se o superar". O prompt dizia "Crawl4AI preferencial", e seguiu-se a canónica (registado no `PENDENCIAS_T6.md`).
+- **`scripts/web_fetch.py`:** leva a lógica do `scrape.yml` para o contrato do ADR, e acrescenta:
+  - allowlist verificada em cada redirect;
+  - robots.txt pela RFC 9309;
+  - bloqueio de SSRF (privados, loopback, link-local e metadados da cloud);
+  - tecto de bytes em streaming e prazo total do pedido;
+  - verificação do content-type;
+  - conversão pelo adapter do F1 (`HtmlConverter` com `strict=True`, porque sem ele um HTML muito aninhado cai em silêncio para texto, verificado no 0.1.8; no processo filho);
+  - proveniência com `final_url`, `http_status` e `content_type`, e o `uri` sem credenciais nem fragmento;
+  - saída pelo `write_ingested`. Nunca escreve no Supabase.
+- **Testes:** `runner/tests/test_web_fetch.py` (42, servidor HTTP local em thread).
+  - Verificação por mutação: sem o prazo total, ou sem a allowlist por redirect, os testes respectivos falham.
+  - O teardown do servidor passou de 0,5 s para 0,05 s por teste (suite em 2,8 s).
+- **Corrida real:**
+  - `example.com`, `python.org` e `wikipedia.org` dão 403 no proxy desta sessão (política de rede do ambiente);
+  - no `pypi.org` (acessível), 3 páginas com 200, o título certo e tabelas;
+  - o robots.txt real do pypi.org proíbe `/simple/`, e o fetch recusou;
+  - um domínio fora da allowlist foi recusado.
+  - Evidência em `docs/ops/WEB-FETCH.md` §3.
+- **Corrigido durante a corrida:** a mensagem do `robots_disallowed` escondia a causa (dizia só `http_error`). Agora inclui o detalhe, por exemplo `ProxyError: 403`.
+- **Apanhado na validação, antes do commit:**
+  - a suite com extras falhou num teste, e encontrei um defeito real: o `fetch` reconhecia o erro do conversor pela **classe**, e o `ingest_benchmark` recarregava o `ingest_document`, trocando a classe em `sys.modules`. Agora o `fetch` reconhece o erro pelo `code`, e qualquer outra excepção vira `conversion_failed`; o benchmark reutiliza o módulo já carregado. Há 2 testes de regressão;
+  - o semgrep marcou `addr.is_private` e `response.is_redirect` (regra `is-function-without-parentheses`). São propriedades, ou seja, falsos positivos, mas reescrevi sem `nosemgrep`: uma lista explícita de propriedades e os códigos de redirect (301, 302, 303, 307 e 308) à vista. O semgrep com a configuração do CI dá 0 achados.
+- **Validação:** sem extras, `pytest` 679 passed e 29 skipped; com MarkItDown e Postgres, 133 passed nos 6 ficheiros de ingest e fetch.
+- **Canónico:**
+  - o F2 passa de BLOQUEADO a EM CURSO (104 vivos: ABERTO 56, EM CURSO 6, BLOQUEADO 42; recontagem validada);
+  - decisões novas P-24 (`scrape.yml`: recomendada A, manter como legado) e P-25 (allowlist por área: recomendada B, `--allow` por chamada até ao 1.º uso real); 23 → 25.
 
 ### T6f: fecho do F1, S5 e decisões novas (2026-10-05)
 - **T6e fechado:** o PR #109 tem CI verde nas 2 cabeças, com o `test-ingest` a correr com o Postgres.
@@ -746,6 +778,7 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 | PR | Branch | Item | Estado |
 |---|---|---|---|
 | NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
+| NAS (F2a) | `feat/f2-web-fetch-provenance` | F2a: `fetch` com proveniência + P-24, P-25 | Por abrir (empilhado no #110) |
 
 Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
 
