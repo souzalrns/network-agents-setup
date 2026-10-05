@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 02:20 UTC
+Última atualização: 2026-10-06 03:00 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -18,7 +18,7 @@
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ✅         | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt; merge pendente) |
-| F3   | Provenance no retrieve                         | ⏳         |                                     | Não                         |
+| F3   | Provenance no retrieve                         | 🔒 aguarda P-26 | ADR proposto: `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` (PR #112, empilhado no #111). Muda o schema e a RPC de produção que o MCP chama: só com decisão | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
@@ -35,6 +35,7 @@
 - 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
+- **F3 bloqueado pela decisão P-26** (regra 9 do prompt). O F3 muda o schema e a RPC `match_knowledge` de produção, que o MCP chama; o ADR propõe a via aditiva (`match_knowledge_v2`, a antiga intacta), com o SQL corrido pelo DEV. Sem a P-26 não há código do F3, e por isso também não há F4, F5 e F6 (cada fase exige a anterior concluída).
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
 - **F5 precisa de credenciais** (run real com Gemini): só o DEV o pode correr. O Claude prepara o comando e o molde de evidência.
 - **F2, rede da sessão cloud:** a política de rede deste ambiente recusa (403 no proxy) `example.com`, `python.org` e `wikipedia.org`. A corrida real do F2 foi feita no `pypi.org`, que é acessível. Para outros hosts: acrescentá-los em Network access nas definições do ambiente (https://code.claude.com/docs/en/cloud-environments#network-access), ou correr na máquina do DEV.
@@ -206,4 +207,20 @@ CORRIDA REAL: pypi.org (3 páginas 200; robots.txt real proíbe /simple/ → rec
 PENDENCIAS.md: atualizado (sim; F2 → EM CURSO no canónico)
 PRÓXIMO PASSO RECOMENDADO: F3 (provenance no retrieve)
 BLOQUEIOS: nenhum para o F2a. Decisões P-24 e P-25 pendentes (não bloqueiam).
+```
+
+```
+FASE: F3 (proveniência no retrieve)
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: ⏳ → 🔒 aguarda P-26
+ARTEFACTOS:
+- docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md (proposta: opções A/B/C, contrato do F3a, F3b/F3c)
+- PENDENCIAS.md: P-26 no §10 (26 decisões), linha do F3 com o bloqueio
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/112 (só o ADR, sem código)
+- Branch: docs/f3-provenance-adr
+TESTES: n/a (só documentação)
+PENDENCIAS.md: atualizado (sim)
+PRÓXIMO PASSO RECOMENDADO: o maestro decide a P-26 (recomendada A). Com A: F3a em 2 PRs (NAS: SQL versionado + v2 + ingest_apply lê o .meta.yaml + testes Postgres; MCP: retrieve_knowledge na v2, depois do DEV correr o SQL)
+BLOQUEIOS: P-26 (schema e RPC de produção). Regra 9 do prompt: documentado e parado.
 ```

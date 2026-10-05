@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f2-web-fetch-provenance` (empilhado no #110).
+- **Branch actual:** `docs/f3-provenance-adr` (empilhado no #111).
 - **`main` de referência:** NAS `cd8aeb3` (merges até #109); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: F2a (`fetch`). F1: #106–#109 merged; #110 (T6f) aberto com CI verde.
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: F3, **à espera da P-26** (ADR proposto). F1: #106–#109 merged, #110 aberto com CI verde. F2a: #111 aberto com CI verde.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,20 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F3: ADR proposto e paragem na decisão P-26 (2026-10-06)
+- **F2 fechado:** o PR #111 tem CI verde nas 2 cabeças. Registo e mini-relatório no `PENDENCIAS_T6.md`.
+- **Porque o F3 não tem código:**
+  - leva a proveniência ao retrieve, o que muda o schema e a RPC `match_knowledge` de produção, que o MCP chama (`ANM:lib/knowledge.js:68`);
+  - mudar a assinatura parte o MCP;
+  - o F3 canónico (AMBOS, Alta) é bem mais largo do que o do prompt.
+  - Seguiu-se o padrão do F1 neste repo: ADR primeiro (contract-first, §15.4), e código só com decisão.
+- **ADR (`docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md`):**
+  - opção A (recomendada) aditiva: colunas novas, RPC nova `match_knowledge_v2` com filtros e proveniência, o `ingest_apply` passa a ler o `.meta.yaml`, SQL corrido pelo DEV, e depois o MCP passa para a v2. O `match_knowledge` antigo fica intacto;
+  - âmbito F3a (critério do prompt), F3b e F3c (o resto do F3 canónico, sem corte).
+- **Canónico:** P-26 no §10 (25 → 26 decisões), e a linha do F3 aponta para o ADR e para a P-26.
+- **Regra 9 do prompt:** bloqueio documentado; a cadeia pára aqui até à decisão. F4, F5 e F6 exigem a fase anterior concluída.
+- **Registo:** a 1.ª tentativa de editar este ficheiro falhou (erro de sintaxe no meu script de edição) depois do push do ADR; corrigido neste commit.
 
 ### F2a: `fetch` com proveniência (2026-10-06)
 - **Contexto:**
@@ -778,7 +792,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 | PR | Branch | Item | Estado |
 |---|---|---|---|
 | NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
-| NAS (F2a) | `feat/f2-web-fetch-provenance` | F2a: `fetch` com proveniência + P-24, P-25 | Por abrir (empilhado no #110) |
+| NAS #111 | `feat/f2-web-fetch-provenance` | F2a: `fetch` com proveniência + P-24, P-25 | Aberto, CI verde (empilhado no #110) |
+| NAS #112 | `docs/f3-provenance-adr` | ADR do F3 (proposta) + P-26 | Aberto (empilhado no #111) |
 
 Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
 
@@ -823,6 +838,11 @@ cd ..\agent-network-mcp;        graphify update .
 - **Não tocar sem decisão:** F0.12 (apagar a t6), S20/S27/S19 (Oracle), W-004.
 
 ## Próximos 3 passos recomendados
-1. **Maestro:** P-18 em A/B/C (ver o relatório desta sessão; recomendada C), e P-11, P-16 e P-17.
-2. **Claude:** AU-22, a implementação da P-10 = A: verificar o `done_when` no fim do run e remover o `on_fail` e o `max_replans` do schema e dos 13 planos que os usam, com testes.
-3. **DEV:** a checklist acima (F0.1b, F0.3, R-004, F0.7b, F0.6/S-003, S28, T-004).
+1. **Maestro:**
+   - merge do #110 (fecha o F1 no canónico) e do #111 (F2a), por esta ordem; depois, o PR do ADR do F3;
+   - decidir a **P-26** (F3; recomendada A, porque desbloqueia a cadeia) e confirmar a P-21 a P-25.
+2. **DEV:**
+   - a 1.ª ingestão real de um documento convertido: `python scripts/ingest_document.py <doc> --out-dir docs/knowledge/ingested`, entrada no MANIFEST e merge (escreve em produção);
+   - com a P-26 = A, correr o SQL do F3a quando o PR existir;
+   - o F0.6 continua BLOQUEADO (o conector do Claude.ai sem tools).
+3. **Claude:** com a P-26 decidida, o F3a em 2 PRs (NAS e depois MCP). Sem ela, a cadeia F1–F6 fica parada no F3 (regra 9 do prompt).
