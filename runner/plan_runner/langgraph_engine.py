@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-from . import hitl
+from . import done_when, hitl
 from .engine import (
     _check_max_cost,
     _check_max_tokens,
@@ -30,6 +30,7 @@ from .graph import PlanError
 from .knowledge_wiring import inject_knowledge_context
 from .langgraph_compile import build_graph, compile_report, parallel_groups
 from .models import Plan, Step
+from .skills import skill_ref
 
 
 def merge_artifacts(left: dict | None, right: dict | None) -> dict:
@@ -103,7 +104,7 @@ def run_plan_langgraph(
         if step.id in completed:
             return {}
         if not log.has_event("step_started", run_id, step_id=step.id):
-            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph"})
+            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph", "skill": skill_ref(out, step)})
             inject_knowledge_context(out, step, log, run_id)
 
         if step.human_gate:
@@ -301,9 +302,9 @@ def run_plan_langgraph(
             status["state"] = "paused_human_gate"
             status["paused_at_step"] = pending_hitl[0]
             status["current_step"] = pending_hitl[0]
-        else:
+        elif done_when.check(out, plan.done_when, log, run_id, status):
             status["state"] = "done"
-    else:
+    elif done_when.check(out, plan.done_when, log, run_id, status):
         status["state"] = "done"
         status["current_step"] = None
         log.append("plan_done", run_id, {"completed": completed, "engine": "langgraph"})
@@ -368,7 +369,7 @@ def _run_waves_fallback(
                 continue
             status["current_step"] = step.id
             save_status(out, status)
-            log.append("step_started", run_id, {"step_id": step.id, "action": step.action})
+            log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "skill": skill_ref(out, step)})
             inject_knowledge_context(out, step, log, run_id)
 
             if step.human_gate:
@@ -406,6 +407,9 @@ def _run_waves_fallback(
             status["completed"] = sorted(completed)
             save_status(out, status)
 
+    if not done_when.check(out, plan.done_when, log, run_id, status):
+        save_status(out, status)
+        return status
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None
@@ -542,6 +546,7 @@ def resume_plan_langgraph(
                         "step_id": step.id,
                         "action": step.action,
                         "engine": "langgraph",
+                        "skill": skill_ref(out_dir, step),
                     },
                 )
                 inject_knowledge_context(out_dir, step, log, run_id)
@@ -766,18 +771,18 @@ def resume_plan_langgraph(
         status["detail"] = result["error"]
 
     elif all(s.id in completed for s in plan.steps):
-        status["state"] = "done"
-        status["current_step"] = None
         status.pop("paused_at_step", None)
-
-        log.append(
-            "plan_done",
-            run_id,
-            {
-                "completed": completed,
-                "engine": "langgraph",
-            },
-        )
+        if done_when.check(out_dir, plan.done_when, log, run_id, status):
+            status["state"] = "done"
+            status["current_step"] = None
+            log.append(
+                "plan_done",
+                run_id,
+                {
+                    "completed": completed,
+                    "engine": "langgraph",
+                },
+            )
 
     else:
         pending = [
@@ -790,7 +795,7 @@ def resume_plan_langgraph(
             status["state"] = "paused_human_gate"
             status["paused_at_step"] = pending[0]
             status["current_step"] = pending[0]
-        else:
+        elif done_when.check(out_dir, plan.done_when, log, run_id, status):
             status["state"] = "done"
             status["current_step"] = None
 

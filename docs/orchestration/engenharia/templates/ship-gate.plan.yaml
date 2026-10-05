@@ -1,0 +1,56 @@
+# Template — ship_gate de engenharia (3 reviews em paralelo → GO/NO-GO humano)
+# P-18 = C (maestro, 2026-10-03): o plano de domínio real ao lado do
+# docs/orchestration/marketing/templates/examples/ship-parallel.plan.yaml,
+# que continua a ser só o exemplo do motor (wave paralela).
+# S34/AU-32: cada passo de domínio declara `vertical:` (omissão do executor = marketing).
+# P-10 = A: sem `on_fail`/`max_replans` (fora até ao F3); o `done_when` usa só as
+# 2 formas que o runner verifica no fim do run (plan_runner/done_when.py).
+
+id: template-engenharia-ship-gate
+version: 1
+deliverable_type: ship_gate
+objective: "(preencher — ex.: rever o PR #N antes do merge)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+
+steps:
+  # Wave paralela: os 3 reviews não dependem uns dos outros
+  - id: code_review
+    action: revisor_codigo
+    vertical: engenharia
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/01-code-review.md
+
+  - id: security_review
+    action: security_audit
+    vertical: meta
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/02-security-review.md
+
+  - id: test_review
+    action: guia_tdd
+    vertical: engenharia
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/03-test-review.md
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [code_review, security_review, test_review]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject]
+    tools_allowed: []
+    inputs:
+      - artifacts/01-code-review.md
+      - artifacts/02-security-review.md
+      - artifacts/03-test-review.md
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-code-review.md exists
+  - artifacts/02-security-review.md exists
+  - artifacts/03-test-review.md exists
+  - human_gate_resolved on hitl

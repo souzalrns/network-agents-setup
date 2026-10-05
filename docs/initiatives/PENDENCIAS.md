@@ -3,6 +3,8 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **Pós-merge (2026-10-05, `main` `a52fc74`, merges #88, #89, #90 e #92):** E-003 → FECHADO (#90); AU-22 → ABERTO (o `done_when` entrou no #90; falta a 2.ª metade da P-10); H-003 com a mitigação do #89; H-01 EM CURSO (PR #93).
+> **AU-22/E-003 (2026-10-05, `main` `492acff`):** P-18 = C; AU-22 e E-003 EM CURSO (PR #90); novos AU-22b e W-008.
 > **Decisões confirmadas (2026-10-03, `main` `e4a9f5e`):** P-10 e P-12 a P-15 = A, com consulta cruzada; INIT-094, ING-5 e ING-6 → OBSOLETO; a condição da P-18 devolveu-a a A/B/C.
 > **Sessão "continuação operacional" (2026-10-03, `main` `c9edd72`):** R-004 com PR (MCP #15); C-2: lado DB feito pelo DEV, lado repo com PR (MCP #16); E-003 → P-18; H-002 e H-003 com o bloqueio actualizado; F0.6 e F0.7b deixam de esperar pelo F0.4 (fechado no #64; o F0.7b passa a ABERTO). Depois, a pedido do maestro: S-004 (PR MCP #17), factos do README no H-01 (§4.1) e V40 (ponteiros que o H-001 deixou). Auto-auditoria: H-005 (STATUS do MCP desactualizado); `pnpm audit` do NAS = 0 (A22).
 > **Revisão pós-merge (2026-10-03):** `main` `d79d7be` (NAS, merges #79 e #81) e `d635945` (MCP, merges #11–#14); §10 com as decisões P-1 a P-9.
@@ -12,10 +14,10 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **112 itens vivos** (§4): ABERTO 61, EM CURSO 9, BLOQUEADO 42;
-> - **91 linhas de histórico** (§7): 70 fechadas, 21 obsoletas;
+> - **113 itens vivos** (§4): ABERTO 63, EM CURSO 9, BLOQUEADO 41;
+> - **92 linhas de histórico** (§7): 71 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
-> - **18 decisões** em A/B/C (§10): P-1 a P-10 e P-12 a P-15 decididas pelo maestro; pendentes P-11, P-16, P-17 e P-18.
+> - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
 
 ## 0. Como usar este documento
 
@@ -91,7 +93,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (112 itens vivos)
+## 4. Tabela única (113 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -140,9 +142,11 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-001 | `router eval` com o Gemini real: medir a escolha do agente | FALTA-TESTE | ABERTO | DEV | Média | `GEMINI_API_KEY` | O:163; E:784; P §10 (ressalvas) | R1 (Bloco B; colide com R1 do AUDIT-1) | VERIFICADO |
 | W-003 | Robustez das keywords do router (negação, pesos) | FALTA-CONSTRUIR | BLOQUEADO | CLAUDE | Baixa | W-001 (casos reais) | O:166 | R4 | VERIFICADO |
 | W-004 | Ledger central: as linhas do worker também no Supabase | FALTA-LIGAR | ABERTO | DEV | Média | Escrita em produção (DEV) | O:149 | B2 (Bloco B) | VERIFICADO |
+| W-008 | O `docs/architecture/plan-execute/examples/piloto-netos.plan.yaml` não passa no schema dos planos (`on_fail: replan`; `done_when` e `name` por passo): é do formato antigo do plan-execute | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — | `python -m plan_runner.plan_schema` na `main` `492acff`: 1 plano, 1 com erros (já falhava antes do PR #90); os 14 planos de `docs/orchestration/` passam | — | VERIFICADO |
 | AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
-| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | ABERTO | AMBOS | Média | Nenhum: P-10 = A decidida (2026-10-03). Falta o código: verificar o `done_when` no fim do run e remover `on_fail`/`max_replans` do schema e dos planos (com testes) | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes) | — | VERIFICADO |
+| AU-22 | Campos de plano mortos (`knowledge_refs` não é lido); o consumidor do L5 é o bloco `knowledge:` | FALTA-DECIDIR | ABERTO | AMBOS | Média | — | P:307; E:791; #74 fechou o `max_steps` no langgraph + evento `plan_fields_ignored` (`test_plan_fields.py`, 6 testes); PR #90 (merged, `main` `388d86b`): `done_when` verificado no fim do run nos 2 engines (`runner/plan_runner/done_when.py`; `tests/test_done_when.py`, 16 testes; 10 falhavam sem a alteração). A remoção do `on_fail` e do `max_replans` (2.ª metade da P-10) fica por fazer | — | VERIFICADO |
+| AU-22b | Reescrever numa das 2 formas verificáveis a condição de `done_when` em linguagem livre do `paid-pack.plan.yaml` ("no ad_account_mutation without approve"); o evento `done_when_unverifiable` é o gatilho para encontrar outras | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | F3 (decisão do maestro, 2026-10-04) | `docs/orchestration/marketing/templates/paid-pack.plan.yaml`; `runner/plan_runner/done_when.py` (evento `done_when_unverifiable` com `item: AU-22b`); PR #90 | — | VERIFICADO |
 | M-001 | Fase 2: Execution Broker (EXECUTE/REDIRECT/WAIT/DEFER/BLOCK) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | `docs/architecture/META-AGENTS-PHASE-2.md`; O §Fase 2; E §8.3 e §9.3 | — | VERIFICADO |
 | M-002 | Fase 2: Execution Lease (1 tarefa → 1 lease activa) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F0–F6 + C-2 (D-EP5) | E §8.7 e §9.3; O §Fase 2 | — | VERIFICADO |
 | M-003 | Fase 2: Execution Package (contexto para redirect) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | M-002 | E §8.8 e §9.3 | — | VERIFICADO |
@@ -202,8 +206,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | I10 | Avaliar as Karpathy Skills (identificar o repo exacto) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão de âmbito | A5 §5.4; EP:2188-2383 | F15 (ST, ferramentas) | VERIFICADO |
 | I11 | Avaliar Soup (fine-tuning; a dependência "só após C8" já caiu) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão de âmbito | A5 §5.4; EP:2188-2383 | F12 (ST, ferramentas) | VERIFICADO |
 | R-004 | O `ingestDocument` do MCP apaga por `agent_id`+`source` sem filtrar `project`: pode apagar linhas do T6 com a mesma `source` | BUG | EM CURSO | CLAUDE | Média | Merge do PR MCP #15 | `ANM:lib/knowledge.js:163-169`; `runner/plan_runner/supabase_writer.py:111`; PR MCP #13; PR MCP #15 (`.is("project", null)` no delete; `tests/ingestDocument.test.mjs`, 3 testes; `npm test` 19/19) | — | VERIFICADO |
-| E-003 | `ship-parallel.plan.yaml` (reviews de código/segurança/testes) em `docs/orchestration/marketing/`: `action: research`/`critic` resolvem sempre para agentes de marketing, com ou sem `vertical:` | BUG | BLOQUEADO | CLAUDE | Baixa | P-18: o maestro decidiu A com uma condição; a verificação da condição mostrou que o ficheiro é um exemplo do motor (§10 P-18), por isso volta ao maestro em A/B/C | `docs/orchestration/marketing/templates/examples/ship-parallel.plan.yaml`; PR #71; `runner/plan_runner/skills.py:28-39` (procura por `action:`; sem agente no vertical, cai no 1.º encontrado); fixture de `runner/tests/test_real_plans.py:116` e `conftest.py:36` | — | VERIFICADO |
-| H-003 | Actions pinadas em versões Node 20 (deprecado; o runner já as força a Node 24 com aviso): NAS `actions/checkout` v4.4.0/v4.2.2, `setup-python` v5.6.0, `setup-node` v4.4.0, `setup-go` v5.5.0, `upload-artifact` v4.6.2, `github-script` v7.1.0, `pnpm/action-setup`, `codecov-action` v4.6.0, `action-gh-release`; MCP `actions/checkout@v4` (`ingest.yml`) e `actions/cache@v4` (`transcribe.yml`) | BUG | ABERTO | CLAUDE | Baixa | Ler as tags upstream para pinar os SHA novos (repos `actions/*`, fora do âmbito da sessão de 2026-10-03) | `grep -rn 'uses:' .github/workflows/` nos 2 repos (`main` `c9edd72` / `d635945`); logs: run MCP #108, corridas NAS #163–#169 ("Node.js 20 is deprecated") | — | VERIFICADO |
+| H-003 | Actions pinadas em versões Node 20 (deprecado; o runner já as força a Node 24 com aviso): NAS `actions/checkout` v4.4.0/v4.2.2, `setup-python` v5.6.0, `setup-node` v4.4.0, `setup-go` v5.5.0, `upload-artifact` v4.6.2, `github-script` v7.1.0, `pnpm/action-setup`, `codecov-action` v4.6.0, `action-gh-release`; MCP `actions/checkout@v4` (`ingest.yml`) e `actions/cache@v4` (`transcribe.yml`) | BUG | ABERTO | CLAUDE | Baixa | Ler as tags upstream para pinar os SHA novos (repos `actions/*`, fora do âmbito da sessão de 2026-10-03) | `grep -rn 'uses:' .github/workflows/` nos 2 repos (`main` `c9edd72` / `d635945`); logs: run MCP #108, corridas NAS #163–#169 ("Node.js 20 is deprecated"); PR #89 (merged): o envio para o Codecov passou a `continue-on-error` (a `codecov-action` v4.6.0 rebentava com erro TLS e chumbava os testes); é mitigação, o re-pin continua por fazer | — | VERIFICADO |
 | T-004 | Preencher os preços confirmados em `config/model-prices.yaml` (a `null`: um plano com `max_cost_usd` pára no 1.º passo) | FALTA-LIGAR | ABERTO | DEV | Média | Página oficial de preços (bloqueada na sessão do D6) | PR #72; `config/model-prices.yaml` | — | VERIFICADO |
 | T-005 | (Opcional) Escolher os modelos por tier em `config/model-tiers.yaml` | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão | PR #73; `config/model-tiers.yaml` | — | VERIFICADO |
 | S-003 | Testar no Claude.ai connector uma chamada real às tools do MCP depois dos tectos de input do S-001 (pedido normal passa; acima do tecto dá erro de validação legível) | FALTA-TESTE | ABERTO | DEV | Baixa | Conector real (só o DEV); pode ir no mesmo teste do F0.6 | `ANM:CLAUDE.md` ("Alterações ao router e tools MCP: verificar impacto no Claude.ai connector"); PR MCP #14 §Impacto | — | VERIFICADO |
@@ -264,7 +267,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Governança em `packages/core/` (TypeScript) (`README.md:18`; o mesmo em `docs/architecture/ECOSYSTEM.md:21`) | O TS está arquivado pela D1. A governança viva é Python + YAML: `config/areas.yaml`, capabilities, E7, HITL e orçamento do `plan_runner` | `docs/architecture/EXECUTION-PLAN.md:98`; `docs/audit/DECISAO-1-runtimes.md`; `python -m plan_runner.areas` |
 | "5 REAL, 19 INCOMPLETO, 14 MOCK" (`:28`) | Errata do AU-37: REAL 6, MOCK 13 | `docs/architecture/CORE-MAPPING.md:3-4` (#69) |
 | "RAG fechado (C8, 6/6): 110 chunks de 33 ficheiros" (`:27`) | O C8 estava "fechado só no papel" (→ J3). Hoje: tabela canónica `knowledge_chunks`, MANIFEST com 39 fontes, F0 em curso (F0.1, F0.3, F0.6, F0.7b e F0.12 por fechar); o n.º de linhas está por confirmar (F0.1b; esperado 163) | `scripts/ingest_delta.py` (`MANIFEST`: 39); corrida #169 do `ingest-knowledge` (`unchanged=39`); A5:190 |
-| "67 skills + 35 agentes, em 8 domínios" (`:29`) | 69 `SKILL.md` (claude 26, meta 21, marketing 16, design 4, security 2) e 38 `*.agent.md`; falta o domínio `security` na lista | `find skills -name SKILL.md`; `find agents -name '*.agent.md'` |
+| "67 skills + 35 agentes, em 8 domínios" (`:29`) | 72 `SKILL.md` (claude 26, meta 24, marketing 16, design 4, security 2; eram 69 até às 3 skills de `obra/superpowers` de 2026-10-05) e 38 `*.agent.md`; falta o domínio `security` na lista | `find skills -name SKILL.md`; `find agents -name '*.agent.md'` |
 | "Detalhe completo e actualizado: `docs/initiatives/STATUS.md`" (`:36`) | Pendentes só no `PENDENCIAS.md` (P-6 = A) | **Corrigido** (V40) |
 | Os verticais "não vivem aqui", vêm do MCP (`:22`; `ECOSYSTEM.md:13`) | Também há agentes de domínio no setup (ex.: `agents/security`, `agents/marketing`), ligados por áreas | `config/areas.yaml` (10 áreas, 37 agentes; E7) |
 | Requisitos "Node.js 18+" e "Redis 7+"; instalação `pnpm run build`/`dev` (`:107-122`) | O caminho operacional é o `runner/` (pip; Python 3.12 no CI). O TS precisa de Node 22 (`undici@8`), não 18. O Redis só aparece no TS arquivado (6 ficheiros em `packages/`), nada no `runner/`, `scripts/` ou `config/` | `.github/workflows/ci.yml` (Node 22 e comentário do `undici`); `runner-tests.yml:70`; `grep -ril redis` |
@@ -293,13 +296,13 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 11 | F1, F1b, F2, F4, W-003, EX-B7, H-002, R-004, E-003, H-003, H-005 |
+| CLAUDE | 12 | F1, F1b, F2, F4, W-003, W-008, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
 | DEV | 70 | F0.1, F0.3, F0.6, F0.7b, F0.12, R-002, R-003, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 31 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: o PR do NAS que leva as decisões de 2026-10-03 (os PRs MCP #15–#17 e NAS #86 já tiveram merge);
-- decisões: P-18 (A/B/C depois da verificação da condição), P-11, P-16 e P-17;
+- merges: NAS #93 (H-01, README) e #91 (F2, evidência do Agent-Reach); os #88, #89, #90 e #92 já entraram (2026-10-05);
+- decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
 - F0.1 e F0.3 (SELECTs), incluindo o F0.1b que fecha o R-002 (esperado: 163 linhas);
@@ -317,18 +320,19 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, F3, F5, S20, C-2, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 46 | F0.1, F0.3, F0.6, F0.7b, F2, F4, F6, R-002, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
-| Baixa | 49 | F0.12, F1b, R-001, R-003, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, E-003, H-003, T-005, S-003, H-004, H-005 |
+| Baixa | 50 | F0.12, F1b, R-001, R-003, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 61 · EM CURSO 9 · BLOQUEADO 42.
+**Por estado:** ABERTO 63 · EM CURSO 9 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (91 linhas: 70 FECHADO, 21 OBSOLETO)
+## 7. Histórico (92 linhas: 71 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| E-003 | `ship-parallel.plan.yaml` (reviews de código/segurança/testes) resolvia sempre para agentes de marketing | 2026-10-05 | #90 (§10 P-18 = C); `runner/tests/test_engenharia_ship_gate.py` (3 testes) | FECHADO | Os 3 reviews passam a agentes reais em `docs/orchestration/engenharia/templates/ship-gate.plan.yaml` (`revisor_codigo`, `security_audit`, `guia_tdd`), com `done_when` verificável; o `ship-parallel` fica como exemplo do motor (só comentário) |
 | INIT-094 | Reavaliar os 6 harnesses multi-provider | 2026-10-03 | §10 P-12 = A (maestro, consulta cruzada); análise: PR #80 (`docs/research/harnesses-multi-provider-2026-10.md`) | OBSOLETO | Não adoptar; opencodex + LiteLLM ficam como candidatos do F3/§8.6 |
 | ING-5 | gitingest (repo → texto): ADAPT com reservas (pin `0.3.1`, só repos públicos) | 2026-10-03 | §10 P-14 = A (maestro, consulta cruzada); análise: PR #82 (`docs/research/ingestao-ing5-ing6-2026-10.md`) | OBSOLETO | Não adoptar; EXTRACT próprio se houver necessidade |
 | ING-6 | Reavaliar ScrapeGraphAI | 2026-10-03 | §10 P-15 = A (maestro, consulta cruzada); análise: PR #82 (`docs/research/ingestao-ing5-ing6-2026-10.md`) | OBSOLETO | Não adoptar; `fetch` + worker no F2 |
@@ -483,7 +487,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 
 ## 10. Decisões (A/B/C, com recomendada)
 
-**Decididas pelo maestro (2026-10-03): P-1 a P-10 e P-12 a P-15** (P-10 e P-12 a P-15 com consulta cruzada a uma 2.ª IA). **Pendentes:** P-11, P-16, P-17 e P-18 (esta com A condicionada; a condição levou a A/B/C). Nenhuma decisão pendente foi assumida.
+**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03) e P-18 = C (2026-10-04).** **Pendentes:** P-11, P-16 e P-17. Nenhuma decisão pendente foi assumida.
 
 
 | # | Decisão | A | B | C | Recomendada |
@@ -505,7 +509,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-15 | ING-6: ScrapeGraphAI | Não adoptar; `fetch` + worker no F2 | Spike no F2 | Rejeitar de vez | **Decidida: A** (maestro, 2026-10-03; consulta cruzada: uma 2.ª IA concordou). ING-6 → OBSOLETO (§7) |
 | P-16 | S-001: valores dos tectos de input do MCP | Os do PR MCP #14 (`text` 200k, `request` 20k, …) | Mais apertados | Configuráveis por env | **A**: não partem nenhum uso real conhecido |
 | P-17 | H-001: as listas de pendentes do `STATUS.md` | Marcadas HISTÓRICO (**aplicada**, #70) | Movê-las para `docs/archive/` no H-01 | Apagá-las | **A** agora e **B** no H-01; C corta conteúdo |
-| P-18 | E-003: `ship-parallel.plan.yaml` usa `research`/`critic`, que resolvem sempre para agentes de marketing | Re-apontar os 3 reviews para agentes reais (`revisor_codigo` e `guia_tdd` em `engenharia`; `security_audit` em `meta`), com `vertical:`, e mover o ficheiro para `docs/orchestration/engenharia/examples/` (o guarda do AU-32, `test_skills.py:75`, passa a cobri-lo); ajustar `conftest.py` e `test_real_plans.py` | Manter o ficheiro como fixture do motor (wave paralela) e escrever no topo que não é um plano de domínio | Re-apontar as actions sem mover o ficheiro | **Decidida: A, com uma condição** (maestro, 2026-10-03; revisora: "antes de aplicar, lê o ficheiro; se estiver em marketing por intenção, B"). **Verificação da condição:** o ficheiro foi criado no mesmo commit que o engine LangGraph (`5cd7c27`, 2026-09-10), como "Template fan-out" para demonstrar a wave paralela (`docs/architecture/langgraph-lab/README.md`); o `docs/architecture/plug-in-agents.md:178` lista-o como "Generic plan"; é a fixture dos testes do motor (`runner/tests/conftest.py:36`, `test_real_plans.py:116`). A pasta `marketing/` foi por conveniência (era a única `examples/` em 2026-09-10). Ou seja, é um **exemplo do motor**: **não apliquei A**; volta ao maestro com A/B/C (relatório de 2026-10-03; recomendada C = B + um plano de engenharia real à parte) |
+| P-18 | E-003: `ship-parallel.plan.yaml` usa `research`/`critic`, que resolvem sempre para agentes de marketing | Re-apontar os 3 reviews para agentes reais (`revisor_codigo` e `guia_tdd` em `engenharia`; `security_audit` em `meta`), com `vertical:`, e mover o ficheiro para `docs/orchestration/engenharia/examples/` (o guarda do AU-32, `test_skills.py:75`, passa a cobri-lo); ajustar `conftest.py` e `test_real_plans.py` | Manter o ficheiro como fixture do motor (wave paralela) e escrever no topo que não é um plano de domínio | Re-apontar as actions sem mover o ficheiro | **Decidida: C** (maestro, 2026-10-04): o ficheiro é um exemplo do motor (verificação da condição acima), por isso fica onde está com uma nota no topo, e acrescenta-se um plano de engenharia real à parte; C acrescenta sem cortar. Aplicada no PR #90 |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)

@@ -1,3 +1,12 @@
+# EXEMPLO DO MOTOR, NAO E UM PLANO DE DOMINIO (P-18 = C, maestro, 2026-10-03; E-003).
+# Mostra a wave paralela do engine langgraph (criado com ele em 5cd7c27) e e a
+# fixture dos testes do motor (runner/tests/conftest.py, test_real_plans.py).
+# Esta em marketing/ por historia (era a unica pasta examples/). Sem `vertical:`,
+# `research`/`critic` resolvem para os agentes de MARKETING, nao para revisores de
+# codigo. Para um ship gate de engenharia real, usar
+# docs/orchestration/engenharia/templates/ship-gate.plan.yaml
+# (revisor_codigo, security_audit, guia_tdd).
+#
 # Exemplo: onda paralela de reviews antes do GO/NO-GO (estilo Addy /ship)
 # depends_on iguais => mesma wave no motor langgraph
 

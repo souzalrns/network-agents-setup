@@ -8,13 +8,13 @@ from uuid import uuid4
 
 import yaml
 
-from . import hitl, working_memory
+from . import done_when, hitl, working_memory
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
 from .knowledge_wiring import inject_knowledge_context
 from .models import Plan, ignored_plan_fields
-from .skills import repo_root_from_out
+from .skills import repo_root_from_out, skill_ref
 
 
 def load_plan(path: Path) -> Plan:
@@ -232,7 +232,7 @@ def run_plan(
         log.append(
             "step_started",
             run_id,
-            {"step_id": step.id, "action": step.action, "tools_allowed": step.tools_allowed},
+            {"step_id": step.id, "action": step.action, "tools_allowed": step.tools_allowed, "skill": skill_ref(out, step)},
             actor={"kind": "system", "id": "plan_runner"},
         )
         inject_knowledge_context(out, step, log, run_id)
@@ -303,6 +303,9 @@ def run_plan(
         status["completed"] = sorted(completed)
         save_status(out, status)
 
+    if not done_when.check(out, plan.done_when, log, run_id, status):
+        save_status(out, status)
+        return status
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None
@@ -406,7 +409,7 @@ def resume_run(
 
         status["current_step"] = step.id
         save_status(out_dir, status)
-        log.append("step_started", run_id, {"step_id": step.id, "action": step.action})
+        log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "skill": skill_ref(out_dir, step)})
         inject_knowledge_context(out_dir, step, log, run_id)
 
         if step.human_gate:
@@ -456,6 +459,10 @@ def resume_run(
         status["completed"] = sorted(completed)
         save_status(out_dir, status)
 
+    if not done_when.check(out_dir, plan.done_when, log, run_id, status):
+        status.pop("paused_at_step", None)
+        save_status(out_dir, status)
+        return status
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None

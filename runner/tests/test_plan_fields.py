@@ -34,7 +34,8 @@ def test_ignored_plan_fields_lista_cada_campo_declarado():
         "budget": {"max_steps": 5, "max_replans": 1},
         "steps": [{"id": "a", "on_fail": "human"}, {"id": "b"}],
     }
-    assert ignored_plan_fields(data) == ["knowledge_refs", "done_when", "budget.max_replans", "steps[].on_fail"]
+    # P-10 = A: o done_when deixou de ser ignorado (verificado no fim do run, done_when.py)
+    assert ignored_plan_fields(data) == ["knowledge_refs", "budget.max_replans", "steps[].on_fail"]
     assert ignored_plan_fields({"budget": {"max_steps": 5}, "steps": [{"id": "a"}]}) == []
 
 
@@ -43,7 +44,7 @@ def test_native_regista_os_campos_ignorados(tmp_path, tmp_run_dir):
     status = run_plan(_plan(tmp_path, head), mode="stub", out_dir=tmp_run_dir)
     assert status["state"] == "done"
     [ev] = _events(tmp_run_dir, "plan_fields_ignored")
-    assert ev["payload"]["fields"] == ["knowledge_refs", "done_when"]
+    assert ev["payload"]["fields"] == ["knowledge_refs"]
 
 
 def test_plano_sem_campos_mortos_nao_regista_nada(tmp_path, tmp_run_dir):
@@ -52,12 +53,12 @@ def test_plano_sem_campos_mortos_nao_regista_nada(tmp_path, tmp_run_dir):
 
 
 def test_planos_reais_declaram_campos_ignorados():
-    """Os planos de exemplo usam done_when/on_fail: o evento existe para os runs reais."""
+    """Os planos de exemplo usam on_fail: o evento existe para os runs reais (o done_when ja nao e ignorado)."""
     import yaml
 
     plan = Path(__file__).resolve().parents[2] / "docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml"
     fields = ignored_plan_fields(yaml.safe_load(plan.read_text(encoding="utf-8")))
-    assert "done_when" in fields and "steps[].on_fail" in fields
+    assert "steps[].on_fail" in fields and "done_when" not in fields
 
 
 def test_langgraph_respeita_max_steps(tmp_path, tmp_run_dir):

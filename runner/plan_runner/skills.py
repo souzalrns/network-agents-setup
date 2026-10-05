@@ -63,3 +63,21 @@ def read_text_if_exists(path: Path | None) -> str | None:
     if path is None or not path.is_file():
         return None
     return path.read_text(encoding="utf-8")
+
+
+def skill_ref(out_root: Path, step) -> str | None:
+    """Skill que o passo carrega, relativa ao repo (para o evento step_started).
+
+    Mede o uso real das skills: so os planos e o router as carregam, e sem isto
+    nao havia forma de saber quais correm. None se o passo nao resolver skill
+    (ex.: gates humanos).
+    """
+    vertical = str(step.raw.get("vertical") or "marketing") if isinstance(step.raw, dict) else "marketing"
+    repo = repo_root_from_out(Path(out_root))
+    path = resolve_skill_path(repo, step.action, vertical)
+    if path is None:
+        return None
+    try:
+        return path.resolve().relative_to(repo.resolve()).as_posix()
+    except ValueError:
+        return None
