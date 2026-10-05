@@ -9,7 +9,31 @@
 - **`main` de referência:** NAS `81e6364` (merges até #94); MCP `4916872` (merges #15, #16 e #17).
 - **Itens em trabalho:** F0.1 (falta a contagem `projecto` e a F0.1b com o filtro `project`); H-01 (partes 1, 2 e 3).
 
+### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
+1. **DEV — F0.1 + R-002 + R-005:** contagem `projecto`, F0.1b com o filtro `project` (esperado 163) e `kb` das linhas com `project` NULL. São só SELECTs (§5 do PENDENCIAS).
+2. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
+3. **DEV — F0.7b:** `python -m plan_runner.l5_eval run` contra o MCP real (hit@k, MRR, proveniência).
+4. **CLAUDE — AU-22:** 2.ª metade da P-10 (retirar o `on_fail` e o `max_replans` dos planos e do schema, com testes).
+5. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data.
+
+**Gate:** o código do F1 (spike MarkItDown) só arranca com 1, 2 e 3 feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
+
 ## Log (mais recente no topo)
+
+### Análise externa do projecto: confronto com o estado real (2026-10-05)
+O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PENDENCIAS na `main` `81e6364`. Várias acções já estavam feitas:
+- **P-10 e P-12 a P-15:** decididas = A a 2026-10-03 (§10). A P-10 já tem o `done_when` implementado (#90); falta a 2.ª metade (AU-22).
+- **C-2:** feito. A DB foi alterada pelo DEV a 2026-10-03 e o MCP #16 entrou no mesmo dia. **A linha estava desactualizada (erro meu de fecho)** e passou a FECHADO neste PR. Falta só a prova por um run real de conselho, que entra no F5.
+- **README e quickstart:** feitos (#93). O README já não fala no C8 nem no core TS como estado actual; o quickstart (stub → HITL → `done`) foi testado.
+- **F0.3:** fechado (t6 parada a 2026-09-29).
+
+**Válido e adoptado:**
+- fila activa de no máximo 5 itens (acima);
+- gate do F1 em F0.1, F0.6 e F0.7b;
+- não abrir domínios nem meta-agentes;
+- as 3 métricas: F0 verde, custo de onboarding de um domínio ≈ 0 e tempo até valor < 30 min.
+
+**Contagens:** 112 → **111** vivos (ABERTO 62, EM CURSO 7, BLOQUEADO 42); histórico 94 → 95 (74 FECHADO).
 
 ### 4 SELECTs F0 corridos (maestro, 2026-10-05)
 **Resultados (colados pelo maestro):**

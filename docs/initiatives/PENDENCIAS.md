@@ -3,7 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
-> **SELECTs do F0 (2026-10-05, `main` `81e6364`):** F0.3 e R-003 → FECHADO; novo R-005 (`kb` errado na fonte ECC); F0.2 (já fechado) e AU-50 com a evidência nova; o F0.1 continua EM CURSO (falta a contagem `projecto` e a F0.1b com o filtro `project`, que fecham o R-002).
+> **SELECTs do F0 (2026-10-05, `main` `81e6364`):** F0.3 e R-003 → FECHADO; C-2 → FECHADO (o MCP #16 já tinha entrado a 2026-10-03; a linha estava desactualizada); novo R-005 (`kb` errado na fonte ECC); F0.2 (já fechado) e AU-50 com a evidência nova; o F0.1 continua EM CURSO (falta a contagem `projecto` e a F0.1b com o filtro `project`, que fecham o R-002).
 > **Pós-merge (2026-10-05, `main` `92cc762`, merges #91 e #93):** H-01 continua EM CURSO (as partes 4, 5 e 6 entraram no #93; faltam as partes 1, 2 e 3); F2 com a evidência do Agent-Reach (#91). Contagens sem alteração.
 > **Pós-merge (2026-10-05, `main` `a52fc74`, merges #88, #89, #90 e #92):** E-003 → FECHADO (#90); AU-22 → ABERTO (o `done_when` entrou no #90; falta a 2.ª metade da P-10); H-003 com a mitigação do #89; H-01 EM CURSO (PR #93).
 > **AU-22/E-003 (2026-10-05, `main` `492acff`):** P-18 = C; AU-22 e E-003 EM CURSO (PR #90); novos AU-22b e W-008.
@@ -16,8 +16,8 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **112 itens vivos** (§4): ABERTO 62, EM CURSO 8, BLOQUEADO 42;
-> - **94 linhas de histórico** (§7): 73 fechadas, 21 obsoletas;
+> - **111 itens vivos** (§4): ABERTO 62, EM CURSO 7, BLOQUEADO 42;
+> - **95 linhas de histórico** (§7): 74 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
 
@@ -95,7 +95,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (112 itens vivos)
+## 4. Tabela única (111 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -135,7 +135,6 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | EX-C4 | Adoptar Cedar (policy engine) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão de dependência | P §9 (EX-C4); O:52 | C4 (O:52) | VERIFICADO |
 | B16 | `ActionReceipt` com o contrato ADR-001 completo | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | EX-C3/EX-C4 | A5 §5.2 (ST:111,201) | G7 (ST) | VERIFICADO |
 | AU-25 | `mcp/plan_runner` em `moderate` por omissão autoriza `run_plan` sem chave | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão (omissão `strict` fora de stdio) | `mcp/plan_runner/mcp_plan_runner/policy.py:33`; P:310 | — | VERIFICADO |
-| C-2 | Ledger dos conselhos: correr `scripts/alter_token_usage_council_kinds.sql` no Supabase e depois actualizar o CHECK em `agent-network-mcp/memory/token_usage.sql:12` | FALTA-LIGAR | EM CURSO | AMBOS | Alta | Merge do PR MCP #16 (o lado DB está feito) | O:221; E:781; `docs/ops/COUNCIL.md:31,42`; **DB feita pelo DEV a 2026-10-03:** ALTER corrido no SQL Editor do `agent-network-memory`, `token_usage_call_kind_check` com 7 valores (verificação do DEV, adendo do maestro de 2026-10-03; sem PR, escrita em produção); repo: PR MCP #16 (`memory/token_usage.sql:12-14`, validado num Postgres local) | — | VERIFICADO |
 | B1-bis-C | Encurtar skills/prompt-base (meta <9k no `seo-article-demo`; base medida 10 136) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | Ordem do maestro; depois de F0–F3 | P §6 #12; O:222; E §14.2 | — | VERIFICADO |
 | T-001 | Medir o custo do pack Claude (`revisor-codigo`, `guia-tdd`) antes de cortar | FALTA-TESTE | ABERTO | AMBOS | Baixa | Run real (`GEMINI_API_KEY`) | E §9.2 | — | VERIFICADO |
 | T-002 | Medir o conselho `security` no 1.º uso real | FALTA-TESTE | ABERTO | AMBOS | Baixa | 1.º uso real | E §9.2; `docs/ops/COUNCIL.md` | — | VERIFICADO |
@@ -299,7 +298,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | CLAUDE | 13 | F1, F1b, F2, F4, W-003, W-008, R-005, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
 | DEV | 68 | F0.1, F0.6, F0.7b, F0.12, R-002, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
-| AMBOS | 31 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
+| AMBOS | 30 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
 - merges: o PR `docs/f0-selects` (só documentação); os #88 a #94 já entraram (2026-10-05, `main` `81e6364`);
@@ -320,20 +319,21 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Sev | N.º | IDs |
 |---|---:|---|
 | Crítica | 1 | G1.5 |
-| Alta | 16 | F1, F3, F5, S20, C-2, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
+| Alta | 15 | F1, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 46 | F0.1, F0.6, F0.7b, F2, F4, F6, R-002, R-005, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, AU-22, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
 | Baixa | 49 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 62 · EM CURSO 8 · BLOQUEADO 42.
+**Por estado:** ABERTO 62 · EM CURSO 7 · BLOQUEADO 42.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (94 linhas: 73 FECHADO, 21 OBSOLETO)
+## 7. Histórico (95 linhas: 74 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| C-2 | Ledger dos conselhos: CHECK do `token_usage` com os 3 `council_*` | 2026-10-05 | DB: ALTER corrido pelo DEV a 2026-10-03 (`token_usage_call_kind_check` com 7 valores); repo: MCP #16 (merged 2026-10-03, `a4f46e1`; `ANM:memory/token_usage.sql:14-16`) | FECHADO | Fechado com atraso: o #16 entrou a 2026-10-03, mas a linha ficou EM CURSO até à revisão de 2026-10-05. Ainda não há a prova por um run real de conselho com linhas no ledger (entra no F5) |
 | F0.3 | Passo 3 do J3: confirmar que a t6 parou (`ultima_t6`) | 2026-10-05 | SELECT do maestro (2026-10-05): `ultima_t6` = 2026-09-29 10:06:33+00 (≤ 2026-09-30), `total_t6` = 110 | FECHADO | A t6 está congelada; as 110 linhas batem com o C8 (F0.9). Desbloqueia o F0.12 (apagar a t6, com backup e decisão) |
 | R-003 | Confirmar `agent_id`/`project` das 8 linhas da fonte "ECC security-reviewer + database-reviewer" | 2026-10-05 | SELECT do maestro (2026-10-05): `agent_id` = revisor-codigo, `project` NULL, `kb` = marketing | FECHADO | Não é `global`, por isso não aparece em todas as pesquisas. O `kb` está errado → R-005 |
 | E-003 | `ship-parallel.plan.yaml` (reviews de código/segurança/testes) resolvia sempre para agentes de marketing | 2026-10-05 | #90 (§10 P-18 = C); `runner/tests/test_engenharia_ship_gate.py` (3 testes) | FECHADO | Os 3 reviews passam a agentes reais em `docs/orchestration/engenharia/templates/ship-gate.plan.yaml` (`revisor_codigo`, `security_audit`, `guia_tdd`), com `done_when` verificável; o `ship-parallel` fica como exemplo do motor (só comentário) |
