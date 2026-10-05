@@ -31,6 +31,9 @@ documentadas la e repetidas aqui para quem so ler este ficheiro):
 Le do ambiente:
     MCP_API_KEY  -- obrigatoria (sem default; falha explicitamente se em falta)
     MCP_URL      -- opcional, default "http://localhost:3000"
+    VERCEL_PROTECTION_BYPASS -- opcional; se definida, vai no cabecalho
+                 x-vercel-protection-bypass de todos os pedidos (Vercel
+                 "Protection Bypass for Automation"; ver _request_headers)
 
 Assume que o runner e inteiramente sincrono (confirmado por inspeccao de
 engine.py/cli.py/langgraph_engine.py em 2026-09-17 -- nenhum tem `async def`
@@ -96,6 +99,23 @@ def _api_key() -> str:
     return key
 
 
+# Vercel "Standard Protection" (plano Hobby; não se desliga): bloqueia os pedidos
+# ao MCP antes de chegarem à função. A "Protection Bypass for Automation" passa
+# com este cabeçalho. O segredo vem do ambiente e é opcional (sem ele, nada muda:
+# runs locais e servidores sem protecção). Nunca vai para o repo nem para mensagens
+# de erro. Ver docs/ops/L5-F0-REVALIDATION.md §6.2.
+VERCEL_BYPASS_ENV = "VERCEL_PROTECTION_BYPASS"
+VERCEL_BYPASS_HEADER = "x-vercel-protection-bypass"
+
+
+def _request_headers(api_key: str) -> dict[str, str]:
+    headers = {"Authorization": f"Bearer {api_key}"}
+    bypass = os.environ.get(VERCEL_BYPASS_ENV, "").strip()
+    if bypass:
+        headers[VERCEL_BYPASS_HEADER] = bypass
+    return headers
+
+
 def _mcp_url() -> str:
     base = os.environ.get("MCP_URL", MCP_URL_DEFAULT).strip() or MCP_URL_DEFAULT
     return base.rstrip("/") + MCP_PATH
@@ -140,7 +160,7 @@ class McpKnowledge:
         api_key = _api_key()
         url = _mcp_url()
 
-        headers = {"Authorization": f"Bearer {api_key}"}
+        headers = _request_headers(api_key)
 
         # A tool do lado MCP usa Zod .optional() (aceita undefined, NAO
         # aceita null explicito) para filters/top_k/require_citations.

@@ -309,3 +309,64 @@ def test_mcp_instalado_e_o_fixado_no_requirements():
     pin = re.search(r"^mcp==(\S+)$", REQUIREMENTS.read_text(encoding="utf-8"), re.M)
     assert pin, "requirements.txt deixou de fixar o mcp"
     assert mcp_knowledge._installed_mcp_version() == pin.group(1)
+
+
+# ---------------------------------------------------------------------------
+# Vercel "Standard Protection" (F0.7b, 2026-10-05): no plano Hobby não se desliga,
+# e bloqueia os pedidos ao MCP antes da função. A "Protection Bypass for
+# Automation" passa com o cabeçalho x-vercel-protection-bypass. O segredo vem da
+# env VERCEL_PROTECTION_BYPASS (opcional; nunca no repo).
+# ---------------------------------------------------------------------------
+
+VALOR_BYPASS_FICTICIO = "bypass-ficticio-de-teste"
+
+
+def _capture_headers(monkeypatch) -> dict:
+    seen: dict = {}
+
+    def fake_client(**kw):
+        seen.update(kw.get("headers") or {})
+        return _FakeHttpxClient()
+
+    session = _FakeSession(result=_FakeCallToolResult(texts=[_hits_payload([])]))
+    _patch_transport(monkeypatch, session=session)
+    monkeypatch.setattr(mcp_knowledge.httpx, "AsyncClient", fake_client)
+    return seen
+
+
+def test_sem_bypass_nao_envia_o_cabecalho(monkeypatch):
+    monkeypatch.delenv("VERCEL_PROTECTION_BYPASS", raising=False)
+    seen = _capture_headers(monkeypatch)
+    McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False)
+    assert "x-vercel-protection-bypass" not in {k.lower() for k in seen}
+    assert seen["Authorization"].startswith("Bearer ")
+
+
+@pytest.mark.parametrize("valor", ["", "   "])
+def test_bypass_vazio_e_ignorado(monkeypatch, valor):
+    monkeypatch.setenv("VERCEL_PROTECTION_BYPASS", valor)
+    seen = _capture_headers(monkeypatch)
+    McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False)
+    assert "x-vercel-protection-bypass" not in {k.lower() for k in seen}
+
+
+def test_com_bypass_envia_o_cabecalho_em_todos_os_pedidos(monkeypatch):
+    monkeypatch.setenv("VERCEL_PROTECTION_BYPASS", f"  {VALOR_BYPASS_FICTICIO}  ")
+    seen = _capture_headers(monkeypatch)
+    McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False)
+    # Os cabeçalhos ficam no httpx.AsyncClient que o streamable_http_client usa,
+    # por isso vão em todos os pedidos da sessão MCP (initialize, notificação, tools/call).
+    assert seen["x-vercel-protection-bypass"] == VALOR_BYPASS_FICTICIO
+    assert seen["Authorization"].startswith("Bearer ")
+
+
+def test_o_segredo_nao_aparece_nas_mensagens_de_erro(monkeypatch):
+    monkeypatch.setenv("VERCEL_PROTECTION_BYPASS", VALOR_BYPASS_FICTICIO)
+
+    def raise_timeout(**kw):
+        raise httpx.ReadTimeout("timeout")
+
+    monkeypatch.setattr(mcp_knowledge.httpx, "AsyncClient", raise_timeout)
+    with pytest.raises(McpKnowledgeError) as exc:
+        McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False)
+    assert VALOR_BYPASS_FICTICIO not in str(exc.value)
