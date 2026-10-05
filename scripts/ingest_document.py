@@ -217,6 +217,10 @@ def apply_memory_limit(limit: int | None) -> list[str]:
     return []
 
 
+# Alvo do processo filho por omissão (o adapter MarkItDown deste ficheiro).
+DEFAULT_TARGET = "markitdown_converter"
+
+
 def isolated_converter(
     path: Path,
     document_type: str,
@@ -231,7 +235,7 @@ def isolated_converter(
     resultado num ficheiro JSON (o stdout das bibliotecas não interfere). `target`
     (`ficheiro.py:função`) existe para os testes; por omissão é o `markitdown_converter`.
     """
-    target = target or f"{Path(__file__).resolve()}:markitdown_converter"
+    target = target or DEFAULT_TARGET
     with tempfile.TemporaryDirectory(prefix="ingest-") as tmp:
         out = Path(tmp) / "result.json"
         limit = "none" if memory_limit is None else str(memory_limit)
@@ -246,6 +250,9 @@ def isolated_converter(
             limit,
         ]
         try:
+            # Falso positivo (auditoria): lista sem shell; os elementos são o interpretador,
+            # este ficheiro e caminhos resolvidos por nós, nada vem de input externo.
+            # nosemgrep: dangerous-subprocess-use-audit
             proc = subprocess.run(cmd, capture_output=True, timeout=timeout_s, check=False)
         except subprocess.TimeoutExpired as exc:
             raise IngestError(
@@ -273,9 +280,11 @@ def isolated_converter(
 
 
 def _load_target(target: str) -> Callable[[Path, str], Any]:
+    """`DEFAULT_TARGET` é o adapter deste ficheiro; outro alvo (`ficheiro.py:função`) é dos
+    testes, que simulam abusos no filho. O pai só passa alvos que ele próprio escolheu."""
+    if target == DEFAULT_TARGET:
+        return markitdown_converter  # a mesma classe IngestError, sem reimportar o script
     file_name, _, func = target.rpartition(":")
-    if Path(file_name).resolve() == Path(__file__).resolve():
-        return globals()[func]  # o próprio script: a mesma classe IngestError
     spec = importlib.util.spec_from_file_location("ingest_child_target", file_name)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
