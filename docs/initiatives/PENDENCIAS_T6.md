@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-05 17:10 UTC
+Última atualização: 2026-10-05 18:05 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -11,8 +11,8 @@
 | ID   | Descrição                                      | Estado     | Artefactos / Links                  | Critério de saída cumprido? |
 |------|------------------------------------------------|------------|-------------------------------------|-----------------------------|
 | T6a  | (pré-existente)                                | ✅ Merged  | PR #105 (merge `99b2cee`)           | Sim                         |
-| T6b  | PDF funcional (fixture + teste + PR)           | ⏳         | Branch `feat/t6b-pdf-functional-fixture-and-test`; PR por abrir | Não                         |
-| T6c  | DOCX + XLSX                                    | 🔒         |                                     | Não                         |
+| T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
+| T6c  | DOCX + XLSX                                    | ⏳         |                                     | Não                         |
 | T6d  | Segurança de entrada                           | 🔒         |                                     | Não                         |
 | T6e  | Encaixe na pipeline T6                         | 🔒         |                                     | Não                         |
 | T6f  | Fecho F1 no PENDENCIAS                         | 🔒         |                                     | Não                         |
@@ -25,6 +25,7 @@
 
 ## Histórico de fases
 - 2026-10-05 · T6a · ✅ merged no #105 (`99b2cee`): esqueleto do `ingest_document` + adapter MarkItDown + 32 testes.
+- 2026-10-05 · T6b · ✅ PR #106 aberto, CI verde: fixture PDF + gerador reprodutível + testes + job `test-ingest`.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
@@ -41,3 +42,25 @@
 | "Parar no fim de cada fase e esperar instrução" | O maestro, na mesma mensagem: "tens autonomia para prosseguir com tudo" | Fases em sequência, cada uma só com o critério da anterior cumprido; PRs empilhados, sem merge |
 | "fixture em `tests/fixtures/pdf/`" | Os testes do repo vivem em `runner/tests/` | Caminho canónico: `runner/tests/fixtures/ingest/<formato>/` |
 | "commits em inglês" | Os commits anteriores do repo estão em português | Commits desta cadeia em inglês (Conventional Commits); documentação em português, como o resto do repo |
+
+## Mini-relatórios
+
+```
+FASE: T6b
+DATA: 2026-10-05
+ESTADO ANTERIOR → NOVO ESTADO: ⏳ → ✅ (merge pendente, do maestro)
+ARTEFACTOS:
+- runner/tests/fixtures/ingest/pdf/simple_synthetic.pdf (1748 bytes, 1 página) + generate_simple_synthetic.py
+- runner/requirements-fixtures.txt (fpdf2==2.8.9), runner/tests/optional_deps.py
+- runner/tests/test_ingest_fixtures.py (5 testes); test_ingest_document.py passa a exigir as deps no CI
+- .github/workflows/runner-tests.yml: job test-ingest + scripts/ingest_document.py no filtro paths
+- docs/initiatives/PENDENCIAS_T6.md (novo), PENDENCIAS.md (linha F1), PROGRESS-SESSAO.md
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/106
+- Branch: feat/t6b-pdf-functional-fixture-and-test
+- Commits: 4598d9b, e256934, c84684e, 069aeb5
+TESTES: pytest 602 passed, 10 skipped (sem extras); 37 passed com extras e INGEST_TEST_REQUIRED=1; CI 11/11 verde
+PENDENCIAS.md: atualizado (sim: PENDENCIAS_T6.md e a linha F1 do canónico)
+PRÓXIMO PASSO RECOMENDADO: T6c (DOCX + XLSX)
+BLOQUEIOS: nenhum para a plataforma; o PR upstream no microsoft/markitdown fica como decisão do maestro
+```
