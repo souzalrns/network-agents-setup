@@ -20,6 +20,7 @@ E verifica:
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -272,3 +273,39 @@ def test_mcp_url_uses_default_when_env_not_set(monkeypatch):
 def test_mcp_url_uses_env_when_set(monkeypatch):
     monkeypatch.setenv("MCP_URL", "https://agent-network-mcp-oddn.vercel.app/")
     assert mcp_knowledge._mcp_url() == "https://agent-network-mcp-oddn.vercel.app/api/mcp"
+
+
+# ---------------------------------------------------------------------------
+# Versão do pacote `mcp` (F0.7b, 2026-10-05): a linha 2.x mudou a API do cliente
+# (streamable_http_client devolve 2 valores, o http_client passa a ser httpx2 e o
+# CallToolResult usa `is_error`). Este cliente é da linha 1.x (requirements.txt).
+# ---------------------------------------------------------------------------
+
+REQUIREMENTS = Path(__file__).resolve().parents[1] / "requirements.txt"
+
+
+def test_mcp_2x_falha_cedo_com_mensagem_clara(monkeypatch):
+    monkeypatch.setattr(mcp_knowledge, "_installed_mcp_version", lambda: "2.3.0")
+    session = _FakeSession(result=_FakeCallToolResult(texts=[_hits_payload([])]))
+    _patch_transport(monkeypatch, session=session)
+    with pytest.raises(mcp_knowledge.McpKnowledgeError) as exc:
+        mcp_knowledge.McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False)
+    msg = str(exc.value)
+    assert "2.3.0" in msg and "pip install -r requirements.txt" in msg
+    assert session.last_call is None  # nada chega à rede
+
+
+def test_mcp_1x_passa_o_guarda(monkeypatch):
+    monkeypatch.setattr(mcp_knowledge, "_installed_mcp_version", lambda: "1.30.0")
+    session = _FakeSession(result=_FakeCallToolResult(texts=[_hits_payload([])]))
+    _patch_transport(monkeypatch, session=session)
+    assert mcp_knowledge.McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False) == []
+
+
+def test_mcp_instalado_e_o_fixado_no_requirements():
+    """Canário: o ambiente de testes tem de ter o `mcp` do requirements.txt."""
+    import re
+
+    pin = re.search(r"^mcp==(\S+)$", REQUIREMENTS.read_text(encoding="utf-8"), re.M)
+    assert pin, "requirements.txt deixou de fixar o mcp"
+    assert mcp_knowledge._installed_mcp_version() == pin.group(1)

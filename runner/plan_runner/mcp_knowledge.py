@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import json
 import os
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 import anyio
@@ -57,6 +58,32 @@ MCP_PATH = "/api/mcp"
 
 class McpKnowledgeError(RuntimeError):
     """Erro ao consultar o agent-network-mcp (rede, auth, timeout, resposta malformada)."""
+
+
+# Linha do pacote `mcp` para que este cliente foi escrito (runner/requirements.txt
+# fixa mcp==1.30.0). A 2.x (2026-07) mudou a API do cliente: o
+# streamable_http_client devolve 2 valores em vez de 3, o http_client passa a ser
+# um httpx2.AsyncClient e o CallToolResult usa `is_error` em vez de `isError`.
+# Sem este guarda, um ambiente com a 2.x rebenta com "not enough values to unpack"
+# (F0.7b, 2026-10-05). A migração para a 2.x é o W-010.
+SUPPORTED_MCP_MAJOR = 1
+
+
+def _installed_mcp_version() -> str:
+    try:
+        return version("mcp")
+    except PackageNotFoundError:
+        return "não instalado"
+
+
+def _check_mcp_version() -> None:
+    installed = _installed_mcp_version()
+    if installed.split(".", 1)[0] != str(SUPPORTED_MCP_MAJOR):
+        raise McpKnowledgeError(
+            f"Pacote mcp {installed} no ambiente; este cliente é da linha {SUPPORTED_MCP_MAJOR}.x "
+            "(runner/requirements.txt fixa mcp==1.30.0, e a 2.x mudou a API do cliente). "
+            "Num venv, a partir de runner/: pip install -r requirements.txt"
+        )
 
 
 def _api_key() -> str:
@@ -109,6 +136,7 @@ class McpKnowledge:
         filters: dict[str, Any] | None,
         require_citations: bool,
     ) -> list[dict[str, Any]]:
+        _check_mcp_version()
         api_key = _api_key()
         url = _mcp_url()
 

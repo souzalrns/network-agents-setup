@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/portfolio-recruiters` (só documentação).
-- **`main` de referência:** NAS `5736621` (merges até #99); MCP `880d492` (merge #18); MCP `4916872` (merges #15, #16 e #17).
-- **Itens em trabalho:** gate F0 (faltam o F0.6 e o F0.7b); H-01 (partes 1, 2 e 3, depois do gate).
+- **Branch actual:** `fix/F0-7b-mcp-versao` (empilhado sobre o #101).
+- **`main` de referência:** NAS `098034e` (merges até #100); MCP `880d492` (merge #18).
+- **Itens em trabalho:** gate M1 = F0 verde (faltam o F0.6 e o F0.7b, ambos do DEV); o F1 código está bloqueado até lá.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
@@ -21,6 +21,105 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F0.7b, 1.ª tentativa do DEV: `not enough values to unpack` (2026-10-05, ~13:30 UTC)
+- **Erro do DEV:** `ValueError: not enough values to unpack (expected 3, got 2)` em `runner/plan_runner/mcp_knowledge.py:138`, com Python 3.14 global.
+- **Causa:** o ambiente tinha o pacote `mcp` da linha **2.x**, e o `runner/requirements.txt` fixa `mcp==1.30.0`. Nada no repo puxa a 2.x.
+  - Na 1.30.0, o `streamable_http_client` devolve `(read_stream, write_stream, get_session_id)`.
+  - Na 2.x (2.0.0 a 2026-07-28; 2.3.0 a 2026-10-02), devolve só `(read_stream, write_stream)`.
+  - A 2.x mudou mais 2 coisas, e por isso aceitar 2 ou 3 valores não chegava:
+    - o `http_client` passa a ser `httpx2.AsyncClient`;
+    - o `CallToolResult` usa `is_error` em vez de `isError`.
+- **Reproduzido aqui:** o código da `main` com a `mcp` 2.3.0 dá o mesmo erro.
+  - Com a 1.30.0, o cliente chega à rede.
+  - O `mcp` 1.30.0 suporta Python 3.10 a 3.14 (classifiers do PyPI; há wheels `cp314` do `pydantic-core` para Windows).
+- **Correcção (PR do branch `fix/F0-7b-mcp-versao`):**
+  - guarda de versão em `mcp_knowledge.py`: com outra linha que não a 1.x, pára antes da rede, com uma mensagem que diz a versão e o comando a correr;
+  - 3 testes novos: o guarda rejeita a 2.x, deixa passar a 1.x, e um canário confirma que o `mcp` instalado é o do `requirements.txt` (os 3 falhavam sem a alteração);
+  - checklist do §6.2 com o venv (`pip install -r requirements.txt` e a confirmação `1.30.0`);
+  - novo **W-010**: migração para a 2.x, com um teste contra um servidor MCP real local.
+- **Testes:** `pytest` 569 passed (566 + 3); `ruff` limpo.
+- **Contagens:** 104 → 105 vivos (W-010).
+- **Próxima micro-tarefa:** o DEV repete o F0.7b no venv (checklist do §6.2).
+
+### T5: declaração do gate M1 (2026-10-05, ~12:55 UTC)
+
+`M1 INCOMPLETO — F1 bloqueado; faltam: F0.6 (evidência em docs/ops/L5-F0-REVALIDATION.md §6.1), F0.7b (evidência em §6.2), P-19 (limiar do F0.7b, PENDENCIAS §10)`
+
+| Critério do M1 | Estado | Evidência |
+|---|---|---|
+| F0.3 (t6 parada) | FEITO | PENDENCIAS §7; #95 |
+| F0.1 e R-002 | FEITO | PENDENCIAS §7; #97 |
+| F0.6 (conector MCP com a fonte citada) | **Falta** (DEV) | Molde em §6.1, campos NÃO VERIFICADO |
+| F0.7b (`l5_eval run` contra o MCP real) | **Falta** (DEV) | Molde em §6.2, campos NÃO VERIFICADO |
+| Limiar do F0.7b | **Falta** (maestro) | P-19 pendente |
+| R-005 | Documentado | BLOQUEADO (F3); a causa é a P-20, pendente |
+
+O T6 (F1 MarkItDown) **não arrancou**, como pede o gate.
+
+## Relatório sessão 2026-10-05 (campanha "gate M1")
+- **Repo, branch e commit de partida:** NAS `main` `098034e`; branch `docs/m1-moldes-f0`. MCP `main` `880d492` (não tocado).
+- **PRs abertos vistos:** 0 no NAS e 0 no MCP. O #100 entrou às 12:06 UTC; a corrida #183 do ingest deu `chunks=0 unchanged=39`.
+- **Micro-tarefas:**
+  - T0 (arranque);
+  - T1: o #100 já tinha entrado, por isso o S1 está feito sem trabalho;
+  - T2 e T3 (moldes do F0.6 e do F0.7b, comando verificado);
+  - T4 (S20 e R-005);
+  - T5 (M1 = NÃO).
+- **IDs do PENDENCIAS alterados:**
+  - F0.6 e F0.7b: evidência aponta para os moldes;
+  - S20: caminho e prazo proposto 2026-10-12;
+  - R-005: nota da P-20;
+  - novas P-19 e P-20 (§10). Contagens sem mudança: 104 vivos.
+- **M1:** NÃO. Faltam o F0.6, o F0.7b e a P-19.
+- **F1:** não iniciado (bloqueado pelo M1).
+- **Bloqueios do DEV:**
+  - correr o F0.6 e o F0.7b (checklist PowerShell na entrada T2/T3) e colar o output no §6;
+  - decidir a P-19 e a P-20;
+  - confirmar ou mudar o prazo do S20 (2026-10-12).
+- **Próxima micro-tarefa exacta:** quando o output do F0.6 e do F0.7b estiver no §6, repetir o T5. Com o M1 verde, segue o T6a (contrato + pin `markitdown>=0.1.4` + esqueleto, branch `feat/F1-markitdown-spike`).
+- **git status:** limpo depois do push deste branch.
+
+### T4: S20 e R-005 no PENDENCIAS (2026-10-05, ~12:45 UTC)
+- **S20** deixa de estar "ABERTO sem data nem caminho". Opções:
+  - **A:** o DEV corrige já por SSH. Caminho: `ANM:CONFIGURACAO_VM_BRIDGE_WORKER.md`, passo 4: pôr a `SUPABASE_SERVICE_ROLE_KEY` actual onde o `pm2` a lê, depois `pm2 restart bridge-worker --update-env` e `pm2 save`.
+  - **B (recomendada):** prazo até **2026-10-12**. Se nessa data não estiver corrigido, o DEV decide entre uma data nova e tirar a "execução remota" do README do MCP.
+  - **C:** ABERTO sem data. Rejeitada pelo maestro.
+  - Fica registado como **prazo proposto, a confirmar pelo DEV**. O estado continua ABERTO e NÃO VERIFICADO (não há SSH nesta sessão).
+- **R-005:** continua BLOQUEADO (F3), com os factos dos SELECTs (#97). A correcção da causa estava só no chat; passa a **P-20** no §10 (recomendada B: esperar pelo F3).
+- **P-19 (nova):** limiar do F0.7b para o gate. Recomendada A: `provenance_ok` = 1.0 e `source_hit@4` ≥ 0.8 (pelo menos 15 dos 18 casos).
+- **Contagens:** sem mudança (104 vivos). §10 com 20 decisões; pendentes P-11, P-16, P-17, P-19 e P-20.
+- **Próxima micro-tarefa:** T5 (declaração do M1).
+
+### T2 e T3: moldes de evidência do F0.6 e do F0.7b (2026-10-05, ~12:35 UTC)
+- **Feito:** `docs/ops/L5-F0-REVALIDATION.md` §6 (6.1 F0.6, 6.2 F0.7b). Todos os campos estão em NÃO VERIFICADO até o DEV colar o output.
+- **Achado (F0.6):** nenhum dos 33 agentes do MCP tem `agent_id` = `security`.
+  - Uma pergunta por `ask_agent_network` não chega ao pack de security.
+  - O teste tem de usar `retrieve_knowledge` com `kb` = `security` (`ANM:app/api/mcp/route.js`, parâmetros `kb`, `query`, `top_k`).
+  - Pergunta sugerida: o caso `sec-01` do golden set; resultado esperado: fonte `docs/knowledge/security-agents-stack.md`.
+- **Comando do F0.7b verificado** (`runner/plan_runner/l5_eval.py`):
+  - `l5_eval validate` → `18 casos; 0 erros`;
+  - `l5_eval run` sem chave → falha logo, sem medir;
+  - o `MCP_URL` é a base (`https://agent-network-mcp-oddn.vercel.app`), e o código acrescenta `/api/mcp` (`mcp_knowledge.py:73-74`).
+- **Checklist do DEV (PowerShell, em `runner\`, venv activo):**
+  1. `$env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"`
+  2. `$env:MCP_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'MCP_API_KEY' -AsSecureString)).Password` (a chave não fica no histórico)
+  3. `python -m plan_runner.l5_eval run --out "$env:TEMP\f0-7b-report.json"`
+  4. `Remove-Item Env:MCP_API_KEY`
+  5. Colar o `summary` e os casos `--` na §6.2; fazer a pergunta do F0.6 no Claude.ai e colar na §6.1.
+- **Achado (critério):** o F0.7b não tinha limiar para o gate. Abro a **P-19** (A/B/C) no PENDENCIAS §10. Não fecho nada sem ela.
+- **Próxima micro-tarefa:** T4 (S20 e R-005 no PENDENCIAS).
+
+### T0: arranque da campanha "gate M1" (2026-10-05, ~12:20 UTC)
+- **`main`:** NAS `098034e` (#100 merged a 2026-10-05 12:06 UTC); MCP `880d492`.
+- **PRs abertos:** 0 no NAS, 0 no MCP.
+- **Slots da fila:**
+  - S1 (#100): **feito**, merged;
+  - S2 (F0.6) e S3 (F0.7b): ABERTO, DEV;
+  - S4: R-005 BLOQUEADO (F3); S20 ABERTO, **sem data**;
+  - S5 (F1): EM CURSO só no ADR; o spike está bloqueado pelo M1.
+- **M1:** incompleto (F0.6 e F0.7b sem evidência no git).
+- **Próxima micro-tarefa:** T2 (molde de evidência do F0.6).
 
 ### Portfólio para recrutadores (2026-10-05)
 **Pedido do maestro:** confirmar e expandir o `docs/PORTFOLIO.md`, com um bloco "For recruiters / visitors" no README, só números verificáveis e sem duplicar o README.

@@ -3,6 +3,8 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **F0.7b, 1.ª tentativa (2026-10-05):** falhou por `mcp` 2.x no ambiente do DEV (o repo fixa 1.30.0); guarda de versão e checklist com venv (PR do branch `fix/F0-7b-mcp-versao`); novo W-010 (migração para a 2.x).
+> **Gate M1 (2026-10-05, `main` `098034e`):** moldes de evidência do F0.6 e do F0.7b (`L5-F0-REVALIDATION.md` §6); S20 com caminho e prazo proposto (2026-10-12); novas P-19 (limiar do F0.7b) e P-20 (causa do R-005). M1 incompleto; o F1 código continua bloqueado.
 > **Portfólio para recrutadores (2026-10-05, `main` `5736621`):** H-003, W-009, H-005 e H-006 → FECHADO (#99 e MCP #18 merged; corrida #182 com os pins novos); `docs/PORTFOLIO.md` expandido; bloco "For recruiters / visitors" no README.
 > **"Resolve o que for possível" (2026-10-05, `main` `4056fb5`):** R-004 e W-008 → FECHADO; H-003 (re-pin Node 24, NAS e MCP), W-009, H-005 e H-006 → EM CURSO (PR do branch `docs/resolver-possiveis` e PR MCP #18); S-004 só espera pelos alertas que o DEV vê; GIF do quickstart.
 > **Vitrine para recrutadores (2026-10-05):** `docs/PORTFOLIO.md` da plataforma (o de marketing passa a `docs/PORTFOLIO-MARKETING.md`); evidência no H-01; novo H-006 (README do MCP).
@@ -21,10 +23,10 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **104 itens vivos** (§4): ABERTO 58, EM CURSO 5, BLOQUEADO 41;
+> - **105 itens vivos** (§4): ABERTO 59, EM CURSO 5, BLOQUEADO 41;
 > - **104 linhas de histórico** (§7): 83 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
-> - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
+> - **20 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16, P-17, P-19 e P-20.
 
 ## 0. Como usar este documento
 
@@ -100,15 +102,15 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (104 itens vivos)
+## 4. Tabela única (105 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
 
 | ID | Título | Tipo | Estado | Dono | Sev | Bloqueio | Evidência | IDs antigos | Verif. |
 |---|---|---|---|---|---|---|---|---|---|
-| F0.6 | Passo 5 do J3: teste real no conector MCP (a resposta tem de citar a fonte) | FALTA-TESTE | ABERTO | DEV | Média | Conector MCP real (só o DEV); o F0.4 já fechou (#64) | RC:69-70; E §7 F0 | J3 passo 5 | VERIFICADO |
-| F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | FALTA-TESTE | ABERTO | DEV | Média | `MCP_URL`/`MCP_API_KEY` (só o DEV); o F0.4 já fechou (#64) | `python -m plan_runner.l5_eval run` (PR #63) | — | VERIFICADO |
+| F0.6 | Passo 5 do J3: teste real no conector MCP (a resposta tem de citar a fonte) | FALTA-TESTE | ABERTO | DEV | Média | Conector MCP real (só o DEV); o F0.4 já fechou (#64) | RC:69-70; E §7 F0; **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.1 (2026-10-05). Tem de usar a tool `retrieve_knowledge` com `kb` = `security`: nenhum dos 33 agentes do MCP tem `agent_id` = `security`, por isso o `ask_agent_network` não chega ao pack | J3 passo 5 | VERIFICADO |
+| F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | FALTA-TESTE | ABERTO | DEV | Média | `MCP_URL`/`MCP_API_KEY` (só o DEV); o F0.4 já fechou (#64); limiar do gate por decidir (§10 P-19) | `python -m plan_runner.l5_eval run` (PR #63); **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.2 (2026-10-05). Comando verificado: `l5_eval validate` → 18 casos, 0 erros; `l5_eval run` sem `MCP_API_KEY` falha logo, sem medir. `MCP_URL` = base de produção (`mcp_knowledge.py:73-74` acrescenta `/api/mcp`); **1.ª tentativa do DEV (2026-10-05) falhou:** `not enough values to unpack (expected 3, got 2)` em `mcp_knowledge.py:138`. Causa: `mcp` 2.x no ambiente (Python 3.14 global), e o `requirements.txt` fixa `mcp==1.30.0`. Reproduzido com `mcp==2.3.0`. Correcção no PR do branch `fix/F0-7b-mcp-versao`: guarda de versão com uma mensagem clara, teste-canário que compara o instalado com o fixado, e a checklist do §6.2 passa a criar o venv com o `requirements.txt` | — | VERIFICADO |
 | F0.12 | Passo 6 do J3: apagar a `knowledge_chunks_t6` (irreversível, com backup; opcional) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Backup + decisão (o F0.3 fechou: a t6 parou a 2026-09-29, com 110 linhas) | RC:72-75; E §7 F0 | J3 passo 6 | VERIFICADO |
 | F1 | Ingestão universal: ADR do contrato *Universal Ingestion & Research Primitives* (pode avançar já) + spike MarkItDown → T6 (só com o F0 verde; pin `>=0.1.4` e mitigações) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Alta | ADR aceite (#81; §10 P-13 = A). Spike: F0 verde | E §7 F1; AI:140-156; PR #81 (`docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md`) | ING-2 (= "E2" conector, O:20) | VERIFICADO |
 | F1b | Docling, só se o benchmark do F1 o justificar (`docling-core>=2.48.4`) | FALTA-DECIDIR | BLOQUEADO | CLAUDE | Baixa | Resultado do F1 | E §7 F1b; AI:189 | ING-3 | VERIFICADO |
@@ -118,9 +120,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | F5 | Validação E2E de uma capability com **run real** | FALTA-TESTE | BLOQUEADO | AMBOS | Alta | F4 | E §7 F5 | — | VERIFICADO |
 | F6 | UM domínio de prova, com o Domain Onboarding Cost medido; escolhido só depois do F5, com uso real | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | F5 + D-EP8 | E §7 F6 e §9.5 (D-EP8); P:320 (AU-35) | AU-35; B1 (ST:100, "2.º domínio"); R2 (O:164) | VERIFICADO |
 | R-001 | Investigar e documentar a tabela `knowledge_log` (existe no Supabase, 7 colunas, sem dono) | DOC-ERRADO | BLOQUEADO | AMBOS | Baixa | DEV corre as 5 queries só de leitura de `docs/ops/KNOWLEDGE-LOG.md` §3; depois A/B/C (§4 do doc) | #77 (`docs/ops/KNOWLEDGE-LOG.md`: 0 leitores/escritores nos 2 repos); A5 §5.2 (B12); O:22 (E9) | B12 (ST); E9 (O:22) | VERIFICADO |
-| R-005 | Reclassificar o `kb` das 201 linhas do MCP (`project` NULL), todas com `kb` = marketing por omissão; as que não são de marketing (ex.: as 8 da fonte ECC "security-reviewer + database-reviewer", que vão para security) ficam com o `kb` errado. O destino do `agent_id` da ECC fica a confirmar | BUG | BLOQUEADO | CLAUDE | Alta | F3 (provenance formal) | SELECTs do maestro (2026-10-05, 2.ª ronda): `SELECT kb, count(*) … WHERE project IS NULL GROUP BY kb` → marketing = 201, sem outro valor. **Causa confirmada:** `kb text DEFAULT 'marketing'` (`scripts/rag_schema.sql:51`), e o insert do MCP não define o `kb` (`ANM:lib/knowledge.js`, `ingestDocument`). Enquanto a causa não for corrigida, cada novo ingest do MCP grava `marketing`. 201 = 322 − 121: as linhas do MCP são as mesmas da revalidação de 2026-10-03 (L5F0 §0). Hoje o `match_knowledge` filtra só por `agent_id` (`scripts/rag_schema.sql:68`), por isso o `kb` errado ainda não muda a pesquisa; passa a mudar quando o retrieve filtrar por `kb` (F3). 1.ª ronda: a fonte ECC tem `agent_id` = revisor-codigo, `project` NULL e `kb` = marketing; `security-reviewer` não é um `agent_id` existente (o pack de security usa `security`, `scripts/ingest_delta.py:40`; o `docs/knowledge/imported-from-production/MANIFEST.md:9` mapeia a fonte para `revisor-codigo`). Severidade Alta por decisão do maestro (2026-10-05). Sucessor do R-003 | — | VERIFICADO |
+| R-005 | Reclassificar o `kb` das 201 linhas do MCP (`project` NULL), todas com `kb` = marketing por omissão; as que não são de marketing (ex.: as 8 da fonte ECC "security-reviewer + database-reviewer", que vão para security) ficam com o `kb` errado. O destino do `agent_id` da ECC fica a confirmar | BUG | BLOQUEADO | CLAUDE | Alta | F3 (provenance formal) | SELECTs do maestro (2026-10-05, 2.ª ronda): `SELECT kb, count(*) … WHERE project IS NULL GROUP BY kb` → marketing = 201, sem outro valor. **Causa confirmada:** `kb text DEFAULT 'marketing'` (`scripts/rag_schema.sql:51`), e o insert do MCP não define o `kb` (`ANM:lib/knowledge.js`, `ingestDocument`). Enquanto a causa não for corrigida, cada novo ingest do MCP grava `marketing`. 201 = 322 − 121: as linhas do MCP são as mesmas da revalidação de 2026-10-03 (L5F0 §0). Hoje o `match_knowledge` filtra só por `agent_id` (`scripts/rag_schema.sql:68`), por isso o `kb` errado ainda não muda a pesquisa; passa a mudar quando o retrieve filtrar por `kb` (F3). 1.ª ronda: a fonte ECC tem `agent_id` = revisor-codigo, `project` NULL e `kb` = marketing; `security-reviewer` não é um `agent_id` existente (o pack de security usa `security`, `scripts/ingest_delta.py:40`; o `docs/knowledge/imported-from-production/MANIFEST.md:9` mapeia a fonte para `revisor-codigo`). Severidade Alta por decisão do maestro (2026-10-05). Sucessor do R-003; correcção da causa (o insert do MCP passar a definir o `kb`) em A/B/C na §10 P-20 | — | VERIFICADO |
 | AU-44 | Reels/transcrições (yt-dlp + faster-whisper → `transcripts`) sem template nem ponte para o RAG | FALTA-LIGAR | ABERTO | AMBOS | Média | Candidato do F1 | P:329; E §9.2; `agent-network-mcp/.github/workflows/transcribe.yml` | ING-4 | VERIFICADO |
-| S20 | VM Oracle: o bridge-worker usa a chave antiga e falha com 401 | BUG | ABERTO | DEV | Alta | Acesso SSH (fora do âmbito do Claude) | P:347; O:32; E:794; ST:42 | J2 | NÃO VERIFICADO |
+| S20 | VM Oracle: o bridge-worker usa a chave antiga e falha com 401 | BUG | ABERTO | DEV | Alta | Acesso SSH (só o DEV). **Caminho:** `ANM:CONFIGURACAO_VM_BRIDGE_WORKER.md`, passos de recuperação, passo 4: pôr a `SUPABASE_SERVICE_ROLE_KEY` actual (rodada a 2026-09-19) onde o `pm2` a lê, e depois `pm2 restart bridge-worker --update-env` e `pm2 save`. **Prazo proposto: 2026-10-12** (opção B no PROGRESS de 2026-10-05; a confirmar pelo DEV). Se não for corrigido até lá, o DEV decide entre adiar com uma data nova e desligar a funcionalidade do README do MCP | P:347; O:32; E:794; ST:42 | J2 | NÃO VERIFICADO |
 | S27 | Oracle A1: reduzido para 2 OCPU/12 GB? (o S19 diz 24 GB) | FALTA-DECIDIR | ABERTO | DEV | Média | Consola Oracle | ST:46; E:795 | — | NÃO VERIFICADO |
 | S19 | Oracle Free Tier: decidir o âmbito de uso (desbloqueia Q-001/Q-002) | FALTA-DECIDIR | ABERTO | DEV | Média | S27 + acesso SSH | P:360; O:65; ST:41 | — | VERIFICADO |
 | S21 | Screenshots da migração GCP→Oracle podem conter a chave antiga | FALTA-DECIDIR | ABERTO | DEV | Baixa | Confirmação humana | O:34; A5 §5.2 | — | VERIFICADO |
@@ -145,6 +147,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-001 | `router eval` com o Gemini real: medir a escolha do agente | FALTA-TESTE | ABERTO | DEV | Média | `GEMINI_API_KEY` | O:163; E:784; P §10 (ressalvas) | R1 (Bloco B; colide com R1 do AUDIT-1) | VERIFICADO |
 | W-003 | Robustez das keywords do router (negação, pesos) | FALTA-CONSTRUIR | BLOQUEADO | CLAUDE | Baixa | W-001 (casos reais) | O:166 | R4 | VERIFICADO |
 | W-004 | Ledger central: as linhas do worker também no Supabase | FALTA-LIGAR | ABERTO | DEV | Média | Escrita em produção (DEV) | O:149 | B2 (Bloco B) | VERIFICADO |
+| W-010 | Migrar o cliente MCP do runner (`runner/plan_runner/mcp_knowledge.py`) para a linha 2.x do pacote `mcp`, que mudou a API: o `streamable_http_client` devolve 2 valores, o `http_client` passa a ser `httpx2.AsyncClient` e o `CallToolResult` usa `is_error` | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — | Achado do F0.7b (2026-10-05): `mcp` 2.0.0 saiu a 2026-07-28 e a 2.3.0 a 2026-10-02 (PyPI). Inspeccionado em `mcp==2.3.0`: `mcp/client/streamable_http.py` (`yield read_stream, write_stream`; `http_client: httpx2.AsyncClient`) e `mcp.types.CallToolResult` (`is_error`). Até lá, `runner/requirements.txt` fixa `mcp==1.30.0` e o cliente recusa a 2.x com uma mensagem clara (PR do branch `fix/F0-7b-mcp-versao`). A migração precisa de um teste com um servidor MCP real local, porque os testes actuais usam falsos | — | VERIFICADO |
 | AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
 | AU-22b | Reescrever numa das 2 formas verificáveis a condição de `done_when` em linguagem livre do `paid-pack.plan.yaml` ("no ad_account_mutation without approve"); o evento `done_when_unverifiable` é o gatilho para encontrar outras | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | F3 (decisão do maestro, 2026-10-04) | `docs/orchestration/marketing/templates/paid-pack.plan.yaml`; `runner/plan_runner/done_when.py` (evento `done_when_unverifiable` com `item: AU-22b`); PR #90 | — | VERIFICADO |
@@ -294,12 +297,13 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 9 | F1, F1b, F2, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
+| CLAUDE | 10 | F1, F1b, F2, W-010, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
 | DEV | 66 | F0.6, F0.7b, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: o PR `docs/portfolio-recruiters` (só documentação); os #88 a #99 e o MCP #18 já entraram (2026-10-05, `main` `5736621`);
+- merges: o PR `docs/m1-moldes-f0` (só documentação); os #88 a #100 e o MCP #18 já entraram (2026-10-05, `main` `098034e`);
+- gate M1: correr o F0.6 e o F0.7b e colar o output em `docs/ops/L5-F0-REVALIDATION.md` §6; decidir a P-19 (limiar) e a P-20 (causa do R-005); S20 até 2026-10-12 (ou outra data);
 - vitrine no GitHub (só na UI): Topics nos 2 repos, Description e Website do `agent-network-mcp` (o Website certo é `https://agent-network-mcp-oddn.vercel.app`), bio e repos fixados no perfil;
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
@@ -320,9 +324,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 41 | F0.6, F0.7b, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004 |
-| Baixa | 46 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004 |
+| Baixa | 47 | F0.12, F1b, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004 |
 
-**Por estado:** ABERTO 58 · EM CURSO 5 · BLOQUEADO 41.
+**Por estado:** ABERTO 59 · EM CURSO 5 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (104 linhas: 83 FECHADO, 21 OBSOLETO)
@@ -499,7 +503,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 
 ## 10. Decisões (A/B/C, com recomendada)
 
-**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03) e P-18 = C (2026-10-04).** **Pendentes:** P-11, P-16 e P-17. Nenhuma decisão pendente foi assumida.
+**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03) e P-18 = C (2026-10-04).** **Pendentes:** P-11, P-16, P-17, P-19 (limiar do F0.7b) e P-20 (causa do R-005). Nenhuma decisão pendente foi assumida.
 
 
 | # | Decisão | A | B | C | Recomendada |
@@ -522,6 +526,8 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-16 | S-001: valores dos tectos de input do MCP | Os do PR MCP #14 (`text` 200k, `request` 20k, …) | Mais apertados | Configuráveis por env | **A**: não partem nenhum uso real conhecido |
 | P-17 | H-001: as listas de pendentes do `STATUS.md` | Marcadas HISTÓRICO (**aplicada**, #70) | Movê-las para `docs/archive/` no H-01 | Apagá-las | **A** agora e **B** no H-01; C corta conteúdo |
 | P-18 | E-003: `ship-parallel.plan.yaml` usa `research`/`critic`, que resolvem sempre para agentes de marketing | Re-apontar os 3 reviews para agentes reais (`revisor_codigo` e `guia_tdd` em `engenharia`; `security_audit` em `meta`), com `vertical:`, e mover o ficheiro para `docs/orchestration/engenharia/examples/` (o guarda do AU-32, `test_skills.py:75`, passa a cobri-lo); ajustar `conftest.py` e `test_real_plans.py` | Manter o ficheiro como fixture do motor (wave paralela) e escrever no topo que não é um plano de domínio | Re-apontar as actions sem mover o ficheiro | **Decidida: C** (maestro, 2026-10-04): o ficheiro é um exemplo do motor (verificação da condição acima), por isso fica onde está com uma nota no topo, e acrescenta-se um plano de engenharia real à parte; C acrescenta sem cortar. Aplicada no PR #90 |
+| P-19 | F0.7b: limiar mínimo do golden set para declarar o gate M1 (F0 verde) | **Mínimo de proveniência e de fonte:** `provenance_ok` = 1.0 e `source_hit@4` ≥ 0.8 (pelo menos 15 dos 18 casos). O `chunk_hit` e o MRR ficam registados como linha de base | Sem limiar: basta medir e registar (um run com 0 hits passaria o gate) | Limiar completo: o anterior, mais `chunk_hit@4` ≥ 0.7 e `mrr_chunk` ≥ 0.5 | **A** (proposta, 2026-10-05): impede um gate verde com o retrieve partido, sem inventar alvos de qualidade antes da 1.ª medição. Os limiares de qualidade ficam para o F3, com a linha de base na mão. **Pendente** |
+| P-20 | R-005: a causa do `kb` errado (o insert do MCP não define o `kb`, e a coluna tem `DEFAULT 'marketing'`) | Corrigir já no MCP: o `ingestDocument` passa a gravar o `kb` a partir do `agent_id`, com teste. As 201 linhas antigas ficam para o F3 | Esperar pelo F3 e fazer a causa e a reclassificação juntas | Versionar só a mudança do `DEFAULT` da coluna (SQL, sem executar) | **B** (proposta, 2026-10-05): o MCP não ingeriu nada desde 2026-10-03 (201 = 322 − 121), por isso o problema não cresce. Um PR no MCP faz redeploy na Vercel e mexe numa tool do connector. **Pendente** |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)

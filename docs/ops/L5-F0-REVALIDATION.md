@@ -6,6 +6,11 @@
 > - **F0.4:** opção A (P1) aprovada pelo maestro; **PR aberto, sem merge** (§5). O merge escreve em produção.
 > - F0.7b (medição real) só depois do F0.4.
 >
+> **Actualização (2026-10-05):**
+> - F0.1, F0.2, F0.3 e F0.4 fechados (PENDENCIAS §7).
+> - Para o **gate M1 (F0 verde)** faltam o **F0.6** e o **F0.7b**, os 2 com credenciais que só o DEV tem.
+> - Os moldes de evidência e os comandos estão na **§6**.
+>
 > Base: main `e7a29ae` (pós-#62). Plano: [`docs/architecture/EXECUTION-PLAN.md`](../architecture/EXECUTION-PLAN.md) §7.
 
 ## 0. F0.1–F0.3: resultados do maestro (SELECTs, 2026-10-03)
@@ -161,3 +166,86 @@ O MANIFEST sozinho não chega (§2.1).
 **Alternativas:**
 - **B:** só a entrada no MANIFEST + `python scripts/ingest_apply.py --only docs/knowledge/security-agents-stack.md` corrido uma vez pelo DEV. Ingere o pack já, mas o workflow continua a não o actualizar e o problema da §2.1 fica.
 - **C:** pôr o pack no **início** do MANIFEST, sem mais nada. Ingere-o em cada corrida, mas empurra mais 2 ficheiros para a zona saltada e mantém o desperdício de quota.
+
+## 6. Gate M1: evidência do F0.6 e do F0.7b (moldes, 2026-10-05)
+
+O gate M1 (F0 verde) autoriza o código do F1 (spike MarkItDown → T6). Fecha quando as 2 secções abaixo tiverem **evidência real colada neste ficheiro**, num PR. Uma conversa não conta.
+
+**Segurança:**
+- Nunca colar a `MCP_API_KEY`, o URL com credenciais nem tokens.
+- Os excertos de resposta vêm do pack de security, que é público no repo.
+
+### 6.1 F0.6: pergunta real no conector MCP, com a fonte citada
+
+**O que prova:** que o caminho completo Claude.ai → conector MCP (`/api/mcp`, com `Bearer`) → `retrieve_knowledge` → `match_knowledge` → `knowledge_chunks` devolve um excerto **com fonte**.
+
+**Atenção:** nenhum dos 33 agentes do MCP tem `agent_id` = `security`. Uma pergunta feita por `ask_agent_network` **não** chega ao pack de security, porque cada agente procura no seu `agent_id` e no `global`. Por isso o teste usa a tool `retrieve_knowledge` com `kb: "security"`.
+
+**Passos (DEV, no Claude.ai com o conector `agent-network-mcp` ligado):**
+1. Pedir ao Claude.ai, por exemplo: *"Usa a tool `retrieve_knowledge` com `kb` = `security`, `query` = `Os agentes de segurança podem fazer ataques activos ou alterar a produção?` e `top_k` = 4. Mostra os hits com a `citation.source`."*
+2. Copiar para a tabela abaixo a pergunta, o excerto (máximo ~15 linhas) e a fonte citada.
+3. **Resultado esperado:** pelo menos 1 hit com `citation.source` = `docs/knowledge/security-agents-stack.md`, e um excerto com "Nunca ataque activo" (caso `sec-01` do golden set).
+
+| Campo | Valor |
+|---|---|
+| Data (UTC) | NÃO VERIFICADO |
+| Ambiente | NÃO VERIFICADO (produção `agent-network-mcp-oddn.vercel.app` ou preview; sem credenciais) |
+| Tool e parâmetros | NÃO VERIFICADO |
+| Pergunta | NÃO VERIFICADO |
+| Excerto da resposta | NÃO VERIFICADO |
+| **Fonte citada** (obrigatória para FECHADO) | NÃO VERIFICADO |
+| Veredicto | NÃO VERIFICADO |
+
+### 6.2 F0.7b: golden set contra o MCP real
+
+**Comando canónico:** `python -m plan_runner.l5_eval run` (`runner/plan_runner/l5_eval.py`).
+- O golden set é o `config/l5-golden-security.yaml`: 18 casos, `kb: security`, `k: 4`, fonte `docs/knowledge/security-agents-stack.md`.
+- Verificado em 2026-10-05, sem credenciais:
+  - `l5_eval validate` (offline) → `18 casos; 0 erros`;
+  - `l5_eval run` sem `MCP_API_KEY` → falha logo (`McpKnowledgeError`), sem medir nada.
+- **Alternativa** (não usar para o gate): o teste offline `runner/tests/test_l5_eval.py` prova as métricas com um backend falso. Não mede o MCP real.
+
+**Passos (DEV, PowerShell, a partir de `network-agents-setup\runner`):**
+
+O cliente MCP é da linha 1.x do pacote `mcp` (o `requirements.txt` fixa `mcp==1.30.0`). Um Python global com a 2.x falha (1.ª tentativa, 2026-10-05: `not enough values to unpack (expected 3, got 2)`), por isso o comando corre num venv com o `requirements.txt`. Desde o PR do branch `fix/F0-7b-mcp-versao`, o cliente pára logo com uma mensagem clara se a versão não for 1.x.
+
+```powershell
+py -3.14 -m venv .venv          # ou -3.12; o mcp 1.30.0 suporta 3.10 a 3.14
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -c "import importlib.metadata as m; print(m.version('mcp'))"   # tem de dar 1.30.0
+```
+
+Depois, no mesmo terminal:
+
+```powershell
+$env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"   # base; o código acrescenta /api/mcp
+$env:MCP_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'MCP_API_KEY' -AsSecureString)).Password
+python -m plan_runner.l5_eval run --out "$env:TEMP\f0-7b-report.json"
+Remove-Item Env:MCP_API_KEY
+```
+
+Em bash: `MCP_URL=https://agent-network-mcp-oddn.vercel.app MCP_API_KEY=… python -m plan_runner.l5_eval run --out /tmp/f0-7b-report.json`, com a chave lida sem ficar no histórico.
+
+**O que colar abaixo:**
+- o bloco `summary` que o comando imprime em JSON;
+- a lista de casos sem `chunk_rank` (linhas que começam por `--`).
+
+O relatório completo (`--out`) fica fora do repo.
+
+| Campo | Valor |
+|---|---|
+| Data (UTC) e commit do NAS | NÃO VERIFICADO |
+| `cases` / `k` | NÃO VERIFICADO (esperado 18 / 4) |
+| `chunk_hit@1` · `chunk_hit@3` · `chunk_hit@4` | NÃO VERIFICADO |
+| `source_hit@4` | NÃO VERIFICADO |
+| `mrr_chunk` | NÃO VERIFICADO |
+| `no_hits` | NÃO VERIFICADO |
+| `provenance_ok` | NÃO VERIFICADO |
+| Casos falhados (`--`) | NÃO VERIFICADO |
+| Veredicto | NÃO VERIFICADO |
+
+**Critério de fecho:** métricas registadas aqui, num PR. O limiar mínimo para o M1 é uma decisão do maestro (**P-19**, PENDENCIAS §10). Até lá:
+- a medição fica registada como linha de base;
+- o M1 só se declara verde se a P-19 estiver decidida e cumprida.
+
