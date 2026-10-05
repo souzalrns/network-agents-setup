@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/portfolio-recrutadores` (só documentação; empilhado sobre o #97).
-- **`main` de referência:** NAS `9531ec3` (merges até #96); MCP `4916872` (merges #15, #16 e #17).
+- **Branch actual:** `docs/resolver-possiveis` (NAS) e `claude/reels-analysis-tools-access-hwudk9` (MCP, PR #18).
+- **`main` de referência:** NAS `4056fb5` (merges até #98); MCP `4916872` (merges #15, #16 e #17).
 - **Itens em trabalho:** gate F0 (faltam o F0.6 e o F0.7b); H-01 (partes 1, 2 e 3, depois do gate).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
@@ -21,6 +21,37 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### "Resolve o que for possível" (maestro, 2026-10-05)
+**Feito (2 PRs):**
+- **H-003, re-pin das Actions para Node 24.**
+  - Passou a ser possível: o `git ls-remote` lê as tags dos repos `actions/*`, que são públicos.
+  - Regra: em cada Action, a última versão da 1.ª linha principal com `using: node24`, lida no `action.yml` da tag, e não assumida.
+  - Armadilhas evitadas:
+    - `upload-artifact` v3.2.2 (seria downgrade, e o serviço v3 foi desligado) e v5 (ainda Node 20). Fica a v6.0.0.
+    - `setup-node` v5 activa a cache pelo `packageManager`: com o `pnpm` instalado antes, funciona.
+  - NAS: 23 pins. MCP: `checkout` e `cache` pinados por SHA (PR MCP #18).
+  - O `continue-on-error` do Codecov fica como rede: a v5 é composite.
+- **W-009:** o exemplo de budget do `ORCHESTRATOR.md` fica só com o `max_steps`, e uma nota explica o `max_retrieve_calls`.
+- **W-008 → FECHADO, falso positivo meu.** O `piloto-netos` é do formato do plan-execute e valida contra o seu schema (0 erros; `test_plan_schema_json.py`).
+- **R-004 → FECHADO.** O MCP #15 tinha entrado a 2026-10-03. A linha estava desactualizada, como o C-2.
+- **S-004:** o MCP #17 entrou. Só faltam os alertas da aba Security, e a API do Dependabot dá 403 a esta sessão (DEV).
+- **H-005 e H-006 (PR MCP #18):**
+  - README do MCP sem links mortos nem TODO, com 33 agentes, o repo irmão e uma nota honesta sobre o S20;
+  - `LICENSE` MIT;
+  - `diagnostico-vm.txt` → `docs/ops/`;
+  - `docs/STATUS.md` corrigido.
+  - Domínio de produção confirmado na Vercel: `agent-network-mcp-oddn.vercel.app`. O Website no About do repo está errado (UI).
+- **GIF do quickstart:** `docs/assets/quickstart-demo.gif`, 59 KB, gerado a partir da saída real de um run stub (`run_66a9cbadca`; capturada para ficheiros, não escrita à mão). Está no README e no PORTFOLIO. O `pilots/demo` foi apagado a seguir.
+
+**Não é possível nesta sessão:**
+- Topics, Description e Website do About, e bio e pins do perfil (o proxy dá 403);
+- alertas do Dependabot (403);
+- os itens do gate F0 (F0.6, F0.7b);
+- S20 (SSH);
+- os itens bloqueados por decisão (F1, F1b, F2, F4, AU-22b, H-002, EX-B7, R-005).
+
+**Contagens:** 110 → **108** vivos (ABERTO 58, EM CURSO 9, BLOQUEADO 41); histórico 98 → 100.
 
 ### Vitrine para recrutadores (2026-10-05)
 O maestro colou um plano de textos para recrutadores: perfil, About, `PORTFOLIO.md`, bloco no README e LinkedIn. Antes de escrever, confrontei-o com o repo.

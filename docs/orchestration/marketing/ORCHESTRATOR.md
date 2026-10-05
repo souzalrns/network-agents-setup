@@ -110,10 +110,9 @@ Meta: `using_agent_skills` — so descoberta.
 ```yaml
 budget:
   max_steps: 12
-  max_retrieve_calls: 20
 ```
 
-O `max_replans` saiu (P-10 = A, AU-22): o runner não faz replanning até ao F3.
+O `max_replans` saiu (P-10 = A, AU-22): o runner não faz replanning até ao F3. O `max_retrieve_calls: 20` era um alvo de desenho que nunca chegou ao runner. Não está no schema (W-009), e o limite de retrieves fica por definir no F3. Os tectos que o runner aplica são `max_steps`, `max_tokens` e `max_cost_usd` ([BUDGET.md](../../ops/BUDGET.md)).
 
 ---
 

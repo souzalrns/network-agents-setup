@@ -102,7 +102,9 @@ Tudo o que está abaixo se confirma no repositório e no histórico do GitHub Ac
 
 ## Quickstart
 
-Sem chave de API: o modo `stub` não chama nenhum modelo.
+![Quickstart: o run pára no gate humano, é aprovado e termina com os artefactos e o registo de eventos](./assets/quickstart-demo.gif)
+
+*Saída real dos comandos abaixo.* Sem chave de API: o modo `stub` não chama nenhum modelo.
 
 ```bash
 git clone https://github.com/souzalrns/network-agents-setup
