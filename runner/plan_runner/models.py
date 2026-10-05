@@ -86,13 +86,14 @@ class Plan:
 # AU-22: campos que os planos declaram mas que o runner NAO aplica (AUDIT-2 Y7-Y9).
 # O motor regista-os no evento `plan_fields_ignored`, para o plano nao prometer
 # garantias que nao existem. O L5 entra pelo bloco `knowledge:` do passo (S9),
-# nao pelo `knowledge_refs` (decisao A do EXECUTION-PLAN, AU-22).
-IGNORED_PLAN_FIELDS = ("knowledge_refs", "done_when", "budget.max_replans", "steps[].on_fail")
+# nao pelo `knowledge_refs` (decisao A do EXECUTION-PLAN, AU-22). O `done_when`
+# saiu desta lista: e verificado no fim do run (done_when.py; P-10 = A).
+IGNORED_PLAN_FIELDS = ("knowledge_refs", "budget.max_replans", "steps[].on_fail")
 
 
 def ignored_plan_fields(data: dict[str, Any]) -> list[str]:
     """Campos de IGNORED_PLAN_FIELDS que o plano (YAML ja lido) declara."""
-    found = [k for k in ("knowledge_refs", "done_when") if data.get(k)]
+    found = [k for k in ("knowledge_refs",) if data.get(k)]
     if "max_replans" in (data.get("budget") or {}):
         found.append("budget.max_replans")
     if any(isinstance(s, dict) and "on_fail" in s for s in data.get("steps") or []):

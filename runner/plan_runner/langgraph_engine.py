@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-from . import hitl
+from . import done_when, hitl
 from .engine import (
     _check_max_cost,
     _check_max_tokens,
@@ -301,9 +301,9 @@ def run_plan_langgraph(
             status["state"] = "paused_human_gate"
             status["paused_at_step"] = pending_hitl[0]
             status["current_step"] = pending_hitl[0]
-        else:
+        elif done_when.check(out, plan.done_when, log, run_id, status):
             status["state"] = "done"
-    else:
+    elif done_when.check(out, plan.done_when, log, run_id, status):
         status["state"] = "done"
         status["current_step"] = None
         log.append("plan_done", run_id, {"completed": completed, "engine": "langgraph"})
@@ -406,6 +406,9 @@ def _run_waves_fallback(
             status["completed"] = sorted(completed)
             save_status(out, status)
 
+    if not done_when.check(out, plan.done_when, log, run_id, status):
+        save_status(out, status)
+        return status
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None
@@ -766,18 +769,18 @@ def resume_plan_langgraph(
         status["detail"] = result["error"]
 
     elif all(s.id in completed for s in plan.steps):
-        status["state"] = "done"
-        status["current_step"] = None
         status.pop("paused_at_step", None)
-
-        log.append(
-            "plan_done",
-            run_id,
-            {
-                "completed": completed,
-                "engine": "langgraph",
-            },
-        )
+        if done_when.check(out_dir, plan.done_when, log, run_id, status):
+            status["state"] = "done"
+            status["current_step"] = None
+            log.append(
+                "plan_done",
+                run_id,
+                {
+                    "completed": completed,
+                    "engine": "langgraph",
+                },
+            )
 
     else:
         pending = [
@@ -790,7 +793,7 @@ def resume_plan_langgraph(
             status["state"] = "paused_human_gate"
             status["paused_at_step"] = pending[0]
             status["current_step"] = pending[0]
-        else:
+        elif done_when.check(out_dir, plan.done_when, log, run_id, status):
             status["state"] = "done"
             status["current_step"] = None
 

@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import yaml
 
-from . import hitl, working_memory
+from . import done_when, hitl, working_memory
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
@@ -303,6 +303,9 @@ def run_plan(
         status["completed"] = sorted(completed)
         save_status(out, status)
 
+    if not done_when.check(out, plan.done_when, log, run_id, status):
+        save_status(out, status)
+        return status
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None
@@ -456,6 +459,10 @@ def resume_run(
         status["completed"] = sorted(completed)
         save_status(out_dir, status)
 
+    if not done_when.check(out_dir, plan.done_when, log, run_id, status):
+        status.pop("paused_at_step", None)
+        save_status(out_dir, status)
+        return status
     log.append("plan_done", run_id, {"completed": sorted(completed)})
     status["state"] = "done"
     status["current_step"] = None
