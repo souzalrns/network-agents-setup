@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f0-gate-selects` (só documentação).
+- **Branch actual:** `docs/portfolio-recrutadores` (só documentação; empilhado sobre o #97).
 - **`main` de referência:** NAS `9531ec3` (merges até #96); MCP `4916872` (merges #15, #16 e #17).
 - **Itens em trabalho:** gate F0 (faltam o F0.6 e o F0.7b); H-01 (partes 1, 2 e 3, depois do gate).
 
@@ -21,6 +21,39 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Vitrine para recrutadores (2026-10-05)
+O maestro colou um plano de textos para recrutadores: perfil, About, `PORTFOLIO.md`, bloco no README e LinkedIn. Antes de escrever, confrontei-o com o repo.
+
+**Ajustes ao plano:**
+- **O `docs/PORTFOLIO.md` já existia:** era o portfólio de marketing, de antes do `plan_runner`. Não o apaguei: passou a `docs/PORTFOLIO-MARKETING.md` (`git mv`), com uma nota no topo e os 4 links actualizados (README, ONE-PAGER, CONCLUSAO).
+- **O `docs/PORTFOLIO.md` novo é da plataforma:** abre com um resumo em inglês de 60 segundos (o recrutador que não lê português fica-se pelo topo) e segue em português.
+- **Só números verificados:**
+  - 590+ testes (566 + 34 lentos);
+  - 75+ PRs com merge (76 no NAS e 11 no MCP);
+  - 10 136 tokens no SEO e 11 760 numa ronda de conselho;
+  - −22% (#45, #55) e `chunks=0 unchanged=39` (#64);
+  - 38 agentes, 72 skills e 14 planos.
+- **Corrigido do plano colado:**
+  - "local-first": o motor corre local, mas o L4, o L5 e o MCP dependem do Supabase, do Gemini e da Vercel;
+  - "security pipeline" como provado: está testado em stub, e o run real é o F5;
+  - "Supabase ledger": é do MCP; o do runner é local (W-004).
+- **README:** linha "Start here" (Portfolio, Quickstart, MCP, Open work); PRs 70+ → 75+.
+
+**Encontrado e registado (H-006, novo):** defeitos no README do `agent-network-mcp`, que é público:
+- links mortos no rodapé;
+- uma nota de TODO à vista e um `docs/DEPLOY.md` que não existe;
+- "33" e "32 agentes" no mesmo texto;
+- 2 URLs de produção diferentes;
+- "execução remota" anunciada com o S20 aberto;
+- sem `LICENSE`;
+- `diagnostico-vm.txt` na raiz (sem segredos).
+
+O merge no MCP faz redeploy na Vercel, por isso fica para decisão do maestro.
+
+**Só na UI do GitHub (maestro):** Topics nos 2 repos (estão vazios); Description do MCP (está em português e desactualizada); bio; repos fixados. A Description do NAS já está feita.
+
+**Contagens:** 109 → 110 vivos (ABERTO 63, EM CURSO 6, BLOQUEADO 41).
 
 ### 2 SELECTs do F0 (2.ª ronda, maestro, 2026-10-05)
 **Resultados (colados pelo maestro):**

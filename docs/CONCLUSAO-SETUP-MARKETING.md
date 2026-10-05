@@ -6,7 +6,7 @@ Documentação de sistema da agência multi-agente (horizontais + verticais + or
 
 | Entregável | Path |
 |------------|------|
-| Portfolio | [PORTFOLIO.md](./PORTFOLIO.md) |
+| Portfolio | [PORTFOLIO-MARKETING.md](./PORTFOLIO-MARKETING.md) (plataforma: [PORTFOLIO.md](./PORTFOLIO.md)) |
 | One-pager | [ONE-PAGER-MARKETING-AGENTS.md](./ONE-PAGER-MARKETING-AGENTS.md) |
 | System prompts | [marketing-agency-agents.md](./marketing-agency-agents.md) |
 | Playbook Item 13 | [item-13-ai-findability.md](./item-13-ai-findability.md) |
