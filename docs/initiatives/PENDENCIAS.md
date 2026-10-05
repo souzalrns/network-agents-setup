@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **F0.7b, 1.ª tentativa (2026-10-05):** falhou por `mcp` 2.x no ambiente do DEV (o repo fixa 1.30.0); guarda de versão e checklist com venv (PR do branch `fix/F0-7b-mcp-versao`); novo W-010 (migração para a 2.x).
 > **Gate M1 (2026-10-05, `main` `098034e`):** moldes de evidência do F0.6 e do F0.7b (`L5-F0-REVALIDATION.md` §6); S20 com caminho e prazo proposto (2026-10-12); novas P-19 (limiar do F0.7b) e P-20 (causa do R-005). M1 incompleto; o F1 código continua bloqueado.
 > **Portfólio para recrutadores (2026-10-05, `main` `5736621`):** H-003, W-009, H-005 e H-006 → FECHADO (#99 e MCP #18 merged; corrida #182 com os pins novos); `docs/PORTFOLIO.md` expandido; bloco "For recruiters / visitors" no README.
 > **"Resolve o que for possível" (2026-10-05, `main` `4056fb5`):** R-004 e W-008 → FECHADO; H-003 (re-pin Node 24, NAS e MCP), W-009, H-005 e H-006 → EM CURSO (PR do branch `docs/resolver-possiveis` e PR MCP #18); S-004 só espera pelos alertas que o DEV vê; GIF do quickstart.
@@ -22,7 +23,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **104 itens vivos** (§4): ABERTO 58, EM CURSO 5, BLOQUEADO 41;
+> - **105 itens vivos** (§4): ABERTO 59, EM CURSO 5, BLOQUEADO 41;
 > - **104 linhas de histórico** (§7): 83 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **20 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16, P-17, P-19 e P-20.
@@ -101,7 +102,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (104 itens vivos)
+## 4. Tabela única (105 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -109,7 +110,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | ID | Título | Tipo | Estado | Dono | Sev | Bloqueio | Evidência | IDs antigos | Verif. |
 |---|---|---|---|---|---|---|---|---|---|
 | F0.6 | Passo 5 do J3: teste real no conector MCP (a resposta tem de citar a fonte) | FALTA-TESTE | ABERTO | DEV | Média | Conector MCP real (só o DEV); o F0.4 já fechou (#64) | RC:69-70; E §7 F0; **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.1 (2026-10-05). Tem de usar a tool `retrieve_knowledge` com `kb` = `security`: nenhum dos 33 agentes do MCP tem `agent_id` = `security`, por isso o `ask_agent_network` não chega ao pack | J3 passo 5 | VERIFICADO |
-| F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | FALTA-TESTE | ABERTO | DEV | Média | `MCP_URL`/`MCP_API_KEY` (só o DEV); o F0.4 já fechou (#64); limiar do gate por decidir (§10 P-19) | `python -m plan_runner.l5_eval run` (PR #63); **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.2 (2026-10-05). Comando verificado: `l5_eval validate` → 18 casos, 0 erros; `l5_eval run` sem `MCP_API_KEY` falha logo, sem medir. `MCP_URL` = base de produção (`mcp_knowledge.py:73-74` acrescenta `/api/mcp`) | — | VERIFICADO |
+| F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | FALTA-TESTE | ABERTO | DEV | Média | `MCP_URL`/`MCP_API_KEY` (só o DEV); o F0.4 já fechou (#64); limiar do gate por decidir (§10 P-19) | `python -m plan_runner.l5_eval run` (PR #63); **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.2 (2026-10-05). Comando verificado: `l5_eval validate` → 18 casos, 0 erros; `l5_eval run` sem `MCP_API_KEY` falha logo, sem medir. `MCP_URL` = base de produção (`mcp_knowledge.py:73-74` acrescenta `/api/mcp`); **1.ª tentativa do DEV (2026-10-05) falhou:** `not enough values to unpack (expected 3, got 2)` em `mcp_knowledge.py:138`. Causa: `mcp` 2.x no ambiente (Python 3.14 global), e o `requirements.txt` fixa `mcp==1.30.0`. Reproduzido com `mcp==2.3.0`. Correcção no PR do branch `fix/F0-7b-mcp-versao`: guarda de versão com uma mensagem clara, teste-canário que compara o instalado com o fixado, e a checklist do §6.2 passa a criar o venv com o `requirements.txt` | — | VERIFICADO |
 | F0.12 | Passo 6 do J3: apagar a `knowledge_chunks_t6` (irreversível, com backup; opcional) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Backup + decisão (o F0.3 fechou: a t6 parou a 2026-09-29, com 110 linhas) | RC:72-75; E §7 F0 | J3 passo 6 | VERIFICADO |
 | F1 | Ingestão universal: ADR do contrato *Universal Ingestion & Research Primitives* (pode avançar já) + spike MarkItDown → T6 (só com o F0 verde; pin `>=0.1.4` e mitigações) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Alta | ADR aceite (#81; §10 P-13 = A). Spike: F0 verde | E §7 F1; AI:140-156; PR #81 (`docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md`) | ING-2 (= "E2" conector, O:20) | VERIFICADO |
 | F1b | Docling, só se o benchmark do F1 o justificar (`docling-core>=2.48.4`) | FALTA-DECIDIR | BLOQUEADO | CLAUDE | Baixa | Resultado do F1 | E §7 F1b; AI:189 | ING-3 | VERIFICADO |
@@ -146,6 +147,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | W-001 | `router eval` com o Gemini real: medir a escolha do agente | FALTA-TESTE | ABERTO | DEV | Média | `GEMINI_API_KEY` | O:163; E:784; P §10 (ressalvas) | R1 (Bloco B; colide com R1 do AUDIT-1) | VERIFICADO |
 | W-003 | Robustez das keywords do router (negação, pesos) | FALTA-CONSTRUIR | BLOQUEADO | CLAUDE | Baixa | W-001 (casos reais) | O:166 | R4 | VERIFICADO |
 | W-004 | Ledger central: as linhas do worker também no Supabase | FALTA-LIGAR | ABERTO | DEV | Média | Escrita em produção (DEV) | O:149 | B2 (Bloco B) | VERIFICADO |
+| W-010 | Migrar o cliente MCP do runner (`runner/plan_runner/mcp_knowledge.py`) para a linha 2.x do pacote `mcp`, que mudou a API: o `streamable_http_client` devolve 2 valores, o `http_client` passa a ser `httpx2.AsyncClient` e o `CallToolResult` usa `is_error` | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — | Achado do F0.7b (2026-10-05): `mcp` 2.0.0 saiu a 2026-07-28 e a 2.3.0 a 2026-10-02 (PyPI). Inspeccionado em `mcp==2.3.0`: `mcp/client/streamable_http.py` (`yield read_stream, write_stream`; `http_client: httpx2.AsyncClient`) e `mcp.types.CallToolResult` (`is_error`). Até lá, `runner/requirements.txt` fixa `mcp==1.30.0` e o cliente recusa a 2.x com uma mensagem clara (PR do branch `fix/F0-7b-mcp-versao`). A migração precisa de um teste com um servidor MCP real local, porque os testes actuais usam falsos | — | VERIFICADO |
 | AU-20 | Tools: fonte do `tools_allowed` e execução no worker (hoje declarativo; o worker não executa tools) | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | Porte do ToolExecutor (D1) | P:305; O:150; `runner/tests/test_security_pipeline.py` ("Nao tens tools") | B3 (Bloco B, O:150); S33 (A5:169) | VERIFICADO |
 | EX-B7 | Expor `engine: langgraph` + `decision: edit` na superfície MCP | FALTA-LIGAR | ABERTO | CLAUDE | Média | Recomendado depois do F5 (E §9.2) | P:351; O:15; E:793 | B7 (O:15) | VERIFICADO |
 | AU-22b | Reescrever numa das 2 formas verificáveis a condição de `done_when` em linguagem livre do `paid-pack.plan.yaml` ("no ad_account_mutation without approve"); o evento `done_when_unverifiable` é o gatilho para encontrar outras | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | F3 (decisão do maestro, 2026-10-04) | `docs/orchestration/marketing/templates/paid-pack.plan.yaml`; `runner/plan_runner/done_when.py` (evento `done_when_unverifiable` com `item: AU-22b`); PR #90 | — | VERIFICADO |
@@ -295,7 +297,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 9 | F1, F1b, F2, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
+| CLAUDE | 10 | F1, F1b, F2, W-010, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
 | DEV | 66 | F0.6, F0.7b, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
@@ -322,9 +324,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 41 | F0.6, F0.7b, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004 |
-| Baixa | 46 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004 |
+| Baixa | 47 | F0.12, F1b, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004 |
 
-**Por estado:** ABERTO 58 · EM CURSO 5 · BLOQUEADO 41.
+**Por estado:** ABERTO 59 · EM CURSO 5 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (104 linhas: 83 FECHADO, 21 OBSOLETO)

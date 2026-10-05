@@ -205,7 +205,18 @@ O gate M1 (F0 verde) autoriza o código do F1 (spike MarkItDown → T6). Fecha q
   - `l5_eval run` sem `MCP_API_KEY` → falha logo (`McpKnowledgeError`), sem medir nada.
 - **Alternativa** (não usar para o gate): o teste offline `runner/tests/test_l5_eval.py` prova as métricas com um backend falso. Não mede o MCP real.
 
-**Passos (DEV, PowerShell, a partir de `network-agents-setup\runner`, com o venv activo):**
+**Passos (DEV, PowerShell, a partir de `network-agents-setup\runner`):**
+
+O cliente MCP é da linha 1.x do pacote `mcp` (o `requirements.txt` fixa `mcp==1.30.0`). Um Python global com a 2.x falha (1.ª tentativa, 2026-10-05: `not enough values to unpack (expected 3, got 2)`), por isso o comando corre num venv com o `requirements.txt`. Desde o PR do branch `fix/F0-7b-mcp-versao`, o cliente pára logo com uma mensagem clara se a versão não for 1.x.
+
+```powershell
+py -3.14 -m venv .venv          # ou -3.12; o mcp 1.30.0 suporta 3.10 a 3.14
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python -c "import importlib.metadata as m; print(m.version('mcp'))"   # tem de dar 1.30.0
+```
+
+Depois, no mesmo terminal:
 
 ```powershell
 $env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"   # base; o código acrescenta /api/mcp

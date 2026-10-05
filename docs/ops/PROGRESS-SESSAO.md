@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/m1-moldes-f0` (só documentação; campanha "gate M1").
+- **Branch actual:** `fix/F0-7b-mcp-versao` (empilhado sobre o #101).
 - **`main` de referência:** NAS `098034e` (merges até #100); MCP `880d492` (merge #18).
 - **Itens em trabalho:** gate M1 = F0 verde (faltam o F0.6 e o F0.7b, ambos do DEV); o F1 código está bloqueado até lá.
 
@@ -21,6 +21,26 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F0.7b, 1.ª tentativa do DEV: `not enough values to unpack` (2026-10-05, ~13:30 UTC)
+- **Erro do DEV:** `ValueError: not enough values to unpack (expected 3, got 2)` em `runner/plan_runner/mcp_knowledge.py:138`, com Python 3.14 global.
+- **Causa:** o ambiente tinha o pacote `mcp` da linha **2.x**, e o `runner/requirements.txt` fixa `mcp==1.30.0`. Nada no repo puxa a 2.x.
+  - Na 1.30.0, o `streamable_http_client` devolve `(read_stream, write_stream, get_session_id)`.
+  - Na 2.x (2.0.0 a 2026-07-28; 2.3.0 a 2026-10-02), devolve só `(read_stream, write_stream)`.
+  - A 2.x mudou mais 2 coisas, e por isso aceitar 2 ou 3 valores não chegava:
+    - o `http_client` passa a ser `httpx2.AsyncClient`;
+    - o `CallToolResult` usa `is_error` em vez de `isError`.
+- **Reproduzido aqui:** o código da `main` com a `mcp` 2.3.0 dá o mesmo erro.
+  - Com a 1.30.0, o cliente chega à rede.
+  - O `mcp` 1.30.0 suporta Python 3.10 a 3.14 (classifiers do PyPI; há wheels `cp314` do `pydantic-core` para Windows).
+- **Correcção (PR do branch `fix/F0-7b-mcp-versao`):**
+  - guarda de versão em `mcp_knowledge.py`: com outra linha que não a 1.x, pára antes da rede, com uma mensagem que diz a versão e o comando a correr;
+  - 3 testes novos: o guarda rejeita a 2.x, deixa passar a 1.x, e um canário confirma que o `mcp` instalado é o do `requirements.txt` (os 3 falhavam sem a alteração);
+  - checklist do §6.2 com o venv (`pip install -r requirements.txt` e a confirmação `1.30.0`);
+  - novo **W-010**: migração para a 2.x, com um teste contra um servidor MCP real local.
+- **Testes:** `pytest` 569 passed (566 + 3); `ruff` limpo.
+- **Contagens:** 104 → 105 vivos (W-010).
+- **Próxima micro-tarefa:** o DEV repete o F0.7b no venv (checklist do §6.2).
 
 ### T5: declaração do gate M1 (2026-10-05, ~12:55 UTC)
 
