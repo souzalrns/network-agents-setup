@@ -1,0 +1,7 @@
+# Opcional - F1 (T6a): adapter MarkItDown da primitiva ingest_document (scripts/ingest_document.py)
+# À parte do requirements.txt: puxa o magika (onnxruntime), o pdfminer.six, o mammoth e o
+# openpyxl/pandas, que o resto do runner e o CI não precisam.
+# Pin mínimo >=0.1.4: abaixo disso há a CVE-2025-64512 (ADR-INGESTION-PRIMITIVES §5, mitigação 1).
+# Antes de subir a versão: github.com/microsoft/markitdown/security (mitigação 4).
+# Os extras são os 3 formatos do spike (ADR §9, S2).
+markitdown[docx,pdf,xlsx]>=0.1.4
