@@ -1,0 +1,159 @@
+# Marketing capabilities v1 — Capability First (F4, segundo domínio, espelho de security)
+# Não são agentes. O plan_runner corre actions; skills/agents implementam.
+# Validado no E7 (python -m plan_runner.areas): agente, skill e action têm de bater e
+# existir; `implemented` exige pelo menos 1 plano do runner com a action
+# (docs/orchestration/**/*.plan.yaml) — a maturidade é medida, não declarada.
+# Ver docs/orchestration/marketing/ e docs/knowledge/marketing/.
+
+version: 1
+domain: marketing
+policy:
+  offensive: forbidden          # nada de spam, scraping agressivo, contas falsas ou manipulação
+  act_in_production: forbidden  # publicar, gastar media ou enviar a clientes é sempre humano
+  default_level: prepare        # o domínio prepara peças; um humano aprova e publica
+  hitl: required                # os planos de marketing têm gates `plan_approve` antes de publicar
+
+capabilities:
+  - id: market_research
+    description: Pesquisa de mercado, audiência e concorrência com fontes citadas.
+    levels: [read]
+    action: research
+    agent: marketing.research
+    skill: skills/marketing/research/SKILL.md
+    status: implemented
+
+  - id: trend_scouting
+    description: Tendências e formatos em alta para uma marca ou campanha.
+    levels: [read]
+    action: trend_hunter
+    agent: marketing.trend_hunter
+    skill: skills/marketing/trend_hunter/SKILL.md
+    status: implemented
+
+  - id: internal_brief
+    description: Brief interno da campanha (objectivo, público, mensagens, restrições).
+    levels: [prepare]
+    action: internal_brief
+    agent: marketing.internal_brief
+    skill: skills/marketing/internal_brief/SKILL.md
+    status: implemented
+
+  - id: seo_brief
+    description: Brief SEO (intenção, palavras-chave, estrutura) para artigos e páginas.
+    levels: [prepare]
+    action: seo_brief
+    agent: marketing.seo_brief
+    skill: skills/marketing/seo_brief/SKILL.md
+    status: implemented
+
+  - id: answer_first_copy
+    description: Copy answer-first para pesquisa e respostas de IA (GEO / AI findability).
+    levels: [prepare]
+    action: copy_answer_first
+    agent: marketing.copy_answer_first
+    skill: skills/marketing/copy_answer_first/SKILL.md
+    status: implemented
+
+  - id: social_copy
+    description: Copy para redes sociais (posts, legendas, hooks) por plataforma.
+    levels: [prepare]
+    action: copy_social
+    agent: marketing.copy_social
+    skill: skills/marketing/copy_social/SKILL.md
+    status: implemented
+
+  - id: storytelling
+    description: Narrativa de marca e de campanha.
+    levels: [prepare]
+    action: storytelling
+    agent: marketing.storytelling
+    skill: skills/marketing/storytelling/SKILL.md
+    status: implemented
+
+  - id: ad_creative
+    description: Conceitos e variantes de criativos para anúncios.
+    levels: [prepare]
+    action: ad_creative
+    agent: marketing.ad_creative
+    skill: skills/marketing/ad_creative/SKILL.md
+    status: implemented
+
+  - id: creative_review
+    description: Revisão de criativos contra o brief e as regras da marca.
+    levels: [read]
+    action: creative_review
+    agent: marketing.creative_review
+    skill: skills/marketing/creative_review/SKILL.md
+    status: implemented
+
+  - id: content_critique
+    description: Crítica estruturada de peças antes do gate humano.
+    levels: [read]
+    action: critic
+    agent: marketing.critic
+    skill: skills/marketing/critic/SKILL.md
+    status: implemented
+
+  - id: ai_findability_review
+    description: Revisão de encontrabilidade por IA (item 13) de páginas e artigos.
+    levels: [read]
+    action: critic_item13
+    agent: marketing.critic_item13
+    skill: skills/marketing/critic_item13/SKILL.md
+    status: implemented
+
+  - id: video_edit_plan
+    description: Plano de edição de vídeo (cortes, ritmo, legendas) a partir do material.
+    levels: [prepare]
+    action: video_edit_plan
+    agent: marketing.editor_video
+    skill: skills/marketing/video_edit_plan/SKILL.md
+    status: implemented
+
+  - id: influencer_brief
+    description: Brief para influenciadores (mensagens, entregáveis, regras de divulgação).
+    levels: [prepare]
+    action: influencer_brief
+    agent: marketing.influencer
+    skill: skills/marketing/influencer_brief/SKILL.md
+    status: implemented
+
+  - id: ugc_brief
+    description: Brief para conteúdo gerado por utilizadores (UGC).
+    levels: [prepare]
+    action: ugc_brief
+    agent: marketing.ugc
+    skill: skills/marketing/ugc_brief/SKILL.md
+    status: implemented
+
+  - id: media_plan
+    description: Plano de media (canais, orçamento, calendário). Gastar é sempre humano.
+    levels: [prepare]
+    action: media_plan
+    agent: marketing.media_buyer
+    skill: skills/marketing/media_plan/SKILL.md
+    status: implemented
+
+  - id: transcript_analysis
+    description: Análise de transcrições de vídeos/reels (temas, ganchos, oportunidades).
+    levels: [read]
+    action: transcript_analysis
+    agent: marketing.content_analyst
+    skill: skills/marketing/transcript_analysis/SKILL.md
+    status: partial  # executor e skill existem; ainda nenhum plano do runner a usa
+
+  - id: visual_identity
+    description: Identidade visual (logotipo, paleta, tipografia) a partir do brief.
+    levels: [prepare]
+    action: design
+    agent: design.identidade-visual
+    skill: null
+    status: planned  # o agente existe na área, mas sem skill própria nem plano
+
+  - id: performance_analysis
+    description: Leitura de resultados de campanha (KPIs, atribuição) para o próximo ciclo.
+    levels: [read]
+    action: null
+    agent: null
+    skill: null
+    status: planned  # há pack de conhecimento (docs/knowledge/performance-analyst.md); falta agente e skill

@@ -27,7 +27,7 @@ def _cap(**over) -> dict:
 
 def _repo(tmp_path: Path, caps: list[dict] | None = None, policy: dict | None = None, *, hitl="required",
           fname="sec-capabilities.yaml", domain="sec", agent_skill="skills/sec/triage/SKILL.md",
-          skill_action="sec_triage", extra_area_agents=()) -> Path:
+          skill_action="sec_triage", extra_area_agents=(), plan_actions=("sec_triage",)) -> Path:
     _write(tmp_path / "agents/sec/sec_triage.agent.md",
            f"---\nid: sec.triage\nkind: internal\naction: sec_triage\nskill: {agent_skill}\nvertical: sec\n---\n# T\n")
     _write(tmp_path / "agents/eng/dev.agent.md", "---\nid: eng.dev\nkind: internal\naction: dev\n---\n# D\n")
@@ -40,12 +40,35 @@ def _repo(tmp_path: Path, caps: list[dict] | None = None, policy: dict | None = 
             "policy": policy or {"offensive": "forbidden", "act_in_production": "forbidden", "default_level": "read", "hitl": "required"},
             "capabilities": caps if caps is not None else [_cap()]}
     _write(tmp_path / "config" / fname, yaml.safe_dump(data, allow_unicode=True))
+    if plan_actions:  # F4: `implemented` exige um plano do runner com a action
+        steps = [{"id": f"s{i}", "action": a} for i, a in enumerate(plan_actions)]
+        _write(tmp_path / "docs/orchestration/sec/x.plan.yaml", yaml.safe_dump({"id": "x", "steps": steps}))
     return tmp_path
 
 
-def test_ficheiro_real_de_security_e_valido():
-    assert [p.name for p in capability_files(REPO_ROOT)] == ["security-capabilities.yaml"]
+def test_ficheiros_reais_de_security_e_marketing_sao_validos():
+    names = [p.name for p in capability_files(REPO_ROOT)]
+    assert names == ["marketing-capabilities.yaml", "security-capabilities.yaml"]
     assert validate_areas(REPO_ROOT) == []
+
+
+def test_maturidade_implemented_exige_um_plano_com_a_action(tmp_path):
+    errors = validate_areas(_repo(tmp_path, plan_actions=()))
+    assert any("`implemented` exige pelo menos 1 plano" in e for e in errors), errors
+
+
+def test_maturidade_partial_nao_exige_plano(tmp_path):
+    assert validate_areas(_repo(tmp_path, caps=[_cap(status="partial")], plan_actions=())) == []
+
+
+def test_maturidade_le_actions_em_qualquer_profundidade_do_plano(tmp_path):
+    from plan_runner.capabilities import plan_actions
+
+    _write(tmp_path / "docs/orchestration/a/y.plan.yaml",
+           yaml.safe_dump({"steps": [{"id": "p", "parallel": [{"id": "q", "action": "fundo"}]}]}))
+    _write(tmp_path / "docs/architecture/z.plan.yaml", yaml.safe_dump({"steps": [{"action": "fora"}]}))
+    found = plan_actions(tmp_path)
+    assert found == {"fundo": ["docs/orchestration/a/y.plan.yaml"]}  # só planos do runner
 
 
 def test_mini_repo_valido(tmp_path):
@@ -120,7 +143,24 @@ def test_inventario(tmp_path):
 def test_inventario_real_e_cli(capsys):
     assert areas_main([str(REPO_ROOT), "--inventory"]) == 0
     out = capsys.readouterr().out
-    assert "1 ficheiro(s) de capabilities válido(s)" in out
+    assert "2 ficheiro(s) de capabilities válido(s)" in out
     for key in ("agents_without_skill", "skills_without_agent", "agents_using_claude_pack", "shared_skill_action_differs"):
         assert key in out
     assert "security.triage" not in out.split("agents_without_skill")[1].split("skills_without_agent")[0]
+
+
+def test_marketing_implemented_sustentadas_por_planos_validos():
+    """F4: o pipeline carrega o domínio novo. Cada capability `implemented` de marketing tem
+    plano(s) do runner com a action, e esses planos passam o schema do runner (W-006)."""
+    from plan_runner.capabilities import plan_actions
+    from plan_runner.plan_schema import file_errors
+
+    data = yaml.safe_load((REPO_ROOT / "config/marketing-capabilities.yaml").read_text(encoding="utf-8"))
+    used = plan_actions(REPO_ROOT)
+    implemented = [c for c in data["capabilities"] if c["status"] == "implemented"]
+    assert len(implemented) >= 10
+    for cap in implemented:
+        plans = used.get(cap["action"])
+        assert plans, cap["id"]
+        for rel in plans:
+            assert file_errors(REPO_ROOT / rel) == [], (cap["id"], rel)

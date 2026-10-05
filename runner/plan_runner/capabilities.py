@@ -1,6 +1,6 @@
 """Capabilities por domínio (Capability First) + inventário agente ↔ skill.
 
-`config/<domínio>-capabilities.yaml` (hoje: `security-capabilities.yaml`)
+`config/<domínio>-capabilities.yaml` (hoje: `security` e `marketing`, F4)
 descreve o que um domínio sabe fazer, sem criar um agente por capability. O
 ficheiro não tem consumidor em runtime: por isso é validado no E7
 (`python -m plan_runner.areas`), para não apodrecer em silêncio (a lição do
@@ -15,7 +15,11 @@ J5-b no PLANO). Regras:
 - `implemented`/`partial`: `action`, `agent` e `skill` existem e batem uns com os
   outros (o `action:` do agente e o da skill são o da capability; o agente está
   em agents[] da área do domínio; o `skill:` declarado pelo agente é o mesmo);
-- `deferred`/`planned`: podem ficar a null; se preenchidos, têm de existir.
+- `deferred`/`planned`: podem ficar a null; se preenchidos, têm de existir;
+- maturidade (F4): `implemented` exige evidência de uso, ou seja, pelo menos 1 plano do
+  runner (`docs/orchestration/**/*.plan.yaml`) com um passo dessa `action`. Sem plano,
+  a capability é `partial` (há executor, mas ainda nenhum fluxo a usa).
+  Escala: planned < deferred < partial < implemented.
 
 O inventário (`python -m plan_runner.areas --inventory`) lista, sem falhar o CI:
 agentes sem skill, skills sem agente (fora do pack `skills/claude/`), agentes
@@ -36,10 +40,37 @@ STATUSES = ("implemented", "partial", "deferred", "planned")
 ACTIVE = ("implemented", "partial")
 FORBIDDEN_ONLY = ("offensive", "act_in_production")
 CLAUDE_PACK = "skills/claude/"
+PLAN_GLOB = "docs/orchestration/**/*.plan.yaml"
 
 
 def capability_files(repo_root: Path) -> list[Path]:
     return sorted((repo_root / "config").glob("*-capabilities.yaml"))
+
+
+def plan_actions(repo_root: Path) -> dict[str, list[str]]:
+    """`action` → planos do runner que a usam (evidência de maturidade, F4)."""
+    found: dict[str, list[str]] = {}
+
+    def walk(node: Any, rel: str) -> None:
+        if isinstance(node, dict):
+            action = node.get("action")
+            if isinstance(action, str) and action:
+                found.setdefault(action, [])
+                if rel not in found[action]:
+                    found[action].append(rel)
+            for value in node.values():
+                walk(value, rel)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value, rel)
+
+    for path in sorted(repo_root.glob(PLAN_GLOB)):
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            continue  # o plan_schema (W-006) já reporta planos ilegíveis
+        walk(data, path.relative_to(repo_root).as_posix())
+    return found
 
 
 def _rel_file(repo_root: Path, rel: Any) -> Path | None:
@@ -55,6 +86,7 @@ def _rel_file(repo_root: Path, rel: Any) -> Path | None:
 def validate_capabilities(repo_root: Path, known: dict[str, Path], areas: list[dict]) -> list[str]:
     errors: list[str] = []
     by_area = {a.get("id"): a for a in areas if isinstance(a, dict)}
+    used_actions = plan_actions(repo_root)
     for path in capability_files(repo_root):
         rel = path.relative_to(repo_root)
         try:
@@ -122,6 +154,11 @@ def validate_capabilities(repo_root: Path, known: dict[str, Path], areas: list[d
                 for key, val in (("action", action), ("agent", agent), ("skill", skill)):
                     if not isinstance(val, str) or not val:
                         errors.append(f"{where}: `{key}` obrigatório em status `{status}`")
+            if status == "implemented" and isinstance(action, str) and action not in used_actions:
+                errors.append(
+                    f"{where}: `implemented` exige pelo menos 1 plano em {PLAN_GLOB} com a action "
+                    f"`{action}` (maturidade, F4); sem plano, use `partial`"
+                )
             if agent is not None:
                 if agent not in known:
                     errors.append(f"{where}: agente `{agent}` não existe em agents/**/*.agent.md")
