@@ -50,7 +50,7 @@ Objetivo de negócio
 | `docs/knowledge/item-13-ai-findability.md` | Playbook AI Findability |
 | `docs/knowledge/skills-map.md` | Skill → agente |
 | `docs/knowledge/imported-from-harnesses.md` | Regras Ruflo / Hermes / Orca |
-| `docs/PORTFOLIO.md` | Narrativa completa de portfolio |
+| `docs/PORTFOLIO-MARKETING.md` | Narrativa completa de portfolio (marketing); a da plataforma é o `docs/PORTFOLIO.md` |
 
 ---
 
@@ -76,7 +76,7 @@ Critério: resposta baseada em pack/cliente · premissas explícitas · zero dad
 
 ## Links
 
-- Portfolio: [PORTFOLIO.md](./PORTFOLIO.md)  
+- Portfolio: [PORTFOLIO-MARKETING.md](./PORTFOLIO-MARKETING.md) (plataforma: [PORTFOLIO.md](./PORTFOLIO.md))  
 - Agentes: [marketing-agency-agents.md](./marketing-agency-agents.md)  
 - Knowledge: [knowledge/](./knowledge/)  
 - Conclusão: [CONCLUSAO-SETUP-MARKETING.md](./CONCLUSAO-SETUP-MARKETING.md)  

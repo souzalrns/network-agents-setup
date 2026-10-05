@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **Vitrine para recrutadores (2026-10-05):** `docs/PORTFOLIO.md` da plataforma (o de marketing passa a `docs/PORTFOLIO-MARKETING.md`); evidência no H-01; novo H-006 (README do MCP).
 > **Gate F0, 2.ª ronda de SELECTs (2026-10-05, `main` `9531ec3`):** F0.1 e R-002 → FECHADO (F0.1b filtrada); AU-22 → FECHADO (#96 merged); R-005 sobe para Alta (201 linhas do MCP com `kb` = marketing por omissão); F0.4 com a nota do `--max-chunks`. No F0 faltam o F0.6, o F0.7b e o F0.12 (opcional).
 > **AU-22, 2.ª metade da P-10 (2026-10-05, `main` `c15a6d8`):** AU-22 → EM CURSO (PR do branch `fix/AU-22-remover-on-fail-max-replans`); novo W-009 (exemplo de budget com um campo fora do schema); 6 prompts com `on_fail` registados no B1-bis-C.
 > **SELECTs do F0 (2026-10-05, `main` `81e6364`):** F0.3 e R-003 → FECHADO; C-2 → FECHADO (o MCP #16 já tinha entrado a 2026-10-03; a linha estava desactualizada); novo R-005 (`kb` errado na fonte ECC); F0.2 (já fechado) e AU-50 com a evidência nova; o F0.1 continua EM CURSO (falta a contagem `projecto` e a F0.1b com o filtro `project`, que fecham o R-002).
@@ -18,7 +19,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **109 itens vivos** (§4): ABERTO 62, EM CURSO 6, BLOQUEADO 41;
+> - **110 itens vivos** (§4): ABERTO 63, EM CURSO 6, BLOQUEADO 41;
 > - **98 linhas de histórico** (§7): 77 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **18 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16 e P-17.
@@ -97,7 +98,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (109 itens vivos)
+## 4. Tabela única (110 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -167,7 +168,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | E15 | Proveniência do esboço do CouncilSession/`councils.yaml`: substituir a reconstituição se aparecerem os originais | DOC-ERRADO | BLOQUEADO | DEV | Baixa | Aparecerem os originais | P:553; O:105 | — | VERIFICADO |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão (partir/arquivar) | P:297; A5 §5.1 | J8 (parte) | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:102` UP017; `main` `2b27f66`), fora do lint do CI | BUG | BLOQUEADO | CLAUDE | Baixa | F3 (§10 P-7 = A: registar e tratar no F3) | ruff 0.16.10 local (2.ª ronda, 03/10): 2 avisos, ambos `--fix`; `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
-| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Faltam as partes 1 (limpeza), 2 (arquivo dos históricos) e 3 (índices), com os riscos do §4.1; o AU-12 e o H-001 são decisões prévias à parte 2 | Partes 4, 5 e 6 no PR #93 (merged 2026-10-05, `main` `92cc762`): README para portfólio em inglês, casos de estudo e números verificados, `LICENSE`, `SECURITY.md`, avisos de arquivado em `packages/` e `apps/`; Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
+| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Faltam as partes 1 (limpeza), 2 (arquivo dos históricos) e 3 (índices), com os riscos do §4.1; o AU-12 e o H-001 são decisões prévias à parte 2 | Partes 4, 5 e 6 no PR #93 (merged 2026-10-05, `main` `92cc762`): README para portfólio em inglês, casos de estudo e números verificados, `LICENSE`, `SECURITY.md`, avisos de arquivado em `packages/` e `apps/`; Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1; vitrine para recrutadores (2026-10-05, PR do branch `docs/portfolio-recrutadores`): `docs/PORTFOLIO.md` novo, da plataforma (resumo EN de 60 s + PT, só números verificados), com o anterior, de marketing, preservado em `docs/PORTFOLIO-MARKETING.md`; linha "Start here" no README. A Description do NAS já está feita pelo maestro; os Topics estão vazios nos 2 repos (só na UI do GitHub) | — | VERIFICADO |
 | G1.1 | Trading: pesquisa padrão ouro de repos de trading/simulação | FALTA-DECIDIR | BLOQUEADO | AMBOS | Alta | F5 + D-EP8 (domínio só com uso real) | A5 §5.4 (grupos G–J); EP:1618-2428 | J9 (parte) | VERIFICADO |
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | BLOQUEADO | DEV | Média | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | BLOQUEADO | DEV | Alta | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
@@ -213,6 +214,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | S-004 | Triagem de segurança do MCP: vulnerabilidades de dependências (`npm audit`) e backlog com IDs e severidade (não reutiliza o S-003, que é o teste do connector) | BUG | EM CURSO | AMBOS | Média | Merge do PR MCP #17; depois, os alertas da aba Security do MCP (só o DEV vê; como o A22 no NAS) | `npm audit` na `main` MCP `d635945`: `next` 16.3.5 **crítica** (GHSA-vcvr-r3jv-pc5j, RCE no `next/og`; o código não usa `next/og`) e `ip-address` 10.5.0 moderada (transitiva); PR MCP #17 (`next` 16.3.8, `ip-address` 10.7.3; `npm audit` = 0; `npm test` 16/16; `next build` OK) | — | VERIFICADO |
 | H-004 | Correr `graphify update .` localmente nos 2 repos depois das mudanças de código desta ronda (o `graphify-out/` é gitignored; a ferramenta não existe na sessão cloud) | FALTA-LIGAR | ABERTO | DEV | Baixa | Máquina local do DEV | `ANM:CLAUDE.md` §Graphify ("Após mudanças relevantes de código: graphify update ."); `which graphify` vazio na sessão | — | VERIFICADO |
 | H-005 | O `docs/STATUS.md` do MCP está parado em 19/08 e diz que o GitHub Actions está "desligado", mas há workflows agendados a correr: `heartbeat.yml` (de 3 em 3 dias) e `audit-tools.yml` (dias 1 e 15) | DOC-ERRADO | ABERTO | CLAUDE | Baixa | — (repo `agent-network-mcp`; um merge = redeploy na Vercel, juntar a outro PR do MCP) | `ANM:docs/STATUS.md:33,58`; `ANM:.github/workflows/heartbeat.yml:8-9`, `audit-tools.yml:16-17`; corridas "Manter Supabase ativo" #28 (2026-10-01) e "Auditoria quinzenal" #9 (2026-10-01), ambas `success` | — | VERIFICADO |
+| H-006 | README do `agent-network-mcp` (repo público, visto por recrutadores) com defeitos: rodapé com links mortos (`[LinkedIn](#)`, `[Portfólio](#)`); nota de TODO à vista e `docs/DEPLOY.md` citado mas inexistente; "33 agentes" e "32 agentes" no mesmo texto (`lib/agents.js` tem 33); 2 URLs de produção diferentes (README e homepage do repo); "execução remota de código" anunciada com o S20 (401) aberto; sem `LICENSE`; `diagnostico-vm.txt` solto na raiz | DOC-ERRADO | ABERTO | AMBOS | Média | — | `ANM:README.md` (`main` `4916872`): linhas 5, 35, 48 e 56; `git ls-tree` sem `LICENSE` nem `docs/DEPLOY.md`; o `diagnostico-vm.txt` não tem segredos (0 ocorrências de key, token, secret, password ou ssh), mas é ruído operacional. O merge de um PR no MCP faz redeploy na Vercel: a IA prepara o PR e o maestro decide o merge. Encontrado na revisão da vitrine (2026-10-05) | — | VERIFICADO |
 
 
 ### 4.1 Detalhe do H-01 (adendo do maestro, 2026-10-03; registado, NÃO executado)
@@ -298,10 +300,11 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | CLAUDE | 14 | F1, F1b, F2, F4, W-003, W-008, W-009, R-005, EX-B7, AU-22b, H-002, R-004, H-003, H-005 |
 | DEV | 66 | F0.6, F0.7b, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
-| AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
+| AMBOS | 30 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, H-006, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: o PR `docs/f0-gate-selects` (só documentação); os #88 a #96 já entraram (2026-10-05, `main` `9531ec3`);
+- merges: o PR #97 (`docs/f0-gate-selects`) e, depois dele, o PR `docs/portfolio-recrutadores` (só documentação, empilhado sobre o #97); os #88 a #96 já entraram (2026-10-05, `main` `9531ec3`);
+- vitrine no GitHub (só na UI): Topics nos 2 repos, Description do `agent-network-mcp`, bio e repos fixados no perfil;
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
@@ -320,10 +323,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 42 | F0.6, F0.7b, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
+| Média | 43 | F0.6, F0.7b, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, H-006, G1.2, G1.8, G1.9, G4.1, G4.2, R-004, T-004, S-004 |
 | Baixa | 50 | F0.12, F1b, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-008, W-009, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, H-003, T-005, S-003, H-004, H-005 |
 
-**Por estado:** ABERTO 62 · EM CURSO 6 · BLOQUEADO 41.
+**Por estado:** ABERTO 63 · EM CURSO 6 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (98 linhas: 77 FECHADO, 21 OBSOLETO)

@@ -7,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 
+**Start here:** [Portfolio](./docs/PORTFOLIO.md) (60-second English summary, then PT) · [Quickstart](#quickstart) (5 min, no API key) · [Production MCP server](https://github.com/souzalrns/agent-network-mcp) · [Open work](./docs/initiatives/PENDENCIAS.md)
+
 > Documentação interna e estado do projecto em português: [`docs/`](./docs/) · pendentes em [`docs/initiatives/PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md).
 
 ---
@@ -64,7 +66,7 @@ Everything below can be checked in the repository and its Actions history:
 
 - **590+ automated tests** (pytest), including an ingest → retrieve test against a disposable Postgres + pgvector, and slow end-to-end runs of real plans. See [`runner-tests.yml`](./.github/workflows/runner-tests.yml).
 - **Security on every PR:** gitleaks, semgrep and CodeQL. Every GitHub Action is pinned to a commit SHA.
-- **70+ merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
+- **75+ merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
 
 ### Selected engineering stories
 
@@ -81,7 +83,7 @@ The first domain pack built on this core. Horizontal specialists (SEO, AI Visibi
 
 | Document | Contents |
 |---|---|
-| [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md) | Full narrative: problem, solution, diagram, differentiators |
+| [`docs/PORTFOLIO-MARKETING.md`](./docs/PORTFOLIO-MARKETING.md) | Full narrative of the marketing pack: problem, solution, diagram, differentiators (PT) |
 | [`docs/ONE-PAGER-MARKETING-AGENTS.md`](./docs/ONE-PAGER-MARKETING-AGENTS.md) | One-page summary |
 | [`docs/marketing-agency-agents.md`](./docs/marketing-agency-agents.md) | System prompts and limits for every agent |
 | [`docs/item-13-ai-findability.md`](./docs/item-13-ai-findability.md) | AI Visibility playbook (SEO + GEO + AEO + LLMO; internal name "Item 13") |
