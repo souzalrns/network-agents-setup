@@ -197,6 +197,26 @@ def test_conversao_vazia_da_empty_content(tmp_path: Path, markdown: str) -> None
     assert exc.value.code == "empty_content"
 
 
+def test_xlsx_com_celulas_nan_avisa_com_a_contagem(tmp_path: Path) -> None:
+    p = _zip(tmp_path, "custos.xlsx", {"xl/workbook.xml": b"<w/>"})
+    md = "## Custos\n| A | B |\n| --- | --- |\n| x | NaN |\n| NaN | NaN |\nNaN fora de tabela"
+    out = ing.ingest_document(p, converter=_fake(md, "Custos"))
+    assert out["warnings"] == ["xlsx_nan_cells=3"]
+    assert "| x | NaN |" in out["content"]  # o conteúdo não é alterado
+
+
+def test_xlsx_sem_nan_nao_avisa(tmp_path: Path) -> None:
+    p = _zip(tmp_path, "ok.xlsx", {"xl/workbook.xml": b"<w/>"})
+    out = ing.ingest_document(p, converter=_fake("| A |\n| --- |\n| NaNo |", "Ok"))
+    assert out["warnings"] == []
+
+
+def test_nan_so_conta_no_xlsx(tmp_path: Path) -> None:
+    p = _file(tmp_path, "doc.pdf")
+    out = ing.ingest_document(p, converter=_fake("| A |\n| --- |\n| NaN |", "Doc"))
+    assert out["warnings"] == []
+
+
 def test_codigo_fora_do_contrato_e_recusado() -> None:
     with pytest.raises(ValueError):
         ing.IngestError("inventado", "x")

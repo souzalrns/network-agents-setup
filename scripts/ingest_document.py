@@ -14,7 +14,10 @@ O que este esqueleto faz:
   PDF não cai no de texto simples (que devolveria o PDF em bruto como "Markdown");
 - devolve `content` normalizado e `source_meta` com o schema mínimo do §4;
 - nunca devolve conteúdo parcial em silêncio: falha da conversão = `conversion_failed`,
-  conteúdo vazio = `empty_content`.
+  conteúdo vazio = `empty_content`;
+- avisa (`warnings`) sem alterar o conteúdo: título tirado do nome do ficheiro
+  (`title_from_filename`) e células `NaN` num XLSX (`xlsx_nan_cells=<n>`: célula vazia ou
+  fórmula sem valor em cache).
 
 O que ainda NÃO faz (passos seguintes do §9 do ADR):
 - não está ligado ao worker, ao `plan_runner` nem ao T6, e não escreve ficheiros (S4);
@@ -156,6 +159,21 @@ def check_zip_limits(path: Path, max_uncompressed: int) -> None:
             )
 
 
+def count_nan_cells(markdown: str) -> int:
+    """Células `NaN` nas tabelas Markdown do XLSX.
+
+    O conversor do MarkItDown lê os valores pelo pandas: uma célula vazia e uma fórmula sem
+    valor em cache (ficheiro gerado por programa e nunca aberto no Excel) saem as 2 como
+    `NaN`. O conteúdo não é alterado (um `NaN` pode ser um valor que falta); fica o aviso.
+    """
+    total = 0
+    for line in markdown.splitlines():
+        line = line.strip()
+        if line.startswith("|") and line.endswith("|"):
+            total += sum(cell.strip() == "NaN" for cell in line.strip("|").split("|"))
+    return total
+
+
 def normalize(markdown: str) -> str:
     """Fins de linha LF, sem espaços no fim das linhas, um único `\\n` no fim do texto."""
     lines = markdown.replace("\r\n", "\n").replace("\r", "\n").split("\n")
@@ -201,6 +219,10 @@ def ingest_document(
     if not title:
         title = p.stem
         warnings.append("title_from_filename")
+    if document_type == "xlsx":
+        nan_cells = count_nan_cells(content)
+        if nan_cells:
+            warnings.append(f"xlsx_nan_cells={nan_cells}")
 
     source_meta = {
         "uri": p.as_posix(),
