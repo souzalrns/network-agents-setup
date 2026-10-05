@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **F0.7b PASSOU (2026-10-05):** 18 casos contra produção, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@4` 0.944, `mrr_chunk` 0.736 → F0.7b FECHADO. Para o gate M1 falta o F0.6 (e a decisão da P-19, que o resultado já cumpre em qualquer opção).
 > **F0.7b, 2.ª tentativa (2026-10-05):** 400 da Vercel "Standard Protection"; o cliente passa a enviar o cabeçalho de bypass se a env `VERCEL_PROTECTION_BYPASS` existir (PR do branch `fix/F0-7b-vercel-bypass`). Atenção: a mesma protecção pode bloquear o conector do Claude.ai (F0.6).
 > **F0.7b, 1.ª tentativa (2026-10-05):** falhou por `mcp` 2.x no ambiente do DEV (o repo fixa 1.30.0); guarda de versão e checklist com venv (PR do branch `fix/F0-7b-mcp-versao`); novo W-010 (migração para a 2.x).
 > **Gate M1 (2026-10-05, `main` `098034e`):** moldes de evidência do F0.6 e do F0.7b (`L5-F0-REVALIDATION.md` §6); S20 com caminho e prazo proposto (2026-10-12); novas P-19 (limiar do F0.7b) e P-20 (causa do R-005). M1 incompleto; o F1 código continua bloqueado.
@@ -24,8 +25,8 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **105 itens vivos** (§4): ABERTO 59, EM CURSO 5, BLOQUEADO 41;
-> - **104 linhas de histórico** (§7): 83 fechadas, 21 obsoletas;
+> - **104 itens vivos** (§4): ABERTO 58, EM CURSO 5, BLOQUEADO 41;
+> - **105 linhas de histórico** (§7): 84 fechadas, 21 obsoletas;
 > - **40 contradições resolvidas** (§8): 26 da auditoria #65 + 14 novas;
 > - **20 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro; pendentes P-11, P-16, P-17, P-19 e P-20.
 
@@ -103,7 +104,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (105 itens vivos)
+## 4. Tabela única (104 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -111,7 +112,6 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | ID | Título | Tipo | Estado | Dono | Sev | Bloqueio | Evidência | IDs antigos | Verif. |
 |---|---|---|---|---|---|---|---|---|---|
 | F0.6 | Passo 5 do J3: teste real no conector MCP (a resposta tem de citar a fonte) | FALTA-TESTE | ABERTO | DEV | Média | Conector MCP real (só o DEV); o F0.4 já fechou (#64) | RC:69-70; E §7 F0; **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.1 (2026-10-05). Tem de usar a tool `retrieve_knowledge` com `kb` = `security`: nenhum dos 33 agentes do MCP tem `agent_id` = `security`, por isso o `ask_agent_network` não chega ao pack | J3 passo 5 | VERIFICADO |
-| F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | FALTA-TESTE | ABERTO | DEV | Média | `MCP_URL`/`MCP_API_KEY` (só o DEV); o F0.4 já fechou (#64); limiar do gate por decidir (§10 P-19) | `python -m plan_runner.l5_eval run` (PR #63); **molde de evidência** em `docs/ops/L5-F0-REVALIDATION.md` §6.2 (2026-10-05). Comando verificado: `l5_eval validate` → 18 casos, 0 erros; `l5_eval run` sem `MCP_API_KEY` falha logo, sem medir. `MCP_URL` = base de produção (`mcp_knowledge.py:73-74` acrescenta `/api/mcp`); **1.ª tentativa do DEV (2026-10-05) falhou:** `not enough values to unpack (expected 3, got 2)` em `mcp_knowledge.py:138`. Causa: `mcp` 2.x no ambiente (Python 3.14 global), e o `requirements.txt` fixa `mcp==1.30.0`. Reproduzido com `mcp==2.3.0`. Correcção no PR do branch `fix/F0-7b-mcp-versao`: guarda de versão com uma mensagem clara, teste-canário que compara o instalado com o fixado, e a checklist do §6.2 passa a criar o venv com o `requirements.txt`; **2.ª tentativa (2026-10-05):** 400 antes da função, causado pela Vercel "Standard Protection" (plano Hobby, não se desliga). Correcção no PR do branch `fix/F0-7b-vercel-bypass`: o cliente envia `x-vercel-protection-bypass` se a env `VERCEL_PROTECTION_BYPASS` estiver definida (opcional; nunca no repo). 4 testes; verificado contra um servidor MCP local, com o cabeçalho nos 4 pedidos da sessão. A checklist do §6.2 lê o segredo sem o deixar no histórico | — | VERIFICADO |
 | F0.12 | Passo 6 do J3: apagar a `knowledge_chunks_t6` (irreversível, com backup; opcional) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Backup + decisão (o F0.3 fechou: a t6 parou a 2026-09-29, com 110 linhas) | RC:72-75; E §7 F0 | J3 passo 6 | VERIFICADO |
 | F1 | Ingestão universal: ADR do contrato *Universal Ingestion & Research Primitives* (pode avançar já) + spike MarkItDown → T6 (só com o F0 verde; pin `>=0.1.4` e mitigações) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Alta | ADR aceite (#81; §10 P-13 = A). Spike: F0 verde | E §7 F1; AI:140-156; PR #81 (`docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md`) | ING-2 (= "E2" conector, O:20) | VERIFICADO |
 | F1b | Docling, só se o benchmark do F1 o justificar (`docling-core>=2.48.4`) | FALTA-DECIDIR | BLOQUEADO | CLAUDE | Baixa | Resultado do F1 | E §7 F1b; AI:189 | ING-3 | VERIFICADO |
@@ -299,12 +299,12 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Dono | N.º | IDs |
 |---|---:|---|
 | CLAUDE | 10 | F1, F1b, F2, W-010, F4, W-003, R-005, EX-B7, AU-22b, H-002 |
-| DEV | 66 | F0.6, F0.7b, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
+| DEV | 65 | F0.6, F0.12, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004 |
 | AMBOS | 29 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
 - merges: o PR `docs/m1-moldes-f0` (só documentação); os #88 a #100 e o MCP #18 já entraram (2026-10-05, `main` `098034e`);
-- gate M1: correr o F0.6 e o F0.7b e colar o output em `docs/ops/L5-F0-REVALIDATION.md` §6; decidir a P-19 (limiar) e a P-20 (causa do R-005); S20 até 2026-10-12 (ou outra data);
+- gate M1: o F0.7b passou (2026-10-05); falta o F0.6 (pergunta no conector do Claude.ai, colar em `docs/ops/L5-F0-REVALIDATION.md` §6.1); decidir a P-19 (o 1.º run cumpre qualquer opção) e a P-20 (causa do R-005); S20 até 2026-10-12 (ou outra data);
 - vitrine no GitHub (só na UI): Topics nos 2 repos, Description e Website do `agent-network-mcp` (o Website certo é `https://agent-network-mcp-oddn.vercel.app`), bio e repos fixados no perfil;
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
@@ -324,19 +324,20 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 16 | F1, R-005, F3, F5, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 41 | F0.6, F0.7b, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004 |
+| Média | 40 | F0.6, F2, F4, F6, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004 |
 | Baixa | 47 | F0.12, F1b, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, H-002, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004 |
 
-**Por estado:** ABERTO 59 · EM CURSO 5 · BLOQUEADO 41.
+**Por estado:** ABERTO 58 · EM CURSO 5 · BLOQUEADO 41.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (104 linhas: 83 FECHADO, 21 OBSOLETO)
+## 7. Histórico (105 linhas: 84 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| F0.7b | Medir o golden set contra o MCP real (hit@k, MRR, proveniência) | 2026-10-05 | Run do DEV (`python -m plan_runner.l5_eval run`, branch do PR #103) contra produção: 18 casos, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@1/3/4` 0.611/0.889/0.944, `mrr_chunk` 0.736, `no_hits` 0. Registado em `docs/ops/L5-F0-REVALIDATION.md` §6.2 (PR do branch `docs/f0-7b-evidencia`) | FECHADO | 3.ª tentativa. A 1.ª falhou por `mcp` 2.x no ambiente (#102) e a 2.ª pela Vercel Standard Protection (#103). Cumpre as 3 opções da P-19. 1 caso (ID não colado) sem o excerto nos 4 primeiros, mas com a fonte certa |
 | H-003 | Actions pinadas em versões Node 20 (NAS e MCP) | 2026-10-05 | #99 (merged, `5736621`): 23 pins no NAS; PR MCP #18 (merged, `880d492`): `checkout` e `cache`. Em cada Action, a última versão da 1.ª linha principal com `using: node24`, lida no `action.yml` da tag. Prova: CI do #99 sem o aviso "Node.js 20 is deprecated"; corrida #182 do `ingest-knowledge` (1.ª com os pins novos) `success`, `chunks=0 unchanged=39` | FECHADO | Só o `release.yml` (corre com tags) e os 2 workflows do MCP (`ingest.yml`, `transcribe.yml`) ficam por provar numa corrida real |
 | W-009 | O exemplo de budget do `ORCHESTRATOR.md` tinha o `max_retrieve_calls`, que não está no schema | 2026-10-05 | #99 (merged): o exemplo fica com o `max_steps`, e uma nota explica o campo (nunca implementado; limite de retrieves no F3) | FECHADO | — |
 | H-005 | O `docs/STATUS.md` do MCP dizia que o GitHub Actions estava desligado | 2026-10-05 | PR MCP #18 (merged, `880d492`): Actions agendadas activas (`heartbeat.yml`, `audit-tools.yml`); 33 agentes; linha no histórico | FECHADO | — |
@@ -527,7 +528,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-16 | S-001: valores dos tectos de input do MCP | Os do PR MCP #14 (`text` 200k, `request` 20k, …) | Mais apertados | Configuráveis por env | **A**: não partem nenhum uso real conhecido |
 | P-17 | H-001: as listas de pendentes do `STATUS.md` | Marcadas HISTÓRICO (**aplicada**, #70) | Movê-las para `docs/archive/` no H-01 | Apagá-las | **A** agora e **B** no H-01; C corta conteúdo |
 | P-18 | E-003: `ship-parallel.plan.yaml` usa `research`/`critic`, que resolvem sempre para agentes de marketing | Re-apontar os 3 reviews para agentes reais (`revisor_codigo` e `guia_tdd` em `engenharia`; `security_audit` em `meta`), com `vertical:`, e mover o ficheiro para `docs/orchestration/engenharia/examples/` (o guarda do AU-32, `test_skills.py:75`, passa a cobri-lo); ajustar `conftest.py` e `test_real_plans.py` | Manter o ficheiro como fixture do motor (wave paralela) e escrever no topo que não é um plano de domínio | Re-apontar as actions sem mover o ficheiro | **Decidida: C** (maestro, 2026-10-04): o ficheiro é um exemplo do motor (verificação da condição acima), por isso fica onde está com uma nota no topo, e acrescenta-se um plano de engenharia real à parte; C acrescenta sem cortar. Aplicada no PR #90 |
-| P-19 | F0.7b: limiar mínimo do golden set para declarar o gate M1 (F0 verde) | **Mínimo de proveniência e de fonte:** `provenance_ok` = 1.0 e `source_hit@4` ≥ 0.8 (pelo menos 15 dos 18 casos). O `chunk_hit` e o MRR ficam registados como linha de base | Sem limiar: basta medir e registar (um run com 0 hits passaria o gate) | Limiar completo: o anterior, mais `chunk_hit@4` ≥ 0.7 e `mrr_chunk` ≥ 0.5 | **A** (proposta, 2026-10-05): impede um gate verde com o retrieve partido, sem inventar alvos de qualidade antes da 1.ª medição. Os limiares de qualidade ficam para o F3, com a linha de base na mão. **Pendente** |
+| P-19 | F0.7b: limiar mínimo do golden set para declarar o gate M1 (F0 verde) | **Mínimo de proveniência e de fonte:** `provenance_ok` = 1.0 e `source_hit@4` ≥ 0.8 (pelo menos 15 dos 18 casos). O `chunk_hit` e o MRR ficam registados como linha de base | Sem limiar: basta medir e registar (um run com 0 hits passaria o gate) | Limiar completo: o anterior, mais `chunk_hit@4` ≥ 0.7 e `mrr_chunk` ≥ 0.5 | **A** (proposta, 2026-10-05): impede um gate verde com o retrieve partido, sem inventar alvos de qualidade antes da 1.ª medição. Os limiares de qualidade ficam para o F3, com a linha de base na mão. **Pendente.** O 1.º run real (2026-10-05) cumpre as 3 opções (`provenance_ok` 1.0, `source_hit@4` 1.0, `chunk_hit@4` 0.944, `mrr_chunk` 0.736), por isso a escolha já não muda o veredicto do M1. Fica a valer para os runs seguintes, como teste de regressão |
 | P-20 | R-005: a causa do `kb` errado (o insert do MCP não define o `kb`, e a coluna tem `DEFAULT 'marketing'`) | Corrigir já no MCP: o `ingestDocument` passa a gravar o `kb` a partir do `agent_id`, com teste. As 201 linhas antigas ficam para o F3 | Esperar pelo F3 e fazer a causa e a reclassificação juntas | Versionar só a mudança do `DEFAULT` da coluna (SQL, sem executar) | **B** (proposta, 2026-10-05): o MCP não ingeriu nada desde 2026-10-03 (201 = 322 − 121), por isso o problema não cresce. Um PR no MCP faz redeploy na Vercel e mexe numa tool do connector. **Pendente** |
 
 

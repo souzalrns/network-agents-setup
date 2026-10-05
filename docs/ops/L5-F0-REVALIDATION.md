@@ -9,6 +9,7 @@
 > **Actualização (2026-10-05):**
 > - F0.1, F0.2, F0.3 e F0.4 fechados (PENDENCIAS §7).
 > - Para o **gate M1 (F0 verde)** faltam o **F0.6** e o **F0.7b**, os 2 com credenciais que só o DEV tem.
+> - **F0.7b PASSOU (2026-10-05):** 18 casos, `source_hit@4` 1.0, `provenance_ok` 1.0, `chunk_hit@4` 0.944, `mrr_chunk` 0.736 (§6.2). **Para o M1 falta só o F0.6.**
 > - Os moldes de evidência e os comandos estão na **§6**.
 >
 > Base: main `e7a29ae` (pós-#62). Plano: [`docs/architecture/EXECUTION-PLAN.md`](../architecture/EXECUTION-PLAN.md) §7.
@@ -255,15 +256,25 @@ O relatório completo (`--out`) fica fora do repo.
 
 | Campo | Valor |
 |---|---|
-| Data (UTC) e commit do NAS | NÃO VERIFICADO |
-| `cases` / `k` | NÃO VERIFICADO (esperado 18 / 4) |
-| `chunk_hit@1` · `chunk_hit@3` · `chunk_hit@4` | NÃO VERIFICADO |
-| `source_hit@4` | NÃO VERIFICADO |
-| `mrr_chunk` | NÃO VERIFICADO |
-| `no_hits` | NÃO VERIFICADO |
-| `provenance_ok` | NÃO VERIFICADO |
-| Casos falhados (`--`) | NÃO VERIFICADO |
-| Veredicto | NÃO VERIFICADO |
+| Data (UTC) e commit do NAS | 2026-10-05, branch `fix/F0-7b-vercel-bypass` (PR #103: guarda de versão do `mcp` + cabeçalho de bypass da Vercel); contra produção `agent-network-mcp-oddn.vercel.app` (deployment `880d492`). Hora exacta não colada |
+| `cases` / `k` | **18 / 4** (como esperado) |
+| `chunk_hit@1` · `chunk_hit@3` · `chunk_hit@4` | **0.611** (11/18) · **0.889** (16/18) · **0.944** (17/18) |
+| `source_hit@4` | **1.0** (18/18) |
+| `mrr_chunk` | **0.736** |
+| `no_hits` | **0** |
+| `provenance_ok` | **1.0** (todos os hits com `citation.source`) |
+| Casos falhados (`--`) | 1 caso sem o excerto nos 4 primeiros (17/18), mas com a fonte certa; o ID do caso não foi colado |
+| Veredicto | **PASSOU.** O retrieve real devolve sempre a fonte certa, com proveniência, e o excerto certo nos 4 primeiros em 17 de 18 perguntas. Cumpre as 3 opções da P-19 (A: `provenance_ok` 1.0 e `source_hit@4` ≥ 0.8; C: mais `chunk_hit@4` ≥ 0.7 e `mrr_chunk` ≥ 0.5) |
+
+**Resumo colado pelo DEV (2026-10-05):**
+
+```json
+{"kb": "security", "source": "docs/knowledge/security-agents-stack.md", "k": 4, "cases": 18,
+ "chunk_hit@1": 0.611, "chunk_hit@3": 0.889, "chunk_hit@4": 0.944, "source_hit@4": 1.0,
+ "mrr_chunk": 0.736, "no_hits": 0, "provenance_ok": 1.0}
+```
+
+**O que este run também prova:** o caminho completo cliente Python → Vercel (com a Standard Protection passada pelo cabeçalho de bypass) → `/api/mcp` → `retrieve_knowledge` → `match_knowledge` → `knowledge_chunks` funciona em produção, depois das 2 tentativas falhadas (versão do `mcp` e protecção da Vercel).
 
 **Critério de fecho:** métricas registadas aqui, num PR. O limiar mínimo para o M1 é uma decisão do maestro (**P-19**, PENDENCIAS §10). Até lá:
 - a medição fica registada como linha de base;
