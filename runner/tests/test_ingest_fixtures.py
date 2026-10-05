@@ -138,7 +138,7 @@ def test_pdf_simple_synthetic_via_ingest_document() -> None:
     _assert_pdf_golden(out["content"])
     meta = out["source_meta"]
     assert meta["document_type"] == "pdf"
-    assert meta["uri"] == PDF.as_posix()
+    assert meta["uri"] == PDF.relative_to(REPO_ROOT).as_posix()  # relativo ao repo
     # O PdfConverter (0.1.8) não lê o /Title dos metadados: o título vem do nome do ficheiro,
     # com aviso. Se um dia o ler, este assert falha e o golden passa a ser o TITLE.
     assert meta["title"] == PDF.stem

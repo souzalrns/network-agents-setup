@@ -163,21 +163,21 @@ def test_saida_tem_o_contrato_e_o_source_meta_minimo(tmp_path: Path) -> None:
     assert out["content"] == "# Política\n\nlinha com espaços\n"
     meta = out["source_meta"]
     assert set(meta) == {"uri", "title", "document_type", "retrieved_at", "content_hash", "status"}
-    assert meta["uri"] == p.as_posix()
+    assert meta["uri"] == f"external:{p.name}"  # fora do repo: sem o caminho local
     assert meta["document_type"] == "pdf"
     assert meta["status"] == "active"
     assert meta["content_hash"] == hashlib.sha256(out["content"].encode("utf-8")).hexdigest()
     assert datetime.fromisoformat(meta["retrieved_at"]).utcoffset().total_seconds() == 0
     # sem título do adapter: usa o nome do ficheiro e avisa (nunca em silêncio)
     assert meta["title"] == "politica"
-    assert out["warnings"] == ["title_from_filename"]
+    assert out["warnings"] == ["title_from_filename", "uri_outside_repo"]
 
 
 def test_titulo_do_adapter_nao_gera_aviso(tmp_path: Path) -> None:
     p = _file(tmp_path, "x.pdf")
     out = ing.ingest_document(p, converter=_fake("corpo", "  Título real  "))
     assert out["source_meta"]["title"] == "Título real"
-    assert out["warnings"] == []
+    assert out["warnings"] == ["uri_outside_repo"]
 
 
 def test_content_hash_e_o_mesmo_do_t6_para_o_ficheiro_gravado(tmp_path: Path) -> None:
@@ -201,20 +201,20 @@ def test_xlsx_com_celulas_nan_avisa_com_a_contagem(tmp_path: Path) -> None:
     p = _zip(tmp_path, "custos.xlsx", {"xl/workbook.xml": b"<w/>"})
     md = "## Custos\n| A | B |\n| --- | --- |\n| x | NaN |\n| NaN | NaN |\nNaN fora de tabela"
     out = ing.ingest_document(p, converter=_fake(md, "Custos"))
-    assert out["warnings"] == ["xlsx_nan_cells=3"]
+    assert out["warnings"] == ["xlsx_nan_cells=3", "uri_outside_repo"]
     assert "| x | NaN |" in out["content"]  # o conteúdo não é alterado
 
 
 def test_xlsx_sem_nan_nao_avisa(tmp_path: Path) -> None:
     p = _zip(tmp_path, "ok.xlsx", {"xl/workbook.xml": b"<w/>"})
     out = ing.ingest_document(p, converter=_fake("| A |\n| --- |\n| NaNo |", "Ok"))
-    assert out["warnings"] == []
+    assert out["warnings"] == ["uri_outside_repo"]
 
 
 def test_nan_so_conta_no_xlsx(tmp_path: Path) -> None:
     p = _file(tmp_path, "doc.pdf")
     out = ing.ingest_document(p, converter=_fake("| A |\n| --- |\n| NaN |", "Doc"))
-    assert out["warnings"] == []
+    assert out["warnings"] == ["uri_outside_repo"]
 
 
 def test_codigo_fora_do_contrato_e_recusado() -> None:
