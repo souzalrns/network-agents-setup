@@ -6,7 +6,7 @@
 
 ## Estado actual
 - **Branch actual:** `docs/t6f-close-f1` (empilhado no T6e, PR #109).
-- **`main` de referência:** NAS `99b2cee` (merges até #105); MCP `880d492` (merge #18).
+- **`main` de referência:** NAS `cd8aeb3` (merges até #109); MCP `880d492` (merge #18).
 - **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6f (fecho do F1). T6b ✅ (#106), T6c ✅ (#107), T6d ✅ (#108) e T6e ✅ (#109), todos com CI verde.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
@@ -745,13 +745,9 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #106 | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Aberto, CI verde |
-| NAS #107 | `feat/t6c-docx-xlsx-fixtures-and-tests` | F1 / T6c: fixtures DOCX + XLSX + testes | Aberto, CI verde (empilhado no #106) |
-| NAS #108 | `feat/t6d-input-security-guards` | F1 / T6d: segurança de entrada | Aberto, CI verde (empilhado no #107) |
-| NAS #109 | `feat/t6e-pipeline-integration` | F1 / T6e: encaixe no T6 | Aberto, CI verde (empilhado no #108) |
-| NAS (T6f) | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Por abrir (empilhado no #109) |
+| NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
 
-Já com merge: NAS #63–#105 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105); MCP #10–#18.
+Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 

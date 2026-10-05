@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 00:20 UTC
+Última atualização: 2026-10-06 00:50 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -11,10 +11,10 @@
 | ID   | Descrição                                      | Estado     | Artefactos / Links                  | Critério de saída cumprido? |
 |------|------------------------------------------------|------------|-------------------------------------|-----------------------------|
 | T6a  | (pré-existente)                                | ✅ Merged  | PR #105 (merge `99b2cee`)           | Sim                         |
-| T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
-| T6c  | DOCX + XLSX                                    | ✅         | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
-| T6d  | Segurança de entrada                           | ✅         | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
-| T6e  | Encaixe na pipeline T6                         | ✅         | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
+| T6b  | PDF funcional (fixture + teste + PR)           | ✅ Merged  | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
+| T6c  | DOCX + XLSX                                    | ✅ Merged  | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
+| T6d  | Segurança de entrada                           | ✅ Merged  | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
+| T6e  | Encaixe na pipeline T6                         | ✅ Merged  | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ⏳         |                                     | Não                         |
@@ -31,6 +31,7 @@
 - 2026-10-05 · T6e · ✅ PR #109 aberto, CI verde: `write_ingested` + `validate_ingested` (regra 3), `uri` relativo ao repo, caminho completo até ao `match_knowledge` provado contra Postgres + pgvector.
 - 2026-10-06 · T6f · ✅ PR #110 aberto, CI verde: S5 (benchmark), balanço do "Done do F1", decisões P-21 a P-23. **F1 tecnicamente concluído**; no canónico fecha com o merge de #106 a #110.
 - 2026-10-06 · F1b · ✅ não necessário por agora (regra do prompt: sem benchmark de perda material em documentos reais). Reabre com a P-21 B.
+- 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
