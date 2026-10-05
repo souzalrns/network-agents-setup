@@ -22,6 +22,25 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 
 ## Log (mais recente no topo)
 
+### T2 e T3: moldes de evidência do F0.6 e do F0.7b (2026-10-05, ~12:35 UTC)
+- **Feito:** `docs/ops/L5-F0-REVALIDATION.md` §6 (6.1 F0.6, 6.2 F0.7b). Todos os campos estão em NÃO VERIFICADO até o DEV colar o output.
+- **Achado (F0.6):** nenhum dos 33 agentes do MCP tem `agent_id` = `security`.
+  - Uma pergunta por `ask_agent_network` não chega ao pack de security.
+  - O teste tem de usar `retrieve_knowledge` com `kb` = `security` (`ANM:app/api/mcp/route.js`, parâmetros `kb`, `query`, `top_k`).
+  - Pergunta sugerida: o caso `sec-01` do golden set; resultado esperado: fonte `docs/knowledge/security-agents-stack.md`.
+- **Comando do F0.7b verificado** (`runner/plan_runner/l5_eval.py`):
+  - `l5_eval validate` → `18 casos; 0 erros`;
+  - `l5_eval run` sem chave → falha logo, sem medir;
+  - o `MCP_URL` é a base (`https://agent-network-mcp-oddn.vercel.app`), e o código acrescenta `/api/mcp` (`mcp_knowledge.py:73-74`).
+- **Checklist do DEV (PowerShell, em `runner\`, venv activo):**
+  1. `$env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"`
+  2. `$env:MCP_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'MCP_API_KEY' -AsSecureString)).Password` (a chave não fica no histórico)
+  3. `python -m plan_runner.l5_eval run --out "$env:TEMP\f0-7b-report.json"`
+  4. `Remove-Item Env:MCP_API_KEY`
+  5. Colar o `summary` e os casos `--` na §6.2; fazer a pergunta do F0.6 no Claude.ai e colar na §6.1.
+- **Achado (critério):** o F0.7b não tinha limiar para o gate. Abro a **P-19** (A/B/C) no PENDENCIAS §10. Não fecho nada sem ela.
+- **Próxima micro-tarefa:** T4 (S20 e R-005 no PENDENCIAS).
+
 ### T0: arranque da campanha "gate M1" (2026-10-05, ~12:20 UTC)
 - **`main`:** NAS `098034e` (#100 merged a 2026-10-05 12:06 UTC); MCP `880d492`.
 - **PRs abertos:** 0 no NAS, 0 no MCP.
