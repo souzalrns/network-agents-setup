@@ -23,6 +23,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F3a, etapa 5: MCP atrás de feature flag (2026-10-06)
+- **Branch:** `claude/reels-analysis-tools-access-hwudk9` no `agent-network-mcp`. O branch designado foi recriado a partir da `main` `880d492`, porque o #18 já teve merge e o branch remoto tinha sido apagado.
+- **`lib/knowledge.js`:** `KNOWLEDGE_RPC_V2=1` liga a `match_knowledge_v2`.
+  - Sem a flag, o pedido e o hit são idênticos aos de hoje.
+  - Com a flag, os filtros passam por lista branca e validação (`sanitizeKnowledgeFilters`), e os hits ganham `citation.locator`, `uri`, `title` e `metadata`, sem perder campos.
+  - O contexto dos agentes também exclui documentos revogados ou expirados.
+- **Melhoria encontrada ao documentar:** ligar a flag antes do SQL deixaria o RAG vazio em silêncio, porque o `retrieveKnowledgeHits` engole erros. Agora o MCP detecta `PGRST202`, regista um aviso e cai para a `match_knowledge`. Há um teste para isto.
+- **Testes:**
+  - `tests/knowledgeV2.test.mjs` (7); `npm test` 26/26;
+  - e2e (`next build` + 13 testes) 13/13, sem alterações ao `CLAUDE.md`;
+  - mutação: com a v2 sempre ligada, o teste da flag desligada falha;
+  - gitleaks e semgrep limpos.
+  - O MCP não tem workflows de PR: a validação é local, e está descrita no PR.
+- **Documentação:** `docs/RAG_GROUNDING.md` (flag, ordem segura, fallback, rollback) e `.env.example`.
+- **PR:** `agent-network-mcp` #19, par do #113.
+
 ### F3a, etapas 2 a 4: SQL, writer e testes no NAS (2026-10-06)
 - **Migração aditiva:** `scripts/migrations/f3_provenance_retrieve.sql` acrescenta 10 colunas à `knowledge_sources` (com um CHECK do status), o `locator` à `knowledge_chunks` e a função `match_knowledge_v2`, com filtros e proveniência por `LEFT JOIN`, só nas linhas do T6. O `match_knowledge` antigo fica igual.
   - Verificada à mão e no CI: corre 2 vezes sobre dados antigos sem erro.
@@ -827,8 +843,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (F3a) | `feat/f3-provenance-retrieve` | F3a: SQL aditivo + `match_knowledge_v2` + writer com proveniência | Em curso |
-| MCP (F3a) | `claude/reels-analysis-tools-access-hwudk9` | F3a: `retrieve_knowledge` na v2 atrás de feature flag | Por fazer |
+| NAS #113 | `feat/f3-provenance-retrieve` | F3a: SQL aditivo + `match_knowledge_v2` + writer com proveniência | Aberto |
+| MCP #19 | `claude/reels-analysis-tools-access-hwudk9` | F3a: `retrieve_knowledge` na v2 atrás da flag `KNOWLEDGE_RPC_V2` | Aberto |
 
 Já com merge: NAS #63–#112 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC); MCP #10–#18.
 

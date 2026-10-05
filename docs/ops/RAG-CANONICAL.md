@@ -108,7 +108,8 @@ Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing`
    - as linhas antigas da `knowledge_sources` ficam com `status = 'active'` e o resto `NULL`;
    - o `locator` fica `NULL` nas linhas antigas.
    - Na próxima corrida do `ingest-knowledge`, as fontes iguais passam de `UNCHANGED` a `META_UPDATED` **uma vez** (passam a ter `uri` e `document_type`), sem embeddings. O `locator` só aparece quando cada fonte for re-ingerida.
-4. **Merge do PR do MCP e ligar `KNOWLEDGE_RPC_V2=1`** nas env vars da Vercel (Production), seguido de redeploy. Até lá, o MCP usa o `match_knowledge` antigo. A flag desliga-se a qualquer momento (rollback sem SQL).
+4. **Merge do PR do MCP (`agent-network-mcp` #19) e ligar `KNOWLEDGE_RPC_V2=1`** nas env vars da Vercel (Production), seguido de redeploy. Até lá, o MCP usa o `match_knowledge` antigo. A flag desliga-se a qualquer momento (rollback sem SQL).
+   - Se a flag for ligada antes do passo 2, o MCP detecta `PGRST202` (a função não existe), regista um aviso e cai para o `match_knowledge`: o RAG não fica vazio.
 5. **Confirmar:** uma chamada a `retrieve_knowledge` traz `citation.uri`, `citation.locator`, `metadata.status`… e os `filters` passam a ter efeito.
 
 **Rollback:** desligar a flag (passo 4) devolve o MCP ao caminho antigo. As colunas novas e a v2 podem ficar: não mudam nada do que existia.
