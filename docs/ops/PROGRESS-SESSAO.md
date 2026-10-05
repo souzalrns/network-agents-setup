@@ -5,12 +5,12 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f0-7b-evidencia` (empilhado sobre o `fix/F0-7b-vercel-bypass`, PR #103).
+- **Branch actual:** `feat/F1-markitdown-spike` (empilhado sobre o `docs/f0-7b-evidencia`, PR #104, que está sobre o #103).
 - **`main` de referência:** NAS `1415c8f` (merges até #102); MCP `880d492` (merge #18).
 - **Itens em trabalho:** gate M1 FECHADO (2026-10-05, decisão do maestro). T6a (spike MarkItDown) em curso, no branch `feat/F1-markitdown-spike`.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
-1. **CLAUDE — T6a (F1):** esqueleto do `ingest_document` com o adapter MarkItDown (contrato do ADR), sem ligar ao worker.
+1. **CLAUDE — T6b (F1):** mitigação 3 (processo filho com limite de memória), evento de observabilidade e o S2 do ADR §9 (golden set por formato). O T6a está em PR.
 2. **Maestro — P-19:** registar a opção do limiar. O 1.º run real cumpre as 3 opções, por isso a escolha já não muda o veredicto.
 3. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data (proposta 2026-10-12).
 4. **CLAUDE — R-005, só a causa:** ver as opções A/B/C no relatório de 2026-10-05 (P-20). A reclassificação das 201 linhas espera pelo F3.
@@ -22,6 +22,28 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### T6a: spike MarkItDown, esqueleto do `ingest_document` (2026-10-05)
+- **Branch:** `feat/F1-markitdown-spike`, empilhado sobre o #104. O código do F1 só chega à `main` depois da declaração do M1.
+- **Contrato** (ADR-INGESTION-PRIMITIVES §2–§4, só `kind = path`): `ingest_document(path) -> {content, source_meta, warnings}`.
+- **Ficheiros:**
+  - `scripts/ingest_document.py`. Não está ligado ao worker nem ao T6, e não escreve ficheiros; a CLI só imprime JSON. Faz o seguinte:
+    - recusa antes do adapter: `unsupported_format`, também quando a assinatura não bate com a extensão; `too_large`; `decompression_limit`, a mitigação 2 do §5, que lê só o directório central do ZIP;
+    - normaliza o `content` e calcula o `content_hash` com o mesmo SHA-256 do T6;
+    - gera o `source_meta` com o schema mínimo do §4;
+  - `runner/requirements-ingest.txt`: `markitdown[docx,pdf,xlsx]>=0.1.4`, à parte do runner, porque puxa o onnxruntime;
+  - `runner/tests/test_ingest_document.py`: 26 testes de contrato (correm sempre) e 6 smoke com o MarkItDown real, com documentos sintéticos gerados no teste e nenhum binário no repo. No CI, os 6 smoke ficam em skip documentado.
+- **2 achados com o MarkItDown 0.1.8, ambos com teste:**
+  - um `.pdf` que é texto sai como texto, sem erro;
+  - um PDF que o pdfminer não lê cai no conversor de texto e volta em bruto como "Markdown".
+  - Nos 2 casos, o `source_meta` diria `pdf` com conteúdo falso.
+  - **Correcção:** só o conversor do formato (`enable_builtins=False` + `register_converter`) e a verificação da assinatura antes de converter.
+- **Testes:**
+  - sem o `markitdown` (como no CI): `pytest` 600 passed, 7 skipped (574 + 26 novos; 6 skips novos);
+  - com o `markitdown` 0.1.8: o ficheiro novo dá 32 passed;
+  - `ruff check` limpo.
+- **Fica para o T6b:** a mitigação 3 (processo filho com limite de memória do SO), o evento de observabilidade (§3, item 8) e o S2 a S5 do §9.
+- **Ingest:** nenhum ficheiro tocado está no MANIFEST. O merge deve dar `chunks=0`.
 
 ### Decisão do maestro: F0.6 BLOQUEADO e gate M1 FECHADO (2026-10-05)
 
@@ -624,7 +646,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 | PR | Branch | Item | Estado |
 |---|---|---|---|
 | NAS #103 | `fix/F0-7b-vercel-bypass` | F0.7b: cabeçalho opcional `x-vercel-protection-bypass` | Aberto. Fazer o merge primeiro |
-| NAS #104 | `docs/f0-7b-evidencia` | F0.7b FECHADO (evidência do run) e T5 do gate M1 | Aberto, empilhado sobre o #103. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| NAS #104 | `docs/f0-7b-evidencia` | F0.7b FECHADO; F0.6 BLOQUEADO; gate M1 FECHADO | Aberto, empilhado sobre o #103. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| NAS (T6a) | `feat/F1-markitdown-spike` | F1: esqueleto do `ingest_document` com o adapter MarkItDown | Aberto, empilhado sobre o #104. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
 
 Já com merge: NAS #63–#102; MCP #10–#18.
 

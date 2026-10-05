@@ -120,6 +120,12 @@ Classificação de risco: **MÉDIO** (zip bomb sem fix a caminho). Mitigações 
 | S4 | Saída → `docs/knowledge/ingested/<nome>.md` + `<nome>.meta.yaml` → entrada no MANIFEST → T6 (o merge dispara o ingest: **W-prod, decisão do maestro**) | W-repo → W-prod no merge |
 | S5 | Medir: chars por formato, tabelas preservadas (sim/não), tempo, memória máxima | R |
 
+**Estado do spike (2026-10-05, T6a, branch `feat/F1-markitdown-spike`):** o gate M1 fechou (decisão do maestro). O S1 está feito em esqueleto: `scripts/ingest_document.py`, pin em `runner/requirements-ingest.txt` e `runner/tests/test_ingest_document.py`. Ficam para o T6b: a mitigação 3 (processo filho com limite de memória), o evento de observabilidade (§3, item 8) e o S2 a S5.
+
+Achados do T6a com o MarkItDown 0.1.8. Os 2 estão cobertos por testes:
+- com os conversores por omissão, um `.pdf` que é texto sai como texto, sem erro;
+- com os conversores por omissão, um PDF que o pdfminer não lê também cai no conversor de texto e volta em bruto como "Markdown". O adapter regista só o conversor do formato (`enable_builtins=False` + `register_converter`) e verifica a assinatura do ficheiro antes de converter.
+
 **Done do F1** (EXECUTION-PLAN §7): 3 formatos processados; ingestão E2E pela pipeline existente; path de knowledge estável.
 
 ## 10. Decisão pedida ao maestro
