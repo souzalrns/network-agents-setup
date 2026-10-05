@@ -92,6 +92,10 @@ The first domain pack built on this core. Horizontal specialists (SEO, AI Visibi
 
 ## Quickstart
 
+![Quickstart: a stub run pauses at a human gate, is approved, and finishes with its artifacts and audit trail](./docs/assets/quickstart-demo.gif)
+
+*Real output of the commands below (stub mode, no API key).*
+
 ```bash
 git clone https://github.com/souzalrns/network-agents-setup
 cd network-agents-setup/runner
