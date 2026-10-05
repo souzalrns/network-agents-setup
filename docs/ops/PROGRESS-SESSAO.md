@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f4-marketing-capabilities` (empilhado no #113).
+- **Branch actual:** `feat/f5-e2e-evidence` (empilhado no #114).
 - **`main` de referência:** NAS `e10f772` (merges até #112); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F4** (F3a em PR: #113 + MCP #19). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F5 preparado, à espera do run real do DEV**. Em PR: F3a (#113 + MCP #19), F4 (#114). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F5: preparado para o run real do DEV (2026-10-06)
+- **Escolha do caso:** o plano `security-audit-demo`.
+  - Liga o T6 (o pack de security já está no L5), o retrieve no MCP de produção (bloco `knowledge:` do passo audit) e o Gemini real (triage, audit e report), e pára no gate humano.
+  - É real e não sensível, e só lê.
+- **`scripts/f5_evidence.py`:** resume o directório do run (estado, eventos, L5 com hits e fontes, tokens por modelo, artefactos com hash) e dá o veredicto pelos 5 critérios. Nunca imprime prompts, conteúdo nem variáveis de ambiente.
+  - 11 testes: um run stub real dá INCOMPLETO, e um segredo plantado num artefacto e no contexto não aparece na saída.
+- **Achados da verificação do runbook** (corrigidos antes do commit):
+  - o `pilots/f5-run/` não estava no `.gitignore`, o que punha os artefactos do run real em risco de ir para um commit;
+  - escrevi que o worker tinha retry a 429, e é falso (só o `ingest_apply` tem);
+  - os preços em `config/model-prices.yaml` estão `null` (T-004), e com `--max-cost-usd` o worker recusa chamar o modelo. O runbook usa só `--max-tokens`.
+- **CI do GitHub sem runners:** os PRs #113 e #114 têm jobs "not acquired by Runner". Fiz 1 re-execução em cada; a validação local e o resto do CI estão verdes.
+- **Regra 9:** o F5 fica 🔒 à espera do run do DEV. O F6 não arranca sem o F5 (e depende também da P-23).
 
 ### F4: `marketing-capabilities.yaml` com maturidade medida (2026-10-06)
 - **F3a fechado em PR:** #113 (NAS) e MCP #19.
