@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 00:50 UTC
+Última atualização: 2026-10-06 02:20 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -17,8 +17,8 @@
 | T6e  | Encaixe na pipeline T6                         | ✅ Merged  | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅         | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim (merge pendente)        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
-| F2   | Research web (Crawl4AI / scrape + provenance)  | ⏳         |                                     | Não                         |
-| F3   | Provenance no retrieve                         | 🔒         |                                     | Não                         |
+| F2   | Research web (Crawl4AI / scrape + provenance)  | ✅         | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt; merge pendente) |
+| F3   | Provenance no retrieve                         | ⏳         |                                     | Não                         |
 | F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
@@ -31,11 +31,14 @@
 - 2026-10-05 · T6e · ✅ PR #109 aberto, CI verde: `write_ingested` + `validate_ingested` (regra 3), `uri` relativo ao repo, caminho completo até ao `match_knowledge` provado contra Postgres + pgvector.
 - 2026-10-06 · T6f · ✅ PR #110 aberto, CI verde: S5 (benchmark), balanço do "Done do F1", decisões P-21 a P-23. **F1 tecnicamente concluído**; no canónico fecha com o merge de #106 a #110.
 - 2026-10-06 · F1b · ✅ não necessário por agora (regra do prompt: sem benchmark de perda material em documentos reais). Reabre com a P-21 B.
+- 2026-10-06 · F2 · ✅ PR #111 aberto, CI verde: `fetch` com allowlist por redirect, robots.txt (RFC 9309), SSRF, tectos de bytes e de tempo, proveniência e saída pelo T6; 42 testes com servidor local; corrida real no pypi.org.
 - 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
 - **F5 precisa de credenciais** (run real com Gemini): só o DEV o pode correr. O Claude prepara o comando e o molde de evidência.
+- **F2, rede da sessão cloud:** a política de rede deste ambiente recusa (403 no proxy) `example.com`, `python.org` e `wikipedia.org`. A corrida real do F2 foi feita no `pypi.org`, que é acessível. Para outros hosts: acrescentá-los em Network access nas definições do ambiente (https://code.claude.com/docs/en/cloud-environments#network-access), ou correr na máquina do DEV.
+- **F2, Crawl4AI:** o prompt diz "Crawl4AI preferencial"; a decisão canónica do F2 é "a partir do `scrape.yml`; Crawl4AI só se o superar". Seguiu-se a canónica: o F2a não instala o Crawl4AI.
 - **F6 do prompt ≠ F6 do canónico.** No `PENDENCIAS.md`, o F6 é "UM domínio de prova, com o Domain Onboarding Cost medido; escolhido só depois do F5" (D-EP8). Neste ficheiro, F6 é "hardening final + portfolio package". Não se redefine um ID decidido: quando se chegar lá, o maestro escolhe (A/B/C) entre fazer os 2, renomear o do prompt ou fundi-los.
 - **F4 do prompt ≈ F4 do canónico**, que também pede validação no E7 e maturidade de capability; e **F3 do canónico é mais largo** (validade/conflitos, source authority, golden set alargado, 33 ficheiros fora do MANIFEST). Cada fase cumpre o critério do prompt **e** regista o que falta do canónico, sem o cortar.
 - **Escrita em produção:** pôr ficheiros convertidos no MANIFEST (`scripts/ingest_delta.py`) faz o merge escrever no Supabase. É decisão do maestro e fica fora do T6e (o T6e prova o encaixe contra Postgres local).
@@ -184,3 +187,23 @@ BLOQUEIOS: nenhum para o código. Para produção: merge de #106→#110 e a entr
 8. O CI tem um job dedicado que falha (em vez de dar skip) se faltar o conversor ou a base de dados.
 9. As medições (S5) mostram listas e tabelas a 100%, e só os headings de PDF perdidos; isso orientou a decisão de não adoptar já o Docling.
 10. 6 PRs pequenos e empilhados, cada um com CI verde e relatório, sem tocar em produção.
+
+```
+FASE: F2 (F2a: fetch)
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: 🔒 → ⏳ → ✅ (critério do prompt; merge pendente, do maestro; empilhado no #110)
+ARTEFACTOS:
+- scripts/web_fetch.py (fetch + CLI), runner/tests/test_web_fetch.py (42, servidor HTTP local)
+- scripts/ingest_document.py: HtmlConverter com strict=True; scripts/ingest_benchmark.py: reutiliza o módulo carregado
+- docs/ops/WEB-FETCH.md (protecções, códigos, corrida real, fora do âmbito); ADR §9; P-24 e P-25 no canónico
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/111
+- Branch: feat/f2-web-fetch-provenance
+- Commits: aea5fe6, e5c2601, 17c1144, 2989a48, 65a1c6c
+TESTES: pytest 679 passed, 29 skipped (sem extras); 133 passed com MarkItDown + Postgres; semgrep 0; CI 11/11 verde
+CORRIDA REAL: pypi.org (3 páginas 200; robots.txt real proíbe /simple/ → recusado; domínio fora da allowlist → recusado).
+  example.com, python.org e wikipedia.org: 403 no proxy da sessão (política de rede do ambiente).
+PENDENCIAS.md: atualizado (sim; F2 → EM CURSO no canónico)
+PRÓXIMO PASSO RECOMENDADO: F3 (provenance no retrieve)
+BLOQUEIOS: nenhum para o F2a. Decisões P-24 e P-25 pendentes (não bloqueiam).
+```

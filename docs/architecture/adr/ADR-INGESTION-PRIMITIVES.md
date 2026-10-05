@@ -147,6 +147,16 @@ Classificação de risco: **MÉDIO** (zip bomb sem fix a caminho). Mitigações 
   - os campos novos do `source_meta` na `knowledge_sources`, que é o F3;
   - o F1b, que depende da P-21.
 
+**F2a (2026-10-06): `fetch` feito, a partir do `scrape.yml`.**
+- `scripts/web_fetch.py` implementa o §2 (`fetch(uri, limits)`) com o mesmo adapter MarkItDown do F1 (`HtmlConverter` com `strict=True`, no processo filho) e a saída pelo `write_ingested`, ou seja, pelo T6 (regra 2).
+- **Extensões do §3, item 6 (fetch):** `invalid_uri`, `blocked_private_address` (SSRF), `unsupported_content_type` e `conversion_failed`.
+- **Protecções:**
+  - a allowlist é verificada em cada redirect;
+  - o robots.txt segue a RFC 9309 (5xx ou inacessível = tudo proibido);
+  - o tamanho é lido em streaming com tecto, e há um prazo total do pedido.
+- **Evidência:** 42 testes contra um servidor HTTP local, mais uma corrida real no pypi.org, onde o robots.txt real proíbe `/simple/` e o fetch recusou. Detalhe em `docs/ops/WEB-FETCH.md`.
+- **Fica para o F2:** o `discover`, o fallback JavaScript e o Crawl4AI (só com evidência), mais as decisões P-24 (`scrape.yml`) e P-25 (allowlist por área).
+
 Achados do T6a com o MarkItDown 0.1.8. Os 2 estão cobertos por testes:
 - com os conversores por omissão, um `.pdf` que é texto sai como texto, sem erro;
 - com os conversores por omissão, um PDF que o pdfminer não lê também cai no conversor de texto e volta em bruto como "Markdown". O adapter regista só o conversor do formato (`enable_builtins=False` + `register_converter`) e verifica a assinatura do ficheiro antes de converter.

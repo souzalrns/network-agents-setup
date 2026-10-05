@@ -125,8 +125,17 @@ class Converted:
 
 Converter = Callable[[Path, str], Converted]
 
-# O conversor do MarkItDown para cada `document_type` do spike.
-MARKITDOWN_CONVERTERS = {"pdf": "PdfConverter", "docx": "DocxConverter", "xlsx": "XlsxConverter"}
+# O conversor do MarkItDown para cada `document_type` do spike. O "html" é do `fetch` do F2
+# (scripts/web_fetch.py); o `ingest_document` continua a aceitar só PDF, DOCX e XLSX.
+MARKITDOWN_CONVERTERS = {
+    "pdf": "PdfConverter",
+    "docx": "DocxConverter",
+    "xlsx": "XlsxConverter",
+    "html": "HtmlConverter",
+}
+# Opções por formato. No HTML, `strict=True`: sem ela, um HTML muito aninhado
+# (RecursionError) cai em silêncio para texto simples (verificado no 0.1.8).
+MARKITDOWN_OPTIONS: dict[str, dict[str, Any]] = {"html": {"strict": True}}
 
 
 def markitdown_converter(path: Path, document_type: str) -> Converted:
@@ -154,7 +163,7 @@ def markitdown_converter(path: Path, document_type: str) -> Converted:
     md = MarkItDown(enable_builtins=False, enable_plugins=False)
     md.register_converter(getattr(md_converters, MARKITDOWN_CONVERTERS[document_type])())
     try:
-        result = md.convert_local(path)
+        result = md.convert_local(path, **MARKITDOWN_OPTIONS.get(document_type, {}))
     except Exception as exc:  # o MarkItDown e as bibliotecas por baixo têm excepções próprias
         raise IngestError("conversion_failed", f"{type(exc).__name__}: {exc}") from exc
     return Converted(markdown=result.markdown or "", title=result.title)
