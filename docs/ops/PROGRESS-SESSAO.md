@@ -22,6 +22,44 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 
 ## Log (mais recente no topo)
 
+### T5: declaração do gate M1 (2026-10-05, ~12:55 UTC)
+
+`M1 INCOMPLETO — F1 bloqueado; faltam: F0.6 (evidência em docs/ops/L5-F0-REVALIDATION.md §6.1), F0.7b (evidência em §6.2), P-19 (limiar do F0.7b, PENDENCIAS §10)`
+
+| Critério do M1 | Estado | Evidência |
+|---|---|---|
+| F0.3 (t6 parada) | FEITO | PENDENCIAS §7; #95 |
+| F0.1 e R-002 | FEITO | PENDENCIAS §7; #97 |
+| F0.6 (conector MCP com a fonte citada) | **Falta** (DEV) | Molde em §6.1, campos NÃO VERIFICADO |
+| F0.7b (`l5_eval run` contra o MCP real) | **Falta** (DEV) | Molde em §6.2, campos NÃO VERIFICADO |
+| Limiar do F0.7b | **Falta** (maestro) | P-19 pendente |
+| R-005 | Documentado | BLOQUEADO (F3); a causa é a P-20, pendente |
+
+O T6 (F1 MarkItDown) **não arrancou**, como pede o gate.
+
+## Relatório sessão 2026-10-05 (campanha "gate M1")
+- **Repo, branch e commit de partida:** NAS `main` `098034e`; branch `docs/m1-moldes-f0`. MCP `main` `880d492` (não tocado).
+- **PRs abertos vistos:** 0 no NAS e 0 no MCP. O #100 entrou às 12:06 UTC; a corrida #183 do ingest deu `chunks=0 unchanged=39`.
+- **Micro-tarefas:**
+  - T0 (arranque);
+  - T1: o #100 já tinha entrado, por isso o S1 está feito sem trabalho;
+  - T2 e T3 (moldes do F0.6 e do F0.7b, comando verificado);
+  - T4 (S20 e R-005);
+  - T5 (M1 = NÃO).
+- **IDs do PENDENCIAS alterados:**
+  - F0.6 e F0.7b: evidência aponta para os moldes;
+  - S20: caminho e prazo proposto 2026-10-12;
+  - R-005: nota da P-20;
+  - novas P-19 e P-20 (§10). Contagens sem mudança: 104 vivos.
+- **M1:** NÃO. Faltam o F0.6, o F0.7b e a P-19.
+- **F1:** não iniciado (bloqueado pelo M1).
+- **Bloqueios do DEV:**
+  - correr o F0.6 e o F0.7b (checklist PowerShell na entrada T2/T3) e colar o output no §6;
+  - decidir a P-19 e a P-20;
+  - confirmar ou mudar o prazo do S20 (2026-10-12).
+- **Próxima micro-tarefa exacta:** quando o output do F0.6 e do F0.7b estiver no §6, repetir o T5. Com o M1 verde, segue o T6a (contrato + pin `markitdown>=0.1.4` + esqueleto, branch `feat/F1-markitdown-spike`).
+- **git status:** limpo depois do push deste branch.
+
 ### T4: S20 e R-005 no PENDENCIAS (2026-10-05, ~12:45 UTC)
 - **S20** deixa de estar "ABERTO sem data nem caminho". Opções:
   - **A:** o DEV corrige já por SSH. Caminho: `ANM:CONFIGURACAO_VM_BRIDGE_WORKER.md`, passo 4: pôr a `SUPABASE_SERVICE_ROLE_KEY` actual onde o `pm2` a lê, depois `pm2 restart bridge-worker --update-env` e `pm2 save`.
