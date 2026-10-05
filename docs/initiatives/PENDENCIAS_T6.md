@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-05 21:05 UTC
+Última atualização: 2026-10-05 22:00 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -14,7 +14,7 @@
 | T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
 | T6c  | DOCX + XLSX                                    | ✅         | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
 | T6d  | Segurança de entrada                           | ✅         | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
-| T6e  | Encaixe na pipeline T6                         | ⏳         |                                     | Não                         |
+| T6e  | Encaixe na pipeline T6                         | ⏳         | Branch `feat/t6e-pipeline-integration` (empilhado no T6d); PR por abrir | Não                         |
 | T6f  | Fecho F1 no PENDENCIAS                         | 🔒         |                                     | Não                         |
 | F1b  | Docling (só se perda de estrutura)             | 🔒         |                                     | Não                         |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | 🔒         |                                     | Não                         |

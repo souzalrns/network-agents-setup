@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/t6d-input-security-guards` (empilhado no T6c, PR #107).
+- **Branch actual:** `feat/t6e-pipeline-integration` (empilhado no T6d, PR #108).
 - **`main` de referência:** NAS `99b2cee` (merges até #105); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6d (segurança de entrada). T6b ✅ (#106) e T6c ✅ (#107), ambos com CI verde.
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6e (encaixe no T6). T6b ✅ (#106), T6c ✅ (#107) e T6d ✅ (#108), todos com CI verde.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,24 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### T6e: encaixe na pipeline T6 (2026-10-05)
+- **T6d fechado:** o PR #108 ficou verde (11 checks) depois da correcção do semgrep; registo e mini-relatório no `PENDENCIAS_T6.md`.
+- **Ponto de chamada:**
+  - o `ingest_document` é chamado pelo DEV ou pela CLI (`--out-dir`) e grava em `docs/knowledge/ingested/`;
+  - o `.md` entra no MANIFEST, e o merge corre o T6 real (`ingest-knowledge` → `ingest_apply.apply_one`).
+  - Não se criou nenhuma pipeline nova (ADR §2, regra 2).
+- **Código (`scripts/ingest_document.py`):**
+  - `write_ingested`: grava o `.md` byte a byte e o `.meta.yaml`, e não sobrepõe ficheiros;
+  - `validate_ingested`: regra 3 do ADR (sidecar, campos mínimos, hash);
+  - `slugify`;
+  - CLI `--out-dir`, `--name` e `--overwrite`.
+- **Privacidade:** o `uri` passa a ser relativo ao repo. Um ficheiro de fora do repo fica `external:<nome>`, com o aviso `uri_outside_repo`. Antes, o `.meta.yaml`, que vai para o git, guardaria um caminho da máquina do DEV (por exemplo `C:\Users\…`).
+- **Testes:**
+  - `test_ingest_pipeline.py` (14): o hash do `.md` é o `sha256_file` do T6, o validador, a guarda do MANIFEST, o chunker real do T6 nos 3 formatos (as linhas de tabela chegam inteiras) e a CLI;
+  - `test_ingest_pipeline_rag.py` (4): o caminho completo contra Postgres com pgvector, com as fixtures do `test_rag_canonical`. Provam que o `content_hash` do T6 é o do `source_meta`, que o retrieve devolve o documento com a linha da tabela, que a 2.ª corrida é UNCHANGED, e que sem orçamento dá SKIPPED_QUOTA, sem embeddings nem escrita parcial.
+- **CI:** o job `test-ingest` ganha o serviço Postgres com pgvector (como o `test-rag`) e `RAG_TEST_REQUIRED=1`.
+- **Não feito, de propósito:** nenhuma entrada no MANIFEST, porque isso escreve em produção no merge e é decisão do maestro.
 
 ### T6d: segurança de entrada (2026-10-05)
 - **T6c fechado:** o PR #107 tem CI verde nas 2 cabeças (11 checks).
@@ -709,7 +727,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 |---|---|---|---|
 | NAS #106 | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Aberto, CI verde |
 | NAS #107 | `feat/t6c-docx-xlsx-fixtures-and-tests` | F1 / T6c: fixtures DOCX + XLSX + testes | Aberto, CI verde (empilhado no #106) |
-| NAS (T6d) | `feat/t6d-input-security-guards` | F1 / T6d: segurança de entrada | Por abrir (empilhado no #107) |
+| NAS #108 | `feat/t6d-input-security-guards` | F1 / T6d: segurança de entrada | Aberto, CI verde (empilhado no #107) |
+| NAS (T6e) | `feat/t6e-pipeline-integration` | F1 / T6e: encaixe no T6 | Por abrir (empilhado no #108) |
 
 Já com merge: NAS #63–#105 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105); MCP #10–#18.
 

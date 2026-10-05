@@ -15,7 +15,7 @@ ingest_document(path) -> {"content": str, "source_meta": dict, "warnings": [str]
   - `content`: Markdown normalizado (LF, sem espaços no fim das linhas, um `\n` no fim);
   - `source_meta`: o schema mínimo do ADR §4 (`uri`, `title`, `document_type`, `retrieved_at`, `content_hash`, `status`). O `content_hash` é o SHA-256 do `content` em UTF-8, o mesmo que o T6 calcula sobre o ficheiro gravado;
   - `warnings`: avisos que não alteram o conteúdo (§4).
-- **Não escreve nada.** A ligação ao T6 (ficheiro em `docs/knowledge/…` → MANIFEST → ingest) é o T6e.
+- **Só escreve com `--out-dir`** (T6e): ver a §7. O `uri` é relativo à raiz do repo; um ficheiro de fora do repo fica `external:<nome>`, com o aviso `uri_outside_repo`, para não gravar caminhos da máquina local no git.
 
 Uso:
 
@@ -82,6 +82,7 @@ Um caminho que não é ficheiro dá `FileNotFoundError` (não é um erro do cont
 | `title_from_filename` | O conversor não deu título (o `PdfConverter` nunca dá; ver §5) | Não |
 | `xlsx_nan_cells=<n>` | Células `NaN` nas tabelas de um XLSX: célula vazia ou fórmula sem valor em cache | Não |
 | `memory_limit_unavailable` | Conversão fora de Linux, sem limite de memória | Não |
+| `uri_outside_repo` | O documento está fora do repo: o `uri` fica só com o nome | Não |
 
 ## 5. Comportamento do MarkItDown 0.1.8 (fixado por testes)
 
@@ -99,3 +100,27 @@ Um caminho que não é ficheiro dá `FileNotFoundError` (não é um erro do cont
 - As fixtures sintéticas estão em `runner/tests/fixtures/ingest/<formato>/`, cada uma com o gerador reprodutível ao lado. Os pins dos geradores estão em `runner/requirements-fixtures.txt`.
 - O job `test-ingest` (`.github/workflows/runner-tests.yml`) instala o MarkItDown e os geradores, com `INGEST_TEST_REQUIRED=1`: a falta de uma dependência opcional é erro, não skip.
 - Sem os extras (jobs `test`/`test-slow` e em local), os testes que precisam deles dão skip com o motivo.
+
+## 7. Encaixe no T6 (T6e, ADR §9 S4)
+
+Não há pipeline paralela (ADR §2, regra 2). O documento convertido entra no L5 pelo T6 que já existe:
+
+```
+documento → ingest_document (processo filho, MarkItDown)
+  → write_ingested: docs/knowledge/ingested/<nome>.md + <nome>.meta.yaml
+  → entrada no MANIFEST de scripts/ingest_delta.py          ← decisão do maestro (escreve em produção no merge)
+  → merge → workflow ingest-knowledge → ingest_apply.apply_one
+       (chunk_markdown → embed com orçamento --max-chunks → replace_chunks)
+  → match_knowledge (MCP retrieve_knowledge)
+```
+
+```bash
+python scripts/ingest_document.py caminho/doc.pdf --out-dir docs/knowledge/ingested [--name nome] [--overwrite]
+```
+
+- **O `.md` é o `content` byte a byte.** O `sha256_file` do T6 dá o `source_meta.content_hash`, e o `knowledge_sources.content_hash` gravado pelo T6 é esse mesmo valor (provado contra Postgres em `test_ingest_pipeline_rag.py`).
+- **O `.meta.yaml`** guarda o `source_meta` e os avisos. Até ao F3, os campos novos do ADR §4 vivem só neste ficheiro; o F3 é que estende a `knowledge_sources`.
+- **Regra 3 do ADR no CI:** o `validate_ingested` exige o `.meta.yaml`, os campos mínimos e o hash certo. `test_manifest_so_tem_convertidos_com_source_meta_valido` aplica-o a qualquer entrada do MANIFEST em `docs/knowledge/ingested/`. Um `.md` editado à mão depois da conversão falha o CI.
+- **Sem sobreposição:** `write_ingested` recusa ficheiros existentes sem `overwrite=True` / `--overwrite`.
+- **Orçamento e incremental:** os do T6, sem mudanças. Sem orçamento, o ficheiro fica `SKIPPED_QUOTA`, sem escrita parcial; a 2.ª corrida igual é `UNCHANGED`, sem embeddings. Os 2 casos estão testados com o documento convertido.
+- **Gate humano:** o T6 não tem HITL próprio. O gate é o PR que põe o `.md` no MANIFEST, cujo merge é do maestro.

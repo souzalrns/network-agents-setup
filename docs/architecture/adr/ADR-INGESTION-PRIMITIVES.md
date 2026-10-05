@@ -129,6 +129,12 @@ Classificação de risco: **MÉDIO** (zip bomb sem fix a caminho). Mitigações 
 - Fora de Linux não há limite de memória, e isso fica no aviso `memory_limit_unavailable`.
 - Os limites, os códigos e os avisos estão em `docs/ops/INGEST-DOCUMENT.md`.
 
+**T6e (2026-10-05): S4 feito, sem a entrada no MANIFEST.**
+- `write_ingested` grava `<nome>.md` (o `content` byte a byte) e `<nome>.meta.yaml`.
+- `validate_ingested` aplica a regra 3 a qualquer entrada do MANIFEST em `docs/knowledge/ingested/`.
+- O caminho completo (conversão → `apply_one` real → `match_knowledge`) está provado contra Postgres com pgvector no CI. O `content_hash` do T6 é o do `source_meta`.
+- Pôr ficheiros no MANIFEST continua a ser decisão do maestro (W-prod).
+
 Achados do T6a com o MarkItDown 0.1.8. Os 2 estão cobertos por testes:
 - com os conversores por omissão, um `.pdf` que é texto sai como texto, sem erro;
 - com os conversores por omissão, um PDF que o pdfminer não lê também cai no conversor de texto e volta em bruto como "Markdown". O adapter regista só o conversor do formato (`enable_builtins=False` + `register_converter`) e verifica a assinatura do ficheiro antes de converter.
