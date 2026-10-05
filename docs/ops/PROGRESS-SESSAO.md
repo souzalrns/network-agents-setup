@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/portfolio-recruiters` (só documentação).
-- **`main` de referência:** NAS `5736621` (merges até #99); MCP `880d492` (merge #18); MCP `4916872` (merges #15, #16 e #17).
-- **Itens em trabalho:** gate F0 (faltam o F0.6 e o F0.7b); H-01 (partes 1, 2 e 3, depois do gate).
+- **Branch actual:** `docs/m1-moldes-f0` (só documentação; campanha "gate M1").
+- **`main` de referência:** NAS `098034e` (merges até #100); MCP `880d492` (merge #18).
+- **Itens em trabalho:** gate M1 = F0 verde (faltam o F0.6 e o F0.7b, ambos do DEV); o F1 código está bloqueado até lá.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **DEV — F0.6:** pergunta real no conector MCP; a resposta tem de citar a fonte (`[Fonte: …]`).
@@ -21,6 +21,17 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 **Gate:** o código do F1 (spike MarkItDown) só arranca com o F0.6 e o F0.7b feitos (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### T0: arranque da campanha "gate M1" (2026-10-05, ~12:20 UTC)
+- **`main`:** NAS `098034e` (#100 merged a 2026-10-05 12:06 UTC); MCP `880d492`.
+- **PRs abertos:** 0 no NAS, 0 no MCP.
+- **Slots da fila:**
+  - S1 (#100): **feito**, merged;
+  - S2 (F0.6) e S3 (F0.7b): ABERTO, DEV;
+  - S4: R-005 BLOQUEADO (F3); S20 ABERTO, **sem data**;
+  - S5 (F1): EM CURSO só no ADR; o spike está bloqueado pelo M1.
+- **M1:** incompleto (F0.6 e F0.7b sem evidência no git).
+- **Próxima micro-tarefa:** T2 (molde de evidência do F0.6).
 
 ### Portfólio para recrutadores (2026-10-05)
 **Pedido do maestro:** confirmar e expandir o `docs/PORTFOLIO.md`, com um bloco "For recruiters / visitors" no README, só números verificáveis e sem duplicar o README.
