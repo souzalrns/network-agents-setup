@@ -31,8 +31,16 @@ Limites por omissão (todos ajustáveis por parâmetro e pela CLI):
 | Memória do processo filho | 1 GiB (`RLIMIT_DATA`) | Medido no T6d: o MarkItDown 0.1.8 precisa de ≥ 384 MiB (o onnxruntime do magika rebenta abaixo); o `RLIMIT_AS` foi recusado por ser instável com o onnxruntime (768 MiB falhava sempre e 512 MiB só às vezes) |
 | Tempo da conversão | 60 s | O filho é morto ao fim do tempo |
 
-O que ainda NÃO faz (passos seguintes do §9 do ADR):
-- não está ligado ao worker, ao `plan_runner` nem ao T6, e não escreve ficheiros (S4);
+Encaixe no T6 (T6e, ADR §9 S4): `write_ingested` grava `<nome>.md` (o `content` tal como
+está, por isso o hash do T6 é o `content_hash`) e `<nome>.meta.yaml` (proveniência). Para o
+L5, o `.md` entra no MANIFEST de `scripts/ingest_delta.py`, e o merge corre o T6 real
+(`ingest_apply.apply_one`). Esse passo escreve em produção e é decisão do maestro.
+`validate_ingested` verifica a regra 3 do ADR (nada entra no L5 sem `source_meta` válido).
+
+O `uri` é relativo à raiz do repo. Um ficheiro de fora do repo fica só com o nome
+(`external:<nome>`) e o aviso `uri_outside_repo`, para não gravar caminhos da máquina local.
+
+O que ainda NÃO faz:
 - não emite o evento de observabilidade do ADR §3, item 8;
 - só aceita ficheiros do repo ou entregues pelo DEV (§5, item 5).
 
@@ -43,6 +51,7 @@ Dependência à parte do runner: `pip install -r runner/requirements-ingest.txt`
 Uso (só lê e imprime JSON, não escreve nada):
 
     python scripts/ingest_document.py caminho/do/documento.pdf [--timeout-s 60] [--memory-limit-mb 1024]
+    python scripts/ingest_document.py caminho/do/documento.pdf --out-dir docs/knowledge/ingested
 """
 
 from __future__ import annotations
@@ -61,6 +70,11 @@ from datetime import UTC, datetime
 from functools import partial
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+INGESTED_DIR = "docs/knowledge/ingested"
+# Campos do source_meta que o `.meta.yaml` tem de ter (ADR §4, mínimo deste spike).
+REQUIRED_META = ("uri", "title", "document_type", "retrieved_at", "content_hash", "status")
 
 # Formatos do spike (ADR §9, S2). Os outros dão `unsupported_format` até haver golden set.
 DOCUMENT_TYPES = {".pdf": "pdf", ".docx": "docx", ".xlsx": "xlsx"}
@@ -313,6 +327,81 @@ def _child_main(target: str, document_type: str, path: str, out: str, limit: str
     return 0
 
 
+def source_uri(path: Path, repo_root: Path = REPO_ROOT) -> tuple[str, str | None]:
+    """`uri` relativo à raiz do repo; de fora do repo, só o nome e um aviso.
+
+    Evita gravar no `.meta.yaml` (que vai para o git) um caminho da máquina local.
+    """
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(repo_root.resolve()).as_posix(), None
+    except ValueError:
+        return f"external:{path.name}", "uri_outside_repo"
+
+
+def slugify(text: str) -> str:
+    """Nome de ficheiro estável: minúsculas ASCII, dígitos e hífens."""
+    import re
+    import unicodedata
+
+    ascii_text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_text.lower()).strip("-")
+    return slug or "documento"
+
+
+def write_ingested(
+    result: dict[str, Any],
+    out_dir: str | Path,
+    name: str,
+    *,
+    overwrite: bool = False,
+) -> tuple[Path, Path]:
+    """S4 do ADR §9: grava `<name>.md` (o `content` tal e qual) e `<name>.meta.yaml`.
+
+    O `.md` é gravado byte a byte como o `content` (UTF-8, LF), por isso o
+    `sha256_file` do T6 dá o `source_meta.content_hash`. Não sobrepõe ficheiros
+    existentes sem `overwrite=True`. Não toca no MANIFEST.
+    """
+    import yaml  # PyYAML está no runner/requirements.txt
+
+    out = Path(out_dir)
+    md_path, meta_path = out / f"{name}.md", out / f"{name}.meta.yaml"
+    for target in (md_path, meta_path):
+        if target.exists() and not overwrite:
+            raise FileExistsError(f"{target} já existe (usar overwrite=True / --overwrite)")
+    out.mkdir(parents=True, exist_ok=True)
+    md_path.write_bytes(result["content"].encode("utf-8"))
+    meta = {**result["source_meta"], "warnings": list(result["warnings"])}
+    meta_path.write_text(
+        yaml.safe_dump(meta, allow_unicode=True, sort_keys=False), encoding="utf-8", newline="\n"
+    )
+    return md_path, meta_path
+
+
+def validate_ingested(md_path: str | Path) -> list[str]:
+    """Regra 3 do ADR §2: um `.md` convertido só entra no L5 com `source_meta` válido.
+
+    Devolve a lista de problemas (vazia = válido): sidecar `.meta.yaml` em falta, campos
+    mínimos em falta, ou `content_hash` diferente do SHA-256 do `.md`.
+    """
+    import yaml
+
+    md = Path(md_path)
+    meta_path = md.with_suffix(".meta.yaml")
+    if not md.is_file():
+        return [f"{md}: o ficheiro não existe"]
+    if not meta_path.is_file():
+        return [f"{md}: falta o {meta_path.name} (source_meta obrigatório, ADR §2 regra 3)"]
+    meta = yaml.safe_load(meta_path.read_text(encoding="utf-8")) or {}
+    problems = [f"{meta_path.name}: falta o campo {k}" for k in REQUIRED_META if not meta.get(k)]
+    digest = hashlib.sha256(md.read_bytes()).hexdigest()
+    if meta.get("content_hash") and meta["content_hash"] != digest:
+        problems.append(
+            f"{meta_path.name}: content_hash {meta['content_hash'][:12]}… ≠ sha256 do .md {digest[:12]}…"
+        )
+    return problems
+
+
 def count_nan_cells(markdown: str) -> int:
     """Células `NaN` nas tabelas Markdown do XLSX.
 
@@ -383,8 +472,11 @@ def ingest_document(
         if nan_cells:
             warnings.append(f"xlsx_nan_cells={nan_cells}")
 
+    uri, uri_warning = source_uri(p)
+    if uri_warning:
+        warnings.append(uri_warning)
     source_meta = {
-        "uri": p.as_posix(),
+        "uri": uri,
         "title": title,
         "document_type": document_type,
         "retrieved_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -404,6 +496,13 @@ def _parse_args(args: list[str]) -> argparse.Namespace | None:
     parser.add_argument(
         "--memory-limit-mb", type=int, default=DEFAULT_MEMORY_LIMIT // (1024 * 1024)
     )
+    parser.add_argument(
+        "--out-dir",
+        help=f"grava <nome>.md e <nome>.meta.yaml nesta pasta (S4; ex.: {INGESTED_DIR}). "
+        "Não toca no MANIFEST.",
+    )
+    parser.add_argument("--name", help="nome dos ficheiros de saída (por omissão, o do documento)")
+    parser.add_argument("--overwrite", action="store_true")
     try:
         return parser.parse_args(args)
     except SystemExit:
@@ -429,6 +528,26 @@ def main(argv: list[str] | None = None) -> int:
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
         return 1
+    if opts.out_dir:
+        try:
+            md_path, meta_path = write_ingested(
+                result,
+                opts.out_dir,
+                opts.name or slugify(Path(opts.caminho).stem),
+                overwrite=opts.overwrite,
+            )
+        except FileExistsError as exc:
+            print(str(exc), file=sys.stderr)
+            return 1
+        summary = {
+            "md": md_path.as_posix(),
+            "meta": meta_path.as_posix(),
+            "content_hash": result["source_meta"]["content_hash"],
+            "warnings": result["warnings"],
+            "next": "para o L5: entrada no MANIFEST de scripts/ingest_delta.py (decisão do maestro)",
+        }
+        print(json.dumps(summary, ensure_ascii=False, indent=2))
+        return 0
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

@@ -215,15 +215,34 @@ jobs:
   # (runner/requirements-fixtures.txt) para provar que a fixture é a saída do gerador.
   # INGEST_TEST_REQUIRED=1 faz da falta de uma dependência opcional um erro, não um skip:
   # o job nunca fica verde sem ter convertido. Sem rede nem credenciais.
+  # T6e: Postgres + pgvector descartavel (como no test-rag) para o documento convertido
+  # passar pelo T6 real (ingest_apply.apply_one, embedder falso) ate ao match_knowledge.
   test-ingest:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: runner
 
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rag_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       INGEST_TEST_REQUIRED: '1'
+      RAG_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rag_ci
+      RAG_TEST_REQUIRED: '1'
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0 (H-003: Node 24; era v4.4.0)
@@ -241,6 +260,10 @@ jobs:
           python -m pip install -r requirements.txt -r requirements-ingest.txt -r requirements-fixtures.txt
           python -m pip install pytest
 
-      # T6d: inclui os testes de segurança de entrada (processo filho, timeout, RLIMIT_DATA)
-      - name: ingest_document + fixtures + seguranca (MarkItDown real)
-        run: python -m pytest tests/test_ingest_document.py tests/test_ingest_fixtures.py tests/test_ingest_security.py -v -rs
+      # T6d: testes de segurança de entrada (processo filho, timeout, RLIMIT_DATA)
+      # T6e: encaixe no T6 (saída, validador da regra 3, chunker, ingest real -> retrieve)
+      - name: ingest_document + fixtures + seguranca + pipeline T6 (MarkItDown real)
+        run: >-
+          python -m pytest -v -rs
+          tests/test_ingest_document.py tests/test_ingest_fixtures.py tests/test_ingest_security.py
+          tests/test_ingest_pipeline.py tests/test_ingest_pipeline_rag.py
