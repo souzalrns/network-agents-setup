@@ -16,6 +16,8 @@ on:
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
       - 'scripts/ingest_benchmark.py'
+      # F2: primitiva fetch (servidor HTTP local nos testes)
+      - 'scripts/web_fetch.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
@@ -46,6 +48,8 @@ on:
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
       - 'scripts/ingest_benchmark.py'
+      # F2: primitiva fetch (servidor HTTP local nos testes)
+      - 'scripts/web_fetch.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
@@ -264,8 +268,10 @@ jobs:
 
       # T6d: testes de segurança de entrada (processo filho, timeout, RLIMIT_DATA)
       # T6e: encaixe no T6 (saída, validador da regra 3, chunker, ingest real -> retrieve)
+      # F2: fetch contra um servidor HTTP local (robots, allowlist, limites, HTML real)
       - name: ingest_document + fixtures + seguranca + pipeline T6 (MarkItDown real)
         run: >-
           python -m pytest -v -rs
           tests/test_ingest_document.py tests/test_ingest_fixtures.py tests/test_ingest_security.py
           tests/test_ingest_pipeline.py tests/test_ingest_pipeline_rag.py
+          tests/test_web_fetch.py
