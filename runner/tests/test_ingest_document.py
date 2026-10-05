@@ -227,14 +227,17 @@ def test_codigo_fora_do_contrato_e_recusado() -> None:
         "conversion_failed",
         "empty_content",
         "missing_provenance",
+        "timeout",
+        "memory_limit",
     }
 
 
 def test_sem_markitdown_da_conversion_failed_com_o_comando(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setitem(sys.modules, "markitdown", None)  # o import passa a falhar
+    # O adapter em processo (o que corre dentro do filho); no pai, o import passa a falhar.
+    monkeypatch.setitem(sys.modules, "markitdown", None)
     p = _file(tmp_path, "doc.pdf")
     with pytest.raises(ing.IngestError) as exc:
-        ing.ingest_document(p)
+        ing.ingest_document(p, converter=ing.markitdown_converter)
     assert exc.value.code == "conversion_failed"
     assert "requirements-ingest.txt" in str(exc.value)
 
@@ -257,7 +260,7 @@ def test_pin_do_markitdown_fica_a_parte_e_com_o_minimo_do_adr() -> None:
 
 def test_cli_uso_errado_da_2(capsys) -> None:
     assert ing.main([]) == 2
-    assert "uso:" in capsys.readouterr().err
+    assert "usage:" in capsys.readouterr().err  # argparse
 
 
 def test_cli_erro_tipado_sai_em_json(tmp_path: Path, capsys) -> None:
@@ -349,7 +352,7 @@ def _pdf_minimo(texto: str) -> bytes:
         b"<< /Type /Catalog /Pages 2 0 R >>",
         b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
         b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
-        b"/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+        + b"/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
         b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     ]

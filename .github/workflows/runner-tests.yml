@@ -241,5 +241,6 @@ jobs:
           python -m pip install -r requirements.txt -r requirements-ingest.txt -r requirements-fixtures.txt
           python -m pip install pytest
 
-      - name: ingest_document + fixtures (MarkItDown real)
-        run: python -m pytest tests/test_ingest_document.py tests/test_ingest_fixtures.py -v -rs
+      # T6d: inclui os testes de segurança de entrada (processo filho, timeout, RLIMIT_DATA)
+      - name: ingest_document + fixtures + seguranca (MarkItDown real)
+        run: python -m pytest tests/test_ingest_document.py tests/test_ingest_fixtures.py tests/test_ingest_security.py -v -rs

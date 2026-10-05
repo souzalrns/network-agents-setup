@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no T6b, PR #106).
+- **Branch actual:** `feat/t6d-input-security-guards` (empilhado no T6c, PR #107).
 - **`main` de referência:** NAS `99b2cee` (merges até #105); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6c (DOCX/XLSX). T6b ✅ (PR #106, CI verde).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6d (segurança de entrada). T6b ✅ (#106) e T6c ✅ (#107), ambos com CI verde.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,34 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### T6d: segurança de entrada (2026-10-05)
+- **T6c fechado:** o PR #107 tem CI verde nas 2 cabeças (11 checks).
+- **Mitigação 3 do ADR §5:** a conversão corre num processo filho (`isolated_converter`).
+  - O filho aplica o limite de memória a si próprio antes de carregar o MarkItDown.
+  - O resultado volta por ficheiro JSON, por isso o stdout das bibliotecas não interfere.
+  - Ao fim do timeout, o filho é morto.
+  - Se morrer sem resultado, o erro é `conversion_failed`, com o sinal ou o código de saída, o limite e as últimas linhas do stderr.
+- **O limite foi medido, não escolhido a olho** (3 a 5 corridas por valor):
+  - o `RLIMIT_AS` não é monótono com o onnxruntime do magika (768 MiB falhava sempre e 512 MiB só às vezes), por isso foi recusado;
+  - o `RLIMIT_DATA` foi estável, e o MarkItDown precisa de pelo menos 384 MiB;
+  - fica 1 GiB por omissão, e está verificado que trava alocações grandes e acumuladas.
+  - Fora de Linux não há limite de memória, e o resultado traz o aviso `memory_limit_unavailable`.
+- **Contrato:**
+  - códigos novos `timeout` e `memory_limit`, registados no ADR §9;
+  - a CLI ganha `--timeout-s` e `--memory-limit-mb`;
+  - o JSON de erro da CLI deixa de repetir o código dentro do `message`.
+- **Defeitos corrigidos:**
+  - um DOCX/XLSX truncado dava `unsupported_format` ("não é DOCX"). Agora dá `conversion_failed` ("ZIP corrompido");
+  - com pouca memória, o import do MarkItDown falhava com "o pacote markitdown não está instalado", o que era falso. Agora a mensagem distingue "não instalado", "falta uma dependência" e "não carregou".
+- **Testes:** `runner/tests/test_ingest_security.py`, com 22 testes. Os alvos do filho que simulam o abuso (dormir, esgotar memória, `os.abort()`, lixo no stdout) são escritos em `tmp_path`, por isso a maioria corre sem o MarkItDown. O CI corre-os no job `test-ingest`.
+  - Sem os extras: 629 passed, 18 skipped. Com os extras e `INGEST_TEST_REQUIRED=1`: 72 passed.
+- **Documentação:** `docs/ops/INGEST-DOCUMENT.md` (limites, a medição, códigos de erro, avisos, e o comportamento do MarkItDown por formato).
+- **CI do 1.º push: o semgrep falhou.** Reproduzi localmente com a mesma versão (1.179.0) e as regras no mesmo commit, e saíram 4 achados:
+  - 2 do T6d: o `globals()[func]` (substituído por uma lista branca de alvos) e o `subprocess.run(cmd)` (falso positivo de auditoria: lista sem shell e só com valores nossos; fica `nosemgrep` com o motivo);
+  - 1 do T6b: `import_module` no helper de testes, que passa a ter lista branca e `nosemgrep` com o motivo;
+  - 1 do T6a: concatenação implícita de bytes numa lista, que passa a `+` explícito.
+  - Depois disto, o semgrep com a configuração do CI e `--error` dá 0 achados em `scripts/`, `runner/` e nos workflows.
 
 ### T6c: DOCX e XLSX (2026-10-05)
 - **T6b fechado:** o PR #106 tem CI verde nas 2 cabeças, com 11 checks incluindo o `test-ingest`. Registo e mini-relatório no `PENDENCIAS_T6.md`.
@@ -680,7 +708,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 | PR | Branch | Item | Estado |
 |---|---|---|---|
 | NAS #106 | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Aberto, CI verde |
-| NAS (T6c) | `feat/t6c-docx-xlsx-fixtures-and-tests` | F1 / T6c: fixtures DOCX + XLSX + testes | Por abrir (empilhado no #106) |
+| NAS #107 | `feat/t6c-docx-xlsx-fixtures-and-tests` | F1 / T6c: fixtures DOCX + XLSX + testes | Aberto, CI verde (empilhado no #106) |
+| NAS (T6d) | `feat/t6d-input-security-guards` | F1 / T6d: segurança de entrada | Por abrir (empilhado no #107) |
 
 Já com merge: NAS #63–#105 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105); MCP #10–#18.
 
