@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-05 22:00 UTC
+Última atualização: 2026-10-05 22:40 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -14,8 +14,8 @@
 | T6b  | PDF funcional (fixture + teste + PR)           | ✅         | PR #106 (CI verde, 11 checks, incl. `test-ingest`); branch `feat/t6b-pdf-functional-fixture-and-test`; fixture `runner/tests/fixtures/ingest/pdf/` | Sim (merge pendente)        |
 | T6c  | DOCX + XLSX                                    | ✅         | PR #107 (CI verde, 11 checks); branch `feat/t6c-docx-xlsx-fixtures-and-tests` (empilhado no #106); fixtures `runner/tests/fixtures/ingest/docx/` e `xlsx/` | Sim (merge pendente)        |
 | T6d  | Segurança de entrada                           | ✅         | PR #108 (CI verde, 11 checks, depois da correcção do semgrep); branch `feat/t6d-input-security-guards` (empilhado no #107); `docs/ops/INGEST-DOCUMENT.md` | Sim (merge pendente)        |
-| T6e  | Encaixe na pipeline T6                         | ⏳         | Branch `feat/t6e-pipeline-integration` (empilhado no T6d); PR por abrir | Não                         |
-| T6f  | Fecho F1 no PENDENCIAS                         | 🔒         |                                     | Não                         |
+| T6e  | Encaixe na pipeline T6                         | ✅         | PR #109 (CI verde, 11 checks, `test-ingest` com Postgres + pgvector); branch `feat/t6e-pipeline-integration` (empilhado no #108) | Sim (merge pendente)        |
+| T6f  | Fecho F1 no PENDENCIAS                         | ⏳         |                                     | Não                         |
 | F1b  | Docling (só se perda de estrutura)             | 🔒         |                                     | Não                         |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | 🔒         |                                     | Não                         |
 | F3   | Provenance no retrieve                         | 🔒         |                                     | Não                         |
@@ -28,6 +28,7 @@
 - 2026-10-05 · T6b · ✅ PR #106 aberto, CI verde: fixture PDF + gerador reprodutível + testes + job `test-ingest`.
 - 2026-10-05 · T6c · ✅ PR #107 aberto, CI verde: fixtures DOCX e XLSX + geradores reprodutíveis + aviso `xlsx_nan_cells`.
 - 2026-10-05 · T6d · ✅ PR #108 aberto, CI verde: processo filho com timeout e `RLIMIT_DATA` (medido), 22 testes de segurança, limites documentados.
+- 2026-10-05 · T6e · ✅ PR #109 aberto, CI verde: `write_ingested` + `validate_ingested` (regra 3), `uri` relativo ao repo, caminho completo até ao `match_knowledge` provado contra Postgres + pgvector.
 
 ## Riscos / bloqueios abertos
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
@@ -108,4 +109,24 @@ PENDENCIAS.md: atualizado (sim)
 PRÓXIMO PASSO RECOMENDADO: T6e (encaixe na pipeline T6)
 BLOQUEIOS: nenhum. Nota: o 1.º push teve o semgrep vermelho (4 achados, 2 deles anteriores ao T6d);
 corrigido na raiz e verificado localmente com a versão e as regras do CI antes do 2.º push.
+```
+
+```
+FASE: T6e
+DATA: 2026-10-05
+ESTADO ANTERIOR → NOVO ESTADO: ⏳ → ✅ (merge pendente, do maestro; empilhado no #108)
+ARTEFACTOS:
+- scripts/ingest_document.py: write_ingested (.md byte a byte + .meta.yaml), validate_ingested (regra 3 do ADR),
+  source_uri (relativo ao repo; external:<nome> + uri_outside_repo), slugify, CLI --out-dir/--name/--overwrite
+- runner/tests/test_ingest_pipeline.py (14), runner/tests/test_ingest_pipeline_rag.py (4, Postgres + pgvector)
+- job test-ingest com o serviço pgvector/pgvector:pg16 e RAG_TEST_REQUIRED=1
+- docs/ops/INGEST-DOCUMENT.md §7, ADR §9, PENDENCIAS.md (linha F1), PROGRESS-SESSAO.md
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/109
+- Branch: feat/t6e-pipeline-integration
+- Commits: bb8ae7a, 36dc64e, 67f326b, fe4cc11
+TESTES: pytest 639 passed, 26 skipped (sem extras); 90 passed com MarkItDown + Postgres (modo obrigatório); semgrep 0; CI 11/11 verde
+PENDENCIAS.md: atualizado (sim)
+PRÓXIMO PASSO RECOMENDADO: T6f (fecho do F1, com as medições do S5)
+BLOQUEIOS: nenhum. A entrada no MANIFEST (escrita em produção) fica para o maestro, como manda o ADR.
 ```
