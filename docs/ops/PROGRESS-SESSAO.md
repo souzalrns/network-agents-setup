@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f3-provenance-retrieve` (a partir da `main` `e10f772`).
+- **Branch actual:** `feat/f4-marketing-capabilities` (empilhado no #113).
 - **`main` de referência:** NAS `e10f772` (merges até #112); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F3a** (P-26 = A, 2026-10-06). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F4** (F3a em PR: #113 + MCP #19). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F4: `marketing-capabilities.yaml` com maturidade medida (2026-10-06)
+- **F3a fechado em PR:** #113 (NAS) e MCP #19.
+  - O CI do #113 está verde no código.
+  - Na cabeça final, o semgrep, o CodeQL e um `test` não tiveram runner do GitHub. Fiz uma re-execução, com o mesmo resultado (infraestrutura).
+  - O delta entre as 2 cabeças é só documentação, e cada check passou numa delas. Ficou 1 comentário no PR.
+- **`config/marketing-capabilities.yaml`:** 18 capabilities, com a mesma estrutura de security.
+  - 15 `implemented`, cada uma com agente, skill e pelo menos 1 plano real;
+  - 1 `partial` (`transcript_analysis`: tem executor mas nenhum plano);
+  - 2 `planned` (`visual_identity`, que tem o agente mas não tem skill, e `performance_analysis`, que tem o pack de conhecimento mas não tem agente).
+  - Política: ofensivo e acção em produção proibidos, nível por omissão `prepare`, HITL obrigatório (publicar e gastar é sempre humano).
+- **Maturidade medida** (o "maturidade de capability" do F4 canónico): o E7 passa a exigir, para `implemented`, pelo menos 1 plano do runner com a action. Senão, a capability é `partial`.
+  - Security continua válido.
+  - Verificado à mão: promover a `transcript_analysis` sem plano é recusado pelo E7.
+- **Testes:** `test_capabilities.py` com 32. Novos: a regra e a leitura das actions em qualquer profundidade (só de planos do runner); os ficheiros reais; as capabilities `implemented` de marketing com planos válidos no schema do runner (W-006).
+- **Canónico:** F4 BLOQUEADO → EM CURSO (103 vivos: ABERTO 56, EM CURSO 7, BLOQUEADO 40).
 
 ### F3a, etapa 5: MCP atrás de feature flag (2026-10-06)
 - **Branch:** `claude/reels-analysis-tools-access-hwudk9` no `agent-network-mcp`. O branch designado foi recriado a partir da `main` `880d492`, porque o #18 já teve merge e o branch remoto tinha sido apagado.
