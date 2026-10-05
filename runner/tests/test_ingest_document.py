@@ -5,8 +5,8 @@
   (mitigação 2: ZIP que descomprime acima do tecto, sem chegar ao adapter), normalização,
   `source_meta` do §4, pin em `runner/requirements-ingest.txt` e CLI;
 - smoke com o MarkItDown real (documentos sintéticos gerados em `tmp_path`, nada versionado).
-  Skip documentado: o `markitdown` está fora do `requirements.txt` (puxa o onnxruntime, entre
-  outros) e o CI do runner não o instala. Para correr: `pip install -r requirements-ingest.txt`.
+  O `markitdown` está fora do `requirements.txt` (puxa o onnxruntime, entre outros):
+  `tests/optional_deps.py` dá skip em local sem ele e erro no job `test-ingest` do CI (T6b).
 """
 
 from __future__ import annotations
@@ -22,11 +22,9 @@ from pathlib import Path
 
 import pytest
 
+from tests.optional_deps import require
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SKIP_SEM_MARKITDOWN = (
-    "markitdown não instalado: é opcional (runner/requirements-ingest.txt) e o CI do runner "
-    "não o instala; correr com `pip install -r requirements-ingest.txt`"
-)
 
 
 def _load():
@@ -252,7 +250,7 @@ def test_cli_erro_tipado_sai_em_json(tmp_path: Path, capsys) -> None:
 
 
 def _markitdown():
-    return pytest.importorskip("markitdown", reason=SKIP_SEM_MARKITDOWN)
+    return require("markitdown")
 
 
 def test_smoke_versao_instalada_cumpre_o_pin() -> None:
@@ -265,7 +263,7 @@ def test_smoke_versao_instalada_cumpre_o_pin() -> None:
 
 def test_smoke_xlsx_real_preserva_a_tabela(tmp_path: Path) -> None:
     _markitdown()
-    openpyxl = pytest.importorskip("openpyxl", reason=SKIP_SEM_MARKITDOWN)
+    openpyxl = require("openpyxl")
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Custos"
