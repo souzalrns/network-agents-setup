@@ -22,6 +22,17 @@ Feitos e fora da fila: F0.1 e R-002 (SELECTs da 2.ª ronda); AU-22 (#96).
 
 ## Log (mais recente no topo)
 
+### T4: S20 e R-005 no PENDENCIAS (2026-10-05, ~12:45 UTC)
+- **S20** deixa de estar "ABERTO sem data nem caminho". Opções:
+  - **A:** o DEV corrige já por SSH. Caminho: `ANM:CONFIGURACAO_VM_BRIDGE_WORKER.md`, passo 4: pôr a `SUPABASE_SERVICE_ROLE_KEY` actual onde o `pm2` a lê, depois `pm2 restart bridge-worker --update-env` e `pm2 save`.
+  - **B (recomendada):** prazo até **2026-10-12**. Se nessa data não estiver corrigido, o DEV decide entre uma data nova e tirar a "execução remota" do README do MCP.
+  - **C:** ABERTO sem data. Rejeitada pelo maestro.
+  - Fica registado como **prazo proposto, a confirmar pelo DEV**. O estado continua ABERTO e NÃO VERIFICADO (não há SSH nesta sessão).
+- **R-005:** continua BLOQUEADO (F3), com os factos dos SELECTs (#97). A correcção da causa estava só no chat; passa a **P-20** no §10 (recomendada B: esperar pelo F3).
+- **P-19 (nova):** limiar do F0.7b para o gate. Recomendada A: `provenance_ok` = 1.0 e `source_hit@4` ≥ 0.8 (pelo menos 15 dos 18 casos).
+- **Contagens:** sem mudança (104 vivos). §10 com 20 decisões; pendentes P-11, P-16, P-17, P-19 e P-20.
+- **Próxima micro-tarefa:** T5 (declaração do M1).
+
 ### T2 e T3: moldes de evidência do F0.6 e do F0.7b (2026-10-05, ~12:35 UTC)
 - **Feito:** `docs/ops/L5-F0-REVALIDATION.md` §6 (6.1 F0.6, 6.2 F0.7b). Todos os campos estão em NÃO VERIFICADO até o DEV colar o output.
 - **Achado (F0.6):** nenhum dos 33 agentes do MCP tem `agent_id` = `security`.
