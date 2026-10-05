@@ -5,11 +5,21 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/H-01-readme-porta-de-entrada` (PR #93), com a `main` `a52fc74` fundida.
-- **`main` de referência:** NAS `a52fc74` (merges até #92; o #91 e o #93 estão abertos); MCP `4916872` (merges #15, #16 e #17).
-- **Itens em trabalho:** H-01 (PR #93, partes 4, 5 e 6) e a evidência do F2 (PR #91).
+- **Branch actual:** `docs/h01-actualizado` (só documentação).
+- **`main` de referência:** NAS `92cc762` (merges até #93); MCP `4916872` (merges #15, #16 e #17).
+- **Itens em trabalho:** H-01 (partes 1, 2 e 3 por fazer).
 
 ## Log (mais recente no topo)
+
+### H-01 actualizado depois dos merges #91 e #93 (2026-10-05)
+- **#91 e #93 mergeados; `main` em `92cc762`.**
+- **Ingest #176** (`92cc762`): `chunks=0 deleted=0 unchanged=39`. Nada foi escrito em produção. A #175 (`b11591b`, merge do #91) foi cancelada porque a #176 a substituiu.
+- **H-01 actualizado: partes 1–3 pendentes** (limpeza, arquivo dos históricos, índices):
+  - o bloqueio deixa de ser o "merge do PR #93";
+  - as partes 4, 5 e 6 passam para a evidência, com o #93 e a `main` `92cc762`.
+  - O H-01 fica EM CURSO, com o dono AMBOS.
+- **Contagens:** sem alteração. Recalculadas a partir da tabela §4: 113 vivos (ABERTO 63, EM CURSO 9, BLOQUEADO 41). §5 e §6 batem com a §4 e não há sobreposição §4/§7.
+- **Description e Topics do repo:** a sessão não os pode escrever. O proxy responde 403 tanto ao `PATCH /repos` como ao `PUT /topics`, embora a conta tenha admin. Ficam para o maestro, no GitHub ou com `gh repo edit` local.
 
 ### PR #93 sem merge possível: conflito resolvido (2026-10-05)
 - **Causa:** o #90 e o #93 mudavam as mesmas 2 linhas de contagens do `PENDENCIAS.md` (cabeçalho e "Por estado"). Era o conflito previsto; mais nada colidia.

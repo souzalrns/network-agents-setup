@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **Pós-merge (2026-10-05, `main` `92cc762`, merges #91 e #93):** H-01 continua EM CURSO (as partes 4, 5 e 6 entraram no #93; faltam as partes 1, 2 e 3); F2 com a evidência do Agent-Reach (#91). Contagens sem alteração.
 > **Pós-merge (2026-10-05, `main` `a52fc74`, merges #88, #89, #90 e #92):** E-003 → FECHADO (#90); AU-22 → ABERTO (o `done_when` entrou no #90; falta a 2.ª metade da P-10); H-003 com a mitigação do #89; H-01 EM CURSO (PR #93).
 > **AU-22/E-003 (2026-10-05, `main` `492acff`):** P-18 = C; AU-22 e E-003 EM CURSO (PR #90); novos AU-22b e W-008.
 > **Decisões confirmadas (2026-10-03, `main` `e4a9f5e`):** P-10 e P-12 a P-15 = A, com consulta cruzada; INIT-094, ING-5 e ING-6 → OBSOLETO; a condição da P-18 devolveu-a a A/B/C.
@@ -167,7 +168,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | E15 | Proveniência do esboço do CouncilSession/`councils.yaml`: substituir a reconstituição se aparecerem os originais | DOC-ERRADO | BLOQUEADO | DEV | Baixa | Aparecerem os originais | P:553; O:105 | — | VERIFICADO |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | FALTA-DECIDIR | ABERTO | AMBOS | Média | Decisão (partir/arquivar) | P:297; A5 §5.1 | J8 (parte) | VERIFICADO |
 | H-002 | Avisos do ruff que já existiam em `scripts/` (`ingest_apply.py:62` I001, `ingest_delta.py:102` UP017; `main` `2b27f66`), fora do lint do CI | BUG | BLOQUEADO | CLAUDE | Baixa | F3 (§10 P-7 = A: registar e tratar no F3) | ruff 0.16.10 local (2.ª ronda, 03/10): 2 avisos, ambos `--fix`; `runner-tests.yml` só faz lint de `plan_runner/` e `tests/` | — | VERIFICADO |
-| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Merge do PR #93 (partes 4, 5 e 6: README para portfólio em inglês, casos de estudo e números verificados, `LICENSE`, `SECURITY.md`, avisos de arquivado em `packages/` e `apps/`). Faltam as partes 1 (limpeza), 2 (arquivo dos históricos) e 3 (índices), com os riscos do §4.1 | Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
+| H-01 | Limpeza e organização para portfólio (opção C: README para negócio + `docs/` para técnico): lixo, arquivo dos históricos, índices, README, 3–5 casos de estudo, métricas e timeline | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Faltam as partes 1 (limpeza), 2 (arquivo dos históricos) e 3 (índices), com os riscos do §4.1; o AU-12 e o H-001 são decisões prévias à parte 2 | Partes 4, 5 e 6 no PR #93 (merged 2026-10-05, `main` `92cc762`): README para portfólio em inglês, casos de estudo e números verificados, `LICENSE`, `SECURITY.md`, avisos de arquivado em `packages/` e `apps/`; Auditoria #65 (`docs/ops/PENDENCIAS-CRUZADAS.md`); adendo do maestro (03/10); âmbito, factos e riscos no §4.1; ID em §10 P-9; **README:** coberto pelo H-01 (decisão do maestro, 2026-10-03: A); 10 factos verificados no §4.1 | — | VERIFICADO |
 | G1.1 | Trading: pesquisa padrão ouro de repos de trading/simulação | FALTA-DECIDIR | BLOQUEADO | AMBOS | Alta | F5 + D-EP8 (domínio só com uso real) | A5 §5.4 (grupos G–J); EP:1618-2428 | J9 (parte) | VERIFICADO |
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | BLOQUEADO | DEV | Média | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | BLOQUEADO | DEV | Alta | F5 + D-EP8 | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
@@ -260,7 +261,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | O `toolsAllowed` morto: dado como "DONE", mas sem fonte | S33 → AU-20 | ST:62 ("DONE"); A5:169 ("FECHADO-SÓ-NO-PAPEL") |
 | A medição inválida apanhada a tempo: o 1.º run real deu −2,6% contra −16% projectado, mas o braço "opt" tinha corrido com o prompt `legacy` (detectado ao comparar os prompts token a token); repetido, deu **−22% real** | B1-bis-R / B1-bis-R2 | `docs/ops/WORKER-EXTERNAL.md:116,259`; PRs #45 e #55 (corrigido a 2026-10-05: antes dizia "hipótese refutada") |
 
-**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). **Todos corrigidos no PR #93 (2026-10-05):** README reescrito em inglês para portfólio, com factos verificáveis, quickstart testado e os casos de estudo; o histórico fica abaixo.
+**README da raiz: factos verificados (2026-10-03, `main` `c9edd72`).** O maestro decidiu que o H-01 cobre o README (A). **Todos corrigidos no PR #93 (merged 2026-10-05, `main` `92cc762`):** README reescrito em inglês para portfólio, com factos verificáveis, quickstart testado e os casos de estudo; o histórico fica abaixo.
 
 | README diz | Estado verificado | Evidência |
 |---|---|---|
@@ -301,7 +302,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | AMBOS | 31 | F3, F5, F6, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, C-2, B1-bis-C, T-001, T-002, AU-20, AU-22, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004 |
 
 **Só do DEV, sem código:**
-- merges: NAS #93 (H-01, README) e #91 (F2, evidência do Agent-Reach); os #88, #89, #90 e #92 já entraram (2026-10-05);
+- merges: o PR `docs/h01-actualizado` (só documentação); os #88 a #93 já entraram (2026-10-05, `main` `92cc762`);
 - decisões: P-11, P-16 e P-17;
 - S28 (1 run limpo do `transcribe.yml`), S-003 (teste no connector) e H-004 (`graphify update .` local);
 - R-004: merge do PR MCP #15 e, antes ou depois, a query só de leitura do PR (`SELECT project, count(*) ... GROUP BY project`);
