@@ -9,3 +9,10 @@
 # service_role está marcada `rotated` / `rotated-2026-09-19`; o fragmento é inválido.
 b9ec8489bf573f9975e83d5b292f77282efc5d65:docs/initiatives/STATUS.md:generic-api-key:41
 3217917c24daa2f9946acbcd3f56cfa09d4dc009:docs/initiatives/STATUS.md:generic-api-key:41
+#
+# F0.7b (2026-10-05, PR #103): falso positivo. Valor FICTÍCIO de teste
+# ("segredo-de-bypass-de-teste-…") numa constante chamada BYPASS_SECRET, em
+# runner/tests/test_mcp_knowledge.py. Nunca foi um segredo real. O ficheiro actual já
+# usa outro nome e outro valor (VALOR_BYPASS_FICTICIO); só o commit ee95678 o tem, e
+# reescrever o histórico exigiria force-push (proibido).
+ee956781d67c0c9d30f9803bab1455ccabed5cb8:runner/tests/test_mcp_knowledge.py:generic-api-key:321
