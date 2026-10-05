@@ -5,11 +5,47 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/h01-actualizado` (só documentação).
-- **`main` de referência:** NAS `92cc762` (merges até #93); MCP `4916872` (merges #15, #16 e #17).
-- **Itens em trabalho:** H-01 (partes 1, 2 e 3 por fazer).
+- **Branch actual:** `docs/f0-selects` (só documentação).
+- **`main` de referência:** NAS `81e6364` (merges até #94); MCP `4916872` (merges #15, #16 e #17).
+- **Itens em trabalho:** F0.1 (falta a contagem `projecto` e a F0.1b com o filtro `project`); H-01 (partes 1, 2 e 3).
 
 ## Log (mais recente no topo)
+
+### 4 SELECTs F0 corridos (maestro, 2026-10-05)
+**Resultados (colados pelo maestro):**
+1. **Contagem por fonte (top 20; apresentada como F0.1b):**
+   - `docs/knowledge/13_ai_findability.md`: 22
+   - `docs/knowledge/security/security-agents-stack.md`: 20
+   - ECC planner+architect+code-architect-network+doc_updater+docs-lookup: 13
+   - `docs/knowledge/06_INGEST_PIPELINE.md`: 12
+   - `docs/knowledge/orquestrador_playbook.md`: 11
+   - `docs/knowledge/skills_visibility.md`: 11
+   - `docs/knowledge/agoo_agent.md`: 9
+   - `docs/knowledge/13_findability.md`: 9
+   - ECC security-reviewer + database-reviewer: 8
+   - (restantes abaixo)
+2. **`ultima_t6`:** `total_t6` = 110; `ultima` = 2026-09-29 10:06:33+00. A t6 está congelada.
+3. **Fonte ECC "security-reviewer + database-reviewer":** `agent_id` = revisor-codigo, `project` NULL, `kb` = marketing. O `kb` está errado.
+4. **Linhas compostas** (`agent_id LIKE '%+%'`): 0.
+
+**O que fecha e o que não fecha** (o F0 não fecha todo):
+- **F0.3 → FECHADO.** A t6 parou a 2026-09-29, antes do limite de 2026-09-30, e tem 110 linhas (igual ao C8). Desbloqueia o F0.12.
+- **R-003 → FECHADO.** A fonte ECC não é `global`, por isso não entra em todas as pesquisas.
+- **R-005 (novo):** reclassificar o `kb` (e o `agent_id`) da fonte ECC. BUG, CLAUDE, Média, BLOQUEADO pelo F3 (provenance formal).
+  - Causa provável: `kb text DEFAULT 'marketing'` em `scripts/rag_schema.sql:51`, e o insert do MCP não define o `kb`.
+  - Se for isso, todas as linhas com `project` NULL têm `kb` = marketing. Há um SELECT só de leitura para o confirmar.
+  - Não muda a pesquisa: o `match_knowledge` filtra só por `agent_id` (`scripts/rag_schema.sql:68`).
+- **F0.2:** já estava FECHADO (2026-10-03, resultado "NÃO está"). Acrescentei à nota que agora está: 20 chunks, entrados pelo F0.4 (#64).
+  - O caminho foi reportado com `security/`. No repo e no MANIFEST é `docs/knowledge/security-agents-stack.md` (não existe a pasta `docs/knowledge/security/`). Pode ser gralha na cópia ou outra fonte: confirmar na F0.1b filtrada.
+  - As fontes `13_ai_findability.md`, `06_INGEST_PIPELINE.md`, `orquestrador_playbook.md`, `skills_visibility.md`, `agoo_agent.md` e `13_findability.md` não existem no repo com esses nomes (são nomes antigos). A F0.1b filtrada diz de que `project` são.
+- **"P4":** não há item com este ID no PENDENCIAS. O resultado (0 compostos) é a verificação do F0.1 e confirma o AU-50, já fechado; ficou registado nos dois.
+- **F0.1 continua EM CURSO.** A contagem por fonte recebida é da tabela inteira: inclui a fonte ECC, que tem `project` NULL. Não é a F0.1b de `docs/ops/L5-F0-REVALIDATION.md` §3, que filtra `project = 'network-agents-setup'`. Faltam a contagem `projecto` e a F0.1b filtrada, que também fecham o R-002 (esperado: 163).
+- **Ainda abertos no F0:** F0.1, F0.6 (teste no conector), F0.7b (golden set) e F0.12 (apagar a t6).
+
+**Contagens:**
+- antes: 113 vivos (ABERTO 63, EM CURSO 9, BLOQUEADO 41);
+- depois: **112** (ABERTO 62, EM CURSO 8, BLOQUEADO 42);
+- histórico: 92 → 94 (73 FECHADO, 21 OBSOLETO).
 
 ### H-01 actualizado depois dos merges #91 e #93 (2026-10-05)
 - **#91 e #93 mergeados; `main` em `92cc762`.**
