@@ -5,12 +5,12 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/F1-markitdown-spike` (empilhado sobre o `docs/f0-7b-evidencia`, PR #104, que está sobre o #103).
-- **`main` de referência:** NAS `1415c8f` (merges até #102); MCP `880d492` (merge #18).
-- **Itens em trabalho:** gate M1 FECHADO (2026-10-05, decisão do maestro). T6a (spike MarkItDown) em curso, no branch `feat/F1-markitdown-spike`.
+- **Branch actual:** `feat/t6b-pdf-functional-fixture-and-test` (a partir da `main` `99b2cee`).
+- **`main` de referência:** NAS `99b2cee` (merges até #105); MCP `880d492` (merge #18).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: T6b (PDF).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
-1. **CLAUDE — T6b (F1):** mitigação 3 (processo filho com limite de memória), evento de observabilidade e o S2 do ADR §9 (golden set por formato). O T6a está em PR.
+1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
 2. **Maestro — P-19:** registar a opção do limiar. O 1.º run real cumpre as 3 opções, por isso a escolha já não muda o veredicto.
 3. **DEV — S20:** bridge-worker da VM Oracle com 401. Corrigir ou adiar com data (proposta 2026-10-12).
 4. **CLAUDE — R-005, só a causa:** ver as opções A/B/C no relatório de 2026-10-05 (P-20). A reclassificação das 201 linhas espera pelo F3.
@@ -22,6 +22,25 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Cadeia F1 → F6: arranque e T6b (PDF) (2026-10-05)
+- **Pedido do maestro:** prompt único, fase a fase, com o estado sempre gravado ("não deixar só na memória").
+- **Ficheiro de estado:** `docs/initiatives/PENDENCIAS_T6.md`, com a estrutura exacta do prompt. O `PENDENCIAS.md` canónico não muda de forma; a linha do F1 aponta para o ficheiro novo.
+- **4 conflitos do prompt com regras já decididas, resolvidos e registados no ficheiro de estado:**
+  - o PENDENCIAS canónico mantém-se e o estado da cadeia vai para o `_T6`;
+  - o PR para o `microsoft/markitdown` fica como decisão do maestro: sem acesso, e é uma acção pública em nome do DEV;
+  - o F6 do prompt é diferente do F6 canónico (D-EP8);
+  - entre "parar por fase" e a autonomia dada, avanço fase a fase com o critério de saída cumprido.
+- **T6b, o que se fez:**
+  - fixture `runner/tests/fixtures/ingest/pdf/simple_synthetic.pdf` (1748 bytes, 1 página): título, parágrafo, lista de 3 itens e tabela de 3 colunas com cabeçalho e 2 linhas;
+  - gerador `generate_simple_synthetic.py` (fpdf2, pin exacto em `runner/requirements-fixtures.txt`), com bytes iguais em cada corrida; um teste prova que a fixture é a saída do gerador;
+  - `runner/tests/test_ingest_fixtures.py`: regras da fixture, reprodutibilidade, `MarkItDown().convert` (API pública) e `ingest_document`, sempre contra o mesmo golden set (as constantes do gerador);
+  - `runner/tests/optional_deps.py`: sem as dependências opcionais dá skip em local e erro no CI (`INGEST_TEST_REQUIRED=1`, o mesmo padrão do `RAG_TEST_REQUIRED`). Os smoke do T6a passam a usá-lo;
+  - CI: novo job `test-ingest` (MarkItDown real + gerador). O filtro `paths` do workflow passa a incluir `scripts/ingest_document.py`: antes, uma alteração só ao script não corria os testes.
+- **Observações para o F1b e o T6e:**
+  - o PDF não tem headings semânticos, por isso o título sai como texto simples, sem `#`;
+  - o `PdfConverter` não lê o `/Title` dos metadados, por isso o `source_meta.title` vem do nome do ficheiro, com aviso;
+  - a tabela com bordas é reconstruída em Markdown.
 
 ### T6a: spike MarkItDown, esqueleto do `ingest_document` (2026-10-05)
 - **Branch:** `feat/F1-markitdown-spike`, empilhado sobre o #104. O código do F1 só chega à `main` depois da declaração do M1.
@@ -645,11 +664,9 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #103 | `fix/F0-7b-vercel-bypass` | F0.7b: cabeçalho opcional `x-vercel-protection-bypass` | Aberto. Fazer o merge primeiro |
-| NAS #104 | `docs/f0-7b-evidencia` | F0.7b FECHADO; F0.6 BLOQUEADO; gate M1 FECHADO | Aberto, empilhado sobre o #103. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
-| NAS (T6a) | `feat/F1-markitdown-spike` | F1: esqueleto do `ingest_document` com o adapter MarkItDown | Aberto, empilhado sobre o #104. Merge = `ingest-knowledge` (deve dar `chunks=0`) |
+| NAS (T6b) | `feat/t6b-pdf-functional-fixture-and-test` | F1 / T6b: fixture PDF + testes + job `test-ingest` | Por abrir |
 
-Já com merge: NAS #63–#102; MCP #10–#18.
+Já com merge: NAS #63–#105 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105); MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
