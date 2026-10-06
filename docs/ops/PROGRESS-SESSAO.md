@@ -5,9 +5,13 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f3b-validity` (empilhado no `feat/f3c-knowledge-coverage`, PR #119).
+- **Branch actual:** `docs/f6-hardening-portfolio` (PR #121, contra a `main`; contém o #119 e o #120). **Cadeia F1 → F6 concluída**; o merge é do maestro.
 - **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
+- **Itens em trabalho** (opção B confirmada pelo maestro, 2026-10-06):
+  - **F6-CADEIA** (hardening + evidence pack + WHAT-I-CONTRIBUTED): C.1 a C.6 feitos, PR #121 com CI verde. **Fecha no merge do #121**;
+  - **F6 canónico** (EXECUTION-PLAN, D-EP8: domínio de prova com uso real): **continua BLOQUEADO**. Não é o mesmo item;
+  - ordem de merge: #119 (F3c) → #120 (F3b-validade, só com CI verde na base `main`) → #121. Depois do merge do #119, o Claude faz merge da `main` no branch do #120 para a CI correr na nova base;
+  - **F3b-AUTH-1** (autoridade e conflitos, P-31 a P-33): estacionado no fim do §4, fora do caminho crítico. Desbloqueia com o SQL da v3 (DEV) e a flag no MCP. A opção A (fazer a v3 primeiro) foi rejeitada para já.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +26,92 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Opção B confirmada pelo maestro (2026-10-06)
+- **P-23 = A decidida.** No `PENDENCIAS.md` §4 ficam 2 linhas distintas: **F6-CADEIA** (EM CURSO, fecha no merge do #121) e **F6 canónico** (BLOQUEADO, D-EP8).
+- **F3b-AUTH-1:** passa para o último lugar do §4; não é pré-condição do F6-CADEIA.
+- **Contagens:** 110 vivos (ABERTO 60, EM CURSO 7, BLOQUEADO 43).
+- **C.2 a C.6:** já estavam feitos no #121, a partir do inventário `0687c5c`, e não se refazem. Depois dos merges #119 → #120: actualizar o #121 com a `main` e confirmar a CI.
+
+### F6 C.6 feito: PR #121 (2026-10-06)
+- PR **#121** `docs: F6 hardening, evidence pack and portfolio summary` (branch `docs/f6-hardening-portfolio`, base `main`). O corpo diz: pré-condições, o que entra, estacionados, "no production writes" e "do not merge yet". Ordem de merge: #119 → #120 → #121.
+- A base do #120 passou a `main`, para correr a CI (com a base `feat/f3c-knowledge-coverage` os workflows não corriam).
+- Validação local antes do PR: runner contra Postgres **754 passed**, 29 skipped; ruff OK. A 1.ª corrida deu 66 erros porque o Postgres local tinha parado; com ele a correr, passa tudo.
+
+### F6: mini-relatório (§E)
+```
+FASE: F6 da cadeia (hardening + evidence pack + portfolio)
+DATA: 2026-10-06
+ESTADO: 🔒 (C.1 parado) → ✅ por instrução do maestro ("Fez o f6 como no prompt"); o merge é do maestro
+PRÉ-CONDIÇÕES: F1, F4, F5, F3a ✅; F2 ✅ na cadeia; F3c #119 e F3b-validade #120 em PR; F3b-autoridade estacionado (F3b-AUTH-1)
+HARDENING: gitleaks (árvore e histórico) limpo; 13 paths locais removidos; nota de escrita em produção corrigida; MANIFEST ou EXCLUDED testado; F1 e F2 documentados e testados; DNS rebinding → F2-SEC-1
+ARTEFACTOS: docs/portfolio/F6-evidence/ (7 ficheiros), docs/portfolio/WHAT-I-CONTRIBUTED.md
+CANÓNICO: PENDENCIAS_T6 F6 ✅; PENDENCIAS P-23 = A aplicada, F3b-AUTH-1 e F2-SEC-1 novos, 109 vivos; F6 canónico (D-EP8) continua aberto
+PR: #121 (sem merge). Produção: nenhuma escrita
+TESTES: runner + Postgres 754 passed, 29 skipped; ruff OK
+PRÓXIMO PASSO: o maestro faz o merge do #119 → #120 → #121; depois, quando quiser, o F3b-AUTH-1 (v3) e o F3b-VAL-1 (datas)
+```
+
+### F6 C.5 feito: canónico e PENDENCIAS (2026-10-06)
+- `PENDENCIAS_T6.md`: **F6 ✅** (PR aberto; o merge é do maestro); F3 com o F3b-autoridade estacionado; o risco "F6 do prompt ≠ canónico" fica resolvido pela P-23 = A.
+- `PENDENCIAS.md`:
+  - a P-23 fica **aplicada: A** (instrução do maestro), registada no §10;
+  - o F6 canónico continua BLOQUEADO, agora só pela D-EP8;
+  - 2 itens novos no fim do §4: **F3b-AUTH-1** (BLOQUEADO: SQL da v3 + flag) e **F2-SEC-1** (ABERTO: DNS rebinding);
+  - o F1 a F5 não foram reabertos;
+  - contagens: 109 vivos (ABERTO 60, EM CURSO 6, BLOQUEADO 43).
+
+### F6 C.4 feito: resumo de portfolio (2026-10-06)
+- `docs/portfolio/WHAT-I-CONTRIBUTED.md`: 10 pontos factuais em inglês (a língua do `docs/PORTFOLIO.md` para recrutadores), cada um com o PR, mais o link para o evidence pack. Diz também o que ficou por fazer (F3b-AUTH-1).
+
+### F6 C.3 feito: evidence pack (2026-10-06)
+- `docs/portfolio/F6-evidence/` (commit `c5eba44`): `README.md` (índice e estado da cadeia), `prs.md` (21 PRs NAS e MCP com link), `decisions.md` (P-21 a P-36), `tests-and-ci.md` (comandos e última corrida), `run-e2e.md` (F0.7b, F3a v2, F5), `hardening.md` (checklist do C.2 e o que escreve em produção), `deferred.md` (14 estacionados com o critério de desbloqueio).
+- Sem dumps de BD, segredos nem conteúdo de documentos. As afirmações técnicas foram conferidas contra as fontes (`INGEST-DOCUMENT.md:34-39`, `ANM:lib/knowledge.js`).
+
+### F6 C.2 feito: hardening (2026-10-06)
+
+| Item | Resultado |
+|---|---|
+| Segredos | `gitleaks dir .` e `gitleaks git .` (todo o histórico): sem fugas. Nenhum `.env` versionado |
+| Paths absolutos da máquina | **Corrigido:** 13 `C:\Users\<utilizador>\…` em 4 docs → `%USERPROFILE%` (commit `7cf5280`). O histórico do git mantém-nos (sem reescrita) |
+| MANIFEST ou EXCLUDED | `test_knowledge_coverage.py` verde (#119) |
+| Segurança de entrada | `docs/ops/INGEST-DOCUMENT.md` (timeout, `RLIMIT_DATA`, `max_bytes`, ZIP) + `test_ingest_security.py` (18) |
+| F2 | `docs/ops/WEB-FETCH.md` (allowlist em cada redirect, robots RFC 9309, SSRF incluindo `169.254.169.254`) + `test_web_fetch.py`. Limitação já documentada (DNS rebinding) → item novo **F2-SEC-1** |
+| Retrieve aditivo | `match_knowledge` intacta; `match_knowledge_v2` aditiva; flag `KNOWLEDGE_RPC_V2` documentada (`RAG-CANONICAL.md` § F3a, `ANM:docs/RAG_GROUNDING.md`). A `v3` está estacionada (F3b-AUTH-1) |
+| Dry-run vs escrita | **Corrigido:** o `RAG-CANONICAL.md` §3 dizia que um push ainda escrevia na t6 (falso desde o J3). Agora diz o que escreve em produção (só o `ingest_apply.py` sem `--dry-run`, no workflow) e o que não escreve |
+| Testes no âmbito tocado | coverage, segurança de entrada, web fetch e validade: 95 passed, 4 skipped |
+
+### F6: retomado por instrução do maestro (2026-10-06, "Fez o f6 como no prompt")
+- **Leitura aplicada** (regra B do prompt do F6: estacionar o que não pode ser implantado, sem apagar):
+  - F3b, autoridade e conflitos (P-31 a P-33) precisa de SQL em produção e da flag no MCP → estaciona como **F3b-AUTH-1** no fim das pendências;
+  - F3c (#119) e F3b-validade (#120) estão concluídos em PR; o merge é do maestro;
+  - "F6 ✅" = o F6 da cadeia (hardening + portfolio). O F6 canónico (domínio de prova, D-EP8) continua no §4, como na P-23 A ("os 2").
+- **C.2 a C.6 seguem neste branch;** cada subpasso fica gravado aqui.
+
+### F6 C.1 feito: pré-condições NÃO cumpridas, parado (2026-10-06)
+Prompt "FECHAR F6", protocolo A.3(b): falta trabalho grande antes do F6, por isso não se finge um F6 completo. Estado lido do disco (`PENDENCIAS.md`, `PENDENCIAS_T6.md`), não do chat.
+
+| Pré-condição | Estado no disco | OK? |
+|---|---|---|
+| F1 | §7 FECHADO (2026-10-05) | ✅ |
+| F2 | Cadeia: ✅ merged (#111). Canónico: EM CURSO (`discover`, fallback JS, P-24, P-25), por desenho (F2a fechou o critério do prompt) | ✅ na cadeia |
+| F3a | §7 FECHADO (2026-10-06; v2 activa em produção) | ✅ |
+| F3c | PR #119 aberto, **sem merge** (W-prod no merge) | ❌ |
+| F3b, validade | PR #120 aberto (empilhado no #119), **sem merge** | ❌ |
+| F3b, autoridade e conflitos (P-31 = D, P-32 = B, P-33 = B) | **Não começado.** Trabalho grande: `match_knowledge_v3` aditiva (SQL do DEV), anotação no runner e regra no prompt, PR no MCP com flag | ❌ |
+| F4 | §7 FECHADO | ✅ |
+| F5 | §7 FECHADO (run real PASSOU) | ✅ |
+| P-23 (F6 da cadeia vs F6 canónico) | **Pendente.** O F6 canónico é "UM domínio de prova" (D-EP8, BLOQUEADO). Marcar "F6 ✅" no canónico sem a P-23 redefinia um ID decidido | ❌ |
+
+- **Decisões P-21 a P-36:**
+  - P-26 a P-36: decididas pelo maestro;
+  - P-21, P-22, P-24 e P-25: propostas, por confirmar (não bloqueiam o F6);
+  - P-23: pendente (bloqueia).
+- **PRs relevantes:**
+  - com merge: #105–#117 e MCP #19;
+  - abertos: #118 (Dependabot), #119 (F3c), #120 (F3b, validade).
+- **O que NÃO foi feito** (C.2 a C.6): hardening, evidence pack, WHAT-I-CONTRIBUTED, F6 ✅ e PR do F6. Ficam para depois da decisão.
+- **Opções para desbloquear** (A/B/C no relatório; a recomendada é B, a confirmar pelo maestro).
 
 ### F3b, validade implementada (2026-10-06)
 - **P-27 = C, P-28 = C, P-29 = A**, no branch `feat/f3b-validity` (empilhado no #119). **Sem SQL novo:** a `match_knowledge_v2` já filtra por validade.

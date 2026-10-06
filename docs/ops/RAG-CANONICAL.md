@@ -42,7 +42,7 @@ SELECT source FROM match_knowledge(
 Registar aqui: `2026-09-30 — 121 / 322 / 1 / geo-agent: SIM` (reconfirmado por SELECT read-only no fim do dia: 121 / 322 / 1).
 
 ### 3. Correr o ingest e confirmar que escreve no sítio certo
-**Atenção:** o workflow `ingest-knowledge` só **aplica** o ingest em `push` para a `main` (`.github/workflows/ingest-knowledge.yml:3-4,36`). O `workflow_dispatch` só faz o *dry-run* (`:33-34`). O writer corrigido está só na `claude/audit-completo` até haver merge. Até lá, um push para a `main` que toque em `docs/**/*.md` continua a escrever na **t6**.
+**Atenção:** o workflow `ingest-knowledge` só **aplica** o ingest em `push` para a `main` (`.github/workflows/ingest-knowledge.yml:3-4,36`). O `workflow_dispatch` só faz o *dry-run* (`:33-34`). *(Nota de 2026-09-30, já resolvida: o writer corrigido estava só na `claude/audit-completo`, e um push para a `main` ainda escrevia na **t6**.)* **Hoje (2026-10-06):** o writer da `main` escreve na `knowledge_chunks` (J3); a t6 parou a 2026-09-29 (F0.3) e as 33 fontes dela estão todas na canónica (F0.12). O que escreve em produção: só o `scripts/ingest_apply.py` sem `--dry-run`, corrido pelo workflow num push para a `main`. O `ingest_delta.py` (mesmo com `--apply`, que só tem stubs), o `ingest_apply.py --dry-run` e o `validity_report.py` não escrevem.
 
 Por isso, antes do merge, correr **localmente** a partir da `claude/audit-completo`, com o `.env` do PC (`DATABASE_URL`, `GEMINI_API_KEY`):
 ```bash
