@@ -119,3 +119,30 @@ Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing`
    - **Estado em 2026-10-06: v2 activa em produção.** SQL aplicado (verificado no catálogo); `l5_eval` com a flag sem regressão; um `tools/call` do `retrieve_knowledge` (`kb=security`, `top_k=1`) devolveu `citation.uri` e `metadata` preenchido (`document_type` = `md`, `status` = `active`). O `locator` vem `null` nas linhas antigas até cada fonte ser re-ingerida (passo 3). **F3a FECHADO.**
 
 **Rollback:** desligar a flag (passo 4) devolve o MCP ao caminho antigo. As colunas novas e a v2 podem ficar: não mudam nada do que existia.
+
+## F3c: cobertura de `docs/knowledge/` (2026-10-06, P-35 = A, P-36 = A)
+
+> Decisões do maestro de 2026-10-06 (`docs/initiatives/PENDENCIAS.md` §10). A regra fica em teste: **todo o `.md` de `docs/knowledge/` está no MANIFEST ou no `EXCLUDED`** de `scripts/ingest_delta.py`, com a razão (`runner/tests/test_knowledge_coverage.py`, que corre também quando muda `docs/knowledge/**`).
+
+**Antes:** 69 `.md` em `docs/knowledge/`, 37 no MANIFEST e 32 sem decisão (eram 33 no `L5-F0-REVALIDATION.md` §2; o `security-agents-stack.md` entrou no F0.4).
+**A t6 não faz parte do F3c:** as 33 fontes da `knowledge_chunks_t6` estão todas na `knowledge_chunks` (SELECT só de leitura, 2026-10-06). Apagá-la é o F0.12.
+
+| Grupo | Ficheiros | Chunks | Decisão | Razão |
+|---|---:|---:|---|---|
+| `marketing/` | 7 | 15 | **MANIFEST** (`marketing`, P1) | Lidos pelos agentes `creative_review`, `influencer`, `media_buyer`, `ugc` e `editor_video` e pelas skills `creative_review`, `critic` e `seo_brief`; o `kb: marketing` tem 16 dos 17 blocos `knowledge:` dos planos |
+| `imported-from-production/` (conteúdo) | 7 | 109 | EXCLUDED: duplicado | Cópias ou resumos de `agent-network-mcp/ingestion/`, cujo conteúdo já está em produção pelo MCP (`project` NULL: "ECC marketing-agent", "ECC planner+architect+…", etc.). O teste confirma o cabeçalho de cópia |
+| `imported-from-production/` (2 docs) | 2 | 5 | EXCLUDED: cópia sem consumidor | `ADDENDUM_PADROES_ORQUESTRADORES.md` e `PADROES_ERROS_IA.md` |
+| `design/` | 10 | 22 | EXCLUDED (P-36 = A) | Sem consumidor de `kb: design`; as skills de design lêem o ficheiro. O teste falha se um plano passar a usar `kb: design` → **F3c-DESIGN-1** |
+| `imported-from-harnesses.md` | 1 | 17 | EXCLUDED: sem consumidor | Só citado em docs de portfólio |
+| READMEs, MANIFEST e `skills-map.md` | 5 | 21 | EXCLUDED: meta | Índices e mapas |
+
+**Nenhum ficheiro é apagado do git.** O `EXCLUDED` só diz "não vai para o RAG".
+
+**Escrita em produção (W-prod, no merge):** o push para a `main` toca em `scripts/ingest_delta.py` e dispara o `ingest-knowledge`. As 39 fontes anteriores ficam `UNCHANGED`; as 7 de marketing são ingeridas (~15 chunks, dentro do `--max-chunks 50` por omissão). Controlo depois da corrida (só leitura):
+
+```sql
+SELECT source, agent_id, count(*) AS chunks
+FROM knowledge_chunks
+WHERE project = 'network-agents-setup' AND source LIKE 'docs/knowledge/marketing/%'
+GROUP BY source, agent_id ORDER BY source;   -- esperado: 7 fontes, agent_id marketing, 15 chunks no total
+```

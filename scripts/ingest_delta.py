@@ -72,7 +72,61 @@ MANIFEST: list[tuple[str, str, str]] = [
     ("docs/knowledge/saude/oftalmologia.md", "saude", "P1"),
     ("docs/knowledge/legal/direito-br-pt.md", "legal", "P1"),
     ("docs/knowledge/imobiliario/fipezap.md", "imobiliario", "P1"),
+    # F3c (P-35 = A, maestro, 2026-10-06): o pack docs/knowledge/marketing/, lido pelos
+    # agentes e skills de marketing (kb marketing: 16 dos 17 blocos `knowledge:` dos planos).
+    # No fim do MANIFEST: com o ingest incremental, as fontes anteriores ficam UNCHANGED e
+    # estas 7 (~15 chunks) cabem no orçamento por omissão da corrida do merge.
+    ("docs/knowledge/marketing/creative-review-rubric.md", "marketing", "P1"),
+    ("docs/knowledge/marketing/influencer-briefing.md", "marketing", "P1"),
+    ("docs/knowledge/marketing/media-buying.md", "marketing", "P1"),
+    ("docs/knowledge/marketing/multi-ai-findability.md", "marketing", "P1"),
+    ("docs/knowledge/marketing/seo-tech-audit-checklist.md", "marketing", "P1"),
+    ("docs/knowledge/marketing/ugc-pipeline.md", "marketing", "P1"),
+    ("docs/knowledge/marketing/video-edit-checklist.md", "marketing", "P1"),
 ]
+
+# F3c (P-35 = A, P-36 = A): os .md de docs/knowledge/ que NÃO são ingeridos, cada um com
+# a razão. Ficam no git (os agentes e as skills lêem-nos pelo path); só não entram no RAG.
+# Todo o .md de docs/knowledge/ tem de estar no MANIFEST ou aqui
+# (runner/tests/test_knowledge_coverage.py). Tirar daqui = decisão, pack a pack (D-EP2).
+EXCLUDE_META = "meta: índice ou mapa, não é conhecimento consumível"
+EXCLUDE_DUP = (
+    "duplicado: cópia ou resumo de agent-network-mcp/ingestion/, cujo conteúdo já está "
+    "em produção pelo MCP (knowledge_chunks com project NULL)"
+)
+EXCLUDE_MCP_COPY = "cópia de um doc do agent-network-mcp; sem consumidor de kb"
+EXCLUDE_NO_CONSUMER = "sem consumidor de kb (só citado em docs de portfólio)"
+EXCLUDE_DESIGN = (
+    "P-36 = A: sem consumidor de kb design (as skills de design lêem o ficheiro); "
+    "reavaliar no F3c-DESIGN-1"
+)
+EXCLUDED: dict[str, str] = {
+    "docs/knowledge/README.md": EXCLUDE_META,
+    "docs/knowledge/skills-map.md": EXCLUDE_META,
+    "docs/knowledge/design/README.md": EXCLUDE_META,
+    "docs/knowledge/imported-from-production/README.md": EXCLUDE_META,
+    "docs/knowledge/imported-from-production/MANIFEST.md": EXCLUDE_META,
+    "docs/knowledge/imported-from-production/arquitetura-agentes-planejamento-rede-docs.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/comunicacoes-atendimento-base.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/guia-tdd-testes.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/marketing-base.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/produto-tech-a11y-seo.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/radar-ferramentas-opensource.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/revisor-codigo-security-database.md": EXCLUDE_DUP,
+    "docs/knowledge/imported-from-production/ADDENDUM_PADROES_ORQUESTRADORES.md": EXCLUDE_MCP_COPY,
+    "docs/knowledge/imported-from-production/PADROES_ERROS_IA.md": EXCLUDE_MCP_COPY,
+    "docs/knowledge/imported-from-harnesses.md": EXCLUDE_NO_CONSUMER,
+    "docs/knowledge/design/a11y-baseline.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/cognitive-load.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/component-states.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/design-system-anti-patterns.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/handoff-ux-ui-dev.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/nielsen-heuristics.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/tokens-three-tier.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/ux-principles.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/ux-writing-examples.md": EXCLUDE_DESIGN,
+    "docs/knowledge/design/ux-writing-principles.md": EXCLUDE_DESIGN,
+}
 
 
 @dataclass

@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f3a-production` (empilhado no #116).
-- **`main` de referência:** NAS `0b7405a` (merges até #115); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `feat/f3c-knowledge-coverage` (a partir da `main` `3930efe`).
+- **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
@@ -22,6 +22,25 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F3c implementado e decisões do F3b registadas (2026-10-06)
+- **Decisões do maestro:** P-27 = C, P-28 = C, P-29 = A, P-30 = A, P-31 = D, P-32 = B, P-33 = B, P-34 = A, P-35 = A, P-36 = A (`PENDENCIAS.md` §10).
+- **Itens novos**, estacionados no fim do §4 com critério de desbloqueio:
+  - F3-MCP-1 (validade e autoridade nas linhas do MCP);
+  - F3c-DESIGN-1 (pack de design, quando houver consumidor);
+  - F3b-GS-1 (golden set de marketing).
+- **F0.12:** ganha a prova de que a t6 está toda na canónica.
+- **F3c** (branch `feat/f3c-knowledge-coverage`):
+  - `scripts/ingest_delta.py`: 7 `.md` de `marketing/` no MANIFEST (`marketing`, P1); o `EXCLUDED` com 25 entradas, cada uma com a razão;
+  - `runner/tests/test_knowledge_coverage.py` (5 testes; falham sem a alteração):
+    - todo o `.md` de `docs/knowledge/` está no MANIFEST ou no `EXCLUDED`;
+    - os duplicados têm o cabeçalho de cópia do `ingestion/` do MCP;
+    - o design só fica de fora enquanto nenhum plano usar `kb: design`;
+    - o pack de marketing tem consumidor e cabe no orçamento;
+  - `runner-tests.yml`: o filtro de paths passa a incluir `docs/knowledge/**`;
+  - `docs/ops/RAG-CANONICAL.md` § F3c: tabela e SELECT de controlo.
+- **W-prod no merge:** o `ingest-knowledge` ingere os 7 de marketing (~15 chunks); as 39 fontes anteriores ficam UNCHANGED.
+- **Contagens:** 106 vivos (ABERTO 58, EM CURSO 6, BLOQUEADO 42); 36 decisões.
 
 ### F3a FECHADO: v2 activa em produção (2026-10-06)
 - **Prova do DEV:** `tools/call` do `retrieve_knowledge` (`kb=security`, query "chairman security council", `top_k=1`).
@@ -918,10 +937,10 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #117 | `docs/f3a-production` | F3a FECHADO (prova da v2); evidência de produção, R-006, comando v1/v2 (empilhado no #116) | Aberto |
-| NAS #116 | `docs/f5-closed` | F5 e F4 → FECHADO; runbook do F5 corrigido; W-011, V41 | Aberto |
+| NAS (PR do branch) | `feat/f3c-knowledge-coverage` | F3c (P-35, P-36) + registo das decisões P-27 a P-36 | Aberto |
+| NAS #118 | `fix/deps-proxy-addr-source-map-js` | Alertas do Dependabot (`proxy-addr` 2.0.8, `source-map-js` 1.2.2) | Aberto |
 
-Já com merge: NAS #63–#115 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
+Já com merge: NAS #63–#117 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC; #116 e #117 a 2026-10-06); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
