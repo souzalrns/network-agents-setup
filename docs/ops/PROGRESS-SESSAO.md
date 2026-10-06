@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f3b-validity` (empilhado no `feat/f3c-knowledge-coverage`, PR #119).
+- **Branch actual:** `docs/f6-hardening-portfolio` (empilhado no `feat/f3b-validity`, PR #120). **F6 parado no C.1: pré-condições não cumpridas.**
 - **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
 
@@ -22,6 +22,31 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F6 C.1 feito: pré-condições NÃO cumpridas, parado (2026-10-06)
+Prompt "FECHAR F6", protocolo A.3(b): falta trabalho grande antes do F6, por isso não se finge um F6 completo. Estado lido do disco (`PENDENCIAS.md`, `PENDENCIAS_T6.md`), não do chat.
+
+| Pré-condição | Estado no disco | OK? |
+|---|---|---|
+| F1 | §7 FECHADO (2026-10-05) | ✅ |
+| F2 | Cadeia: ✅ merged (#111). Canónico: EM CURSO (`discover`, fallback JS, P-24, P-25), por desenho (F2a fechou o critério do prompt) | ✅ na cadeia |
+| F3a | §7 FECHADO (2026-10-06; v2 activa em produção) | ✅ |
+| F3c | PR #119 aberto, **sem merge** (W-prod no merge) | ❌ |
+| F3b, validade | PR #120 aberto (empilhado no #119), **sem merge** | ❌ |
+| F3b, autoridade e conflitos (P-31 = D, P-32 = B, P-33 = B) | **Não começado.** Trabalho grande: `match_knowledge_v3` aditiva (SQL do DEV), anotação no runner e regra no prompt, PR no MCP com flag | ❌ |
+| F4 | §7 FECHADO | ✅ |
+| F5 | §7 FECHADO (run real PASSOU) | ✅ |
+| P-23 (F6 da cadeia vs F6 canónico) | **Pendente.** O F6 canónico é "UM domínio de prova" (D-EP8, BLOQUEADO). Marcar "F6 ✅" no canónico sem a P-23 redefinia um ID decidido | ❌ |
+
+- **Decisões P-21 a P-36:**
+  - P-26 a P-36: decididas pelo maestro;
+  - P-21, P-22, P-24 e P-25: propostas, por confirmar (não bloqueiam o F6);
+  - P-23: pendente (bloqueia).
+- **PRs relevantes:**
+  - com merge: #105–#117 e MCP #19;
+  - abertos: #118 (Dependabot), #119 (F3c), #120 (F3b, validade).
+- **O que NÃO foi feito** (C.2 a C.6): hardening, evidence pack, WHAT-I-CONTRIBUTED, F6 ✅ e PR do F6. Ficam para depois da decisão.
+- **Opções para desbloquear** (A/B/C no relatório; a recomendada é B, a confirmar pelo maestro).
 
 ### F3b, validade implementada (2026-10-06)
 - **P-27 = C, P-28 = C, P-29 = A**, no branch `feat/f3b-validity` (empilhado no #119). **Sem SQL novo:** a `match_knowledge_v2` já filtra por validade.
