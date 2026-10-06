@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 07:00 UTC
+Última atualização: 2026-10-06 (F5 PASSOU; #113, #114, #115 e MCP #19 merged)
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -18,12 +18,14 @@
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅ Merged  | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ✅ Merged  | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt) |
-| F3   | Provenance no retrieve                         | ✅         | NAS #113 (migração aditiva, `match_knowledge_v2`, writer, 21 testes; CI verde em código, jobs de infra cancelados por falta de runner — ver comentário no #113) + MCP `agent-network-mcp` #19 (flag `KNOWLEDGE_RPC_V2`, 26 testes + 13 e2e). No canónico, o F3 continua EM CURSO (F3b, F3c) | Sim (critério do prompt; merge pendente) |
-| F4   | marketing-capabilities.yaml                    | ✅         | PR #114: `config/marketing-capabilities.yaml` (18 capabilities), maturidade medida pelo E7, 32 testes. CI: test, test-rag, test-ingest, test-slow e gitleaks verdes; semgrep/CodeQL sem runner do GitHub (semgrep local: 0 achados) | Sim (merge pendente) |
-| F5   | Validação E2E real (1 run Gemini)              | 🔒 aguarda run do DEV | Preparado: `docs/ops/F5-E2E-RUN.md` (comando único PowerShell, critérios), `scripts/f5_evidence.py` + 11 testes; branch `feat/f5-e2e-evidence` | Não (só o DEV tem as credenciais) |
-| F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
+| F3   | Provenance no retrieve                         | ✅ Merged  | NAS #113 (merged 2026-10-06, `8c22d18`; o SQL chegou antes à `main` no `2a9203a`) + MCP `agent-network-mcp` #19 (merged 2026-10-05, flag `KNOWLEDGE_RPC_V2`). Falta o DEV correr o SQL no Supabase e ligar a flag (NÃO VERIFICADO). No canónico, o F3 continua EM CURSO (F3b, F3c) | Sim |
+| F4   | marketing-capabilities.yaml                    | ✅ Merged  | PR #114 (merged 2026-10-06, `e66d1b1`): `config/marketing-capabilities.yaml` (18 capabilities), maturidade medida pelo E7, 32 testes. **F4 FECHADO** no canónico (§7) | Sim |
+| F5   | Validação E2E real (1 run Gemini)              | ✅ PASSOU  | PR #115 (merged 2026-10-06, `0b7405a`). Run real do DEV (3.º, `run_9017d441d1`): **PASSOU** nos 5 critérios (estado `done`, L5 com 5 hits na `kb=security`, 3 chamadas Gemini com 16614 tokens, 0 erros, 4 artefactos). Evidência em `docs/ops/F5-E2E-RUN.md` §4. **F5 FECHADO** no canónico (§7) | Sim |
+| F6   | Hardening final + portfolio package            | 🔒 aguarda P-23 | O F5 já não bloqueia. Falta a decisão P-23 (F6 da cadeia vs F6 canónico, que também precisa da D-EP8) | Não |
 
 ## Histórico de fases
+- 2026-10-06 · **F5 · ✅ PASSOU** (3.º run real do DEV, `run_9017d441d1`): 5 de 5 critérios. O 1.º run falhou pelo `MCP_URL` com `/api/mcp` (erro do runbook, corrigido; V41) e o 2.º por um bypass com 1 carácter (verificação de tamanho no runbook; W-011 para o runner). **F5 e F4 FECHADOS** no canónico.
+- 2026-10-06 16:32–16:35 UTC · **merge do maestro: #113, #114 e #115** (`main` `0b7405a`); MCP #19 a 2026-10-05 22:06 UTC.
 - 2026-10-05 · T6a · ✅ merged no #105 (`99b2cee`): esqueleto do `ingest_document` + adapter MarkItDown + 32 testes.
 - 2026-10-05 · T6b · ✅ PR #106 aberto, CI verde: fixture PDF + gerador reprodutível + testes + job `test-ingest`.
 - 2026-10-05 · T6c · ✅ PR #107 aberto, CI verde: fixtures DOCX e XLSX + geradores reprodutíveis + aviso `xlsx_nan_cells`.
@@ -39,11 +41,12 @@
 - 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
-- **F5 à espera do run real do DEV** (regra 9: as credenciais Gemini, MCP e bypass da Vercel são só do DEV). Tudo preparado em `docs/ops/F5-E2E-RUN.md`; a evidência cola-se na §4 desse ficheiro. Sem o F5, o F6 não arranca (e o F6 depende também da P-23).
+- ~~**F5 à espera do run real do DEV**~~ — **resolvido: o F5 PASSOU (2026-10-06, 3.º run)**. O F6 passa a depender só da **P-23** (e o F6 canónico da D-EP8).
+- **F3a em produção: só o DEV.** Correr `scripts/migrations/f3_provenance_retrieve.sql` no Supabase e ligar `KNOWLEDGE_RPC_V2=1` na Vercel (ordem em `docs/ops/RAG-CANONICAL.md` § F3a). Sem isto, o MCP continua no `match_knowledge` antigo, o que é seguro.
 - **CI do GitHub sem runners (2026-10-05, 19:50 UTC em diante):** jobs "not acquired by Runner" nos PRs #113 e #114; 1 re-execução feita em cada; o resto do CI e a validação local estão verdes.
 - ~~**F3 bloqueado pela decisão P-26**~~ — **resolvido: P-26 = A (maestro, 2026-10-06)**; F3a em curso. O F3 muda o schema e a RPC `match_knowledge` de produção, que o MCP chama; o ADR propõe a via aditiva (`match_knowledge_v2`, a antiga intacta), com o SQL corrido pelo DEV. Sem a P-26 não há código do F3, e por isso também não há F4, F5 e F6 (cada fase exige a anterior concluída).
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
-- **F5 precisa de credenciais** (run real com Gemini): só o DEV o pode correr. O Claude prepara o comando e o molde de evidência.
+- ~~**F5 precisa de credenciais**~~ — resolvido: o DEV correu-o (3 runs; o 3.º passou).
 - **F2, rede da sessão cloud:** a política de rede deste ambiente recusa (403 no proxy) `example.com`, `python.org` e `wikipedia.org`. A corrida real do F2 foi feita no `pypi.org`, que é acessível. Para outros hosts: acrescentá-los em Network access nas definições do ambiente (https://code.claude.com/docs/en/cloud-environments#network-access), ou correr na máquina do DEV.
 - **F2, Crawl4AI:** o prompt diz "Crawl4AI preferencial"; a decisão canónica do F2 é "a partir do `scrape.yml`; Crawl4AI só se o superar". Seguiu-se a canónica: o F2a não instala o Crawl4AI.
 - **F6 do prompt ≠ F6 do canónico.** No `PENDENCIAS.md`, o F6 é "UM domínio de prova, com o Domain Onboarding Cost medido; escolhido só depois do F5" (D-EP8). Neste ficheiro, F6 é "hardening final + portfolio package". Não se redefine um ID decidido: quando se chegar lá, o maestro escolhe (A/B/C) entre fazer os 2, renomear o do prompt ou fundi-los.
@@ -284,4 +287,22 @@ TESTES: test_f5_evidence 11 passed (inclui: um run stub real dá INCOMPLETO; seg
 PENDENCIAS.md: atualizado (sim; F5 BLOQUEADO com o bloqueio exacto)
 PRÓXIMO PASSO RECOMENDADO: o DEV corre os comandos da §2 do F5-E2E-RUN.md e cola a saída na §4
 BLOQUEIOS: credenciais (só o DEV) — regra 9: documentado e parado
+```
+
+```
+FASE: F5 (validação E2E real), fecho
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: 🔒 aguarda run do DEV → ✅ PASSOU (F5 e F4 FECHADOS no canónico)
+EVIDÊNCIA (do DEV, `scripts/f5_evidence.py pilots/f5-run-v3`):
+- run_9017d441d1 / example-security-audit-demo, external, estado done
+- passos: triage, audit, hitl_security_decision, report
+- L5: audit kb=security, 5 hits, fonte docs/knowledge/security-agents-stack.md
+- modelo: 3 chamadas gemini-3.5-flash-lite, tokens 13670 / 2944 / 16614
+- 4 artefactos; 0 worker_error, 0 knowledge_context_failed
+CORRECÇÕES:
+- docs/ops/F5-E2E-RUN.md: MCP_URL só com a base (o runner acrescenta /api/mcp); linha que mostra o tamanho dos segredos; 2 linhas novas na §5
+- .gitignore: pilots/f5-run*/ (o 3.º run usou pilots/f5-run-v3, que não estava ignorado)
+- PENDENCIAS.md: F5 e F4 → §7; F3 com os merges; F6 sem o F5 no bloqueio; W-011 e V41 novos
+PRÓXIMO PASSO RECOMENDADO: o maestro decide a P-23 (F6). O DEV corre o SQL do F3a e liga a flag
+BLOQUEIOS: F6 → P-23 (decisão do maestro)
 ```

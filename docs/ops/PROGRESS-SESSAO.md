@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f5-e2e-evidence` (empilhado no #114).
-- **`main` de referência:** NAS `e10f772` (merges até #112); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F5 preparado, à espera do run real do DEV**. Em PR: F3a (#113 + MCP #19), F4 (#114). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
+- **Branch actual:** `docs/f5-closed` (a partir da `main` `0b7405a`).
+- **`main` de referência:** NAS `0b7405a` (merges até #115); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F5 PASSOU: F5 e F4 FECHADOS (2026-10-06)
+- **Evidência do DEV** (`scripts/f5_evidence.py pilots/f5-run-v3`): `run_9017d441d1`, plano `example-security-audit-demo`, `external`, estado `done`.
+  - L5: passo audit com `kb=security` e 5 hits, fonte `docs/knowledge/security-agents-stack.md`.
+  - Modelo: 3 chamadas a `gemini-3.5-flash-lite`, tokens 13670 / 2944 / 16614.
+  - 4 artefactos, 0 erros. Veredicto **PASSOU** (5 de 5).
+- **Os 2 primeiros runs falharam por configuração:**
+  - o 1.º pelo `MCP_URL` com `/api/mcp`. **O erro era meu, no runbook do #115:** o runner acrescenta sempre `/api/mcp`, como já dizia o `L5-F0-REVALIDATION.md:241`. Corrigido no runbook; V41 no §8;
+  - o 2.º por um `VERCEL_PROTECTION_BYPASS` com 1 carácter. O runbook ganhou uma linha que mostra o tamanho dos 3 segredos sem os valores. Novo W-011: o runner deve validar os dois à partida.
+- **`.gitignore`:** o 3.º run usou `pilots/f5-run-v3`, que não estava ignorado. O padrão passa a `pilots/f5-run*/`.
+- **`PENDENCIAS.md`:**
+  - F5 e F4 → §7. O F4 fecha pela regra do §9 (passo 5), porque o #114 entrou;
+  - F3 continua EM CURSO, com os merges registados; faltam o SQL e a flag (DEV), o F3b e o F3c;
+  - o F6 deixa de ter o F5 no bloqueio (fica a D-EP8 e a P-23);
+  - contagens: 102 vivos (ABERTO 57, EM CURSO 6, BLOQUEADO 39), 108 de histórico, 41 contradições.
+- **PR:** branch `docs/f5-closed` (só docs e `.gitignore`).
 
 ### F5: preparado para o run real do DEV (2026-10-06)
 - **Escolha do caso:** o plano `security-audit-demo`.
@@ -872,10 +888,9 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #113 | `feat/f3-provenance-retrieve` | F3a: SQL aditivo + `match_knowledge_v2` + writer com proveniência | Aberto |
-| MCP #19 | `claude/reels-analysis-tools-access-hwudk9` | F3a: `retrieve_knowledge` na v2 atrás da flag `KNOWLEDGE_RPC_V2` | Aberto |
+| NAS (PR do branch) | `docs/f5-closed` | F5 e F4 → FECHADO; runbook do F5 corrigido; W-011, V41 | Aberto |
 
-Já com merge: NAS #63–#112 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC); MCP #10–#18.
+Já com merge: NAS #63–#115 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
@@ -918,11 +933,8 @@ cd ..\agent-network-mcp;        graphify update .
 - **Não tocar sem decisão:** F0.12 (apagar a t6), S20/S27/S19 (Oracle), W-004.
 
 ## Próximos 3 passos recomendados
-1. **Maestro:**
-   - merge do #110 (fecha o F1 no canónico) e do #111 (F2a), por esta ordem; depois, o PR do ADR do F3;
-   - decidir a **P-26** (F3; recomendada A, porque desbloqueia a cadeia) e confirmar a P-21 a P-25.
+1. **Maestro:** decidir a **P-23** (F6 da cadeia vs F6 canónico; recomendada A, que mantém os 2) e confirmar a P-21, a P-22, a P-24 e a P-25. Merge do PR do F5 (só docs).
 2. **DEV:**
-   - a 1.ª ingestão real de um documento convertido: `python scripts/ingest_document.py <doc> --out-dir docs/knowledge/ingested`, entrada no MANIFEST e merge (escreve em produção);
-   - com a P-26 = A, correr o SQL do F3a quando o PR existir;
-   - o F0.6 continua BLOQUEADO (o conector do Claude.ai sem tools).
-3. **Claude:** com a P-26 decidida, o F3a em 2 PRs (NAS e depois MCP). Sem ela, a cadeia F1–F6 fica parada no F3 (regra 9 do prompt).
+   - correr `scripts/migrations/f3_provenance_retrieve.sql` no Supabase e ligar `KNOWLEDGE_RPC_V2=1` na Vercel, pela ordem do `docs/ops/RAG-CANONICAL.md` § F3a;
+   - confirmar com uma chamada a `retrieve_knowledge` que vem a `citation.uri` e o `metadata.status`.
+3. **Claude:** o W-011 (o runner valida o `MCP_URL` e o bypass à partida), num PR pequeno com testes. Depois, o F6 conforme a P-23.
