@@ -111,5 +111,11 @@ Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing`
 4. **Merge do PR do MCP (`agent-network-mcp` #19) e ligar `KNOWLEDGE_RPC_V2=1`** nas env vars da Vercel (Production), seguido de redeploy. Até lá, o MCP usa o `match_knowledge` antigo. A flag desliga-se a qualquer momento (rollback sem SQL).
    - Se a flag for ligada antes do passo 2, o MCP detecta `PGRST202` (a função não existe), regista um aviso e cai para o `match_knowledge`: o RAG não fica vazio.
 5. **Confirmar:** uma chamada a `retrieve_knowledge` traz `citation.uri`, `citation.locator`, `metadata.status`… e os `filters` passam a ter efeito.
+   - **Atenção:** o `provenance_ok` do `l5_eval` **não distingue** a v1 da v2, porque só olha para o `citation.source`, que a v1 também devolve (R-006). O sinal certo é o `metadata`: `null` na v1, preenchido na v2.
+   - Comando de 1 linha (em `runner/`, com o `MCP_URL`, o `MCP_API_KEY` e o `VERCEL_PROTECTION_BYPASS` no ambiente). Imprime só `v1` ou `v2`, sem conteúdo:
+     ```powershell
+     python -c "from plan_runner.mcp_knowledge import McpKnowledge as M; h=M().retrieve('security','auditoria defensiva',top_k=1,filters=None,require_citations=True); print('v2' if h and h[0].get('metadata') else 'v1')"
+     ```
+   - **Estado em 2026-10-06: v2 activa em produção.** SQL aplicado (verificado no catálogo); `l5_eval` com a flag sem regressão; um `tools/call` do `retrieve_knowledge` (`kb=security`, `top_k=1`) devolveu `citation.uri` e `metadata` preenchido (`document_type` = `md`, `status` = `active`). O `locator` vem `null` nas linhas antigas até cada fonte ser re-ingerida (passo 3). **F3a FECHADO.**
 
 **Rollback:** desligar a flag (passo 4) devolve o MCP ao caminho antigo. As colunas novas e a v2 podem ficar: não mudam nada do que existia.
