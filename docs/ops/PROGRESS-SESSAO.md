@@ -23,6 +23,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F6 C.2 feito: hardening (2026-10-06)
+
+| Item | Resultado |
+|---|---|
+| Segredos | `gitleaks dir .` e `gitleaks git .` (todo o histórico): sem fugas. Nenhum `.env` versionado |
+| Paths absolutos da máquina | **Corrigido:** 13 `C:\Users\<utilizador>\…` em 4 docs → `%USERPROFILE%` (commit `7cf5280`). O histórico do git mantém-nos (sem reescrita) |
+| MANIFEST ou EXCLUDED | `test_knowledge_coverage.py` verde (#119) |
+| Segurança de entrada | `docs/ops/INGEST-DOCUMENT.md` (timeout, `RLIMIT_DATA`, `max_bytes`, ZIP) + `test_ingest_security.py` (18) |
+| F2 | `docs/ops/WEB-FETCH.md` (allowlist em cada redirect, robots RFC 9309, SSRF incluindo `169.254.169.254`) + `test_web_fetch.py`. Limitação já documentada (DNS rebinding) → item novo **F2-SEC-1** |
+| Retrieve aditivo | `match_knowledge` intacta; `match_knowledge_v2` aditiva; flag `KNOWLEDGE_RPC_V2` documentada (`RAG-CANONICAL.md` § F3a, `ANM:docs/RAG_GROUNDING.md`). A `v3` está estacionada (F3b-AUTH-1) |
+| Dry-run vs escrita | **Corrigido:** o `RAG-CANONICAL.md` §3 dizia que um push ainda escrevia na t6 (falso desde o J3). Agora diz o que escreve em produção (só o `ingest_apply.py` sem `--dry-run`, no workflow) e o que não escreve |
+| Testes no âmbito tocado | coverage, segurança de entrada, web fetch e validade: 95 passed, 4 skipped |
+
 ### F6: retomado por instrução do maestro (2026-10-06, "Fez o f6 como no prompt")
 - **Leitura aplicada** (regra B do prompt do F6: estacionar o que não pode ser implantado, sem apagar):
   - F3b, autoridade e conflitos (P-31 a P-33) precisa de SQL em produção e da flag no MCP → estaciona como **F3b-AUTH-1** no fim das pendências;
