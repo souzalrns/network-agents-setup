@@ -23,6 +23,10 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F6 C.3 feito: evidence pack (2026-10-06)
+- `docs/portfolio/F6-evidence/` (commit `c5eba44`): `README.md` (índice e estado da cadeia), `prs.md` (21 PRs NAS e MCP com link), `decisions.md` (P-21 a P-36), `tests-and-ci.md` (comandos e última corrida), `run-e2e.md` (F0.7b, F3a v2, F5), `hardening.md` (checklist do C.2 e o que escreve em produção), `deferred.md` (14 estacionados com o critério de desbloqueio).
+- Sem dumps de BD, segredos nem conteúdo de documentos. As afirmações técnicas foram conferidas contra as fontes (`INGEST-DOCUMENT.md:34-39`, `ANM:lib/knowledge.js`).
+
 ### F6 C.2 feito: hardening (2026-10-06)
 
 | Item | Resultado |
