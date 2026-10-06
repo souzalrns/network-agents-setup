@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | **ID** | ADR-F3-PROVENANCE-RETRIEVE |
-| **Estado** | **Proposta**, à espera da decisão P-26 (`docs/initiatives/PENDENCIAS.md` §10). Só contrato: nenhum código, nenhum SQL executado |
+| **Estado** | **Aceite: opção A** (P-26 = A, maestro, 2026-10-06). O F3a está a ser implementado; o SQL de produção é corrido pelo DEV |
 | **Data** | 2026-10-06 |
 | **Decisores** | Maestro (aceita ou rejeita); redigido pelo Claude |
 | **Item** | F3 no `PENDENCIAS.md` (AMBOS, Alta) e F3 da cadeia F1–F6 (`docs/initiatives/PENDENCIAS_T6.md`) |
@@ -45,6 +45,21 @@
 | 7 | Produção | O SQL fica em `scripts/migrations/`, e o DEV corre-o (W-prod). Antes e depois, há queries só de leitura de controlo no PR |
 | 8 | MCP (2.º PR) | O `retrieve_knowledge` chama a v2, e a `citation` passa a trazer `uri`, `title`, `retrieved_at`, `locator` e `status`; os `filters` passam a ter efeito. Verificar o impacto no conector do Claude.ai (`ANM:CLAUDE.md`) |
 
+## 3.1 Implementação do F3a (2026-10-06)
+
+- **NAS** (branch `feat/f3-provenance-retrieve`):
+  - migração `scripts/migrations/f3_provenance_retrieve.sql`;
+  - `runner/plan_runner/provenance.py` (sidecar → colunas);
+  - writer com detecção da migração (`has_f3_columns`): o merge pode vir antes do SQL;
+  - `ingest_apply` com `INVALID_META` e `META_UPDATED`;
+  - testes `test_f3_provenance.py` (11, Postgres) e `test_provenance.py` (10).
+  - Runbook do DEV em `docs/ops/RAG-CANONICAL.md` § F3a.
+- **MCP:** o `retrieve_knowledge` passa para a v2 atrás da flag `KNOWLEDGE_RPC_V2`, desligada por omissão.
+- **Diferenças face ao §3:**
+  - a coluna `final_url` foi acrescentada (vem do F2);
+  - `effective_*` ficou `timestamptz`, como o resto do schema;
+  - o filtro `valid_at` aceita qualquer instante ISO 8601.
+
 ## 4. Consequências
 
 - **Positivas:**
@@ -58,4 +73,4 @@
 
 ## 5. Decisão pedida
 
-A P-26 no `PENDENCIAS.md` §10. Sem decisão, **nada é implementado**: a cadeia F1–F6 pára no F3 (regra 9 do prompt: documentar o bloqueio, parar e esperar).
+A P-26 no `PENDENCIAS.md` §10: **decidida A pelo maestro a 2026-10-06**. O F3a é implementado em 2 PRs (NAS e MCP), sem escrita em produção: o SQL fica em `scripts/migrations/` para o DEV correr, e o MCP usa a v2 só com a feature flag ligada.

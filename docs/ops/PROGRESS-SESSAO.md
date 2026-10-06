@@ -5,9 +5,9 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f3-provenance-adr` (empilhado no #111).
-- **`main` de referência:** NAS `cd8aeb3` (merges até #109); MCP `880d492` (merge #18).
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: F3, **à espera da P-26** (ADR proposto). F1: #106–#109 merged, #110 aberto com CI verde. F2a: #111 aberto com CI verde.
+- **Branch actual:** `feat/f3-provenance-retrieve` (a partir da `main` `e10f772`).
+- **`main` de referência:** NAS `e10f772` (merges até #112); MCP `880d492` (merge #18).
+- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. Fase actual: **F3a** (P-26 = A, 2026-10-06). F1 FECHADO (#105–#110 merged); F2a merged (#111); ADR do F3 merged (#112).
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +22,58 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F3a, etapa 5: MCP atrás de feature flag (2026-10-06)
+- **Branch:** `claude/reels-analysis-tools-access-hwudk9` no `agent-network-mcp`. O branch designado foi recriado a partir da `main` `880d492`, porque o #18 já teve merge e o branch remoto tinha sido apagado.
+- **`lib/knowledge.js`:** `KNOWLEDGE_RPC_V2=1` liga a `match_knowledge_v2`.
+  - Sem a flag, o pedido e o hit são idênticos aos de hoje.
+  - Com a flag, os filtros passam por lista branca e validação (`sanitizeKnowledgeFilters`), e os hits ganham `citation.locator`, `uri`, `title` e `metadata`, sem perder campos.
+  - O contexto dos agentes também exclui documentos revogados ou expirados.
+- **Melhoria encontrada ao documentar:** ligar a flag antes do SQL deixaria o RAG vazio em silêncio, porque o `retrieveKnowledgeHits` engole erros. Agora o MCP detecta `PGRST202`, regista um aviso e cai para a `match_knowledge`. Há um teste para isto.
+- **Testes:**
+  - `tests/knowledgeV2.test.mjs` (7); `npm test` 26/26;
+  - e2e (`next build` + 13 testes) 13/13, sem alterações ao `CLAUDE.md`;
+  - mutação: com a v2 sempre ligada, o teste da flag desligada falha;
+  - gitleaks e semgrep limpos.
+  - O MCP não tem workflows de PR: a validação é local, e está descrita no PR.
+- **Documentação:** `docs/RAG_GROUNDING.md` (flag, ordem segura, fallback, rollback) e `.env.example`.
+- **PR:** `agent-network-mcp` #19, par do #113.
+
+### F3a, etapas 2 a 4: SQL, writer e testes no NAS (2026-10-06)
+- **Migração aditiva:** `scripts/migrations/f3_provenance_retrieve.sql` acrescenta 10 colunas à `knowledge_sources` (com um CHECK do status), o `locator` à `knowledge_chunks` e a função `match_knowledge_v2`, com filtros e proveniência por `LEFT JOIN`, só nas linhas do T6. O `match_knowledge` antigo fica igual.
+  - Verificada à mão e no CI: corre 2 vezes sobre dados antigos sem erro.
+- **Risco tratado:**
+  - o merge deste PR toca em `docs/**/*.md` e dispara o `ingest-knowledge` contra produção antes de o DEV correr o SQL;
+  - por isso o writer **detecta** a migração (`has_f3_columns`) e, sem ela, escreve exactamente como antes;
+  - está testado nos 2 schemas.
+- **`runner/plan_runner/provenance.py`:**
+  - valida o `.meta.yaml`: campos, hash, status e datas, incluindo comparar datas com e sem fuso sem `TypeError`;
+  - converte-o nas colunas.
+- **`ingest_apply`:**
+  - `INVALID_META` não escreve nada e conta como falha da corrida;
+  - `META_UPDATED` acontece quando o `.md` é igual e só o sidecar muda, sem embeddings, e é o que torna possível uma revogação ter efeito;
+  - sem sidecar, a proveniência vem do git.
+- **Testes:**
+  - `test_f3_provenance.py` (11, Postgres): a migração 2 vezes sobre dados antigos, o CHECK, o writer sem e com a migração, a v2 com proveniência e cada filtro, o `match_knowledge` antigo igual, as linhas do MCP sem herdar proveniência, `INVALID_META` e `META_UPDATED`;
+  - `test_provenance.py` (10).
+  - Verificação por mutação: sem a detecção, ou sem a condição `project` no JOIN, os testes respectivos falham.
+- **Defeitos meus apanhados na validação:**
+  - acrescentei uma chave ao retorno do `replace_chunks`, o que partia um contrato testado (revertido);
+  - o `has_f3_columns` não tratava um cursor sem linha;
+  - o refactor separou o `nosemgrep` da chamada a que se aplicava (o semgrep apanhou).
+- **Validação:** sem extras, `pytest` 700 passed e 29 skipped; com extras e Postgres, 144 passed; semgrep 0; gitleaks limpo.
+- **Documentação:** runbook do DEV em `docs/ops/RAG-CANONICAL.md` § F3a (ordem merge → SQL → MCP → flag; rollback desligando a flag).
+
+### F3a, etapa 1: P-26 = A, F1 FECHADO (2026-10-06)
+- **Maestro:** o merge do #110, do #111 e do #112 está feito, e a **P-26 = A**. Pedido explícito: implementar o F3 (SQL aditivo, v2, writer, testes e MCP mínimo ou com feature flag) e só depois o F4.
+- **Pergunta do maestro, "porque não levou o prompt até ao fim":** parei no F3 por excesso de cautela. A opção A é aditiva e o SQL só corre pela mão do DEV, por isso podia ter implementado num PR sem merge. Fica registado como lição: com uma opção aditiva e sem escrita em produção, avança-se em PR e a decisão fica para o merge.
+- **Canónico:**
+  - o F1 passa para o §7 como FECHADO (merge do #105 ao #110; providência 2);
+  - o F3 passa a EM CURSO;
+  - a P-26 fica decidida;
+  - o alias ING-2 aponta para o §7.
+  - Ficam 103 vivos (ABERTO 56, EM CURSO 6, BLOQUEADO 41) e 106 linhas no §7 (85 FECHADO). Recontagem validada.
+- **ADR do F3:** o estado passa a Aceite (opção A). **`PENDENCIAS_T6.md`:** o T6f e o F2 ficam ✅ Merged, e o F3 fica ⏳.
 
 ### F3: ADR proposto e paragem na decisão P-26 (2026-10-06)
 - **F2 fechado:** o PR #111 tem CI verde nas 2 cabeças. Registo e mini-relatório no `PENDENCIAS_T6.md`.
@@ -791,11 +843,10 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #110 | `docs/t6f-close-f1` | F1 / T6f: S5 + fecho do F1 + P-21 a P-23 | Aberto, CI verde; base `main` depois do merge do #109 |
-| NAS #111 | `feat/f2-web-fetch-provenance` | F2a: `fetch` com proveniência + P-24, P-25 | Aberto, CI verde (empilhado no #110) |
-| NAS #112 | `docs/f3-provenance-adr` | ADR do F3 (proposta) + P-26 | Aberto (empilhado no #111) |
+| NAS #113 | `feat/f3-provenance-retrieve` | F3a: SQL aditivo + `match_knowledge_v2` + writer com proveniência | Aberto |
+| MCP #19 | `claude/reels-analysis-tools-access-hwudk9` | F3a: `retrieve_knowledge` na v2 atrás da flag `KNOWLEDGE_RPC_V2` | Aberto |
 
-Já com merge: NAS #63–#109 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05, 17:39–17:40 UTC); MCP #10–#18.
+Já com merge: NAS #63–#112 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC); MCP #10–#18.
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 

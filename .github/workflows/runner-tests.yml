@@ -23,6 +23,8 @@ on:
       - 'scripts/create_recall_l4_rpc.sql'
       # AU-11: DDL canónico do RAG, carregado pelo test_rag_canonical.py
       - 'scripts/rag_schema.sql'
+      # F3a: migracao aditiva da proveniencia (test_f3_provenance.py)
+      - 'scripts/migrations/**'
       # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
@@ -55,6 +57,8 @@ on:
       - 'scripts/create_recall_l4_rpc.sql'
       # AU-11: DDL canónico do RAG, carregado pelo test_rag_canonical.py
       - 'scripts/rag_schema.sql'
+      # F3a: migracao aditiva da proveniencia (test_f3_provenance.py)
+      - 'scripts/migrations/**'
       # Bloco C: paineis de conselho (validados pelo E7) e migracao do ledger
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
@@ -207,6 +211,11 @@ jobs:
 
       - name: ingest -> retrieve (Postgres + pgvector, embedder falso)
         run: python -m pytest tests/test_rag_canonical.py -v -rs
+
+      # F3a: migracao aditiva (2x, sobre dados antigos), match_knowledge_v2 com filtros,
+      # writer compativel antes e depois do SQL, sidecar invalido / proveniencia mudada
+      - name: proveniencia no retrieve (F3a, Postgres + pgvector)
+        run: python -m pytest tests/test_f3_provenance.py tests/test_provenance.py -v -rs
 
       # L4 (D3): ciclo remember/recall/forget/promote + SQL (2x, idempotencia) + worker
       - name: memoria L4 (Postgres + pgvector, Gemini falso)

@@ -9,6 +9,13 @@ Escreve em:
       agent-network-mcp le): agent_id, source, content, embedding vector(768),
       project, content_hash, chunk_index, kb, created_at, updated_at
 
+F3a (ADR-F3-PROVENANCE-RETRIEVE, P-26 = A): com a migracao
+scripts/migrations/f3_provenance_retrieve.sql aplicada, grava tambem a proveniencia
+(uri, title, document_type, retrieved_at, status, jurisdiction, validade, meta) na
+knowledge_sources e o `locator` de cada chunk. Sem a migracao (producao antes de o DEV a
+correr), `has_f3_columns` da False e a escrita e exactamente a de antes: o ingest nunca
+parte por causa da ordem merge -> SQL.
+
 A knowledge_chunks e partilhada com o agent-network-mcp: as linhas deste
 ingest ficam marcadas com project='network-agents-setup' e o DELETE so apaga
 essas (nunca as do MCP com a mesma `source`). A knowledge_chunks_t6 foi
@@ -17,6 +24,7 @@ abandonada (scripts/migrate_t6_to_knowledge_chunks.sql).
 Le DATABASE_URL do ambiente (mesma que o Prisma usa).
 Sem ORM: usa psycopg directo (mais leve, sem migrations).
 """
+
 from __future__ import annotations
 
 import os
@@ -26,6 +34,7 @@ from contextlib import contextmanager
 from typing import Any
 
 import psycopg
+from psycopg.types.json import Jsonb
 
 CHUNKS_TABLE = "knowledge_chunks"
 PROJECT = "network-agents-setup"
@@ -39,8 +48,7 @@ def _database_url() -> str:
     url = os.environ.get("DATABASE_URL", "").strip()
     if not url:
         raise SupabaseWriterError(
-            "DATABASE_URL nao definida no ambiente. "
-            "Adiciona ao .env e exporta antes de correr."
+            "DATABASE_URL nao definida no ambiente. Adiciona ao .env e exporta antes de correr."
         )
     return url
 
@@ -58,6 +66,67 @@ def connect() -> Iterator[psycopg.Connection]:
         conn.close()
 
 
+def has_f3_columns(conn: psycopg.Connection) -> bool:
+    """A migracao F3a esta aplicada neste schema? (knowledge_sources.uri e
+    knowledge_chunks.locator existem). Detecta, em vez de assumir, para o merge do codigo
+    poder vir antes do SQL sem partir o ingest de producao."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT count(*) FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND ((table_name = 'knowledge_sources' AND column_name = 'uri')
+                OR (table_name = 'knowledge_chunks' AND column_name = 'locator'))
+            """
+        )
+        row = cur.fetchone()
+        return bool(row) and row[0] == 2
+
+
+# Colunas de proveniencia da knowledge_sources (F3a), pela ordem dos parametros.
+PROVENANCE_COLUMNS = (
+    "uri",
+    "final_url",
+    "title",
+    "document_type",
+    "retrieved_at",
+    "status",
+    "jurisdiction",
+    "effective_from",
+    "effective_until",
+    "meta",
+)
+
+
+def _provenance_values(provenance: dict[str, Any]) -> list[Any]:
+    values = [provenance.get(col) for col in PROVENANCE_COLUMNS]
+    values[PROVENANCE_COLUMNS.index("status")] = provenance.get("status") or "active"
+    values[PROVENANCE_COLUMNS.index("meta")] = Jsonb(provenance.get("meta") or {})
+    return values
+
+
+def update_source_provenance(
+    conn: psycopg.Connection, source_path: str, provenance: dict[str, Any]
+) -> bool:
+    """So a proveniencia de uma fonte ja gravada (o .md nao mudou, o sidecar sim: ex. o
+    documento passou a 'superseded'). Sem embeddings. Devolve True se alguma coisa mudou."""
+    cols = ", ".join(PROVENANCE_COLUMNS)
+    marks = ", ".join(["%s"] * len(PROVENANCE_COLUMNS))
+    sets = ", ".join(f"{c} = %s" for c in PROVENANCE_COLUMNS)
+    # Falso positivo (SEC-2d): a f-string so interpola nomes de colunas constantes
+    # (PROVENANCE_COLUMNS); os valores vao como parametros %s.
+    # nosemgrep: sqlalchemy-execute-raw-query
+    sql = f"""
+        UPDATE knowledge_sources SET {sets}, updated_at = NOW()
+        WHERE source_path = %s AND ({cols}) IS DISTINCT FROM ({marks})
+    """
+    values = _provenance_values(provenance)
+    with conn.cursor() as cur:
+        # nosemgrep: sqlalchemy-execute-raw-query
+        cur.execute(sql, [*values, source_path, *values])
+        return cur.rowcount == 1
+
+
 def upsert_source(
     conn: psycopg.Connection,
     *,
@@ -68,8 +137,18 @@ def upsert_source(
     git_sha: str | None = None,
     size_bytes: int | None = None,
     chunk_count: int = 0,
+    provenance: dict[str, Any] | None = None,
 ) -> None:
-    """INSERT ... ON CONFLICT (source_path) DO UPDATE em knowledge_sources."""
+    """INSERT ... ON CONFLICT (source_path) DO UPDATE em knowledge_sources.
+
+    Com `provenance` (so quando has_f3_columns), grava tambem as colunas do F3a."""
+    if provenance is not None:
+        _upsert_source_with_provenance(
+            conn,
+            (source_path, content_hash, agent_id, priority, chunk_count, git_sha, size_bytes),
+            provenance,
+        )
+        return
     sql = """
         INSERT INTO knowledge_sources (
             source_path, content_hash, agent_id, priority,
@@ -102,6 +181,36 @@ def upsert_source(
         )
 
 
+def _upsert_source_with_provenance(
+    conn: psycopg.Connection, base: tuple[Any, ...], provenance: dict[str, Any]
+) -> None:
+    cols = ", ".join(PROVENANCE_COLUMNS)
+    marks = ", ".join(["%s"] * len(PROVENANCE_COLUMNS))
+    updates = ", ".join(f"{c} = EXCLUDED.{c}" for c in PROVENANCE_COLUMNS)
+    # Falso positivo (SEC-2d): a f-string so interpola nomes de colunas constantes.
+    sql = f"""
+        INSERT INTO knowledge_sources (
+            source_path, content_hash, agent_id, priority,
+            last_ingested_at, chunk_count, git_sha, size_bytes, updated_at, {cols}
+        ) VALUES (
+            %s, %s, %s, %s, NOW(), %s, %s, %s, NOW(), {marks}
+        )
+        ON CONFLICT (source_path) DO UPDATE SET
+            content_hash = EXCLUDED.content_hash,
+            agent_id = EXCLUDED.agent_id,
+            priority = EXCLUDED.priority,
+            last_ingested_at = NOW(),
+            chunk_count = EXCLUDED.chunk_count,
+            git_sha = EXCLUDED.git_sha,
+            size_bytes = EXCLUDED.size_bytes,
+            updated_at = NOW(),
+            {updates}
+    """
+    with conn.cursor() as cur:
+        # nosemgrep: sqlalchemy-execute-raw-query
+        cur.execute(sql, [*base, *_provenance_values(provenance)])
+
+
 def delete_chunks(conn: psycopg.Connection, source_path: str) -> int:
     """Apaga todos os chunks de um source_path. Devolve o numero apagado."""
     with conn.cursor() as cur:
@@ -121,8 +230,11 @@ def insert_chunks(
     agent_id: str,
     kb: str,
     chunks: list[dict[str, Any]],
+    with_locator: bool = False,
 ) -> int:
     """Insere chunks com embeddings. Devolve o numero de linhas inseridas.
+
+    Com `with_locator` (migracao F3a aplicada), grava tambem `citation.locator`.
 
     agent_id composto ('a+b') gera uma linha por agente: o match_knowledge
     filtra por igualdade de agent_id, por isso 'a+b' nunca seria encontrado.
@@ -136,12 +248,14 @@ def insert_chunks(
     if not chunks:
         return 0
 
+    locator_col = ", locator" if with_locator else ""
+    locator_mark = ", %s" if with_locator else ""
     sql = f"""
         INSERT INTO {CHUNKS_TABLE} (
             id, source, content_hash, chunk_index, content,
-            agent_id, kb, embedding, project, created_at, updated_at
+            agent_id, kb, embedding, project, created_at, updated_at{locator_col}
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s::vector, %s, NOW(), NOW()
+            %s, %s, %s, %s, %s, %s, %s, %s::vector, %s, NOW(), NOW(){locator_mark}
         )
     """
     agents = [a for a in agent_id.split("+") if a] or [agent_id]
@@ -151,26 +265,26 @@ def insert_chunks(
             emb = c.get("embedding") or []
             if len(emb) != 768:
                 raise SupabaseWriterError(
-                    f"chunk_index={c.get('chunk_index')} tem {len(emb)} dims "
-                    "(esperado 768)"
+                    f"chunk_index={c.get('chunk_index')} tem {len(emb)} dims (esperado 768)"
                 )
             for agent in agents:
-                # SEC-2d falso positivo: `sql` so interpola CHUNKS_TABLE (linha 30); os valores vao como parametros %s.
+                params = [
+                    str(uuid.uuid4()),
+                    source_path,
+                    c["content_hash"],
+                    c["chunk_index"],
+                    c["content"],
+                    agent,
+                    kb,
+                    emb,
+                    PROJECT,
+                ]
+                if with_locator:
+                    params.append((c.get("citation") or {}).get("locator"))
+                # SEC-2d falso positivo: `sql` so interpola CHUNKS_TABLE e o nome da coluna
+                # `locator` (constantes); os valores vao como parametros %s.
                 # nosemgrep: sqlalchemy-execute-raw-query
-                cur.execute(
-                    sql,
-                    (
-                        str(uuid.uuid4()),
-                        source_path,
-                        c["content_hash"],
-                        c["chunk_index"],
-                        c["content"],
-                        agent,
-                        kb,
-                        emb,
-                        PROJECT,
-                    ),
-                )
+                cur.execute(sql, params)
                 n += 1
     return n
 
@@ -186,12 +300,16 @@ def replace_chunks(
     priority: str = "P1",
     git_sha: str | None = None,
     size_bytes: int | None = None,
+    provenance: dict[str, Any] | None = None,
 ) -> dict[str, int]:
     """Operacao idempotente: upsert source + delete chunks antigos + insert novos.
 
-    Devolve {"deleted": N, "inserted": M}.
+    Com a migracao F3a aplicada, grava a `provenance` (colunas de
+    plan_runner.provenance.to_source_columns) e os locators; sem ela, ignora-as.
+    Devolve {"deleted": N, "inserted": M} (o contrato de antes do F3a).
     """
     with conn:
+        f3 = has_f3_columns(conn)
         upsert_source(
             conn,
             source_path=source_path,
@@ -201,6 +319,7 @@ def replace_chunks(
             git_sha=git_sha,
             size_bytes=size_bytes,
             chunk_count=len(chunks),
+            provenance=provenance if f3 else None,
         )
         deleted = delete_chunks(conn, source_path)
         inserted = insert_chunks(
@@ -209,6 +328,7 @@ def replace_chunks(
             agent_id=agent_id,
             kb=kb,
             chunks=chunks,
+            with_locator=f3,
         )
     return {"deleted": deleted, "inserted": inserted}
 

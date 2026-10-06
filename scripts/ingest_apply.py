@@ -61,11 +61,19 @@ _load_env(ROOT / ".env")
 
 from plan_runner.chunking import chunk_markdown  # noqa: E402
 from plan_runner.embedder import EmbedderError, embed_text  # noqa: E402
+from plan_runner.provenance import (  # noqa: E402
+    ProvenanceError,
+    default_meta,
+    load_meta,
+    to_source_columns,
+)
 from plan_runner.supabase_writer import (  # noqa: E402
     connect,
+    has_f3_columns,
     purge_source,
     replace_chunks,
     source_state,
+    update_source_provenance,
 )
 
 # Importa o manifesto e helpers do ingest_delta (sem correr o main).
@@ -163,6 +171,12 @@ def apply_one(
 
     Salta (UNCHANGED, sem embeddings nem escrita) o ficheiro que ja esta gravado tal e
     qual (is_unchanged), salvo com force=True. O orcamento so e gasto no que mudou.
+
+    F3a: le o <nome>.meta.yaml ao lado do .md (F1/F2). Sidecar invalido = INVALID_META,
+    sem escrita nenhuma (regra 3 do ADR-INGESTION-PRIMITIVES). Sem sidecar, a proveniencia
+    vem do git. Se o .md nao mudou mas a proveniencia sim (ex. status 'superseded'),
+    META_UPDATED: so a knowledge_sources, sem embeddings. Tudo isto so com a migracao
+    F3a aplicada (has_f3_columns); sem ela, o comportamento e o de antes.
     """
     full = ROOT / rel
     if not full.is_file():
@@ -171,6 +185,11 @@ def apply_one(
     text = full.read_text(encoding="utf-8")
     content_hash, size = sha256_file(full)
     kb = _kb_for(agent_id)
+    try:
+        meta = load_meta(full, content_hash)
+    except ProvenanceError as exc:
+        return {"action": "INVALID_META", "chunks": 0, "deleted": 0, "note": str(exc)}
+    provenance = to_source_columns(meta or default_meta(rel))
 
     chunks = chunk_markdown(
         text,
@@ -187,8 +206,13 @@ def apply_one(
     if not force:
         with connect() as conn:
             state = source_state(conn, rel)
-        if is_unchanged(state, content_hash=content_hash, agent_id=agent_id):
-            return {"action": "UNCHANGED", "chunks": 0, "deleted": 0}
+            if is_unchanged(state, content_hash=content_hash, agent_id=agent_id):
+                changed = False
+                if has_f3_columns(conn):
+                    with conn:  # commit (no psycopg 3 tambem fecha a ligacao)
+                        changed = update_source_provenance(conn, rel, provenance)
+                action = "META_UPDATED" if changed else "UNCHANGED"
+                return {"action": action, "chunks": 0, "deleted": 0}
 
     if budget.exhausted():
         return {"action": "SKIPPED_QUOTA", "chunks": 0, "deleted": 0}
@@ -221,6 +245,7 @@ def apply_one(
             priority=priority,
             git_sha=os.environ.get("GITHUB_SHA") or os.environ.get("GIT_SHA"),
             size_bytes=size,
+            provenance=provenance,
         )
     return {"action": "OK", "chunks": len(chunks), "deleted": out["deleted"]}
 
@@ -277,6 +302,7 @@ def main() -> int:
     total_chunks = 0
     total_deleted = 0
     unchanged = 0
+    meta_updated = 0
     failures: list[tuple[str, str]] = []  # (path, motivo) -- para o resumo final
 
     for rel, agent_id, priority in targets:
@@ -303,10 +329,14 @@ def main() -> int:
         total_chunks += out["chunks"]
         total_deleted += out["deleted"]
         unchanged += out["action"] == "UNCHANGED"
+        meta_updated += out["action"] == "META_UPDATED"
+        if out["action"] == "INVALID_META":
+            # Regra 3: sem proveniencia valida nao entra; conta como falha da corrida.
+            failures.append((rel, out.get("note", "sidecar invalido")))
 
     print()
     print(f"TOTAL: chunks={total_chunks} deleted={total_deleted} unchanged={unchanged} "
-          f"orcamento_usado={budget.used}/{budget.max_chunks}")
+          f"meta_updated={meta_updated} orcamento_usado={budget.used}/{budget.max_chunks}")
 
     if failures:
         print()

@@ -53,6 +53,9 @@ ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS updated_at   timestamptz D
 
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_agent ON knowledge_chunks (agent_id);
 
+-- F3a (2026-10-06, P-26 = A): a proveniência no retrieve está na migração ADITIVA
+-- scripts/migrations/f3_provenance_retrieve.sql (colunas novas + match_knowledge_v2).
+-- Schema completo = este ficheiro + essa migração (os testes aplicam os 2, por esta ordem).
 -- Retrieve: o único overload (o de 4 argumentos foi removido no J3).
 -- Igual a agent-network-mcp/memory/schema.sql:45-58.
 CREATE OR REPLACE FUNCTION match_knowledge(
