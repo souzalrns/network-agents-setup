@@ -13,6 +13,8 @@ on:
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
       - 'scripts/ingest_delta.py'
+      # F3c: todo o .md de docs/knowledge/ tem de estar no MANIFEST ou no EXCLUDED
+      - 'docs/knowledge/**'
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
       - 'scripts/ingest_benchmark.py'
@@ -49,6 +51,8 @@ on:
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
       - 'scripts/ingest_delta.py'
+      # F3c: todo o .md de docs/knowledge/ tem de estar no MANIFEST ou no EXCLUDED
+      - 'docs/knowledge/**'
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
       - 'scripts/ingest_benchmark.py'
