@@ -6,7 +6,7 @@ Texto completo, com as opções A/B/C, em `docs/initiatives/PENDENCIAS.md` §10.
 |---|---|---|---|---|
 | P-21 | F1b: Docling | A: não necessário por agora (sem documentos reais com perda medida) | 2026-10-05 | Proposta |
 | P-22 | Contribuição upstream no `microsoft/markitdown` | B: primeiro uma issue, aberta pelo DEV na conta dele | 2026-10-05 | Proposta |
-| P-23 | F6 da cadeia vs F6 canónico | A: os 2. O da cadeia fecha neste pacote; o canónico (domínio de prova, D-EP8) continua | 2026-10-06 | Aplicada por instrução do maestro ("Fez o f6 como no prompt"); falta a confirmação formal no §10 |
+| P-23 | F6 da cadeia vs F6 canónico | A: os 2. O da cadeia fecha neste pacote; o canónico (domínio de prova, D-EP8) continua | 2026-10-06 | **Aplicada** por instrução do maestro ("Fez o f6 como no prompt"), registada no §10 |
 | P-24 | F2: `scrape.yml` do MCP | A: manter como legado; o que vai para o L5 passa pelo `fetch` | 2026-10-06 | Proposta |
 | P-25 | F2: allowlist por área | B: `--allow` explícito em cada chamada, até ao 1.º uso real | 2026-10-06 | Proposta |
 | P-26 | F3: proveniência no retrieve | A: aditiva (`match_knowledge_v2`), MCP atrás de flag | 2026-10-06 | **Decidida** (maestro) |

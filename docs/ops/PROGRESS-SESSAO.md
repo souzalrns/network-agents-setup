@@ -23,6 +23,15 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F6 C.5 feito: canónico e PENDENCIAS (2026-10-06)
+- `PENDENCIAS_T6.md`: **F6 ✅** (PR aberto; o merge é do maestro); F3 com o F3b-autoridade estacionado; o risco "F6 do prompt ≠ canónico" fica resolvido pela P-23 = A.
+- `PENDENCIAS.md`:
+  - a P-23 fica **aplicada: A** (instrução do maestro), registada no §10;
+  - o F6 canónico continua BLOQUEADO, agora só pela D-EP8;
+  - 2 itens novos no fim do §4: **F3b-AUTH-1** (BLOQUEADO: SQL da v3 + flag) e **F2-SEC-1** (ABERTO: DNS rebinding);
+  - o F1 a F5 não foram reabertos;
+  - contagens: 109 vivos (ABERTO 60, EM CURSO 6, BLOQUEADO 43).
+
 ### F6 C.4 feito: resumo de portfolio (2026-10-06)
 - `docs/portfolio/WHAT-I-CONTRIBUTED.md`: 10 pontos factuais em inglês (a língua do `docs/PORTFOLIO.md` para recrutadores), cada um com o PR, mais o link para o evidence pack. Diz também o que ficou por fazer (F3b-AUTH-1).
 
