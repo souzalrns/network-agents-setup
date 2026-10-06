@@ -37,7 +37,7 @@ Ver `mcp/plan_runner/`:
 Ctrl+S. Depois corre a verificação:
 
 powershell
-cd C:\Users\souza\Downloads\network-agents-setup
+cd %USERPROFILE%\Downloads\network-agents-setup
 
 Get-ChildItem docs\architecture\patterns-from-mcp -File | Select-Object Name,Length
 
