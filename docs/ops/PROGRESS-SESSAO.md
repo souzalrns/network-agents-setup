@@ -7,7 +7,11 @@
 ## Estado actual
 - **Branch actual:** `docs/f6-hardening-portfolio` (PR #121, contra a `main`; contém o #119 e o #120). **Cadeia F1 → F6 concluída**; o merge é do maestro.
 - **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
-- **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
+- **Itens em trabalho** (opção B confirmada pelo maestro, 2026-10-06):
+  - **F6-CADEIA** (hardening + evidence pack + WHAT-I-CONTRIBUTED): C.1 a C.6 feitos, PR #121 com CI verde. **Fecha no merge do #121**;
+  - **F6 canónico** (EXECUTION-PLAN, D-EP8: domínio de prova com uso real): **continua BLOQUEADO**. Não é o mesmo item;
+  - ordem de merge: #119 (F3c) → #120 (F3b-validade, só com CI verde na base `main`) → #121. Depois do merge do #119, o Claude faz merge da `main` no branch do #120 para a CI correr na nova base;
+  - **F3b-AUTH-1** (autoridade e conflitos, P-31 a P-33): estacionado no fim do §4, fora do caminho crítico. Desbloqueia com o SQL da v3 (DEV) e a flag no MCP. A opção A (fazer a v3 primeiro) foi rejeitada para já.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -22,6 +26,12 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Opção B confirmada pelo maestro (2026-10-06)
+- **P-23 = A decidida.** No `PENDENCIAS.md` §4 ficam 2 linhas distintas: **F6-CADEIA** (EM CURSO, fecha no merge do #121) e **F6 canónico** (BLOQUEADO, D-EP8).
+- **F3b-AUTH-1:** passa para o último lugar do §4; não é pré-condição do F6-CADEIA.
+- **Contagens:** 110 vivos (ABERTO 60, EM CURSO 7, BLOQUEADO 43).
+- **C.2 a C.6:** já estavam feitos no #121, a partir do inventário `0687c5c`, e não se refazem. Depois dos merges #119 → #120: actualizar o #121 com a `main` e confirmar a CI.
 
 ### F6 C.6 feito: PR #121 (2026-10-06)
 - PR **#121** `docs: F6 hardening, evidence pack and portfolio summary` (branch `docs/f6-hardening-portfolio`, base `main`). O corpo diz: pré-condições, o que entra, estacionados, "no production writes" e "do not merge yet". Ordem de merge: #119 → #120 → #121.
