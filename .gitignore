@@ -102,3 +102,6 @@ pilots/run-router-*/
 pilots/router-decisions.jsonl
 # Bloco C: sessoes de conselho (tema/contexto podem ser sensiveis; evidencia vai para docs/)
 pilots/council-*/
+# F5: run real E2E (artefactos e ledger locais; a evidência vai resumida para docs/ops/F5-E2E-RUN.md)
+pilots/f5-run/
+pilots/test-f5-*/

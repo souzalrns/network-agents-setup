@@ -18,6 +18,8 @@ on:
       - 'scripts/ingest_benchmark.py'
       # F2: primitiva fetch (servidor HTTP local nos testes)
       - 'scripts/web_fetch.py'
+      # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
+      - 'scripts/f5_evidence.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'
@@ -52,6 +54,8 @@ on:
       - 'scripts/ingest_benchmark.py'
       # F2: primitiva fetch (servidor HTTP local nos testes)
       - 'scripts/web_fetch.py'
+      # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
+      - 'scripts/f5_evidence.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
       - 'scripts/create_memory_l4_table.sql'
       - 'scripts/create_recall_l4_rpc.sql'

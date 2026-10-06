@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 06:00 UTC
+Última atualização: 2026-10-06 07:00 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -19,8 +19,8 @@
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ✅ Merged  | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt) |
 | F3   | Provenance no retrieve                         | ✅         | NAS #113 (migração aditiva, `match_knowledge_v2`, writer, 21 testes; CI verde em código, jobs de infra cancelados por falta de runner — ver comentário no #113) + MCP `agent-network-mcp` #19 (flag `KNOWLEDGE_RPC_V2`, 26 testes + 13 e2e). No canónico, o F3 continua EM CURSO (F3b, F3c) | Sim (critério do prompt; merge pendente) |
-| F4   | marketing-capabilities.yaml                    | ⏳         | Branch `feat/f4-marketing-capabilities` (empilhado no #113); 18 capabilities, maturidade medida pelo E7 | Não                         |
-| F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
+| F4   | marketing-capabilities.yaml                    | ✅         | PR #114: `config/marketing-capabilities.yaml` (18 capabilities), maturidade medida pelo E7, 32 testes. CI: test, test-rag, test-ingest, test-slow e gitleaks verdes; semgrep/CodeQL sem runner do GitHub (semgrep local: 0 achados) | Sim (merge pendente) |
+| F5   | Validação E2E real (1 run Gemini)              | 🔒 aguarda run do DEV | Preparado: `docs/ops/F5-E2E-RUN.md` (comando único PowerShell, critérios), `scripts/f5_evidence.py` + 11 testes; branch `feat/f5-e2e-evidence` | Não (só o DEV tem as credenciais) |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
 
 ## Histórico de fases
@@ -32,11 +32,15 @@
 - 2026-10-06 · T6f · ✅ PR #110 aberto, CI verde: S5 (benchmark), balanço do "Done do F1", decisões P-21 a P-23. **F1 tecnicamente concluído**; no canónico fecha com o merge de #106 a #110.
 - 2026-10-06 · F1b · ✅ não necessário por agora (regra do prompt: sem benchmark de perda material em documentos reais). Reabre com a P-21 B.
 - 2026-10-06 · F2 · ✅ PR #111 aberto, CI verde: `fetch` com allowlist por redirect, robots.txt (RFC 9309), SSRF, tectos de bytes e de tempo, proveniência e saída pelo T6; 42 testes com servidor local; corrida real no pypi.org.
+- 2026-10-06 · F4 · ✅ PR #114 aberto: marketing-capabilities.yaml (15 implemented, 1 partial, 2 planned) e maturidade medida pelo E7.
+- 2026-10-06 · F5 · preparado (runbook + recolhedor + testes); 🔒 à espera do run real do DEV.
 - 2026-10-06 · F3 (F3a) · ✅ NAS #113 + MCP #19 abertos: migração aditiva, `match_knowledge_v2` com filtros, writer com detecção da migração, MCP atrás de flag com fallback. Merge e SQL pelo DEV.
 - 2026-10-05 19:09–19:22 UTC · **merge do maestro: #110, #111 e #112** (`main` `e10f772`). **F1 FECHADO** no canónico (§7). P-26 = A (2026-10-06): o F3 arranca.
 - 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
 ## Riscos / bloqueios abertos
+- **F5 à espera do run real do DEV** (regra 9: as credenciais Gemini, MCP e bypass da Vercel são só do DEV). Tudo preparado em `docs/ops/F5-E2E-RUN.md`; a evidência cola-se na §4 desse ficheiro. Sem o F5, o F6 não arranca (e o F6 depende também da P-23).
+- **CI do GitHub sem runners (2026-10-05, 19:50 UTC em diante):** jobs "not acquired by Runner" nos PRs #113 e #114; 1 re-execução feita em cada; o resto do CI e a validação local estão verdes.
 - ~~**F3 bloqueado pela decisão P-26**~~ — **resolvido: P-26 = A (maestro, 2026-10-06)**; F3a em curso. O F3 muda o schema e a RPC `match_knowledge` de produção, que o MCP chama; o ADR propõe a via aditiva (`match_knowledge_v2`, a antiga intacta), com o SQL corrido pelo DEV. Sem a P-26 não há código do F3, e por isso também não há F4, F5 e F6 (cada fase exige a anterior concluída).
 - **PR upstream no `microsoft/markitdown` (T6b, passo 6 do prompt): decisão do maestro.** Esta sessão só tem acesso aos repos `souzalrns/*`, e um PR num repo da Microsoft é uma acção pública em nome do DEV (fork, CLA da Microsoft, contacto com maintainers). Os PRs desta cadeia vão para a `main` da plataforma. As fixtures e os testes ficam prontos para servir de base a uma contribuição upstream, se o maestro a quiser.
 - **F5 precisa de credenciais** (run real com Gemini): só o DEV o pode correr. O Claude prepara o comando e o molde de evidência.
@@ -246,4 +250,38 @@ TESTES: NAS pytest 700 passed (sem extras), 144 passed (com extras + Postgres); 
 PENDENCIAS.md: atualizado (sim)
 PRÓXIMO PASSO RECOMENDADO: F4 (marketing-capabilities.yaml)
 BLOQUEIOS: nenhum no código. Produção: merge #113 → o DEV corre o SQL → merge MCP #19 → KNOWLEDGE_RPC_V2=1.
+```
+
+```
+FASE: F4 (marketing-capabilities.yaml)
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: 🔒 → ⏳ → ✅ (merge pendente; empilhado no #113)
+ARTEFACTOS:
+- config/marketing-capabilities.yaml (18: 15 implemented, 1 partial, 2 planned; policy prepare + HITL)
+- runner/plan_runner/capabilities.py: maturidade medida (implemented exige plano do runner com a action)
+- runner/tests/test_capabilities.py (32)
+LINKS:
+- PR: https://github.com/souzalrns/network-agents-setup/pull/114
+- Branch: feat/f4-marketing-capabilities
+- Commits: 475dc52, 1a4ee6d
+TESTES: pytest 704 passed; planos reais em stub 21 passed; E7 "2 ficheiro(s) de capabilities válido(s)"; semgrep 0
+PENDENCIAS.md: atualizado (sim; F4 EM CURSO no canónico)
+PRÓXIMO PASSO RECOMENDADO: F5 (run real E2E, do DEV)
+BLOQUEIOS: nenhum no código; CI parcialmente sem runners do GitHub (infraestrutura)
+```
+
+```
+FASE: F5 (validação E2E real)
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: 🔒 → 🔒 aguarda run do DEV (preparado)
+ARTEFACTOS:
+- docs/ops/F5-E2E-RUN.md (o que prova, comando único PowerShell, critérios, molde de evidência, se falhar)
+- scripts/f5_evidence.py (veredicto PASSOU/INCOMPLETO sem segredos nem conteúdo) + runner/tests/test_f5_evidence.py (11)
+- .gitignore: pilots/f5-run/ e pilots/test-f5-*/
+LINKS:
+- Branch: feat/f5-e2e-evidence (PR a abrir, empilhado no #114)
+TESTES: test_f5_evidence 11 passed (inclui: um run stub real dá INCOMPLETO; segredos plantados não aparecem)
+PENDENCIAS.md: atualizado (sim; F5 BLOQUEADO com o bloqueio exacto)
+PRÓXIMO PASSO RECOMENDADO: o DEV corre os comandos da §2 do F5-E2E-RUN.md e cola a saída na §4
+BLOQUEIOS: credenciais (só o DEV) — regra 9: documentado e parado
 ```
