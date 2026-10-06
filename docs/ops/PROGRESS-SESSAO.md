@@ -23,6 +23,13 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F6: retomado por instrução do maestro (2026-10-06, "Fez o f6 como no prompt")
+- **Leitura aplicada** (regra B do prompt do F6: estacionar o que não pode ser implantado, sem apagar):
+  - F3b, autoridade e conflitos (P-31 a P-33) precisa de SQL em produção e da flag no MCP → estaciona como **F3b-AUTH-1** no fim das pendências;
+  - F3c (#119) e F3b-validade (#120) estão concluídos em PR; o merge é do maestro;
+  - "F6 ✅" = o F6 da cadeia (hardening + portfolio). O F6 canónico (domínio de prova, D-EP8) continua no §4, como na P-23 A ("os 2").
+- **C.2 a C.6 seguem neste branch;** cada subpasso fica gravado aqui.
+
 ### F6 C.1 feito: pré-condições NÃO cumpridas, parado (2026-10-06)
 Prompt "FECHAR F6", protocolo A.3(b): falta trabalho grande antes do F6, por isso não se finge um F6 completo. Estado lido do disco (`PENDENCIAS.md`, `PENDENCIAS_T6.md`), não do chat.
 
