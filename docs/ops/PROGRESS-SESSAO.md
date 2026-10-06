@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f5-closed` (a partir da `main` `0b7405a`).
+- **Branch actual:** `docs/f3a-production` (empilhado no #116).
 - **`main` de referência:** NAS `0b7405a` (merges até #115); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
 
@@ -22,6 +22,21 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F3a em produção: SQL verificado; a v2 ainda sem prova (2026-10-06)
+- **O DEV pediu F3 → FECHADO**, com o `l5_eval` contra produção e `KNOWLEDGE_RPC_V2=1`: 18 casos, `chunk_hit@1/3/4` 0.611/0.889/0.944, `source_hit@4` 1.0, `mrr_chunk` 0.736, `no_hits` 0, `provenance_ok` 1.0.
+- **Verificação do Claude (só leituras):**
+  - Supabase `agent-network-memory`, SELECTs ao catálogo: existem a `match_knowledge` e a `match_knowledge_v2`, as colunas `uri`, `status`, `document_type`, `meta` e `effective_from` da `knowledge_sources`, o `locator` da `knowledge_chunks` e o `knowledge_sources_status_check`. **O SQL do F3a está aplicado.**
+  - Vercel: a leitura das env vars foi recusada pelo modo de permissões, por isso a flag não foi vista pelo Claude.
+- **Porque não fechou:**
+  - (1) o `provenance_ok` é `bool(hits) and all(sources)` e só olha para o `citation.source`, que a v1 também devolve. Os números são iguais aos do F0.7b, que correu na v1. **Provam que não houve regressão, não que a v2 está activa;**
+  - (2) o F3 canónico inclui o F3b (validade e conflitos, autoridade, golden set) e o F3c (33 ficheiros fora do MANIFEST). Fechá-lo cortava-os.
+- **Registado:**
+  - F3 com a evidência de produção (continua EM CURSO);
+  - novo R-006 (o `l5_eval` passa a medir o `metadata` da v2);
+  - comando de 1 linha no `RAG-CANONICAL.md`, que imprime `v1` ou `v2`;
+  - contagens: 103 vivos (ABERTO 58, EM CURSO 6, BLOQUEADO 39).
+- **Opções para o maestro:** A/B/C no relatório (a recomendada mantém o F3 vivo e fecha o F3a numa linha própria quando o comando der `v2`).
 
 ### F5 PASSOU: F5 e F4 FECHADOS (2026-10-06)
 - **Evidência do DEV** (`scripts/f5_evidence.py pilots/f5-run-v3`): `run_9017d441d1`, plano `example-security-audit-demo`, `external`, estado `done`.
@@ -888,7 +903,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (PR do branch) | `docs/f5-closed` | F5 e F4 → FECHADO; runbook do F5 corrigido; W-011, V41 | Aberto |
+| NAS (PR do branch) | `docs/f3a-production` | F3a em produção: evidência, R-006, comando v1/v2 (empilhado no #116) | Aberto |
+| NAS #116 | `docs/f5-closed` | F5 e F4 → FECHADO; runbook do F5 corrigido; W-011, V41 | Aberto |
 
 Já com merge: NAS #63–#115 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
 
@@ -935,6 +951,7 @@ cd ..\agent-network-mcp;        graphify update .
 ## Próximos 3 passos recomendados
 1. **Maestro:** decidir a **P-23** (F6 da cadeia vs F6 canónico; recomendada A, que mantém os 2) e confirmar a P-21, a P-22, a P-24 e a P-25. Merge do PR do F5 (só docs).
 2. **DEV:**
-   - correr `scripts/migrations/f3_provenance_retrieve.sql` no Supabase e ligar `KNOWLEDGE_RPC_V2=1` na Vercel, pela ordem do `docs/ops/RAG-CANONICAL.md` § F3a;
-   - confirmar com uma chamada a `retrieve_knowledge` que vem a `citation.uri` e o `metadata.status`.
-3. **Claude:** o W-011 (o runner valida o `MCP_URL` e o bypass à partida), num PR pequeno com testes. Depois, o F6 conforme a P-23.
+   - ~~correr o SQL do F3a~~ feito (verificado no catálogo a 2026-10-06);
+   - correr o comando de 1 linha do `docs/ops/RAG-CANONICAL.md` § F3a, passo 5. Tem de imprimir `v2`; se imprimir `v1`, a flag não está activa no deploy de produção (falta o redeploy depois de a definir?);
+   - escolher a opção A/B/C do fecho do F3 (relatório de 2026-10-06).
+3. **Claude:** o R-006 e o W-011 (o `l5_eval` mede a v2; o runner valida o `MCP_URL` e o bypass), num PR pequeno com testes. Depois, o F6 conforme a P-23.
