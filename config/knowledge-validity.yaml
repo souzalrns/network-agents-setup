@@ -1,0 +1,32 @@
+# F3b, validade das fontes do L5 (maestro, 2026-10-06): P-27 = C, P-28 = C, P-29 = A.
+# Lido por runner/plan_runner/validity.py, que o scripts/ingest_apply.py aplica a cada fonte
+# do MANIFEST antes de gravar a proveniência (knowledge_sources.effective_*), e pelo
+# scripts/validity_report.py (relatório local, só leitura).
+#
+# - Fora destas classes (o caso normal: playbooks, checklists): sem data. A fonte vale até
+#   ser marcada `superseded` ou `revoked` no sidecar.
+# - Classe com `require`: a data vem do autor, no `<nome>.meta.yaml`. Com sidecar e sem a
+#   data → INVALID_META (não entra). Sem sidecar → aviso no ingest e no relatório (não se
+#   inventam datas; a fonte continua a entrar como antes).
+# - Classe com `ttl_days`: sem data canónica (páginas web do F2) → effective_until =
+#   retrieved_at + ttl_days, salvo se o autor declarar outra.
+# - A classe sai do path ou do esquema do `uri`; o sidecar pode fixá-la com
+#   `validity_class: <id>` (ex.: uma lei convertida pelo F1 em docs/knowledge/ingested/).
+#   A 1.ª classe que bater ganha.
+# - Expirados ficam na BD e são filtrados por omissão pela match_knowledge_v2 (`valid_at`).
+version: 1
+classes:
+  - id: legal
+    description: Lei, regulamento ou norma. A vigência vem da própria fonte.
+    paths: ["docs/knowledge/legal/**"]
+    require: [effective_from]
+  - id: market_data
+    description: Dados de mercado (preços, índices). Valem para um período.
+    paths: ["docs/knowledge/imobiliario/**"]
+    require: [effective_until]
+  - id: web
+    description: Página buscada pelo F2 (fetch). Sem data canónica, por isso TTL desde o retrieved_at.
+    uri_schemes: [http, https]
+    ttl_days: 90
+report:
+  expiring_within_days: 30

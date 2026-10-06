@@ -33,6 +33,9 @@ on:
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
       - 'config/*-capabilities.yaml'
+      # F3b: classes de validade (test_validity.py) e o relatório local
+      - 'config/knowledge-validity.yaml'
+      - 'scripts/validity_report.py'
       - 'skills/**'
       # .claude/skills/ e copia gerada de skills/ (test_claude_skills_sync.py)
       - '.claude/skills/**'
@@ -71,6 +74,9 @@ on:
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
       - 'config/*-capabilities.yaml'
+      # F3b: classes de validade (test_validity.py) e o relatório local
+      - 'config/knowledge-validity.yaml'
+      - 'scripts/validity_report.py'
       - 'skills/**'
       # .claude/skills/ e copia gerada de skills/ (test_claude_skills_sync.py)
       - '.claude/skills/**'
@@ -223,7 +229,7 @@ jobs:
       # F3a: migracao aditiva (2x, sobre dados antigos), match_knowledge_v2 com filtros,
       # writer compativel antes e depois do SQL, sidecar invalido / proveniencia mudada
       - name: proveniencia no retrieve (F3a, Postgres + pgvector)
-        run: python -m pytest tests/test_f3_provenance.py tests/test_provenance.py -v -rs
+        run: python -m pytest tests/test_f3_provenance.py tests/test_provenance.py tests/test_f3b_validity.py -v -rs
 
       # L4 (D3): ciclo remember/recall/forget/promote + SQL (2x, idempotencia) + worker
       - name: memoria L4 (Postgres + pgvector, Gemini falso)
