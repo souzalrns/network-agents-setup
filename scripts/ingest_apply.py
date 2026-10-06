@@ -67,6 +67,7 @@ from plan_runner.provenance import (  # noqa: E402
     load_meta,
     to_source_columns,
 )
+from plan_runner.validity import apply_validity, load_policy  # noqa: E402
 from plan_runner.supabase_writer import (  # noqa: E402
     connect,
     has_f3_columns,
@@ -78,6 +79,10 @@ from plan_runner.supabase_writer import (  # noqa: E402
 
 # Importa o manifesto e helpers do ingest_delta (sem correr o main).
 from scripts.ingest_delta import MANIFEST, sha256_file  # noqa: E402
+
+# F3b (P-27 = C, P-28 = C): classes de validade das fontes. Carregada aqui, do repo real
+# (os testes mudam o ROOT para um tmp_path depois do import).
+VALIDITY = load_policy(ROOT / "config" / "knowledge-validity.yaml")
 
 
 # --- retry com backoff exponencial para o rate limit do Gemini --------------
@@ -177,6 +182,10 @@ def apply_one(
     vem do git. Se o .md nao mudou mas a proveniencia sim (ex. status 'superseded'),
     META_UPDATED: so a knowledge_sources, sem embeddings. Tudo isto so com a migracao
     F3a aplicada (has_f3_columns); sem ela, o comportamento e o de antes.
+
+    F3b (validade): a classe da fonte (config/knowledge-validity.yaml) exige datas ou da
+    um TTL. Sidecar sem a data exigida = INVALID_META. Sem sidecar numa classe datada = so
+    um aviso em "warnings" (nao se inventam datas; a fonte entra como antes).
     """
     full = ROOT / rel
     if not full.is_file():
@@ -187,9 +196,15 @@ def apply_one(
     kb = _kb_for(agent_id)
     try:
         meta = load_meta(full, content_hash)
+        meta, warnings = apply_validity(VALIDITY, rel, meta)
     except ProvenanceError as exc:
         return {"action": "INVALID_META", "chunks": 0, "deleted": 0, "note": str(exc)}
     provenance = to_source_columns(meta or default_meta(rel))
+
+    def done(result: dict) -> dict:
+        if warnings:
+            result["warnings"] = warnings
+        return result
 
     chunks = chunk_markdown(
         text,
@@ -198,10 +213,10 @@ def apply_one(
         kb=kb,
     )
     if not chunks:
-        return {"action": "EMPTY", "chunks": 0, "deleted": 0}
+        return done({"action": "EMPTY", "chunks": 0, "deleted": 0})
 
     if dry_run:
-        return {"action": "DRY", "chunks": len(chunks), "deleted": 0}
+        return done({"action": "DRY", "chunks": len(chunks), "deleted": 0})
 
     if not force:
         with connect() as conn:
@@ -212,21 +227,21 @@ def apply_one(
                     with conn:  # commit (no psycopg 3 tambem fecha a ligacao)
                         changed = update_source_provenance(conn, rel, provenance)
                 action = "META_UPDATED" if changed else "UNCHANGED"
-                return {"action": action, "chunks": 0, "deleted": 0}
+                return done({"action": action, "chunks": 0, "deleted": 0})
 
     if budget.exhausted():
-        return {"action": "SKIPPED_QUOTA", "chunks": 0, "deleted": 0}
+        return done({"action": "SKIPPED_QUOTA", "chunks": 0, "deleted": 0})
 
     if len(chunks) > budget.remaining():
         # Orçamento não chega para este ficheiro inteiro -- salta-o por
         # completo em vez de o ingerir parcialmente (parcial seria pior:
         # deixaria a fonte com metade dos chunks antigos, metade novos).
-        return {
+        return done({
             "action": "SKIPPED_QUOTA",
             "chunks": 0,
             "deleted": 0,
             "note": f"precisa de {len(chunks)} chunks, restam {budget.remaining()}",
-        }
+        })
 
     # Gera embeddings (768 dims) para cada chunk, com retry a 429.
     for c in chunks:
@@ -247,7 +262,7 @@ def apply_one(
             size_bytes=size,
             provenance=provenance,
         )
-    return {"action": "OK", "chunks": len(chunks), "deleted": out["deleted"]}
+    return done({"action": "OK", "chunks": len(chunks), "deleted": out["deleted"]})
 
 
 def purge_one(rel: str, *, dry_run: bool) -> dict:
@@ -303,6 +318,7 @@ def main() -> int:
     total_deleted = 0
     unchanged = 0
     meta_updated = 0
+    validity_warnings: list[tuple[str, str]] = []  # F3b: (path, aviso) -- nao e falha
     failures: list[tuple[str, str]] = []  # (path, motivo) -- para o resumo final
 
     for rel, agent_id, priority in targets:
@@ -330,13 +346,23 @@ def main() -> int:
         total_deleted += out["deleted"]
         unchanged += out["action"] == "UNCHANGED"
         meta_updated += out["action"] == "META_UPDATED"
+        validity_warnings += [(rel, w) for w in out.get("warnings", [])]
         if out["action"] == "INVALID_META":
             # Regra 3: sem proveniencia valida nao entra; conta como falha da corrida.
             failures.append((rel, out.get("note", "sidecar invalido")))
 
     print()
     print(f"TOTAL: chunks={total_chunks} deleted={total_deleted} unchanged={unchanged} "
-          f"meta_updated={meta_updated} orcamento_usado={budget.used}/{budget.max_chunks}")
+          f"meta_updated={meta_updated} validity_warnings={len(validity_warnings)} "
+          f"orcamento_usado={budget.used}/{budget.max_chunks}")
+
+    if validity_warnings:
+        # F3b: fontes de classe datada sem sidecar. Nao e falha (a fonte entrou como antes);
+        # o autor acrescenta o <nome>.meta.yaml com a data real (scripts/validity_report.py).
+        print()
+        print(f"=== {len(validity_warnings)} AVISO(S) DE VALIDADE ===")
+        for rel, warning in validity_warnings:
+            print(f"  AVISO  {rel}: {warning}")
 
     if failures:
         print()

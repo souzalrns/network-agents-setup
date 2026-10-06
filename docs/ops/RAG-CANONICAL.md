@@ -146,3 +146,42 @@ FROM knowledge_chunks
 WHERE project = 'network-agents-setup' AND source LIKE 'docs/knowledge/marketing/%'
 GROUP BY source, agent_id ORDER BY source;   -- esperado: 7 fontes, agent_id marketing, 15 chunks no total
 ```
+
+## F3b: validade das fontes (2026-10-06, P-27 = C, P-28 = C, P-29 = A)
+
+> Política em `config/knowledge-validity.yaml`; código em `runner/plan_runner/validity.py`; aplicada pelo `scripts/ingest_apply.py` a cada fonte. **Sem SQL novo**: a `match_knowledge_v2` (F3a) já filtra por `effective_from`/`effective_until` contra o `valid_at` (por omissão, agora).
+
+| Classe | Como se reconhece | O que exige | Quem define a data |
+|---|---|---|---|
+| (nenhuma) | Tudo o resto: playbooks e checklists | Nada | Ninguém. Vale até `status: superseded` ou `revoked` no sidecar |
+| `legal` | `docs/knowledge/legal/**`, ou `validity_class: legal` no sidecar | `effective_from` | O autor, no `<nome>.meta.yaml`, a partir da própria lei |
+| `market_data` | `docs/knowledge/imobiliario/**`, ou `validity_class: market_data` | `effective_until` | O autor, no sidecar |
+| `web` | `uri` com `http`/`https` (páginas do F2) | — | O ingest: `effective_until` = `retrieved_at` + 90 dias, salvo se o autor declarar outra. Fica no `meta` como `effective_until_source: ttl:90d` |
+
+**No ingest:**
+- sidecar de classe datada **sem** a data → `INVALID_META`: a fonte não entra e a corrida falha (regra 3);
+- classe datada **sem sidecar** → entra como antes, com `AVISO` no fim da corrida (`validity_warnings=N`). Não se inventam datas. Hoje há 2 casos: `legal/direito-br-pt.md` e `imobiliario/fipezap.md` (item **F3b-VAL-1**: o autor dá as datas reais);
+- `validity_class: <id>` no sidecar fixa a classe (ex.: uma lei convertida pelo F1 para `docs/knowledge/ingested/`).
+
+**Expirados (P-29 = A):** ficam na BD e saem do retrieve por omissão. Para auditoria, usar `filters: {"valid_at": "<data antiga>"}` ou `{"status": "any"}`.
+
+**Relatório local** (só leitura do git; sem BD, sem workflow):
+
+```bash
+python scripts/validity_report.py              # o que está expirado, a expirar em 30 dias ou sem a data exigida
+python scripts/validity_report.py --at 2027-01-01
+python scripts/validity_report.py --strict     # exit 1 se houver expirados ou datas em falta
+```
+
+**Exemplo de sidecar** (ao lado de `docs/knowledge/legal/direito-br-pt.md`; o `content_hash` é o SHA-256 do `.md`):
+
+```yaml
+uri: docs/knowledge/legal/direito-br-pt.md
+title: Direito BR-PT
+document_type: md
+retrieved_at: 2026-10-06T00:00:00+00:00
+content_hash: <sha256 do .md>
+status: active
+jurisdiction: PT
+effective_from: 2024-01-01   # a data da própria fonte, nunca inventada
+```

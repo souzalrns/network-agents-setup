@@ -60,6 +60,14 @@
   - `effective_*` ficou `timestamptz`, como o resto do schema;
   - o filtro `valid_at` aceita qualquer instante ISO 8601.
 
+## 3.2 F3b e F3c: decisões e implementação (2026-10-06)
+
+- **Decisões do maestro:** P-27 a P-36 (`docs/initiatives/PENDENCIAS.md` §10).
+- **F3c** (P-35 = A, P-36 = A): o MANIFEST ganha o pack `docs/knowledge/marketing/` (7). Os outros 25 `.md` de `docs/knowledge/` ficam no `EXCLUDED` de `scripts/ingest_delta.py`, cada um com a razão. O `runner/tests/test_knowledge_coverage.py` garante que nenhum `.md` fica sem decisão.
+- **F3b, validade** (P-27 = C, P-28 = C, P-29 = A): classes em `config/knowledge-validity.yaml` (`legal`, `market_data` e `web` com TTL de 90 dias), aplicadas no ingest (`runner/plan_runner/validity.py`). Sem SQL: a filtragem já vem da `match_knowledge_v2`. Relatório local em `scripts/validity_report.py`. Runbook em `docs/ops/RAG-CANONICAL.md` § F3b.
+- **F3b, autoridade e conflitos** (P-31 = D, P-32 = B, P-33 = B): `match_knowledge_v3` aditiva, no mesmo padrão do F3a (SQL do DEV e flag no MCP). **Por fazer.**
+- **Golden set** (P-34 = A): os casos sintéticos de validade estão no CI (`test_f3b_validity.py`). O golden set de marketing é o F3b-GS-1.
+
 ## 4. Consequências
 
 - **Positivas:**
