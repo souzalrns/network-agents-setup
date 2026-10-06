@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f3c-knowledge-coverage` (a partir da `main` `3930efe`).
+- **Branch actual:** `feat/f3b-validity` (empilhado no `feat/f3c-knowledge-coverage`, PR #119).
 - **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
 
@@ -22,6 +22,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F3b, validade implementada (2026-10-06)
+- **P-27 = C, P-28 = C, P-29 = A**, no branch `feat/f3b-validity` (empilhado no #119). **Sem SQL novo:** a `match_knowledge_v2` já filtra por validade.
+- **`config/knowledge-validity.yaml`:** classes `legal` (exige `effective_from`), `market_data` (exige `effective_until`) e `web` (TTL de 90 dias desde o `retrieved_at`). Override com `validity_class` no sidecar.
+- **`runner/plan_runner/validity.py`, aplicado no `ingest_apply`:**
+  - sidecar de classe datada sem a data → `INVALID_META`;
+  - classe datada sem sidecar → AVISO, sem falhar. É o caso das 2 fontes de hoje (`legal/direito-br-pt.md`, `imobiliario/fipezap.md`): zero breaking change no merge e nenhuma data inventada. Novo **F3b-VAL-1** (DEV).
+- **`scripts/validity_report.py`:** local, só leitura do git; `--at` e `--strict`. No repo: `falta_data 2, sem_data 44`.
+- **Testes:**
+  - `test_validity.py`: 30, sem BD;
+  - `test_f3b_validity.py`: 4, contra Postgres. A web expira pelo TTL e sai do retrieve, mas fica na BD; a lei sem vigência não entra; a classe datada sem sidecar entra com aviso;
+  - o `test-rag` da CI passa a correr o `test_f3b_validity.py`.
+- **Contagens:** 107 vivos (ABERTO 59, EM CURSO 6, BLOQUEADO 42).
 
 ### F3c implementado e decisões do F3b registadas (2026-10-06)
 - **Decisões do maestro:** P-27 = C, P-28 = C, P-29 = A, P-30 = A, P-31 = D, P-32 = B, P-33 = B, P-34 = A, P-35 = A, P-36 = A (`PENDENCIAS.md` §10).
@@ -937,7 +950,8 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (PR do branch) | `feat/f3c-knowledge-coverage` | F3c (P-35, P-36) + registo das decisões P-27 a P-36 | Aberto |
+| NAS #119 | `feat/f3c-knowledge-coverage` | F3c (P-35, P-36) + registo das decisões P-27 a P-36 | Aberto |
+| NAS (PR do branch) | `feat/f3b-validity` | F3b, validade (P-27 a P-29), empilhado no #119 | Aberto |
 | NAS #118 | `fix/deps-proxy-addr-source-map-js` | Alertas do Dependabot (`proxy-addr` 2.0.8, `source-map-js` 1.2.2) | Aberto |
 
 Já com merge: NAS #63–#117 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC; #116 e #117 a 2026-10-06); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
