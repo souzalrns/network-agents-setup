@@ -1,6 +1,6 @@
 # PENDENCIAS — Cadeia F1 → F6
 
-Última atualização: 2026-10-06 04:00 UTC
+Última atualização: 2026-10-06 06:00 UTC
 
 > Ficheiro de estado da cadeia F1 → F6 (prompt do maestro de 2026-10-05). É lido no início de cada sessão e actualizado no fim de cada fase.
 > **Não substitui** o `docs/initiatives/PENDENCIAS.md`, que continua a ser o documento único de estado do repo (tabela de 10 colunas, regra permanente). A linha do F1 no canónico aponta para este ficheiro.
@@ -18,8 +18,8 @@
 | T6f  | Fecho F1 no PENDENCIAS                         | ✅ Merged  | PR #110 (CI verde, 11 checks); S5 em `scripts/ingest_benchmark.py`; decisões P-21 a P-23 no canónico | Sim        |
 | F1b  | Docling (só se perda de estrutura)             | ✅ Não necessário | S5 (#110): listas e tabelas a 100%; só os headings do PDF se perdem; sem documentos reais do domínio no repo → regra do prompt: não necessário por agora. Reabre com PDFs reais (P-21 B) | Sim (saltada, regra do prompt) |
 | F2   | Research web (Crawl4AI / scrape + provenance)  | ✅ Merged  | PR #111 (CI verde, 11 checks); `scripts/web_fetch.py`, `docs/ops/WEB-FETCH.md`; corrida real no pypi.org. No canónico, o F2 continua EM CURSO (`discover`, fallback JS, P-24, P-25) | Sim (critério do prompt) |
-| F3   | Provenance no retrieve                         | ⏳         | P-26 = A (maestro, 2026-10-06). NAS: PR #113 (migração aditiva, `match_knowledge_v2`, writer, 21 testes); MCP: `agent-network-mcp` #19 (flag `KNOWLEDGE_RPC_V2`, desligada por omissão, fallback se a v2 não existir; 26 testes + 13 e2e); ADR aceite (#112) | Não                         |
-| F4   | marketing-capabilities.yaml                    | 🔒         |                                     | Não                         |
+| F3   | Provenance no retrieve                         | ✅         | NAS #113 (migração aditiva, `match_knowledge_v2`, writer, 21 testes; CI verde em código, jobs de infra cancelados por falta de runner — ver comentário no #113) + MCP `agent-network-mcp` #19 (flag `KNOWLEDGE_RPC_V2`, 26 testes + 13 e2e). No canónico, o F3 continua EM CURSO (F3b, F3c) | Sim (critério do prompt; merge pendente) |
+| F4   | marketing-capabilities.yaml                    | ⏳         | Branch `feat/f4-marketing-capabilities` (empilhado no #113); 18 capabilities, maturidade medida pelo E7 | Não                         |
 | F5   | Validação E2E real (1 run Gemini)              | 🔒         |                                     | Não                         |
 | F6   | Hardening final + portfolio package            | 🔒         |                                     | Não                         |
 
@@ -32,6 +32,7 @@
 - 2026-10-06 · T6f · ✅ PR #110 aberto, CI verde: S5 (benchmark), balanço do "Done do F1", decisões P-21 a P-23. **F1 tecnicamente concluído**; no canónico fecha com o merge de #106 a #110.
 - 2026-10-06 · F1b · ✅ não necessário por agora (regra do prompt: sem benchmark de perda material em documentos reais). Reabre com a P-21 B.
 - 2026-10-06 · F2 · ✅ PR #111 aberto, CI verde: `fetch` com allowlist por redirect, robots.txt (RFC 9309), SSRF, tectos de bytes e de tempo, proveniência e saída pelo T6; 42 testes com servidor local; corrida real no pypi.org.
+- 2026-10-06 · F3 (F3a) · ✅ NAS #113 + MCP #19 abertos: migração aditiva, `match_knowledge_v2` com filtros, writer com detecção da migração, MCP atrás de flag com fallback. Merge e SQL pelo DEV.
 - 2026-10-05 19:09–19:22 UTC · **merge do maestro: #110, #111 e #112** (`main` `e10f772`). **F1 FECHADO** no canónico (§7). P-26 = A (2026-10-06): o F3 arranca.
 - 2026-10-05 17:39–17:40 UTC · **merge do maestro: #106, #107, #108 e #109** (`main` `cd8aeb3`). CI da `main` verde (incluindo o `test-ingest`); `ingest-knowledge` com sucesso na última corrida (`cd8aeb3`; as 3 anteriores canceladas pela concorrência do workflow). Falta o #110 para o F1 fechar no canónico.
 
@@ -224,4 +225,25 @@ TESTES: n/a (só documentação)
 PENDENCIAS.md: atualizado (sim)
 PRÓXIMO PASSO RECOMENDADO: o maestro decide a P-26 (recomendada A). Com A: F3a em 2 PRs (NAS: SQL versionado + v2 + ingest_apply lê o .meta.yaml + testes Postgres; MCP: retrieve_knowledge na v2, depois do DEV correr o SQL)
 BLOQUEIOS: P-26 (schema e RPC de produção). Regra 9 do prompt: documentado e parado.
+```
+
+```
+FASE: F3 (F3a: proveniência no retrieve)
+DATA: 2026-10-06
+ESTADO ANTERIOR → NOVO ESTADO: 🔒 aguarda P-26 → ⏳ → ✅ (P-26 = A; merge e SQL pendentes, do maestro/DEV)
+ARTEFACTOS:
+- NAS: scripts/migrations/f3_provenance_retrieve.sql (aditiva, idempotente), runner/plan_runner/provenance.py,
+  supabase_writer (has_f3_columns, proveniência, locator, update_source_provenance), ingest_apply (INVALID_META, META_UPDATED),
+  runner/tests/test_f3_provenance.py (11, Postgres) + test_provenance.py (10), passo no job test-rag, runbook RAG-CANONICAL.md § F3a
+- MCP: lib/knowledge.js (KNOWLEDGE_RPC_V2, sanitizeKnowledgeFilters, hits com proveniência, fallback PGRST202),
+  tests/knowledgeV2.test.mjs (7), docs/RAG_GROUNDING.md, .env.example
+LINKS:
+- PR NAS: https://github.com/souzalrns/network-agents-setup/pull/113
+- PR MCP: https://github.com/souzalrns/agent-network-mcp/pull/19
+- Branches: feat/f3-provenance-retrieve; claude/reels-analysis-tools-access-hwudk9
+TESTES: NAS pytest 700 passed (sem extras), 144 passed (com extras + Postgres); MCP npm test 26/26, e2e 13/13;
+  CI #113: todos os checks verdes em pelo menos 1 das 2 cabeças (delta = só docs); a última teve jobs sem runner do GitHub
+PENDENCIAS.md: atualizado (sim)
+PRÓXIMO PASSO RECOMENDADO: F4 (marketing-capabilities.yaml)
+BLOQUEIOS: nenhum no código. Produção: merge #113 → o DEV corre o SQL → merge MCP #19 → KNOWLEDGE_RPC_V2=1.
 ```
