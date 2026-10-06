@@ -116,6 +116,6 @@ Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing`
      ```powershell
      python -c "from plan_runner.mcp_knowledge import McpKnowledge as M; h=M().retrieve('security','auditoria defensiva',top_k=1,filters=None,require_citations=True); print('v2' if h and h[0].get('metadata') else 'v1')"
      ```
-   - **Estado em 2026-10-06:** SQL aplicado (verificado no catálogo); `l5_eval` com a flag sem regressão; o `v2` deste comando ainda não foi visto.
+   - **Estado em 2026-10-06: v2 activa em produção.** SQL aplicado (verificado no catálogo); `l5_eval` com a flag sem regressão; um `tools/call` do `retrieve_knowledge` (`kb=security`, `top_k=1`) devolveu `citation.uri` e `metadata` preenchido (`document_type` = `md`, `status` = `active`). O `locator` vem `null` nas linhas antigas até cada fonte ser re-ingerida (passo 3). **F3a FECHADO.**
 
 **Rollback:** desligar a flag (passo 4) devolve o MCP ao caminho antigo. As colunas novas e a v2 podem ficar: não mudam nada do que existia.

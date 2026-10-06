@@ -23,6 +23,21 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### F3a FECHADO: v2 activa em produção (2026-10-06)
+- **Prova do DEV:** `tools/call` do `retrieve_knowledge` (`kb=security`, query "chairman security council", `top_k=1`).
+  - O hit traz `citation.uri` = `docs/knowledge/security-agents-stack.md`.
+  - O `metadata` vem preenchido: `document_type` = `md`, `status` = `active`, `content_hash`.
+- **Porque prova a v2:**
+  - na v1 (`ANM:lib/knowledge.js`), o `metadata` é `null` e o `citation` nem tem `uri`;
+  - no fallback para a v1 com a flag ligada (PGRST202), o `status` e o `document_type` viriam `null`, porque só a `match_knowledge_v2` os devolve.
+- **`locator` `null`:** esperado nas linhas antigas; preenche-se quando cada fonte for re-ingerida.
+- **Registado:**
+  - F3a no §7 (FECHADO);
+  - F3 continua EM CURSO (F3b, F3c);
+  - o R-006 mantém-se (o `l5_eval` não distingue as versões);
+  - contagens: §4 sem alteração (103 vivos), §7 109 linhas (88 FECHADO).
+- **PR:** continuação do #117 (branch `docs/f3a-production`).
+
 ### F3a em produção: SQL verificado; a v2 ainda sem prova (2026-10-06)
 - **O DEV pediu F3 → FECHADO**, com o `l5_eval` contra produção e `KNOWLEDGE_RPC_V2=1`: 18 casos, `chunk_hit@1/3/4` 0.611/0.889/0.944, `source_hit@4` 1.0, `mrr_chunk` 0.736, `no_hits` 0, `provenance_ok` 1.0.
 - **Verificação do Claude (só leituras):**
@@ -903,7 +918,7 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS (PR do branch) | `docs/f3a-production` | F3a em produção: evidência, R-006, comando v1/v2 (empilhado no #116) | Aberto |
+| NAS #117 | `docs/f3a-production` | F3a FECHADO (prova da v2); evidência de produção, R-006, comando v1/v2 (empilhado no #116) | Aberto |
 | NAS #116 | `docs/f5-closed` | F5 e F4 → FECHADO; runbook do F5 corrigido; W-011, V41 | Aberto |
 
 Já com merge: NAS #63–#115 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
@@ -952,6 +967,6 @@ cd ..\agent-network-mcp;        graphify update .
 1. **Maestro:** decidir a **P-23** (F6 da cadeia vs F6 canónico; recomendada A, que mantém os 2) e confirmar a P-21, a P-22, a P-24 e a P-25. Merge do PR do F5 (só docs).
 2. **DEV:**
    - ~~correr o SQL do F3a~~ feito (verificado no catálogo a 2026-10-06);
-   - correr o comando de 1 linha do `docs/ops/RAG-CANONICAL.md` § F3a, passo 5. Tem de imprimir `v2`; se imprimir `v1`, a flag não está activa no deploy de produção (falta o redeploy depois de a definir?);
-   - escolher a opção A/B/C do fecho do F3 (relatório de 2026-10-06).
-3. **Claude:** o R-006 e o W-011 (o `l5_eval` mede a v2; o runner valida o `MCP_URL` e o bypass), num PR pequeno com testes. Depois, o F6 conforme a P-23.
+   - ~~provar a v2 em produção~~ feito (2026-10-06, `tools/call` com `metadata` preenchido): F3a FECHADO;
+   - para o `locator` aparecer, re-ingerir as fontes (acontece sozinho quando cada `.md` do MANIFEST mudar).
+3. **Claude:** o R-006 e o W-011 (o `l5_eval` mede a v2; o runner valida o `MCP_URL` e o bypass), num PR pequeno com testes. Depois, o F3b (validade e conflitos, autoridade, golden set) e o F6 conforme a P-23.
