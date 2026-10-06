@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f6-hardening-portfolio` (empilhado no `feat/f3b-validity`, PR #120). **F6 parado no C.1: pré-condições não cumpridas.**
+- **Branch actual:** `docs/f6-hardening-portfolio` (PR #121, contra a `main`; contém o #119 e o #120). **Cadeia F1 → F6 concluída**; o merge é do maestro.
 - **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho:** cadeia F1 → F6 (prompt do maestro de 2026-10-05), com o estado em `docs/initiatives/PENDENCIAS_T6.md`. **F5 PASSOU** (3.º run real do DEV, 2026-10-06): F5 e F4 FECHADOS no canónico. F1 FECHADO; F2a, F3a (#113 + MCP #19) e F4 (#114) merged. Próximo: F6, que espera pela P-23. Do DEV: o SQL do F3a no Supabase e a flag `KNOWLEDGE_RPC_V2`.
 
@@ -22,6 +22,25 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F6 C.6 feito: PR #121 (2026-10-06)
+- PR **#121** `docs: F6 hardening, evidence pack and portfolio summary` (branch `docs/f6-hardening-portfolio`, base `main`). O corpo diz: pré-condições, o que entra, estacionados, "no production writes" e "do not merge yet". Ordem de merge: #119 → #120 → #121.
+- A base do #120 passou a `main`, para correr a CI (com a base `feat/f3c-knowledge-coverage` os workflows não corriam).
+- Validação local antes do PR: runner contra Postgres **754 passed**, 29 skipped; ruff OK. A 1.ª corrida deu 66 erros porque o Postgres local tinha parado; com ele a correr, passa tudo.
+
+### F6: mini-relatório (§E)
+```
+FASE: F6 da cadeia (hardening + evidence pack + portfolio)
+DATA: 2026-10-06
+ESTADO: 🔒 (C.1 parado) → ✅ por instrução do maestro ("Fez o f6 como no prompt"); o merge é do maestro
+PRÉ-CONDIÇÕES: F1, F4, F5, F3a ✅; F2 ✅ na cadeia; F3c #119 e F3b-validade #120 em PR; F3b-autoridade estacionado (F3b-AUTH-1)
+HARDENING: gitleaks (árvore e histórico) limpo; 13 paths locais removidos; nota de escrita em produção corrigida; MANIFEST ou EXCLUDED testado; F1 e F2 documentados e testados; DNS rebinding → F2-SEC-1
+ARTEFACTOS: docs/portfolio/F6-evidence/ (7 ficheiros), docs/portfolio/WHAT-I-CONTRIBUTED.md
+CANÓNICO: PENDENCIAS_T6 F6 ✅; PENDENCIAS P-23 = A aplicada, F3b-AUTH-1 e F2-SEC-1 novos, 109 vivos; F6 canónico (D-EP8) continua aberto
+PR: #121 (sem merge). Produção: nenhuma escrita
+TESTES: runner + Postgres 754 passed, 29 skipped; ruff OK
+PRÓXIMO PASSO: o maestro faz o merge do #119 → #120 → #121; depois, quando quiser, o F3b-AUTH-1 (v3) e o F3b-VAL-1 (datas)
+```
 
 ### F6 C.5 feito: canónico e PENDENCIAS (2026-10-06)
 - `PENDENCIAS_T6.md`: **F6 ✅** (PR aberto; o merge é do maestro); F3 com o F3b-autoridade estacionado; o risco "F6 do prompt ≠ canónico" fica resolvido pela P-23 = A.
