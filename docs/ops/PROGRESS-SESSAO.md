@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/privacy-policy` (a partir da `main` `c9de58f`: merge do #124).
-- **`main` de referência:** NAS `c9de58f` (merges até #124); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `test/fake-clients` (a partir da `main` `4c99fdd`: merge do #125).
+- **`main` de referência:** NAS `4c99fdd` (merges até #125); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Clientes fictícios para testes (2026-10-07)
+- **Merge do #125** (`4c99fdd`): política de privacidade em vigor; GOV-IMPACT-1 FECHADO.
+- **Pedido:** Faker + testcontainers, seed de clientes fictícios, teste da L4 e da memória do cliente, `docs/ops/TESTING.md`.
+- **Correcção ao pedido:** não existe a tabela `client_memory` no ANM. A memória do cliente é o `memory/<client_id>/MEMORY.md` (working memory, S30) mais a `memory_l4` no âmbito `project:<client_id>`. O seed escreve nas duas.
+- **Feito no PR do branch `test/fake-clients`:**
+  - `runner/requirements-test.txt` (Faker 40.41.0 MIT, testcontainers 4.15.0 Apache-2.0, pins exactos);
+  - `scripts/seed_fake_clients.py`: seed fixa, prefixo `FAKE-`, e-mails RFC 2606, só BD local, recusa o Supabase, nunca lê o `DATABASE_URL`;
+  - fixture `disposable_pg` no `conftest.py` (RAG_TEST_DATABASE_URL → testcontainers → skip ou erro);
+  - `runner/tests/test_fake_clients.py`;
+  - CI: `requirements-test.txt` nos jobs `test` e `test-rag`;
+  - `docs/ops/TESTING.md`.
+- **Verificação:**
+  - testes passam com o Postgres local **e** com testcontainers (dockerd arrancado nesta sessão: contentor `pgvector/pgvector:pg16` real);
+  - smoke do CLI numa BD descartável: 12 linhas em 3 clientes, limpeza a 0, Supabase recusado;
+  - mutação: sem Docker, skip; com `RAG_TEST_REQUIRED=1`, erro.
 
 ### Política de privacidade e fecho do GOV-IMPACT-1 (2026-10-07)
 - **Merge do #124** (11:03 UTC, `c9de58f`): política do AIMS, mapeamento ISO e teste de evidências no `main`.
