@@ -92,7 +92,12 @@ Evidência para o B: o worker já tem transport injectável, `BudgetExceeded`, H
 **Testes de mutação** (cada um parte o código de propósito): tirar a preservação das thought signatures, a validação, o orçamento por turno, a troca da frase "sem tools" ou a autorização faz falhar pelo menos um teste. No seguimento, os 12 mutantes da aprovação e do kb (pausa, recusa, consumo da aprovação, decisão por id, gravação da decisão, resume nos 2 motores, limpeza do estado, filtro e política do kb) são todos apanhados.
 
 **Para ligar num run real:**
-1. Corre `PLAN_RUNNER_TOOLS=1 python -m plan_runner run <plano> --mode external --worker gemini`.
+0. **Plano de prova:** `docs/orchestration/au20/au20-force-read.plan.yaml`.
+   - Não tem `repo_files`, por isso o `docs/ops/BUDGET.md` não entra no prompt e as 3 respostas pedidas só existem nesse ficheiro.
+   - Os planos de design (ex.: `design-flow-demo`) também mostram `meta.tools` com a flag, mesmo sem nenhuma chamada (`calls: []`), mas o `repo_files` dá ao modelo o que ele precisa e a tool não chega a ser usada.
+   - **Sem `meta.tools` no `result.json`, a flag não chegou ao processo do worker.**
+   - Fixado por `test_plano_force_read_obriga_a_tool_e_mostra_meta_tools` e `test_plano_force_read_sem_flag_nao_tem_meta_tools`.
+1. Corre `PLAN_RUNNER_TOOLS=1 python -m plan_runner run <plano> --mode external --worker gemini`. Em PowerShell, a flag vai na mesma sessão: `$env:PLAN_RUNNER_TOOLS = "1"`, e os valores aceites são `1`, `true`, `yes` ou `on`.
 2. Confirma em `result.json → meta.tools` (turnos, chamadas, `unsupported`, `refused_policy`, `kbs`) e nos eventos `tool_called`.
 3. Com uma tool `act` no passo, o run pára em `paused_human_gate`: lê o pedido em `hitl-requests.jsonl` (`context.tool_calls` tem os argumentos) e decide com `python -m plan_runner resume <run> --decision approve|reject` (ou pelo lado Node, no mesmo contrato).
 

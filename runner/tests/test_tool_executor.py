@@ -646,3 +646,39 @@ def test_schema_dos_planos_aceita_tool_limits_e_tool_kbs():
     assert plan_errors({"id": "x", "version": 1, "objective": "o", "steps": [step]}) == []
     bad = {**step, "tool_kbs": ["a b"], "tool_limits": {"max_turns": 0, "outro": 1}}
     assert len(plan_errors({"id": "x", "version": 1, "objective": "o", "steps": [bad]})) == 3
+
+
+# --------------------------------------------------------------------------- plano de prova do run real (AU-20)
+
+FORCE_READ = REPO_ROOT / "docs/orchestration/au20/au20-force-read.plan.yaml"
+BUDGET_FACT = "13 130 tokens"  # só existe em docs/ops/BUDGET.md
+
+
+def test_plano_force_read_obriga_a_tool_e_mostra_meta_tools(run_dir, monkeypatch):
+    """O plano do run real: sem repo_files, o BUDGET.md não está no prompt; com a flag, a tool corre
+    e o result.json tem meta.tools. É o que o DEV confirma no run com o Gemini real."""
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    script = Script([_call("read_repo_file", {"path": "docs/ops/BUDGET.md"}, id_="b1"),
+                     _text("1) 13 130 tokens\n\nFonte: docs/ops/BUDGET.md\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(FORCE_READ, mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+    first, second = script.bodies
+    assert BUDGET_FACT not in json.dumps(first, ensure_ascii=False)  # o conteúdo não vai no prompt
+    assert "docs/ops/BUDGET.md" in first["contents"][0]["parts"][0]["text"]  # a tarefa chega ao modelo
+    assert [d["name"] for d in first["tools"][0]["functionDeclarations"]] == ["read_repo_file"]
+    assert BUDGET_FACT in json.dumps(second, ensure_ascii=False)  # só chega pela tool
+    tools = json.loads((run_dir / "pending_steps/read_budget/result.json").read_text(encoding="utf-8"))["meta"]["tools"]
+    assert tools["enabled"] and tools["limits"] == {"max_turns": 3, "max_tool_calls": 2}
+    assert tools["calls"][0]["tool"] == "read_repo_file" and tools["calls"][0]["ok"]
+    assert tools["calls"][0]["sources"] == ["docs/ops/BUDGET.md"]
+    assert len(_events(run_dir, "tool_called")) == 1
+
+
+def test_plano_force_read_sem_flag_nao_tem_meta_tools(run_dir, monkeypatch):
+    """Sem PLAN_RUNNER_TOOLS no processo: chamada única, sem meta.tools (o sintoma do 1.º run do DEV)."""
+    script = Script([_text("Não consigo ler o ficheiro.\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(FORCE_READ, mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+    assert len(script.bodies) == 1 and "tools" not in script.bodies[0]
+    meta = json.loads((run_dir / "pending_steps/read_budget/result.json").read_text(encoding="utf-8"))["meta"]
+    assert "tools" not in meta and meta["worker"] == "gemini"
