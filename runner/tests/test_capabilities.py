@@ -164,3 +164,133 @@ def test_marketing_implemented_sustentadas_por_planos_validos():
         assert plans, cap["id"]
         for rel in plans:
             assert file_errors(REPO_ROOT / rel) == [], (cap["id"], rel)
+
+
+# --------------------------------------------------------------------------- F4-MAT-1: maturidade medida (P-38 = B)
+
+PLAN_X = "docs/orchestration/sec/x.plan.yaml"
+
+
+def _maturity(repo: Path) -> dict[str, dict]:
+    from plan_runner.areas import agent_ids
+    from plan_runner.capabilities import capability_maturity
+
+    known, _ = agent_ids(repo)
+    return {r["id"]: r for r in capability_maturity(repo, known)}
+
+
+def _fake_test(repo: Path, plan: str = PLAN_X, marker: str = "httpx_transport") -> None:
+    _write(repo / "runner/tests/test_x.py",
+           f'PLAN = "{plan}"\n\ndef test_x(monkeypatch):\n    monkeypatch.setattr(ew, "{marker}", object())\n')
+
+
+def _evidence(repo: Path, body: str = "# Run\n\nPlano x.plan.yaml, run_abc. **PASSOU**\n") -> None:
+    _write(repo / "docs/ops/RUN.md", body)
+
+
+def _runs(repo: Path, **over) -> None:
+    run = {"id": "r1", "date": "2026-10-06", "run_id": "run_abc", "plan": PLAN_X, "worker": "gemini",
+           "verdict": "passed", "evidence": "docs/ops/RUN.md", "anchor": "**PASSOU**", **over}
+    _write(repo / "config/capability-runs.yaml", yaml.safe_dump({"runs": [run]}).replace("'2026-10-06'", "2026-10-06"))
+
+
+@pytest.mark.parametrize("cap, plan_actions, level", [
+    ({"action": None, "agent": None, "skill": None, "status": "planned"}, (), "DRAFT"),
+    ({"skill": None, "status": "planned"}, (), "DECLARED"),          # action + agente, sem skill
+    ({"status": "partial"}, (), "WIRED"),                           # executor ligado, nenhum plano
+    ({}, ("sec_triage",), "EXECUTABLE"),                            # há plano, nenhum teste
+])
+def test_maturidade_ate_executable(tmp_path, cap, plan_actions, level):
+    repo = _repo(tmp_path, caps=[_cap(**cap)], plan_actions=plan_actions)
+    assert _maturity(repo)["triage"]["maturity"] == level
+
+
+def test_validated_exige_teste_com_o_gemini_falso_que_corre_o_plano(tmp_path):
+    repo = _repo(tmp_path)
+    _fake_test(repo, marker="outra_coisa")  # cita o plano, mas não troca o transport: não conta
+    assert _maturity(repo)["triage"]["maturity"] == "EXECUTABLE"
+    _fake_test(repo)
+    row = _maturity(repo)["triage"]
+    assert row["maturity"] == "VALIDATED" and row["tests"] == ["runner/tests/test_x.py"] and row["plans"] == [PLAN_X]
+
+
+def test_proven_exige_run_real_registado_e_verificado(tmp_path):
+    repo = _repo(tmp_path)
+    _fake_test(repo)
+    _evidence(repo)
+    _runs(repo)
+    row = _maturity(repo)["triage"]
+    assert row["maturity"] == "PROVEN" and row["runs"] == ["r1"]
+    assert validate_areas(repo) == []
+
+
+def test_proven_nao_salta_niveis(tmp_path):
+    repo = _repo(tmp_path)  # run real registado, mas nenhum teste com o Gemini falso
+    _evidence(repo)
+    _runs(repo)
+    assert _maturity(repo)["triage"]["maturity"] == "EXECUTABLE"
+
+
+def test_status_nao_implemented_fica_no_maximo_em_executable(tmp_path):
+    repo = _repo(tmp_path, caps=[_cap(), _cap(id="secrets", status="partial")])
+    _fake_test(repo)
+    _evidence(repo)
+    _runs(repo)
+    rows = _maturity(repo)
+    assert rows["triage"]["maturity"] == "PROVEN"
+    assert rows["secrets"]["maturity"] == "EXECUTABLE" and "partial" in rows["secrets"]["note"]
+
+
+@pytest.mark.parametrize("over, msg", [
+    ({"anchor": "**NAO ESTA LA**"}, "não contém o anchor"),
+    ({"run_id": "run_outro"}, "não contém o run_id"),
+    ({"plan": "docs/orchestration/sec/nao-existe.plan.yaml"}, "`plan` tem de ser um plano"),
+    ({"worker": "stub"}, "`worker` tem de ser `gemini`"),
+    ({"verdict": "talvez"}, "`verdict`"),
+    ({"evidence": "docs/ops/NAO.md"}, "`evidence` tem de ser um ficheiro"),
+    ({"date": "ontem"}, "`date`"),
+])
+def test_registo_de_runs_invalido_falha_no_e7_e_nao_conta(tmp_path, over, msg):
+    repo = _repo(tmp_path)
+    _fake_test(repo)
+    _evidence(repo)
+    _runs(repo, **over)
+    assert any(msg in e for e in validate_areas(repo)), validate_areas(repo)
+    assert _maturity(repo)["triage"]["maturity"] == "VALIDATED"
+
+
+def test_run_failed_e_valido_mas_nao_prova(tmp_path):
+    repo = _repo(tmp_path)
+    _fake_test(repo)
+    _evidence(repo)
+    _runs(repo, verdict="failed")
+    assert validate_areas(repo) == [] and _maturity(repo)["triage"]["maturity"] == "VALIDATED"
+
+
+def test_maturidade_real_do_repo():
+    """F4-MAT-1: o defensive_audit é PROVEN pelo run do F5; as partial ficam em EXECUTABLE (§15.7)."""
+    repo = Path(__file__).resolve().parents[2]
+    rows = {f"{r['domain']}.{r['id']}": r for r in _maturity_repo(repo)}
+    assert rows["security.defensive_audit"]["maturity"] == "PROVEN"
+    assert "f5-security-audit" in rows["security.defensive_audit"]["runs"]
+    assert rows["security.triage"]["maturity"] == "PROVEN"
+    assert rows["marketing.seo_brief"]["maturity"] == "PROVEN"  # B1, run real do seo-article-demo
+    assert rows["security.secrets_hygiene"]["maturity"] == "EXECUTABLE"
+    assert rows["marketing.transcript_analysis"]["maturity"] == "WIRED"
+    assert rows["security.agent_redteam_lab"]["maturity"] == "DRAFT"
+    from plan_runner.capabilities import load_runs
+
+    assert load_runs(repo)[1] == []  # o registo real bate com os documentos de evidência
+
+
+def _maturity_repo(repo: Path) -> list[dict]:
+    from plan_runner.areas import agent_ids
+    from plan_runner.capabilities import capability_maturity
+
+    return capability_maturity(repo, agent_ids(repo)[0])
+
+
+def test_cli_mostra_a_maturidade(capsys):
+    assert areas_main(["--maturity"]) == 0
+    out = capsys.readouterr().out
+    assert "security.defensive_audit: PROVEN" in out and "limitado a EXECUTABLE" in out

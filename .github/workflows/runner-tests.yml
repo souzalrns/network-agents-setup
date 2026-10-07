@@ -34,6 +34,10 @@ on:
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
       - 'config/*-capabilities.yaml'
+      # F4-MAT-1: registo de runs reais (PROVEN) e os documentos de evidência que o E7 verifica
+      - 'config/capability-runs.yaml'
+      - 'docs/ops/F5-E2E-RUN.md'
+      - 'docs/ops/WORKER-EXTERNAL.md'
       # F3b: classes de validade (test_validity.py) e o relatório local
       - 'config/knowledge-validity.yaml'
       - 'scripts/validity_report.py'
@@ -76,6 +80,10 @@ on:
       - 'config/councils.yaml'
       # Security pipeline: capabilities e skills validadas pelo E7; plano demo testado
       - 'config/*-capabilities.yaml'
+      # F4-MAT-1: registo de runs reais (PROVEN) e os documentos de evidência que o E7 verifica
+      - 'config/capability-runs.yaml'
+      - 'docs/ops/F5-E2E-RUN.md'
+      - 'docs/ops/WORKER-EXTERNAL.md'
       # F3b: classes de validade (test_validity.py) e o relatório local
       - 'config/knowledge-validity.yaml'
       - 'scripts/validity_report.py'

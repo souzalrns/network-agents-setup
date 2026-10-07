@@ -1,0 +1,30 @@
+# Runs reais registados: a evidência do nível PROVEN da maturidade das capabilities
+# (F4-MAT-1, P-38 = B; EXECUTION-PLAN §15.7: "PROVEN = evidência E2E com run real").
+#
+# Isto NÃO declara a maturidade de nenhuma capability: regista runs que aconteceram, e o
+# E7 (`python -m plan_runner.areas`) verifica cada um contra o documento de evidência
+# (o documento tem de conter o `anchor`, o nome do plano e o `run_id`, se houver).
+# A maturidade é calculada em runner/plan_runner/capabilities.py (capability_maturity):
+# um plano com um run `passed` aqui faz PROVEN as capabilities `implemented` cujas
+# actions ele usa, se já estiverem VALIDATED.
+#
+# Só runs com o provider real (`worker: gemini`). Os directórios dos runs não estão no
+# git (pilots/f5-run*/, pilots/run-*): a evidência é o documento citado.
+
+runs:
+  - id: f5-security-audit
+    date: 2026-10-06
+    run_id: run_9017d441d1
+    plan: docs/orchestration/security/templates/examples/security-audit-demo.plan.yaml
+    worker: gemini
+    verdict: passed
+    evidence: docs/ops/F5-E2E-RUN.md
+    anchor: "**Veredicto: PASSOU**"
+
+  - id: b1-seo-article
+    date: 2026-10-01
+    plan: docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml
+    worker: gemini
+    verdict: passed
+    evidence: docs/ops/WORKER-EXTERNAL.md
+    anchor: "Primeiro run real (B1): FEITO a 2026-10-01"

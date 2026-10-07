@@ -17,6 +17,7 @@ Regras (do cabeçalho de config/areas.yaml):
 
 CLI:  cd runner && python -m plan_runner.areas               (sai 1 e lista os erros)
       cd runner && python -m plan_runner.areas --inventory   (agente <-> skill, informativo)
+      cd runner && python -m plan_runner.areas --maturity    (maturidade medida das capabilities, F4-MAT-1)
 """
 from __future__ import annotations
 
@@ -205,13 +206,17 @@ def validate_areas(repo_root: Path) -> list[str]:
 
     errors += declared_skill_errors(repo_root, known)
     errors += validate_capabilities(repo_root, known, areas)
+    from .capabilities import load_runs
+
+    errors += load_runs(repo_root)[1]  # F4-MAT-1: o registo de runs reais (PROVEN) tem de bater com a evidência
     return errors
 
 
 def main(argv: list[str] | None = None) -> int:
     args = list(argv or [])
     want_inventory = "--inventory" in args
-    args = [a for a in args if a != "--inventory"]
+    want_maturity = "--maturity" in args
+    args = [a for a in args if a not in ("--inventory", "--maturity")]
     repo_root = Path(args[0]) if args else Path(__file__).resolve().parents[2]
     errors = validate_areas(repo_root)
     if errors:
@@ -235,6 +240,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n{key} ({len(items)}):")
             for item in items:
                 print(f"  - {item}")
+    if want_maturity:
+        from .capabilities import capability_maturity
+
+        known, _ = agent_ids(repo_root)
+        print("\nmaturidade (F4-MAT-1, medida; escala do EXECUTION-PLAN §15.7):")
+        for row in capability_maturity(repo_root, known):
+            extra = f"  [{row['note']}]" if row["note"] else ""
+            print(f"  {row['domain']}.{row['id']}: {row['maturity']} (status {row['status']}){extra}")
     return 0
 
 

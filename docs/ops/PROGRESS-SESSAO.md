@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/r011-l5-regression` (a partir da `main` `e3348ac`: merge do #134); a seguir, `feat/f4-mat-1-maturity`.
+- **Branch actual:** `feat/f4-mat-1-maturity` (empilhado no `feat/r011-l5-regression`, PR #135, a partir da `main` `e3348ac`).
 - **`main` de referência:** NAS `e3348ac` (merges até #134); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F4-MAT-1: maturidade das capabilities medida (2026-10-07)
+- **P-38 = B:** a maturidade é derivada da evidência e não há campo novo nos YAML de capabilities. O `status` continua a ser o âmbito declarado.
+- **Código:**
+  - `capabilities.capability_maturity`: DRAFT → DECLARED → WIRED → EXECUTABLE → VALIDATED → PROVEN, cada nível a exigir o anterior;
+  - `validated_plans`: testes que citam o plano e trocam o `httpx_transport`;
+  - `load_runs`: o registo `config/capability-runs.yaml`, com o F5 e o B1, verificado contra os documentos de evidência no E7;
+  - `python -m plan_runner.areas --maturity`.
+- **Tecto:** o que não é `implemented` fica em EXECUTABLE. As `partial` de security partilham a action do auditor, e um run dele não prova a parte que falta.
+- **Medido:**
+  - security: `triage`, `defensive_audit` e `security_report` são PROVEN (F5, `run_9017d441d1`);
+  - marketing: `market_research`, `seo_brief`, `answer_first_copy` e `ai_findability_review` são PROVEN (B1);
+  - as outras 11 de marketing ficam em EXECUTABLE (falta um teste com o Gemini falso);
+  - `transcript_analysis` WIRED, `visual_identity` DECLARED, `performance_analysis` e `agent_redteam_lab` DRAFT.
+- **Testes:** 18 novos em `test_capabilities.py` (32 → 50) (cada nível, tecto do `status`, registo inválido em 7 formas, `failed` não prova, tabela real do repo, CLI). 8 mutantes apanhados.
+- **Docs:** `docs/ops/CAPABILITY-MATURITY.md`. F4-MAT-1 → EM CURSO (ABERTO 70, EM CURSO 9).
 
 ### R-011: o limiar da P-19 passa a regressão no `l5_eval` (2026-10-07)
 - **Pedido do maestro:** "Recomendação A aprovada": primeiro o R-011, depois o F4-MAT-1.
