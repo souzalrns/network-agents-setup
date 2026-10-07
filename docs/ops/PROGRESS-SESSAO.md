@@ -27,6 +27,33 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### Revisão do EXECUTION-PLAN desde a Parte 1, 2.ª passagem (2026-10-07)
+- **Pedido do maestro:** a revisão é desde o início (A), não só o roadmap. Li o plano por partes:
+  - Parte 1 (§1 a §3: estado de partida, arquitectura e os 3 ajustes);
+  - Parte 2 (§4 a §6: matrizes P0, P1 e P2, e os gates);
+  - Parte 3 (§8 a §12: meta-agentes, pendentes, anti-padrões, teste definitivo e instruções);
+  - Parte 4 (§14 e §15: adendo e governança).
+- **Bloqueios desactualizados corrigidos:**
+  - R-005 dizia "F3"; agora depende da P-20;
+  - as 18 linhas G1/G2 diziam "F5 + D-EP8"; agora só a D-EP8;
+  - B1-bis-C dizia "depois de F0–F3";
+  - L4-2 dizia "depois do F3"; L4-3 e EX-B7 diziam "depois do F5". Todos já podem avançar.
+- **Compromissos do plano sem item, agora registados:**
+  - E-004: capabilities de software (§5.16);
+  - ING-008: o contrato do `ingest_document` com `url`, `bytes` e `connector_ref` (§3, ajuste 1);
+  - ING-009: document intelligence como capability (§4.4);
+  - ING-010 e ING-011: Instructor e Unstructured (§2.3);
+  - R-007 e R-008: Graphiti e LightRAG como padrões (§2.3);
+  - R-009: sunset da v1 e da flag (§15.10, ADR-F3 §4);
+  - **R-010: o purge nunca é chamado** (§15.8, regra T6). É um achado real.
+- **F2:** o artefacto de research ainda não tem o formato do §3, ajuste 2.
+- **Correcções feitas:**
+  - H-002 (os 2 avisos do ruff; um deles foi introduzido por mim no #120);
+  - o docstring do `mcp_knowledge.py`, que dizia que o `metadata` e o `locator` vêm sempre `None`;
+  - o DOC do F4 medido (§15.9; §7 F4-DOC): 1 ficheiro do core, o que o próprio F4 pedia.
+- **D-EP5** ("decidir depois do F5") → **P-39** (recomendada C: decidir com o primeiro caso real).
+- **Contagens:** 121 vivos (ABERTO 67, EM CURSO 8, BLOQUEADO 46), 113 de histórico (92 FECHADO), 42 contradições, 39 decisões.
+
 ### Revisão contra o EXECUTION-PLAN e correcções (2026-10-07)
 - **Merges do maestro** (2026-10-06, 21:22–21:24 UTC): #119, #120, #121.
   - A CI da `main` está verde em cada merge, incluindo `test-rag` e `test-ingest` no #120. Assim, o código do #120 foi validado na `main`, embora o PR não tenha tido CI própria antes do merge.
