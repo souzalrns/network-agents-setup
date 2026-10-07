@@ -26,6 +26,11 @@ JavaScript, o Crawl4AI (só se superar isto, com evidência) e o `discover`.
 Uso (só lê e imprime JSON; com `--out-dir` grava os 2 ficheiros):
 
     python scripts/web_fetch.py https://exemplo.org/pagina --allow exemplo.org [--out-dir DIR]
+    python scripts/web_fetch.py https://exemplo.org/pagina --area research [--allow exemplo.org]
+
+F2-ALLOW-1 (P-25 = A): `--area` usa a allowlist da área (`config/web-allowlist.yaml`), e um
+`--allow` tem de caber nela. Sem `--area`, o resultado leva o aviso `no_area_allowlist`.
+Regras: `runner/plan_runner/web_allowlist.py`.
 """
 
 from __future__ import annotations
@@ -79,6 +84,19 @@ class FetchError(Exception):
         super().__init__(f"{code}: {message}")
         self.code = code
         self.detail = message
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]  # onde está o config/web-allowlist.yaml
+
+
+def _load_web_allowlist():
+    """`runner/plan_runner/web_allowlist.py` pelo caminho (o script corre fora do pacote)."""
+    path = Path(__file__).resolve().parents[1] / "runner" / "plan_runner" / "web_allowlist.py"
+    spec = importlib.util.spec_from_file_location("web_allowlist", path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules.setdefault("web_allowlist", mod)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def _load_ingest_document():
@@ -314,8 +332,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("url")
     parser.add_argument(
-        "--allow", action="append", required=True, help="domínio permitido (repetível)"
+        "--allow", action="append", help="domínio permitido (repetível); com --area, tem de caber nela"
     )
+    parser.add_argument("--area", help="área do config/web-allowlist.yaml (F2-ALLOW-1)")
     parser.add_argument("--timeout-s", type=float, default=DEFAULT_TIMEOUT_S)
     parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
     parser.add_argument("--out-dir", help="grava <nome>.md e <nome>.meta.yaml (pelo T6)")
@@ -325,13 +344,24 @@ def main(argv: list[str] | None = None) -> int:
         opts = parser.parse_args(argv)
     except SystemExit:
         return 2
+    if opts.area is None and not opts.allow:
+        print("error: passa --area <área> ou pelo menos 1 --allow <domínio>", file=sys.stderr)
+        return 2
+    wa = _load_web_allowlist()
+    try:
+        allowlist, policy_warnings = wa.resolve_allowlist(REPO_ROOT, opts.area, opts.allow)
+    except wa.AllowlistError as exc:
+        # recusado antes de qualquer pedido de rede
+        print(json.dumps({"error": "blocked_by_allowlist", "message": str(exc)}, ensure_ascii=False))
+        return 1
     try:
         result = fetch(
-            opts.url, allowlist=opts.allow, timeout_s=opts.timeout_s, max_bytes=opts.max_bytes
+            opts.url, allowlist=allowlist, timeout_s=opts.timeout_s, max_bytes=opts.max_bytes
         )
     except FetchError as exc:
         print(json.dumps({"error": exc.code, "message": exc.detail}, ensure_ascii=False))
         return 1
+    result["warnings"] = list(result.get("warnings") or []) + policy_warnings
     if opts.out_dir:
         ing = _load_ingest_document()
         parts = urlsplit(result["source_meta"]["final_url"])

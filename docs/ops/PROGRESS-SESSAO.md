@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/au20b-flag-off-meta` (a partir da `main` `8da0f49`: merge do #139); a seguir, `feat/f2-allow-1`.
+- **Branch actual:** `feat/f2-allow-1` (empilhado no `feat/au20b-flag-off-meta`, PR #140, a partir da `main` `8da0f49`).
 - **`main` de referência:** NAS `e74a610` (merges até #136; o #135 e o #136 levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,18 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### F2-ALLOW-1: allowlist do `fetch` por área (2026-10-07)
+- **P-25 = A:**
+  - `config/web-allowlist.yaml` com as 10 áreas do `config/areas.yaml`, todas com a lista vazia. Os domínios são do maestro.
+  - `runner/plan_runner/web_allowlist.py`:
+    - `validate` no E7: áreas existentes; domínios DNS em minúsculas, sem esquema, caminho, porta, `*` nem IP; sem repetidos;
+    - `resolve_allowlist`: a área dá a política e o `--allow` só a estreita.
+  - `scripts/web_fetch.py --area`: recusa antes de qualquer pedido de rede. Só com `--allow` mantém o F2a e acrescenta o aviso `no_area_allowlist`.
+  - O CI do runner passa a correr quando muda o `config/web-allowlist.yaml`.
+- **Transição:** o `--area` ainda é opcional, porque com as listas vazias torná-lo obrigatório desligava o `fetch`. Fica obrigatório quando o maestro der os domínios (opções no relatório).
+- **Testes:** 25 em `test_web_allowlist.py`, 7 mutantes apanhados. Os 40 do `test_web_fetch.py` continuam a passar.
+- **Docs:** `WEB-FETCH.md` §2.1. F2-ALLOW-1 → EM CURSO (ABERTO 69, EM CURSO 8).
 
 ### AU-20b: a flag desligada fica escrita no `result.json` (2026-10-07)
 - **Pedido do maestro:** "P-42 = A (aprovada). Avança com AU-20b e depois F2-ALLOW-1".

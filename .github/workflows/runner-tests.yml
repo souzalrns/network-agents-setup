@@ -21,6 +21,8 @@ on:
       - 'scripts/seed_fake_clients.py'
       # F2: primitiva fetch (servidor HTTP local nos testes)
       - 'scripts/web_fetch.py'
+      # F2-ALLOW-1: allowlist do fetch por área, validada no E7
+      - 'config/web-allowlist.yaml'
       # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
       - 'scripts/f5_evidence.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
@@ -67,6 +69,8 @@ on:
       - 'scripts/seed_fake_clients.py'
       # F2: primitiva fetch (servidor HTTP local nos testes)
       - 'scripts/web_fetch.py'
+      # F2-ALLOW-1: allowlist do fetch por área, validada no E7
+      - 'config/web-allowlist.yaml'
       # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
       - 'scripts/f5_evidence.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
