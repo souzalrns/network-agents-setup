@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/retention-confirmed` (a partir da `main` `85d06ff`: merge do #128); MCP: `main` `c689feb` (merge do #21).
-- **`main` de referência:** NAS `85d06ff` (merges até #128); MCP: merge do #21 a 2026-10-07 12:42 UTC.
+- **Branch actual:** `docs/decisions-p37` (a partir da `main` `7879722`: merge do #129); MCP: `main` `c689feb` (merge do #21).
+- **`main` de referência:** NAS `7879722` (merges até #129); MCP: merge do #21 a 2026-10-07 12:42 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Decisões revistas: P-37 = B (2026-10-07)
+- **Correcção do maestro:** a P-37 já estava decidida (B, executor mínimo em Python), aprovada numa sessão anterior. O PENDENCIAS tinha-a como proposta pendente. Registada nas decididas, com a contradição V43 no §8.
+- **Efeitos:**
+  - o AU-20 deixa de esperar por decisão: o bloqueio passa a "implementar o contrato";
+  - `AU-20-TOOL-EXECUTOR.md` passa a "contrato aprovado, B decidida";
+  - o evidence pack do F6 (`deferred.md`) foi actualizado.
+- **Revisão das outras pendentes** (estado real, sem assumir escolhas):
+  - P-16: aplicada de facto (os valores A entraram no MCP #14, com merge; o S-001 está fechado). Falta só a confirmação formal.
+  - P-17: A aplicada (#70); falta a parte B, com o H-01.
+  - P-19: o M1 já fechou por decisão do maestro; só serve como regra de regressão.
+  - P-11, P-20, P-21, P-22, P-24, P-25, P-38 e P-39: pendentes de verdade.
+- **Contagens:** 41 decisões (30 decididas, 11 pendentes), 43 contradições.
 
 ### Retenção confirmada em produção (2026-10-07)
 - **Merges:** MCP #21 (12:42 UTC, `c689feb`) e NAS #128 (12:42 UTC, `85d06ff`), com todos os commits (desta vez verificado commit a commit).

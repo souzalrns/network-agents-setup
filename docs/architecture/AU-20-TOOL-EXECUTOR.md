@@ -1,6 +1,6 @@
 # AU-20: contrato do executor de tools do worker (PROPOSTA, contract-first §15.4)
 
-**Estado:** proposta. **Não há código.** À espera da decisão do maestro no **P-37** (recomendação B: executor mínimo em Python dentro do `plan_runner`, D1).
+**Estado:** contrato aprovado. **P-37 = B decidida pelo maestro** (executor mínimo em Python dentro do `plan_runner`, D1). Ainda **não há código**: é o próximo passo do AU-20.
 **Pré-requisito feito:** `activate_for_task` + SEC-1.3 (`docs/ops/SKILL-ACTIVATION.md`, merge do #123).
 **Governança:** ISO/IEC 42001 (P-40), ver a secção "ISO/IEC 42001" abaixo.
 **Hoje:** o worker faz uma única chamada Gemini `generateContent` sem `tools` (`runner/plan_runner/external_worker.py`, `gemini_generate`), e o prompt diz "Nao tens tools neste passo". `tools_allowed` é só declarativo (`models.py`, `executor.py`).
@@ -52,12 +52,12 @@ Alinhamento voluntário, não certificação. A política é `docs/governance/AI
 
 **Regra do AIMS para cada tool nova** (`AI-MANAGEMENT-SYSTEM.md` §2, ponto 7): o contract-first só fica completo com uma linha de risco no `PENDENCIAS.md` (6.1.2) e uma linha na Declaração de Aplicabilidade (`ISO-42001-MAPPING.md`). O teste `runner/tests/test_governance_mapping.py` falha se o mapeamento citar evidência que não existe.
 
-## Opções para o P-37 (inalteradas, só detalhadas)
+## Opções do P-37 (decidida: B)
 
 | Opção | O quê | Custo | Risco |
 |---|---|---|---|
 | A | Portar o `ToolExecutor.ts` para Node e chamá-lo do worker | 2.º runtime (viola D1) | alto |
-| **B (RECOMENDADA)** | Executor mínimo em Python no `plan_runner`, com as 2 tools `read` acima e o loop de function calling Gemini | ~1 módulo + testes; custo zero de infra | baixo: tudo opt-in por `tools_allowed`; sem ele, nada muda |
+| **B (DECIDIDA)** | Executor mínimo em Python no `plan_runner`, com as 2 tools `read` acima e o loop de function calling Gemini | ~1 módulo + testes; custo zero de infra | baixo: tudo opt-in por `tools_allowed`; sem ele, nada muda |
 | C | Adoptar pydantic-ai (MIT) como motor do loop | dependência nova + 2.º modelo de execução ao lado do LangGraph | médio: duplica o B3/D1 |
 
 Evidência para o B: o worker já tem transport injectável, `BudgetExceeded`, HITL e eventos. A diferença é um loop de no máximo `max_turns` à volta do `gemini_generate` existente, mais um registo de 2 tools que reutilizam código já testado (`repo_files.py`, `mcp_knowledge.py`).
