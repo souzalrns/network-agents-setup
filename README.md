@@ -9,6 +9,7 @@
 
 > **For recruiters / visitors (60 seconds)**
 > - **Portfolio:** [`docs/PORTFOLIO.md`](./docs/PORTFOLIO.md), with a 60-second English summary, the status of each capability, every number with its source, a timeline and a code tour.
+> - **Latest work (Oct 2026):** [`docs/portfolio/WHAT-I-CONTRIBUTED.md`](./docs/portfolio/WHAT-I-CONTRIBUTED.md) (document ingestion, web fetch, provenance and validity in retrieval) and its [evidence pack](./docs/portfolio/F6-evidence/README.md).
 > - **Run it:** [Quickstart](#quickstart), 5 minutes, no API key, with a GIF of a real run.
 > - **Production companion:** [`agent-network-mcp`](https://github.com/souzalrns/agent-network-mcp), the MCP server on Vercel.
 > - **What is still open:** [`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md), the single source of truth for pending work.
@@ -70,9 +71,9 @@ flowchart LR
 
 Everything below can be checked in the repository and its Actions history:
 
-- **590+ automated tests** (pytest), including an ingest → retrieve test against a disposable Postgres + pgvector, and slow end-to-end runs of real plans. See [`runner-tests.yml`](./.github/workflows/runner-tests.yml).
+- **830+ automated tests** (pytest; 836 on 2026-10-07), plus 195 TypeScript unit tests (vitest), including an ingest → retrieve test against a disposable Postgres + pgvector, and slow end-to-end runs of real plans. See [`runner-tests.yml`](./.github/workflows/runner-tests.yml).
 - **Security on every PR:** gitleaks, semgrep and CodeQL. Every GitHub Action is pinned to a commit SHA.
-- **75+ merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
+- **100 merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
 
 ### Selected engineering stories
 

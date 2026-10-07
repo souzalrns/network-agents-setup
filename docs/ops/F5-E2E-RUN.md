@@ -34,7 +34,8 @@ python -c "import importlib.metadata as m; print(m.version('mcp'))"   # tem de d
 $env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'GEMINI_API_KEY' -AsSecureString)).Password
 $env:MCP_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'MCP_API_KEY' -AsSecureString)).Password
 $env:VERCEL_PROTECTION_BYPASS = [System.Net.NetworkCredential]::new('', (Read-Host 'VERCEL_PROTECTION_BYPASS' -AsSecureString)).Password
-# MCP_URL é SÓ a base: o runner acrescenta /api/mcp (runner/plan_runner/mcp_knowledge.py)
+# MCP_URL é SÓ a base: o runner acrescenta /api/mcp (runner/plan_runner/mcp_knowledge.py).
+# Desde o W-011 (2026-10-07), um /api/mcp a mais é tirado sozinho e um bypass truncado falha logo com mensagem clara.
 $env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"
 
 # Confirmar que nenhum segredo ficou truncado (mostra só o tamanho, nunca o valor).

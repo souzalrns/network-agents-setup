@@ -5,8 +5,8 @@
 > **What it is.** A governed runtime for AI agent workflows. One Python execution engine (`plan_runner`) runs declarative YAML plans step by step. It enforces human approval gates, token and cost ceilings, and completion criteria, and writes an append-only audit log for every run. Business domains (marketing, security, engineering…) plug in as **domain packs**: agents, skills, plans and knowledge, with no change to the engine.
 >
 > **Proof you can check** (every number below has a source in [Numbers and sources](#números-e-fontes-numbers-and-sources)).
-> - 590+ automated tests in CI;
-> - 75+ merged pull requests, each with evidence;
+> - 830+ automated tests in CI (Python), plus 195 TypeScript unit tests;
+> - 100 merged pull requests, each with evidence;
 > - security scanning on every PR (gitleaks, semgrep, CodeQL), with every GitHub Action pinned to a commit SHA;
 > - token usage measured on real model runs: a multi-step SEO plan went from **13,130** to **10,136** tokens (−22%) after a measured optimisation, and one round of a multi-agent council costs **11,760**.
 >
@@ -112,8 +112,8 @@ Nenhum número deste portfólio vem de estimativa. Cada um tem a fonte onde se c
 | **12 998 → 10 136** tokens (**−22%**) | Mesmo plano, prompt antigo contra prompt optimizado, medidos com o modelo real | [`WORKER-EXTERNAL.md`](./ops/WORKER-EXTERNAL.md), "Medição real (B1-bis-R2)"; PRs #45 e #55 |
 | **11 760** tokens | 1 ronda real do conselho `architecture` (14,7% do tecto de 80k) | [`COUNCIL.md`](./ops/COUNCIL.md), "Custo medido (C-1)" |
 | `chunks=0 unchanged=39` | Corrida do ingest em produção quando nada mudou: nenhum embedding gasto | PR #64; corridas do workflow `ingest-knowledge` |
-| **590+** testes | `pytest` do runner: 566 rápidos + 34 lentos (2026-10-05) | [`runner-tests.yml`](../.github/workflows/runner-tests.yml) |
-| **75+** PRs com merge | Contados pela API do GitHub (2026-10-05) | Histórico de PRs do repo |
+| **830+** testes | `pytest` do runner: 802 rápidos + 34 lentos (836, 2026-10-07; eram 600 a 2026-10-05). Mais 195 de TypeScript (vitest) | [`runner-tests.yml`](../.github/workflows/runner-tests.yml) |
+| **100** PRs com merge | Contados pela API do GitHub (2026-10-07; eram 75+ a 2026-10-05) | Histórico de PRs do repo |
 | **38** agentes · **72** skills · **14** planos | Ficheiros `*.agent.md`, `SKILL.md` e `*.plan.yaml` no repo | [`agents/`](../agents/), [`skills/`](../skills/), [`docs/orchestration/`](./orchestration/) |
 
 ### Linha do tempo (Timeline)

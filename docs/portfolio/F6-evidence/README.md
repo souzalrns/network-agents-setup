@@ -20,7 +20,7 @@
 |---|---|
 | F1 | ✅ FECHADO (#105–#110) |
 | F2 | ✅ na cadeia (#111); no canónico continua EM CURSO (`discover`, fallback JS) |
-| F3 | F3a ✅ FECHADO (v2 activa em produção); F3c e F3b-validade em PR (#119, #120); F3b-autoridade estacionado (F3b-AUTH-1) |
+| F3 | F3a, F3c e F3b-validade ✅ FECHADOS (#113, #119, #120; F3c confirmado em produção: 7 fontes, 15 chunks). O F3 fica BLOQUEADO só no que está estacionado: F3b-AUTH-1, F3b-GS-1 e F3-ART-1 |
 | F4 | ✅ FECHADO (#114) |
 | F5 | ✅ FECHADO (run real PASSOU, #115/#116) |
-| F6-CADEIA | ✅ este pacote (PR #121; fecha no merge). O **F6 canónico** (domínio de prova, D-EP8) é outro item e continua BLOQUEADO |
+| F6-CADEIA | ✅ FECHADO (#121, merged 2026-10-06). O **F6 canónico** (domínio de prova, D-EP8) é outro item e continua BLOQUEADO |

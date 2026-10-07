@@ -22,7 +22,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -97,7 +97,8 @@ EXCLUDE_DUP = (
 EXCLUDE_MCP_COPY = "cópia de um doc do agent-network-mcp; sem consumidor de kb"
 EXCLUDE_NO_CONSUMER = "sem consumidor de kb (só citado em docs de portfólio)"
 EXCLUDE_DESIGN = (
-    "P-36 = A: sem consumidor de kb design (as skills de design lêem o ficheiro); "
+    "P-36 = A: sem consumidor de kb design no RAG. Os passos de design dos planos recebem "
+    "estes ficheiros por repo_files (SEC-1, F3c-DESIGN-1 opção A), não por retrieve; "
     "reavaliar no F3c-DESIGN-1"
 )
 EXCLUDED: dict[str, str] = {
@@ -153,7 +154,7 @@ def load_state(state_path: Path) -> dict[str, Any]:
 
 def save_state(state_path: Path, sources: dict[str, Any]) -> None:
     payload = {
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "git_sha": os.environ.get("GITHUB_SHA") or os.environ.get("GIT_SHA"),
         "sources": sources,
     }
