@@ -158,3 +158,50 @@ def test_provenance_v2_ok_distingue_v1_de_v2(hit, v2):
     assert rep["summary"]["provenance_ok"] == 1.0  # o source está sempre lá
     assert rep["summary"]["provenance_v2_ok"] == v2
 
+
+
+# --------------------------------------------------------------------------- R-011: regra de regressão (P-19)
+
+
+def _summary(prov, src, k=4):
+    return {"k": k, "provenance_ok": prov, f"source_hit@{k}": src}
+
+
+@pytest.mark.parametrize("prov, src, failed", [
+    (1.0, 1.0, []),                                    # a linha de base do F0.7b
+    (1.0, 0.8, []),                                    # 15 de 18 arredonda para 0.833; 0.8 exacto passa
+    (1.0, 0.778, ["source_hit@4"]),                    # 14 de 18
+    (0.95, 1.0, ["provenance_ok"]),                    # um hit sem fonte
+    (None, 0.0, ["provenance_ok", "source_hit@4"]),    # nenhum hit
+])
+def test_limiar_da_p19(prov, src, failed):
+    out = ev.regression_failures(_summary(prov, src))
+    assert [f.split(" ")[0] for f in out] == failed
+
+
+def test_limiar_usa_o_k_do_golden():
+    assert ev.regression_failures(_summary(1.0, 0.5, k=8))[0].startswith("source_hit@8")
+
+
+def _run(monkeypatch, tmp_path, retrieve):
+    monkeypatch.setattr(ev, "mcp_retrieve", lambda: retrieve)
+    out = tmp_path / "report.json"
+    code = ev.main(["run", "--out", str(out)])
+    return code, json.loads(out.read_text(encoding="utf-8"))
+
+
+def test_run_passa_no_gate_com_a_fonte_certa(monkeypatch, tmp_path, golden, chunks, capsys):
+    by_anchor = {c["id"]: next(ch for ch in chunks if ev._norm(c["anchor"]) in ev._norm(ch["content"]))
+                 for c in golden["cases"]}
+    question = {c["question"]: c["id"] for c in golden["cases"]}
+    code, rep = _run(monkeypatch, tmp_path, lambda kb, q, k: [by_anchor[question[q]]])
+    assert code == 0 and rep["gate"]["passed"] and rep["gate"]["failures"] == []
+    assert "gate P-19: passou" in capsys.readouterr().out
+
+
+def test_run_abaixo_do_limiar_sai_com_1_e_diz_a_metrica(monkeypatch, tmp_path, golden, capsys):
+    code, rep = _run(monkeypatch, tmp_path, lambda kb, q, k: [_hit("outra.md", "x")])  # fonte errada sempre
+    out = capsys.readouterr().out
+    assert code == 1 and not rep["gate"]["passed"]
+    assert "REGRESSAO source_hit@4 = 0.0" in out and "gate P-19: FALHOU (1)" in out
+    assert rep["gate"]["min_source_hit"] == 0.8 and rep["gate"]["min_provenance_ok"] == 1.0

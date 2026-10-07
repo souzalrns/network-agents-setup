@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/r005-fechado` (a partir da `main` `a1716f1`: merges do #132 e do #133); MCP: `main` `855057d` (merge do #22, em produção na Vercel).
-- **`main` de referência:** NAS `a1716f1` (merges até #133; os 3 merges levaram todos os commits); MCP `855057d`.
+- **Branch actual:** `feat/r011-l5-regression` (a partir da `main` `e3348ac`: merge do #134); a seguir, `feat/f4-mat-1-maturity`.
+- **`main` de referência:** NAS `e3348ac` (merges até #134); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,14 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### R-011: o limiar da P-19 passa a regressão no `l5_eval` (2026-10-07)
+- **Pedido do maestro:** "Recomendação A aprovada": primeiro o R-011, depois o F4-MAT-1.
+- **Código:**
+  - `l5_eval.regression_failures(summary)`: `provenance_ok` = 1.0 e `source_hit@k` ≥ 0.8 (P-19, opção A);
+  - o `run` imprime `REGRESSAO …` e `gate P-19: passou/FALHOU`, sai com 1 abaixo do limiar e grava o bloco `gate` no `--out`.
+- **Testes:** 8 novos em `test_l5_eval.py` (25 no total): limiar nos 2 lados, nenhum hit, `k` do golden, `main(["run"])` que passa com os chunks reais e que falha com a fonte errada. 4 mutantes apanhados (`<` → `<=`, sem a regra da proveniência, sem o caso "nenhum hit", sempre `return 0`).
+- **Docs e estado:** `L5-F0-REVALIDATION.md` §6.2; R-011 → EM CURSO (ABERTO 71, EM CURSO 8).
 
 ### R-005 fechado em produção (2026-10-07)
 - **Merges:** #132 (`ecb27d3`), #133 (`a1716f1`) e MCP #22 (`855057d`). Os 3 levaram todos os commits (confirmado no `git log`). O deploy de produção do MCP na Vercel terminou às 18:29 UTC.
