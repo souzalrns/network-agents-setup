@@ -1,0 +1,335 @@
+"""AU-20 (P-37 = B): executor de tools do worker. O Gemini é sempre falso (guião de respostas).
+
+Unidade: autorização (tools_allowed ∩ registo, só `read`), validação dos args,
+limites, dados-não-instruções, thought signatures preservadas, conhecimento com
+backend falso. Integração: run_plan real com o worker, com a flag ligada e
+desligada (sem a flag, o passo faz a chamada única de sempre).
+"""
+from __future__ import annotations
+
+import copy
+import json
+import shutil
+import uuid
+from pathlib import Path
+
+import pytest
+import yaml
+
+from plan_runner import external_worker as ew
+from plan_runner import tool_executor as te
+from plan_runner.engine import run_plan
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SECRET = "SEGREDO-NAO-PODE-SAIR-123"
+USAGE = {"promptTokenCount": 100, "candidatesTokenCount": 10, "totalTokenCount": 110}
+
+
+def _call(name: str, args: dict, *, id_: str | None = None, signature: str | None = None) -> dict:
+    part: dict = {"functionCall": {"name": name, "args": args}}
+    if id_:
+        part["functionCall"]["id"] = id_
+    if signature:
+        part["thoughtSignature"] = signature
+    return {"candidates": [{"content": {"role": "model", "parts": [part]}, "finishReason": "STOP"}],
+            "usageMetadata": USAGE, "modelVersion": "gemini-test", "responseId": "r"}
+
+
+def _text(text: str) -> dict:
+    return {"candidates": [{"content": {"role": "model", "parts": [{"text": text}]}, "finishReason": "STOP"}],
+            "usageMetadata": USAGE, "modelVersion": "gemini-test", "responseId": "r"}
+
+
+class Script:
+    """Transport do Gemini com um guião: devolve as respostas por ordem e guarda os bodies."""
+
+    def __init__(self, responses: list[dict]):
+        self.responses = list(responses)
+        self.bodies: list[dict] = []
+
+    def __call__(self, url, headers, body, timeout):
+        self.bodies.append(copy.deepcopy(body))
+        if not self.responses:
+            raise AssertionError("o worker pediu mais turnos do que o guião tem")
+        return 200, self.responses.pop(0)
+
+
+@pytest.fixture(autouse=True)
+def _env(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "chave-de-teste")
+    for var in ("SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "AGENT_MODEL", "DATABASE_URL", "PLAN_RUNNER_CONTEXT", te.ENV_FLAG):
+        monkeypatch.delenv(var, raising=False)
+
+
+@pytest.fixture
+def run_dir():
+    d = REPO_ROOT / "pilots" / f"_pytest_tools_{uuid.uuid4().hex[:8]}"
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def _plan(tmp_path: Path, steps: list[dict], **top) -> Path:
+    p = tmp_path / "plan.yaml"
+    p.write_text(yaml.safe_dump({"id": "teste-tools", "version": 1, "objective": "testar tools", **top, "steps": steps}), encoding="utf-8")
+    return p
+
+
+def _events(run_dir: Path, type_: str) -> list[dict]:
+    lines = (run_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    return [e for e in map(json.loads, lines) if e["type"] == type_]
+
+
+def _ctx(tmp_path: Path, backend=None) -> te.ToolContext:
+    return te.ToolContext(repo_root=REPO_ROOT, out_root=tmp_path, step_id="s", knowledge_backend=backend)
+
+
+# --------------------------------------------------------------------------- política
+
+
+def test_plano_de_tools_intersecta_com_o_registo_e_so_read():
+    plan = te.plan_tools(["read_repo_file", "web_search", "read_repo_file", "retrieve_knowledge"])
+    assert plan.allowed == ["read_repo_file", "retrieve_knowledge"]
+    assert plan.unsupported == ["web_search"] and plan.active
+    act = te.Tool("apagar", "x", {"type": "object"}, "act", lambda a, c: {"ok": True})
+    plan2 = te.plan_tools(["apagar"], registry={"apagar": act})
+    assert plan2.allowed == [] and plan2.refused_level == ["apagar"] and not plan2.active
+    assert not te.plan_tools([]).active and not te.plan_tools(None).active
+
+
+def test_flag_so_liga_com_valores_explicitos():
+    assert te.tools_enabled_from_env({te.ENV_FLAG: "1"}) and te.tools_enabled_from_env({te.ENV_FLAG: "true"})
+    assert not te.tools_enabled_from_env({}) and not te.tools_enabled_from_env({te.ENV_FLAG: "0"})
+
+
+def test_limites_do_passo_com_tecto_rigido():
+    assert te.ToolLimits.from_step({}) == (te.ToolLimits(), [])
+    lim, w = te.ToolLimits.from_step({"tool_limits": {"max_turns": 3, "max_tool_calls": 999}})
+    assert lim == te.ToolLimits(3, te.HARD_MAX_TOOL_CALLS) and any("tecto" in x for x in w)
+    lim, w = te.ToolLimits.from_step({"tool_limits": {"max_turns": 0, "max_tool_calls": True}})
+    assert lim == te.ToolLimits() and len(w) == 2
+    assert te.ToolLimits.from_step({"tool_limits": [1]})[1]
+
+
+# --------------------------------------------------------------------------- uma chamada
+
+
+def test_tool_nao_autorizada_nao_corre(tmp_path):
+    ran = []
+    reg = {**te.REGISTRY, "espiao": te.Tool("espiao", "x", {"type": "object"}, "read", lambda a, c: ran.append(1) or {"ok": True})}
+    plan = te.plan_tools(["read_repo_file"], registry=reg)
+    resp, rec = te.execute_call({"name": "espiao", "args": {}}, plan, _ctx(tmp_path), reg)
+    assert resp["error"] == "tool_not_allowed" and not rec["ok"] and ran == []
+
+
+def test_tool_act_exige_aprovacao_e_nao_corre(tmp_path):
+    ran = []
+    act = te.Tool("apagar", "x", {"type": "object"}, "act", lambda a, c: ran.append(1) or {"ok": True})
+    plan = te.ToolPlan(allowed=["apagar"])  # mesmo que algo a deixe passar no plano, a execução recusa
+    resp, _ = te.execute_call({"name": "apagar", "args": {}}, plan, _ctx(tmp_path), {"apagar": act})
+    assert resp["error"] == "requires_approval" and ran == []
+
+
+@pytest.mark.parametrize("args", [{}, {"path": ""}, {"path": "a", "extra": 1}, {"path": 7}])
+def test_args_invalidos_sao_recusados_antes_de_executar(tmp_path, args):
+    plan = te.plan_tools(["read_repo_file"])
+    resp, rec = te.execute_call({"name": "read_repo_file", "args": args}, plan, _ctx(tmp_path))
+    assert resp["error"] == "invalid_args" and "args_sha256" in rec
+
+
+def test_read_repo_file_le_e_recusa_segredos(tmp_path):
+    plan = te.plan_tools(["read_repo_file"])
+    ok, rec = te.execute_call({"name": "read_repo_file", "args": {"path": "runner/requirements.txt"}}, plan, _ctx(tmp_path))
+    assert ok["ok"] and "PyYAML" in ok["content"] and rec["sources"] == ["runner/requirements.txt"]
+    assert ok["note"] == te.DATA_NOTE
+    for path in (".env", "../fora.txt", "secrets/x.txt", "nao/existe.md"):
+        resp, _ = te.execute_call({"name": "read_repo_file", "args": {"path": path}}, plan, _ctx(tmp_path))
+        assert not resp["ok"], path
+
+
+class FakeKnowledge:
+    def __init__(self):
+        self.calls = []
+
+    def retrieve(self, kb, query, *, top_k, filters, require_citations):
+        self.calls.append((kb, query, top_k, require_citations))
+        return [{"content": "Prazo de contestação: 15 dias úteis.", "source": "legal/direito-br-pt.md",
+                 "citation": {"uri": "https://exemplo/lei", "source": "legal/direito-br-pt.md"}}]
+
+
+def test_retrieve_knowledge_com_backend_falso(tmp_path):
+    kb = FakeKnowledge()
+    plan = te.plan_tools(["retrieve_knowledge"])
+    resp, rec = te.execute_call({"name": "retrieve_knowledge", "args": {"kb": "legal", "query": "prazo", "top_k": 3}},
+                                plan, _ctx(tmp_path, backend=lambda: kb))
+    assert resp["ok"] and resp["hits"] == 1 and "15 dias" in resp["content"]
+    assert kb.calls == [("legal", "prazo", 3, True)] and rec["sources"] == ["legal/direito-br-pt.md"]
+    bad, _ = te.execute_call({"name": "retrieve_knowledge", "args": {"kb": "legal; drop", "query": "x"}},
+                             plan, _ctx(tmp_path, backend=lambda: kb))
+    assert bad["error"] == "invalid_args" and len(kb.calls) == 1
+
+
+def test_tool_que_rebenta_volta_como_erro(tmp_path):
+    def boom(args, ctx):
+        raise RuntimeError("falhou")
+    reg = {"x": te.Tool("x", "x", {"type": "object"}, "read", boom)}
+    resp, rec = te.execute_call({"name": "x", "args": {}}, te.ToolPlan(allowed=["x"]), _ctx(tmp_path), reg)
+    assert resp["error"] == "tool_error" and resp["detail"] == "RuntimeError" and not rec["ok"]
+
+
+def test_output_grande_e_cortado(tmp_path):
+    reg = {"x": te.Tool("x", "x", {"type": "object"}, "read", lambda a, c: {"ok": True, "content": "a" * 50}, max_output_chars=10)}
+    resp, rec = te.execute_call({"name": "x", "args": {}}, te.ToolPlan(allowed=["x"]), _ctx(tmp_path), reg)
+    assert resp["truncated"] and resp["content"].startswith("a" * 10) and "cortado" in resp["content"] and rec["truncated"]
+
+
+# --------------------------------------------------------------------------- loop
+
+
+def _gen(script: Script):
+    def generate(contents, declarations):
+        return script(None, None, {"contents": contents, "declarations": declarations}, 0)[1]
+    return generate
+
+
+def test_loop_preserva_thought_signature_e_ids(tmp_path):
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"}, id_="c1", signature="SIG=="), _text("fim")])
+    res = te.run_tool_loop(user="pedido", plan=te.plan_tools(["read_repo_file"]), ctx=_ctx(tmp_path),
+                           limits=te.ToolLimits(), generate=_gen(script))
+    assert res.turns == 2 and len(res.calls) == 1 and res.calls[0]["ok"]
+    second = script.bodies[1]["contents"]
+    assert second[1] == {"role": "model", "parts": [{"functionCall": {"name": "read_repo_file", "args": {"path": "runner/requirements.txt"}, "id": "c1"}, "thoughtSignature": "SIG=="}]}
+    fr = second[2]["parts"][0]["functionResponse"]
+    assert fr["name"] == "read_repo_file" and fr["id"] == "c1" and fr["response"]["ok"]
+    assert [d["name"] for d in script.bodies[0]["declarations"]] == ["read_repo_file"]
+
+
+def test_loop_para_no_max_turns(tmp_path):
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"})] * 5)
+    with pytest.raises(te.ToolLoopError) as e:
+        te.run_tool_loop(user="u", plan=te.plan_tools(["read_repo_file"]), ctx=_ctx(tmp_path),
+                         limits=te.ToolLimits(max_turns=2, max_tool_calls=10), generate=_gen(script))
+    assert e.value.reason == "max_turns" and len(script.bodies) == 2
+
+
+def test_loop_para_no_max_tool_calls(tmp_path):
+    many = {"candidates": [{"content": {"role": "model", "parts": [
+        {"functionCall": {"name": "read_repo_file", "args": {"path": "runner/requirements.txt"}}}] * 3}}], "usageMetadata": USAGE}
+    script = Script([many])
+    with pytest.raises(te.ToolLoopError) as e:
+        te.run_tool_loop(user="u", plan=te.plan_tools(["read_repo_file"]), ctx=_ctx(tmp_path),
+                         limits=te.ToolLimits(max_turns=5, max_tool_calls=2), generate=_gen(script))
+    assert e.value.reason == "max_tool_calls"
+
+
+def test_before_turn_corre_antes_de_cada_turno_extra(tmp_path):
+    seen = []
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"}), _text("fim")])
+    te.run_tool_loop(user="u", plan=te.plan_tools(["read_repo_file"]), ctx=_ctx(tmp_path), limits=te.ToolLimits(),
+                     generate=_gen(script), before_turn=seen.append)
+    assert seen == [2]
+
+
+# --------------------------------------------------------------------------- worker (run_plan real)
+
+
+STEP = {"id": "s", "action": "research", "output_artifact": "artifacts/01.md", "tools_allowed": ["read_repo_file", "web_search"]}
+
+
+def test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre(tmp_path, run_dir, monkeypatch):
+    script = Script([_text("# artefacto\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(_plan(tmp_path, [STEP]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+    body = script.bodies[0]
+    assert "tools" not in body and len(script.bodies) == 1
+    assert ew.NO_TOOLS_SENTENCE in body["systemInstruction"]["parts"][0]["text"]
+    result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
+    assert "tools" not in result["meta"]
+
+
+@pytest.mark.parametrize("context", ["opt", "legacy"])
+def test_com_flag_o_worker_usa_a_tool_e_audita(tmp_path, run_dir, monkeypatch, context):
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    monkeypatch.setenv("PLAN_RUNNER_CONTEXT", context)
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"}, id_="c1"), _text("# artefacto final\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(_plan(tmp_path, [STEP]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+
+    first, second = script.bodies
+    system = first["systemInstruction"]["parts"][0]["text"]
+    assert ew.NO_TOOLS_SENTENCE not in system and "SÓ DE LEITURA" in system and te.DATA_NOTE in system
+    assert first["tools"] == [{"functionDeclarations": [te.REGISTRY["read_repo_file"].declaration()]}]  # web_search nunca é declarada
+    assert "responseMimeType" not in first["generationConfig"]
+    assert second["contents"][2]["parts"][0]["functionResponse"]["response"]["ok"]
+
+    result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
+    tools = result["meta"]["tools"]
+    assert tools["enabled"] and tools["turns"] == 2 and tools["unsupported"] == ["web_search"]
+    assert tools["calls"][0]["tool"] == "read_repo_file" and tools["calls"][0]["ok"]
+    assert result["meta"]["tokens_total"] == 2 * USAGE["totalTokenCount"]  # soma dos turnos
+    assert (run_dir / "artifacts/01.md").read_text(encoding="utf-8").startswith("# artefacto final")
+
+    ev = _events(run_dir, "tool_called")
+    assert len(ev) == 1 and ev[0]["payload"]["step_id"] == "s" and len(ev[0]["payload"]["args_sha256"]) == 64
+    assert "runner/requirements.txt" not in json.dumps(ev[0]["payload"].get("args", ""))  # args em claro nunca
+    ledger = (run_dir / ew.LEDGER_FILE).read_text(encoding="utf-8").splitlines()
+    assert len(ledger) == 2  # 1 linha por turno
+
+
+def test_com_flag_segredo_nunca_chega_ao_modelo(tmp_path, run_dir, monkeypatch):
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    secret_rel = f"pilots/{run_dir.name}-env/.env"
+    secret = REPO_ROOT / secret_rel
+    secret.parent.mkdir(parents=True, exist_ok=True)
+    secret.write_text(SECRET, encoding="utf-8")
+    try:
+        script = Script([_call("read_repo_file", {"path": secret_rel}), _text("# ok\n")])
+        monkeypatch.setattr(ew, "httpx_transport", script)
+        assert run_plan(_plan(tmp_path, [STEP]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+        assert SECRET not in json.dumps(script.bodies)
+        result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
+        assert result["meta"]["tools"]["calls"][0]["error"] == "excluded"
+    finally:
+        shutil.rmtree(secret.parent, ignore_errors=True)
+
+
+def test_com_flag_limite_deixa_o_passo_em_waiting_external(tmp_path, run_dir, monkeypatch):
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    step = {**STEP, "tool_limits": {"max_turns": 2}}
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"})] * 3)
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    st = run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")
+    assert st["state"] == "waiting_external" and len(script.bodies) == 2
+    pending = run_dir / "pending_steps/s"
+    assert not (pending / "result.json").exists()
+    assert "max_turns" in json.loads((pending / ew.ERROR_FILE).read_text(encoding="utf-8"))["error"]
+
+
+def test_com_flag_orcamento_para_antes_do_turno_seguinte(tmp_path, run_dir, monkeypatch):
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"}), _text("# nunca chega\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    st = run_plan(_plan(tmp_path, [STEP], budget={"max_tokens": 100}), mode="external", out_dir=run_dir, worker="gemini")
+    assert st["state"] == "paused_budget" and len(script.bodies) == 1  # o 2.º turno nunca é pedido
+
+
+def test_com_flag_passo_sem_tools_do_registo_fica_igual(tmp_path, run_dir, monkeypatch):
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    step = {**STEP, "tools_allowed": ["web_search"]}
+    script = Script([_text("# ok\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+    assert "tools" not in script.bodies[0] and len(script.bodies) == 1
+    result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
+    assert result["meta"]["tools"] == {"enabled": False, "reason": "nenhuma tool do passo esta no registo",
+                                      "unsupported": ["web_search"], "refused_level": []}
+
+
+def test_com_flag_artefacto_json_continua_a_ser_lido(tmp_path, run_dir, monkeypatch):
+    monkeypatch.setenv(te.ENV_FLAG, "1")
+    step = {**STEP, "output_artifact": "artifacts/01.json"}
+    script = Script([_call("read_repo_file", {"path": "runner/requirements.txt"}), _text('```json\n{"ok": 1}\n```')])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+    assert json.loads((run_dir / "artifacts/01.json").read_text(encoding="utf-8")) == {"ok": 1}
