@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/au20-force-read-plan` (a partir da `main` `7cdf1a2`: merge do #137).
+- **Branch actual:** `docs/au20-fechado` (a partir da `main` `d4151e9`: merge do #138).
 - **`main` de referência:** NAS `e74a610` (merges até #136; o #135 e o #136 levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,18 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### AU-20 FECHADO: run real com a tool (2026-10-07)
+- **Merge do #138** (`d4151e9`): o commit `9fe2a2f` está no `main`.
+- **Run real do DEV com `PLAN_RUNNER_TOOLS=1`:** `run_2382ec5b5c`, plano `au20-force-read`, `state: done`.
+  - Evento `tool_called`: `read_repo_file`, `ok: true`, `bytes: 10948`, `sources: [docs/ops/BUDGET.md]`, `ms: 37`, `turn: 1`, `args_sha256` `cefd6578…`.
+  - `meta.tools` presente no `result.json`.
+- **PENDENCIAS:**
+  - AU-20 → FECHADO (§7);
+  - **P-42 = A** registada: com a flag desligada, o `result.json` diz `meta.tools.enabled: false`;
+  - novo **AU-20b** (Baixa, CLAUDE) para a implementar;
+  - 124 vivos (ABERTO 71, EM CURSO 6, BLOQUEADO 47); histórico com 122 linhas; 42 decisões, todas decididas.
+- **Docs:** contrato AU-20 (estado e "Prova em run real"), F6-evidence/deferred e PORTFOLIO deixam de dizer "falta 1 run real".
 
 ### AU-20: plano de prova para o run real (2026-10-07)
 - **Contexto:** no 1.º run do DEV com o `design-flow-demo` não apareceu `meta.tools`. O maestro trouxe o diagnóstico do Grok (4 pontos).

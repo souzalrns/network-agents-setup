@@ -1,6 +1,6 @@
 # AU-20: contrato do executor de tools do worker (contract-first §15.4)
 
-**Estado:** **implementado atrás de uma flag** (`PLAN_RUNNER_TOOLS=1`, desligada por omissão). P-37 = B decidida pelo maestro: executor mínimo em Python dentro do `plan_runner` (D1). Código em `runner/plan_runner/tool_executor.py`, ligado em `external_worker.py`. Testes em `runner/tests/test_tool_executor.py` (45, Gemini falso). Ver "Implementação" no fim. **Seguimento (2026-10-07, decisão do maestro):** o nível `act` pára no HITL chamada a chamada, e o `retrieve_knowledge` só usa os kb permitidos ao passo.
+**Estado:** **FECHADO (2026-10-07): implementado atrás de uma flag** (`PLAN_RUNNER_TOOLS=1`, desligada por omissão) **e provado num run real** (secção "Prova em run real" no fim). P-37 = B decidida pelo maestro: executor mínimo em Python dentro do `plan_runner` (D1). Código em `runner/plan_runner/tool_executor.py`, ligado em `external_worker.py`. Testes em `runner/tests/test_tool_executor.py` (45, Gemini falso). Ver "Implementação" no fim. **Seguimento (2026-10-07, decisão do maestro):** o nível `act` pára no HITL chamada a chamada, e o `retrieve_knowledge` só usa os kb permitidos ao passo.
 **Pré-requisito feito:** `activate_for_task` + SEC-1.3 (`docs/ops/SKILL-ACTIVATION.md`, merge do #123).
 **Governança:** ISO/IEC 42001 (P-40), ver a secção "ISO/IEC 42001" abaixo.
 **Sem a flag** (omissão): o worker faz a chamada única de sempre, e o prompt diz "Nao tens tools neste passo", mesmo nos 42 passos que declaram `read_repo_file`. **Com a flag:** os passos com `tools_allowed` ∩ registo passam pelo loop de function calling.
@@ -101,7 +101,22 @@ Evidência para o B: o worker já tem transport injectável, `BudgetExceeded`, H
 2. Confirma em `result.json → meta.tools` (turnos, chamadas, `unsupported`, `refused_policy`, `kbs`) e nos eventos `tool_called`.
 3. Com uma tool `act` no passo, o run pára em `paused_human_gate`: lê o pedido em `hitl-requests.jsonl` (`context.tool_calls` tem os argumentos) e decide com `python -m plan_runner resume <run> --decision approve|reject` (ou pelo lado Node, no mesmo contrato).
 
-O AU-20 fecha com o merge e com um run real com a flag ligada (DEV).
+O AU-20 fechava com o merge e com um run real com a flag ligada (DEV): feito, ver a secção seguinte.
+
+## Prova em run real (2026-10-07)
+
+Run do DEV com `PLAN_RUNNER_TOOLS=1` e o Gemini real:
+- **Run:** `run_2382ec5b5c`, plano `docs/orchestration/au20/au20-force-read.plan.yaml`, `state: done`.
+- **Evento `tool_called`:**
+  - `step_id: read_budget`, `tool: read_repo_file`, `ok: true`;
+  - `bytes: 10948`, `sources: [docs/ops/BUDGET.md]`, `ms: 37`, `turn: 1`;
+  - `args_sha256` (`cefd6578…`). Os args em claro não vão para o evento.
+- **`meta.tools`:** presente no `result.json` do passo.
+
+O plano não tem `repo_files`, por isso o conteúdo do `BUDGET.md` só podia chegar ao modelo pela tool.
+
+**1.º run (antes deste):** com o `design-flow-demo`, o `result.json` saiu sem `meta.tools`. Com a flag, esse campo existe sempre, mesmo sem nenhuma chamada. Logo, a flag não chegou ao processo do worker.
+- **P-42 = A (maestro, 2026-10-07):** com a flag desligada, o `result.json` vai passar a dizê-lo (`meta.tools.enabled: false`). Fica como item **AU-20b**.
 
 **Fica para depois** (não está no registo, fica `unsupported`): `web_search` (10 passos o declaram) e qualquer tool `prepare`/`act` real. O caminho de aprovação das `act` já existe e está testado com uma tool falsa; uma `act` real só entra no registo com idempotência + rollback (§15.6, item 10). `prepare` continua recusado até ter semântica definida.
 
