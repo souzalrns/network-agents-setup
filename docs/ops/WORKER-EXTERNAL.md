@@ -403,6 +403,11 @@ Escreve `pending_steps/<id>/skill_activation.json` e, só quando a skill tem scr
 
 **Desligadas por omissão.** Com `PLAN_RUNNER_TOOLS=1`, um passo cujo `tools_allowed` tenha tools do registo passa a ter um loop de function calling. Sem a flag, o passo faz a chamada única de sempre.
 
+O `result.json` diz sempre em que caso se está, num passo que declare `tools_allowed`:
+- **com a flag:** `meta.tools.enabled: true`, com as chamadas;
+- **sem a flag (AU-20b, P-42 = A):** `meta.tools: {"enabled": false, "reason": "PLAN_RUNNER_TOOLS desligada", ...}`;
+- **passo sem `tools_allowed`:** sem `meta.tools`.
+
 | Tool | Nível | O que faz |
 |---|---|---|
 | `read_repo_file(path)` | read | lê um ficheiro do repo pelas regras do SEC-1 (denylist de segredos, sem `..`, sem symlinks para fora, até 20 KB) |

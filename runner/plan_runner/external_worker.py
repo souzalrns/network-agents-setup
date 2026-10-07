@@ -749,6 +749,10 @@ class GeminiWorker:
                     tools_meta["refused_policy"] = tool_plan.refused_policy
                 if kb_warnings:
                     tools_meta["warnings"] = kb_warnings
+            elif tool_plan is None and request.get("tools_allowed"):
+                # AU-20b (P-42 = A): a flag desligada fica escrita no resultado; sem isto, so a
+                # ausencia de meta.tools o dizia (1.o run real do AU-20, 2026-10-07).
+                tools_meta = te.flag_off_meta(request.get("tools_allowed"))
 
         text, finish = _response_text(response)
         if not text.strip():
