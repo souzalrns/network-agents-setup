@@ -11,6 +11,7 @@
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
   - a revisão do estado contra o EXECUTION-PLAN, com as lacunas novas F3-ART-1, F4-MAT-1 e F5-ROUTE-1.
+  Em paralelo, PR #123 (SEC-1.3, `activate_for_task`, pré-requisito do AU-20).
   Decisões pendentes de alto impacto: P-37 (AU-20) e P-38 (maturidade). O F6 canónico (D-EP8) continua BLOQUEADO.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
@@ -26,6 +27,26 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### AU-20, pré-requisito: verificação do `activate_for_task` (2026-10-07)
+- **Pedido do maestro:** verificar a implementação e a documentação do branch `feat/activate-for-task-sec13` (outro agente), testar, corrigir e reforçar, com pesquisa de projectos maduros.
+- **Estado encontrado:**
+  - o `executor.py` importava `activate_for_task` e `materialize_activation`, que nunca chegaram ao git;
+  - a suite não corria (18 erros de colecção; no `main`, 754 passed);
+  - o wire perdia o `skill_preview_head` e o `agent_preview_head`;
+  - o `test_skills.py` anunciado ia sobrescrever o do `main`.
+- **Feito no mesmo branch, PR #123 (draft):**
+  - `skill_activation.py` + 39 testes (sem rede);
+  - SEC-1.3 deny-by-default e fail-closed, com sha256 + `pins:` (OWASP Agentic Skills: update drift);
+  - pesquisa externa pela API skills.sh por HTTPS directo, em vez de `npx skills find --json`: o `find` não tem `--json` no `skills@1.7.1`, e o `npx` executa código descarregado;
+  - o `SKILL_ACTIVATION.md` entra no prompt só quando há algo a dizer.
+  - Suite local: **793 passed**.
+- **Docs:**
+  - `docs/ops/SKILL-ACTIVATION.md`;
+  - secção "Verificação" no `docs/REPORT-ACTIVATE-FOR-TASK.md`;
+  - `docs/architecture/AU-20-TOOL-EXECUTOR.md`: contrato §15.4 proposto para a P-37, B recomendada.
+- **PENDENCIAS:** novos SEC-1.3 (EM CURSO) e SKILL-EXT-1 (BLOQUEADO: SkillsCat, API sem contrato e serviço AGPL). O AU-20 continua ABERTO.
+- **Contagens:** 123 vivos (ABERTO 67, EM CURSO 9, BLOQUEADO 47).
 
 ### Revisão do EXECUTION-PLAN desde a Parte 1, 2.ª passagem (2026-10-07)
 - **Pedido do maestro:** a revisão é desde o início (A), não só o roadmap. Li o plano por partes:
