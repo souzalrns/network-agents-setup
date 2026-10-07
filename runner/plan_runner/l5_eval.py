@@ -88,6 +88,9 @@ def evaluate(golden: dict[str, Any], retrieve: Retrieve) -> dict[str, Any]:
             "id": case["id"], "question": case["question"], "hits": len(hits),
             "source_rank": src_rank, "chunk_rank": chunk_rank,
             "provenance_ok": bool(hits) and all(sources),
+            # R-006: só a match_knowledge_v2 devolve o `metadata` e o `citation.uri`; na v1 o
+            # `metadata` vem null. O `provenance_ok` (só o `citation.source`) não as distingue.
+            "provenance_v2_ok": bool(hits) and all(_has_v2_provenance(h) for h in hits),
             "retrieved_sources": sources, "stale": bool(case.get("stale")),
         })
     n = len(rows)
@@ -103,8 +106,17 @@ def evaluate(golden: dict[str, Any], retrieve: Retrieve) -> dict[str, Any]:
         "mrr_chunk": round(sum(1 / x["chunk_rank"] for x in rows if x["chunk_rank"]) / n, 3),
         "no_hits": n - len(with_hits),
         "provenance_ok": round(sum(1 for x in with_hits if x["provenance_ok"]) / len(with_hits), 3) if with_hits else None,
+        "provenance_v2_ok": (
+            round(sum(1 for x in with_hits if x["provenance_v2_ok"]) / len(with_hits), 3) if with_hits else None
+        ),
     }
     return {"summary": summary, "cases": rows}
+
+
+def _has_v2_provenance(hit: dict[str, Any]) -> bool:
+    """O hit veio da match_knowledge_v2: `metadata` preenchido e `citation.uri` (R-006)."""
+    metadata = hit.get("metadata")
+    return isinstance(metadata, dict) and bool(metadata) and bool((hit.get("citation") or {}).get("uri"))
 
 
 def _local_chunks(golden: dict[str, Any]) -> list[dict[str, Any]]:

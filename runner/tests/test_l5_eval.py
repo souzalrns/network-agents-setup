@@ -133,3 +133,28 @@ def test_bloco_knowledge_do_plano_security_cumpre_o_sub_schema():
     blocks = {s["id"]: s["knowledge"] for s in plan["steps"] if "knowledge" in s}
     assert list(blocks) == ["audit"] and blocks["audit"]["kb"] == "security"
     jsonschema.validate(instance=blocks["audit"], schema=sub)
+
+
+# --- R-006: o eval distingue a v1 da v2 (F3a) -------------------------------------------------
+
+
+def _golden_r006():
+    return {"kb": "security", "k": 2, "source": "docs/a.md",
+            "cases": [{"id": "x", "question": "q", "anchor": "texto"}]}
+
+
+@pytest.mark.parametrize(
+    ("hit", "v2"),
+    [
+        ({"content": "texto", "citation": {"source": "docs/a.md", "locator": None}, "metadata": None}, 0.0),
+        ({"content": "texto", "citation": {"source": "docs/a.md", "uri": "docs/a.md"},
+          "metadata": {"status": "active", "document_type": "md"}}, 1.0),
+        ({"content": "texto", "citation": {"source": "docs/a.md"}, "metadata": {"status": "active"}}, 0.0),
+    ],
+    ids=["v1", "v2", "v2-sem-uri"],
+)
+def test_provenance_v2_ok_distingue_v1_de_v2(hit, v2):
+    rep = ev.evaluate(_golden_r006(), lambda kb, q, k: [hit])
+    assert rep["summary"]["provenance_ok"] == 1.0  # o source está sempre lá
+    assert rep["summary"]["provenance_v2_ok"] == v2
+
