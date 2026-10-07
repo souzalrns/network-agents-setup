@@ -19,10 +19,14 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 <!-- resumo: verificado pelo teste -->
 | Tabela | Cumpre | Parcial | Falta | N/A |
 |---|---:|---:|---:|---:|
-| Cláusulas 4–10 | 9 | 15 | 3 | 0 |
-| Anexo A | 22 | 11 | 5 | 0 |
+| Cláusulas 4–10 | 11 | 15 | 1 | 0 |
+| Anexo A | 26 | 12 | 0 | 0 |
 
-**Leitura:** os controlos técnicos (dados, proveniência, V&V, HITL, deny-by-default) estão fortes. Falta sobretudo a camada de gestão: avaliação de impacto (**GOV-IMPACT-1**, Alta), avaliação de risco periódica, fornecedores, incidentes e revisões (**GOV-42001-1**). Nenhum controlo foi excluído: com memória de clientes no âmbito, todos se aplicam.
+**Leitura:**
+- Os controlos técnicos (dados, proveniência, V&V, HITL, deny-by-default) estão fortes.
+- A avaliação de impacto e a protecção de dados estão cumpridas desde o GOV-IMPACT-1 ([`PRIVACY-POLICY.md`](./PRIVACY-POLICY.md), AIMS §5).
+- Falta sobretudo gestão: avaliação de risco periódica, fornecedores avaliados, incidentes exercitados e revisões (**GOV-42001-1**).
+- Nenhum controlo foi excluído: o setup está preparado para memória de clientes, por isso todos se aplicam.
 
 ## Cláusulas 4–10 (obrigatórias)
 
@@ -38,7 +42,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | 6.1.1 | Riscos e oportunidades: geral | Parcial | `docs/initiatives/PENDENCIAS.md::## 4. Tabela única` | GOV-42001-1 |
 | 6.1.2 | Avaliação de risco de IA | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 4. Gestão de risco` | GOV-42001-1 |
 | 6.1.3 | Tratamento de risco de IA | Parcial | `docs/governance/ISO-42001-MAPPING.md::## Anexo A` | GOV-42001-1 |
-| 6.1.4 | Avaliação de impacto do sistema de IA | Falta | — | GOV-IMPACT-1 |
+| 6.1.4 | Avaliação de impacto do sistema de IA | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 5. Avaliação de impacto`; `docs/governance/PRIVACY-POLICY.md::## 12. Avaliação de impacto e ponderação` | — |
 | 6.2 | Objectivos de IA e planeamento | Parcial | `docs/ops/L5-F0-REVALIDATION.md` | GOV-42001-1 |
 | 6.3 | Planeamento de mudanças | Cumpre | `docs/architecture/EXECUTION-PLAN.md::### 15.4 Contract-first` | — |
 | 7.1 | Recursos | Cumpre | `config/areas.yaml::budget`; `config/model-tiers.yaml`; `config/model-prices.yaml`; `docs/ops/BUDGET.md` | — |
@@ -49,7 +53,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | 8.1 | Planeamento e controlo operacional | Cumpre | `runner/plan_runner/engine.py`; `.github/workflows/runner-tests.yml` | — |
 | 8.2 | Avaliação de risco de IA (operação) | Falta | — | GOV-42001-1 |
 | 8.3 | Tratamento de risco de IA (operação) | Parcial | `runner/plan_runner/hitl.py::def write_request`; `config/skills.yaml::allow_scripts` | GOV-42001-1 |
-| 8.4 | Avaliação de impacto (operação) | Falta | — | GOV-IMPACT-1 |
+| 8.4 | Avaliação de impacto (operação) | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Quando se repete`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.2 Estado medido` | — |
 | 9.1 | Monitorização, medição, análise e avaliação | Parcial | `runner/plan_runner/l5_eval.py::provenance_v2_ok`; `runner/plan_runner/cost.py::def ledger_cost_usd` | GOV-42001-1 |
 | 9.2 | Auditoria interna | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 10. Auditoria interna`; `docs/architecture/governance/audit/AUDIT-GOVERNANCE.md` | GOV-42001-1 |
 | 9.3 | Revisão pela gestão | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Revisão desta política` | GOV-42001-1 |
@@ -70,10 +74,10 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.4.4 | Recursos de ferramentas | Sim | Parcial | `runner/plan_runner/skill_activation.py::def is_script_allowed`; `runner/plan_runner/capabilities.py::LEVELS` (execução de tools por decidir: P-37) | AU-20 |
 | A.4.5 | Recursos de sistema e computação | Sim | Cumpre | `config/areas.yaml::max_tokens`; `config/model-prices.yaml`; `runner/plan_runner/cost.py::def ledger_cost_usd` | — |
 | A.4.6 | Recursos humanos | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis` (competências humanas não documentadas) | GOV-42001-1 |
-| A.5.2 | Processo de avaliação de impacto | Sim | Falta | memória de clientes no âmbito sem avaliação | GOV-IMPACT-1 |
-| A.5.3 | Documentação das avaliações de impacto | Sim | Falta | idem | GOV-IMPACT-1 |
-| A.5.4 | Impacto em indivíduos ou grupos | Sim | Falta | `runner/plan_runner/engine.py::def _load_client_memory` injecta a memória do cliente no prompt | GOV-IMPACT-1 |
-| A.5.5 | Impactos sociais | Sim | Falta | idem | GOV-IMPACT-1 |
+| A.5.2 | Processo de avaliação de impacto | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.1 Processo (A.5.2)` | — |
+| A.5.3 | Documentação das avaliações de impacto | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.2 Estado medido`; `docs/governance/PRIVACY-POLICY.md` | — |
+| A.5.4 | Impacto em indivíduos ou grupos | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.3 Impacto em indivíduos ou grupos`; `docs/governance/PRIVACY-POLICY.md::## 8. Direitos do titular`; `runner/tests/test_privacy_separation.py` | — |
+| A.5.5 | Impactos sociais | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.4 Impactos sociais` | — |
 | A.6.1.2 | Objectivos de desenvolvimento responsável | Sim | Cumpre | `docs/architecture/EXECUTION-PLAN.md::## 15. Governança do próprio Execution Plan`; `CLAUDE.md` | — |
 | A.6.1.3 | Processos de concepção e desenvolvimento responsáveis | Sim | Cumpre | `docs/architecture/EXECUTION-PLAN.md::### 15.4 Contract-first`; `.github/workflows/security-scan.yml` | — |
 | A.6.2.2 | Requisitos e especificação | Sim | Cumpre | `docs/ops/SKILL-ACTIVATION.md`; `docs/architecture/AU-20-TOOL-EXECUTOR.md` | — |
@@ -97,7 +101,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.9.4 | Uso previsto | Sim | Cumpre | `config/areas.yaml`; `agents/meta/security_auditor.agent.md::description` | — |
 | A.10.2 | Atribuição de responsabilidades | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` | — |
 | A.10.3 | Fornecedores | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` (lista sem avaliação formal) | GOV-42001-1 |
-| A.10.4 | Clientes | Sim | Falta | há clientes com memória no âmbito e nenhum acordo sobre o uso de IA | GOV-42001-1 |
+| A.10.4 | Clientes | Sim | Parcial | `docs/governance/PRIVACY-POLICY.md::## 5. Finalidades e bases legais` (obrigações perante clientes definidas; hoje não há clientes reais nem um acordo-modelo de tratamento de dados) | GOV-42001-1 |
 
 ## Ligação ao P-37 (executor de tools)
 

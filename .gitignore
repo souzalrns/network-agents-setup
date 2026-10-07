@@ -105,3 +105,7 @@ pilots/council-*/
 # F5: run real E2E (artefactos e ledger locais; a evidência vai resumida para docs/ops/F5-E2E-RUN.md)
 pilots/f5-run*/
 pilots/test-f5-*/
+
+# === Dados de clientes: nunca no git (docs/governance/PRIVACY-POLICY.md §2) ===
+# A working memory por cliente (memory/<client_id>/MEMORY.md, S30) vive fora do git.
+/memory/*/

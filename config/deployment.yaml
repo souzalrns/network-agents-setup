@@ -1,0 +1,10 @@
+# Implantação deste setup: público (portfólio/modelo) ou privado (com dados de clientes).
+# Política: docs/governance/PRIVACY-POLICY.md §1 e §2. Guarda: runner/tests/test_privacy_separation.py
+#
+# public  -> nenhum dado de cliente no git (memory/<cliente>/ e afins); o teste falha se aparecer.
+# private -> pode haver clientes; privacy_contact passa a ser obrigatório (e-mail do responsável).
+repo_visibility: public
+
+# E-mail do responsável para pedidos de titulares (acesso, correcção, eliminação, portabilidade).
+# Obrigatório quando repo_visibility: private. Num repo público, opcional.
+privacy_contact: null

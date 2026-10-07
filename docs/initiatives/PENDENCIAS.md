@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **Privacidade (2026-10-07, `main` `c9de58f`, merge do #124):** GOV-IMPACT-1 → FECHADO com a política de privacidade (LGPD + GDPR), a avaliação de impacto (AIMS §5) e a separação repo público/privado (`config/deployment.yaml`, `.gitignore`, teste). Estado medido: 0 dados de clientes. Novos: GOV-RET-1 (purga por data), GOV-PRIV-1 (transcrição de terceiros no repo público do MCP), S-005 (`_prisma_migrations` sem RLS) e a decisão P-41 (prazos).
 > **ISO/IEC 42001 e pós-merge (2026-10-07, `main` `7cda6f1`, merges #122 e #123):** SEC-1.3, W-011, R-006 e H-002 → FECHADO (§7). P-40 decidida pelo maestro (âmbito NAS + ANM; papéis maestro / DEV / Claude; auditoria trimestral e revisão semestral). Novos GOV-42001-1 (EM CURSO) e GOV-IMPACT-1 (ABERTO, Alta), prefixo GOV- no §3. Política e mapeamento em `docs/governance/` (PR do branch `docs/governance-iso42001`).
 > **AU-20, pré-requisito (2026-10-07):** o branch `feat/activate-for-task-sec13` (outro agente) não importava: o `executor.py` chamava `activate_for_task`, que nunca chegou ao git (18 erros de colecção). Implementado e reforçado no mesmo branch, PR #123 (draft). Novos SEC-1.3 (EM CURSO) e SKILL-EXT-1 (BLOQUEADO, SkillsCat). O AU-20 continua ABERTO (P-37); contrato proposto em `docs/architecture/AU-20-TOOL-EXECUTOR.md`.
 > **Revisão do EXECUTION-PLAN desde a Parte 1 (2026-10-07, 2.ª passagem):**
@@ -42,10 +43,10 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **121 itens vivos** (§4): ABERTO 68, EM CURSO 6, BLOQUEADO 47;
-> - **115 linhas de histórico** (§7): 94 fechadas, 21 obsoletas;
+> - **123 itens vivos** (§4): ABERTO 70, EM CURSO 6, BLOQUEADO 47;
+> - **116 linhas de histórico** (§7): 95 fechadas, 21 obsoletas;
 > - **42 contradições resolvidas** (§8): 26 da auditoria #65 + 16 novas;
-> - **40 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro, P-26 a P-36 (2026-10-06) decididas pelo maestro e P-23 = A (2026-10-06) e P-40 (ISO/IEC 42001, 2026-10-07) decididas pelo maestro; pendentes P-11, P-16, P-17, P-19, P-20, P-21 (F1b), P-22 (upstream MarkItDown), P-24 (`scrape.yml`) e P-25 (allowlist por área).
+> - **41 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro, P-26 a P-36 (2026-10-06) decididas pelo maestro e P-23 = A (2026-10-06) e P-40 (ISO/IEC 42001, 2026-10-07) decididas pelo maestro; pendentes P-11, P-16, P-17, P-19, P-20, P-21 (F1b), P-22 (upstream MarkItDown), P-24 (`scrape.yml`) e P-25 (allowlist por área).
 
 ## 0. Como usar este documento
 
@@ -122,7 +123,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (121 itens vivos)
+## 4. Tabela única (123 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -248,8 +249,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | R-010 | Purge no ingest: uma fonte que sai do MANIFEST ou do git tem de sair do índice (regra T6, E §15.8 e §15.12). O `purge_one` existe no `ingest_apply.py`, mas nada o chama | FALTA-LIGAR | ABERTO | AMBOS | Média | Escreve em produção (apaga linhas): o código é do Claude, a activação é do DEV | `scripts/ingest_apply.py:268` (definido, sem chamadas); `scripts/ingest_delta.py:221` (`apply_purge_stub`). Hoje o MANIFEST só cresce, por isso ainda não há órfãos; revisão do EXECUTION-PLAN, 2026-10-07 | — | VERIFICADO |
 | F3b-AUTH-1 | Autoridade e conflitos do F3b (P-31 = D, P-32 = B, P-33 = B): `match_knowledge_v3` aditiva com a autoridade (`oficial`/`curado`/`experimental`, por path com override no sidecar) e o filtro `min_authority`; `superseded_by`; anotação de autoridade e data no bloco de conhecimento do runner e regra no prompt do worker; flag no MCP | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | Precisa de SQL em produção (o DEV corre a v3) e de um PR no MCP com flag; estacionado (maestro, 2026-10-06, opção B): não é pré-condição do F6-CADEIA | Decisões no §10; padrão do F3a (`scripts/migrations/f3_provenance_retrieve.sql`, `ANM:lib/knowledge.js`); a supersessão por `status: superseded` já funciona na v2 (`test_f3_provenance.py`) | — | VERIFICADO |
 | SKILL-EXT-1 | Provider SkillsCat na pesquisa de skills externas (pedido no relatório do `activate_for_task`) | FALTA-DECIDIR | BLOQUEADO | AMBOS | Baixa | Contrato da API não verificável (sem documentação; o endpoint `skills.cat/api/search` não está confirmado) e serviço AGPL-3.0. Desbloqueia com o contrato documentado e a decisão do maestro sobre as licenças dos candidatos | `docs/ops/SKILL-ACTIVATION.md` (secção "SkillsCat: estacionado"); hoje `external_provider: skillscat` dá o aviso `provider_unsupported` e não pesquisa | — | VERIFICADO |
-| GOV-42001-1 | ISO/IEC 42001 (P-40): sistema de gestão de IA, alinhamento voluntário (não certificação), âmbito NAS + ANM. Fechar as lacunas `Parcial`/`Falta` do mapeamento: avaliação de risco periódica (6.1.2, 8.2), objectivos mensuráveis (6.2, A.9.3), competências (7.2, A.4.6), fornecedores avaliados (A.10.3), clientes (A.10.4), reporte externo e incidentes (A.8.3, A.8.4), 1.ª auditoria interna (2027-01) e 1.ª revisão da política | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Merge do PR do branch `docs/governance-iso42001` (política, mapeamento e teste); depois, cada lacuna do mapeamento | `docs/governance/AI-MANAGEMENT-SYSTEM.md`; `docs/governance/ISO-42001-MAPPING.md` (27 cláusulas, 38 controlos, Declaração de Aplicabilidade); `runner/tests/test_governance_mapping.py` | — | VERIFICADO |
-| GOV-IMPACT-1 | Avaliação de impacto (ISO/IEC 42001 6.1.4, 8.4, A.5.2–A.5.5) da memória de clientes: working memory por cliente (`memory/<client_id>/MEMORY.md`, injectada no prompt pelo S30), memória L4 (`memory_l4`: retenção `expires_at`, `forget`) e tabelas de memória do ANM (`agent_log`, `project_state`). Responder: que dados pessoais entram (LGPD e GDPR), quem os vê, por quanto tempo, como um titular pede para apagar, o que acontece se um prompt os expuser | FALTA-CONSTRUIR | ABERTO | AMBOS | Alta | — (o Claude prepara o levantamento; o DEV confirma o que existe em produção; o maestro aceita o risco residual) | Lacuna medida no mapeamento (`docs/governance/ISO-42001-MAPPING.md`: 6.1.4, 8.4 e A.5.2–A.5.5 em `Falta`); `runner/plan_runner/engine.py` (`_load_client_memory`); `scripts/create_memory_l4_table.sql`; `ANM:memory/schema.sql` | — | VERIFICADO |
+| GOV-42001-1 | ISO/IEC 42001 (P-40): sistema de gestão de IA, alinhamento voluntário (não certificação), âmbito NAS + ANM. Fechar as lacunas `Parcial`/`Falta` do mapeamento: avaliação de risco periódica (6.1.2, 8.2), objectivos mensuráveis (6.2, A.9.3), competências (7.2, A.4.6), fornecedores avaliados (A.10.3), clientes (A.10.4), reporte externo e incidentes (A.8.3, A.8.4), 1.ª auditoria interna (2027-01) e 1.ª revisão da política | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | #124 com merge (2026-10-07, `c9de58f`): política, mapeamento e teste em vigor. Falta fechar cada lacuna `Parcial`/`Falta` do mapeamento | `docs/governance/AI-MANAGEMENT-SYSTEM.md`; `docs/governance/ISO-42001-MAPPING.md` (27 cláusulas, 38 controlos, Declaração de Aplicabilidade); `runner/tests/test_governance_mapping.py` | — | VERIFICADO |
+| GOV-RET-1 | Retenção por data (política de privacidade §7): purga automática no fim do contrato + 90 dias (memória do cliente, `project_state` e `agent_log` por `project`, L4 por `expires_at`), 24 meses no `token_usage` e 12 meses no conteúdo público de terceiros. Hoje a única limpeza (`cleanup_old_transcripts_if_needed`) apaga por tamanho da BD (acima de 70 % de 500 MB), não por idade | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | SQL versionado (Claude) + agendamento e execução em produção (DEV); prazos da P-41 | `docs/governance/PRIVACY-POLICY.md` §7; definição da função lida no Supabase (2026-10-07, só leitura); AIMS §5.3 | — | VERIFICADO |
+| GOV-PRIV-1 | O repo público `agent-network-mcp` versiona `transcripts/latest.json`, com a transcrição de um vídeo público de terceiros (título, autor, descrição, fala). Remover do git e pôr no `.gitignore`; decidir se se reescreve o histórico | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | PR no MCP (Claude); reescrever o histórico é decisão do DEV (força push no `main` do MCP) | `git ls-files transcripts` no ANM (2026-10-07); política de privacidade §2; AIMS §5.2 e §11 | — | VERIFICADO |
+| S-005 | Tabela `_prisma_migrations` no esquema `public` do Supabase sem RLS (as restantes 23 tabelas têm). Não tem dados pessoais, mas fica legível pela API se as permissões do `anon` o permitirem | FALTA-CONSTRUIR | ABERTO | DEV | Baixa | SQL versionado (activar RLS sem políticas, ou mover para outro esquema); o DEV aplica | SELECT ao `pg_class` (2026-10-07, só leitura): `relrowsecurity = false` só nesta tabela | — | VERIFICADO |
 
 
 ### 4.1 Detalhe do H-01 (adendo do maestro, 2026-10-03; registado, NÃO executado)
@@ -334,11 +337,12 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Dono | N.º | IDs |
 |---|---:|---|
 | CLAUDE | 13 | F1b, F2, W-010, W-003, R-005, EX-B7, AU-22b, F3c-DESIGN-1, F2-SEC-1, F3-ART-1, ING-008, ING-009, R-007 |
-| DEV | 68 | F0.6, F0.12, F3b-VAL-1, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, ING-010, ING-011 |
-| AMBOS | 40 | F3, F6, F3-MCP-1, F3b-GS-1, F3b-AUTH-1, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004, F4-MAT-1, F5-ROUTE-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, GOV-42001-1, GOV-IMPACT-1 |
+| DEV | 69 | F0.6, F0.12, F3b-VAL-1, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, ING-010, ING-011, S-005 |
+| AMBOS | 41 | F3, F6, F3-MCP-1, F3b-GS-1, F3b-AUTH-1, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004, F4-MAT-1, F5-ROUTE-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, GOV-42001-1, GOV-RET-1, GOV-PRIV-1 |
 
 **Só do DEV, sem código** (refeito na revisão de 2026-10-07; a lista anterior citava merges e SELECTs já feitos):
-- **merge** do PR do branch `docs/governance-iso42001` (ISO/IEC 42001: política, mapeamento, teste; fecho pós-merge do #122 e do #123);
+- **merge** do PR do branch `docs/privacy-policy` (política de privacidade, avaliação de impacto, separação repo público/privado; fecha o GOV-IMPACT-1);
+- **P-41** (prazos de retenção) e o e-mail de contacto de privacidade (`config/deployment.yaml → privacy_contact`; obrigatório num repo privado);
 - **decisões:** P-37 (AU-20), P-38 (maturidade), P-11, P-16, P-17, P-19, P-20 e as propostas P-21, P-22, P-24, P-25;
 - **F3b-VAL-1:** os 2 sidecars com as datas reais (`legal/direito-br-pt.md`, `imobiliario/fipezap.md`);
 - **F3b-AUTH-1,** quando quiseres desbloquear: o SQL da v3 e a flag no MCP (o código é do Claude);
@@ -353,20 +357,21 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Sev | N.º | IDs |
 |---|---:|---|
 | Crítica | 1 | G1.5 |
-| Alta | 15 | R-005, F3, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4, GOV-IMPACT-1 |
-| Média | 48 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, F4-MAT-1, ING-009, R-010, GOV-42001-1 |
-| Baixa | 57 | F0.12, F1b, F3c-DESIGN-1, F2-SEC-1, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1 |
+| Alta | 14 | R-005, F3, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
+| Média | 50 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, F4-MAT-1, ING-009, R-010, GOV-42001-1, GOV-RET-1, GOV-PRIV-1 |
+| Baixa | 58 | F0.12, F1b, F3c-DESIGN-1, F2-SEC-1, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, S-005 |
 
-**Por estado:** ABERTO 68 · EM CURSO 6 · BLOQUEADO 47.
+**Por estado:** ABERTO 70 · EM CURSO 6 · BLOQUEADO 47.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (115 linhas: 94 FECHADO, 21 OBSOLETO)
+## 7. Histórico (116 linhas: 95 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| GOV-IMPACT-1 | Avaliação de impacto (ISO/IEC 42001 6.1.4, 8.4, A.5.2–A.5.5) e política de privacidade (LGPD + GDPR) | 2026-10-07 | PR do branch `docs/privacy-policy`: `docs/governance/PRIVACY-POLICY.md`, AIMS §5 e §11, `config/deployment.yaml`, `runner/tests/test_privacy_separation.py` | FECHADO | Fecha com o merge deste PR. Estado medido: 0 dados de clientes; conteúdo público de terceiros coberto. Seguimento: GOV-RET-1, GOV-PRIV-1, S-005, P-41 |
 | SEC-1.3 | `activate_for_task` antes do worker + allow-list de scripts por skill (deny-by-default), sha256 e `pins:`, pesquisa externa opt-in | 2026-10-07 | #123 (merged 2026-10-07 10:31 UTC, `7cda6f1`); CI da `main` verde (11 checks) | FECHADO | Pré-requisito do AU-20, que continua ABERTO (P-37). SKILL-EXT-1 (SkillsCat) fica no §4 |
 | W-011 / R-006 / H-002 | Validação do `MCP_URL` e do bypass; `provenance_v2_ok` no `l5_eval`; avisos do ruff em `scripts/` | 2026-10-07 | #122 (merged 2026-10-07 10:26 UTC, `4e38801`); CI da `main` verde | FECHADO | Mesmo PR da revisão do estado contra o EXECUTION-PLAN e do F3c-DESIGN-1 opção A |
 | F4-DOC | Domain Onboarding Cost do F4 (E §15.9: "medido no F4") | 2026-10-07 | Medido a partir do diff do #114 (`git diff --stat 8c22d18 e66d1b1`): **DOC(core) = 1 ficheiro** (`runner/plan_runner/capabilities.py`, +41 linhas: a regra de maturidade que o próprio E §7 F4 pede); infraestrutura, runtime, persistência e orquestração novas = 0. O pack acrescentou 1 capability file (18 capabilities) e 32 testes | FECHADO | A alteração ao core foi a do plano (F4 item 5), não uma necessidade do domínio. Reuse Ratio fica para o F6 canónico, que o exige |
@@ -547,7 +552,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 
 ## 10. Decisões (A/B/C, com recomendada)
 
-**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03), P-18 = C (2026-10-04) e P-26 = A (2026-10-06); P-27 a P-36 (F3b e F3c, 2026-10-06); P-23 = A (2026-10-06, opção B confirmada); P-40 (ISO/IEC 42001: âmbito, papéis e cadência, 2026-10-07).** **Pendentes:** P-11, P-16, P-17, P-19 (limiar do F0.7b), P-20 (causa do R-005), P-21 (F1b), P-22 (upstream MarkItDown), P-24 (`scrape.yml`), P-25 (allowlist por área), P-37 (AU-20: executor de tools), P-38 (escala de maturidade) e P-39 (D-EP5: ordem da Fase 2). Nenhuma decisão pendente foi assumida.
+**Decididas pelo maestro: P-1 a P-10, P-12 a P-15 (2026-10-03), P-18 = C (2026-10-04) e P-26 = A (2026-10-06); P-27 a P-36 (F3b e F3c, 2026-10-06); P-23 = A (2026-10-06, opção B confirmada); P-40 (ISO/IEC 42001: âmbito, papéis e cadência, 2026-10-07).** **Pendentes:** P-11, P-16, P-17, P-19 (limiar do F0.7b), P-20 (causa do R-005), P-21 (F1b), P-22 (upstream MarkItDown), P-24 (`scrape.yml`), P-25 (allowlist por área), P-37 (AU-20: executor de tools), P-38 (escala de maturidade), P-39 (D-EP5: ordem da Fase 2) e P-41 (prazos de retenção da política de privacidade). Nenhuma decisão pendente foi assumida.
 
 
 | # | Decisão | A | B | C | Recomendada |
@@ -592,6 +597,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-38 | F4-MAT-1: escala de maturidade das capabilities | Adoptar a do E §15.7 nos YAML (`maturity: DECLARED…PROVEN`) a par do `status` | **Derivar a maturidade** a partir de evidência (skill/agent → DECLARED/WIRED; plano → EXECUTABLE; teste com Gemini falso → VALIDATED; run real registado → PROVEN), sem campo novo nos YAML; o `status` actual continua | Manter só o `status` e corrigir o E §15.7 | **B** (proposta, 2026-10-07): a maturidade é medida, não declarada (regra do F4), e o `defensive_audit` passa a PROVEN pelo run do F5. **Pendente** |
 | P-39 | D-EP5: ordem 2a/2b da Fase 2 dos meta-agentes (Execution Broker vs Execution Lease). O plano diz "decidir só depois do F5", e o F5 fechou a 2026-10-06 | 2a primeiro: o Execution Broker (M-001) | 2b primeiro: a Execution Lease (M-002) | **Adiar a escolha até a Fase 2 estar desbloqueada:** a implementação continua presa ao F0–F6 canónico + C-2, e decidir sem uso real seria especulativo | **C** (proposta, 2026-10-07): a ordem decide-se com os dados do primeiro caso real. **Pendente** |
 | P-40 | ISO/IEC 42001 (gestão de IA): âmbito, papéis e cadência do AIMS | Âmbito só NAS | **Âmbito NAS + ANM** (a memória de clientes está no ANM); papéis maestro (gestão de topo, aceita risco Alto, merge) / DEV (operação e produção) / Claude (desenvolvimento, propostas, nunca decide); auditoria interna trimestral e revisão da política semestral | Não adoptar referencial | **B — decidida pelo maestro (2026-10-07).** Alinhamento voluntário, não certificação. Política em `docs/governance/AI-MANAGEMENT-SYSTEM.md`; mapeamento em `docs/governance/ISO-42001-MAPPING.md`; itens GOV-42001-1 e GOV-IMPACT-1 |
+| P-41 | Prazos de retenção que a P-40 não fixou (política de privacidade §7) | **`token_usage` 24 meses; conteúdo público de terceiros (`transcripts`, `image_posts`, `scrapes`) 12 meses ou até oposição** | `token_usage` 12 meses; conteúdo público 6 meses | Sem prazo (só limpeza por tamanho, como hoje) | **A** (proposta, 2026-10-07): 24 meses cobrem 2 ciclos de auditoria semestral de custos; 12 meses chegam para o estudo de conteúdo e minimizam o que se guarda de terceiros. Os dados de clientes já têm prazo dado pelo maestro (contrato + 90 dias). **Pendente**; a política já usa A até à decisão |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
