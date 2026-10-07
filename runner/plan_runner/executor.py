@@ -5,12 +5,8 @@ from pathlib import Path
 from typing import Any
 
 from .models import Step
-from .skills import (
-    activate_for_task,
-    materialize_activation,
-    read_text_if_exists,
-    repo_root_from_out,
-)
+from .skill_activation import activate_for_task, materialize_activation
+from .skills import repo_root_from_out
 
 
 class StepResult:
@@ -80,13 +76,12 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     pending.mkdir(parents=True, exist_ok=True)
 
     repo_root = repo_root_from_out(out_root)
-    # Worker chama activate_for_task antes de executar: resolve skill/agent,
-    # aplica SEC-1.3 (allow-list de scripts) e, se should_search_external,
-    # consulta npx skills find / SkillsCat. Resultado entra no request.json
-    # e no prompt (skill_activation.json + SKILL.md/AGENT.md).
+    # activate_for_task (plan_runner/skill_activation.py) antes do worker:
+    # resolve agente + skill (com o `vertical:` do passo, S34), aplica SEC-1.3
+    # (allow-list de scripts, deny-by-default) e, so com opt-in, pesquisa
+    # skills externas (candidatas, nunca instaladas). Resultado no request.json,
+    # em skill_activation.json e, se houver algo a dizer, no prompt.
     activation = activate_for_task(repo_root, step)
-    skill_path = activation.skill_path
-    agent_path = activation.agent_path
 
     req: dict[str, Any] = {
         "step_id": step.id,
