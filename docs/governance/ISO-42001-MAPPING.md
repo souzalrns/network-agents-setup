@@ -71,7 +71,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.3.3 | Reporte de preocupações | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Reporte de preocupações`; `SECURITY.md::Reporting a vulnerability` | — |
 | A.4.2 | Documentação de recursos | Sim | Cumpre | `docs/generated/AGENTS.md`; `docs/generated/SKILLS.md`; `config/model-tiers.yaml` | — |
 | A.4.3 | Recursos de dados | Sim | Cumpre | `scripts/ingest_delta.py::MANIFEST`; `scripts/ingest_delta.py::EXCLUDED`; `docs/ops/RAG-CANONICAL.md` | — |
-| A.4.4 | Recursos de ferramentas | Sim | Cumpre | `runner/plan_runner/tool_executor.py::LEVELS_ALLOWED`; `runner/plan_runner/tool_executor.py::def plan_tools`; `runner/plan_runner/skill_activation.py::def is_script_allowed`; `runner/tests/test_tool_executor.py` | — |
+| A.4.4 | Recursos de ferramentas | Sim | Cumpre | `runner/plan_runner/tool_executor.py::LEVELS_ALLOWED`; `runner/plan_runner/tool_executor.py::def plan_tools`; `runner/plan_runner/tool_executor.py::def step_kbs`; `runner/plan_runner/skill_activation.py::def is_script_allowed`; `runner/tests/test_tool_executor.py` | — |
 | A.4.5 | Recursos de sistema e computação | Sim | Cumpre | `config/areas.yaml::max_tokens`; `config/model-prices.yaml`; `runner/plan_runner/cost.py::def ledger_cost_usd` | — |
 | A.4.6 | Recursos humanos | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis` (competências humanas não documentadas) | GOV-42001-1 |
 | A.5.2 | Processo de avaliação de impacto | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.1 Processo (A.5.2)` | — |
@@ -96,7 +96,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.8.3 | Reporte externo | Sim | Parcial | `SECURITY.md::Reporting a vulnerability` (só vulnerabilidades; não cobre impactos adversos de IA) | GOV-42001-1 |
 | A.8.4 | Comunicação de incidentes | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 9. Incidentes` (processo definido, nunca exercitado) | GOV-42001-1 |
 | A.8.5 | Informação para partes interessadas | Sim | Cumpre | `docs/PORTFOLIO.md`; `docs/portfolio/WHAT-I-CONTRIBUTED.md` | — |
-| A.9.2 | Processos de uso responsável | Sim | Cumpre | `config/areas.yaml::hitl: required`; `runner/plan_runner/memory_l4.py::def promote`; `runner/plan_runner/capabilities.py::act_in_production` | — |
+| A.9.2 | Processos de uso responsável | Sim | Cumpre | `config/areas.yaml::hitl: required`; `runner/plan_runner/tool_executor.py::LEVELS_APPROVAL`; `runner/plan_runner/external_worker.py::def _open_tool_approval`; `runner/plan_runner/memory_l4.py::def promote`; `runner/plan_runner/capabilities.py::act_in_production` | — |
 | A.9.3 | Objectivos de uso responsável | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 2. Política de IA` (sem objectivos mensuráveis) | GOV-42001-1 |
 | A.9.4 | Uso previsto | Sim | Cumpre | `config/areas.yaml`; `agents/meta/security_auditor.agent.md::description` | — |
 | A.10.2 | Atribuição de responsabilidades | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` | — |

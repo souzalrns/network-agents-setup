@@ -78,7 +78,7 @@ O README lista as garantias e o código de cada capacidade ([Capabilities](../RE
 ## O que não afirmamos (Explicit non-claims)
 
 - **Não** é uma plataforma "enterprise" completa: é um runtime orientado a produção, com as lacunas listadas.
-- **Os agentes não executam tools:** o `tools_allowed` é declarativo (AU-20).
+- **As tools dos agentes estão atrás de uma flag:** com `PLAN_RUNNER_TOOLS=1`, o worker executa `read_repo_file` e `retrieve_knowledge` (só leitura, kb limitado ao passo), e uma tool `act` pára no HITL. Por omissão, o `tools_allowed` continua declarativo (AU-20; falta 1 run real).
 - **Nem todos os packs estão provados.** O marketing (SEO) foi medido com o modelo real; o de segurança está testado em stub. Ter 38 agentes e 72 skills não quer dizer 38 capacidades prontas.
 - O TypeScript em `packages/` e `apps/` está **arquivado** (decisão D1): o runtime é Python.
 - O conhecimento L5 ainda não tem provenance formal nem filtro por `kb` no retrieve (F3, R-005).

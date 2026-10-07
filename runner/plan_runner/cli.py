@@ -43,7 +43,8 @@ def main(argv: list[str] | None = None) -> int:
 
     p_res = sub.add_parser("resume", help="Resume a paused run")
     p_res.add_argument("out", type=Path, help="Run directory with status.json")
-    p_res.add_argument("--decision", default="approve", help="approve|reject|edit")
+    p_res.add_argument("--decision", default=None,
+                       help="approve|reject|edit (omissao: approve; obrigatorio na aprovacao de uma tool act)")
     p_res.add_argument("--payload-file", type=Path, default=None, help="Ficheiro JSON com payload para edit (opcional)")
     p_res.add_argument(
         "--worker",
@@ -132,8 +133,21 @@ def main(argv: list[str] | None = None) -> int:
             # B1: tenta a decisao escrita pelo lado Node (hitl-decisions.jsonl)
             # primeiro; se nao houver, cai no --decision explicito da CLI
             # (nao-regressao: o uso actual continua a funcionar sem alteracao).
-            hitl_decision = hitl.read_decision(args.out)
-            decision = hitl_decision["response"] if hitl_decision else args.decision
+            approval = (st or {}).get("tool_approval")
+            if approval:
+                # AU-20: so conta a decisao DESTE pedido (por id), nunca a ultima do ficheiro, e
+                # sem ela o --decision tem de ser explicito: aprovar uma tool act nunca e o default.
+                node = next((d for d in reversed(hitl._read_jsonl(args.out / hitl.DECISIONS_FILE))
+                             if d.get("id") == approval.get("request_id")), None)
+                decision = node["response"] if node else args.decision
+                if decision is None:
+                    raise PlanError(
+                        f"aprovacao de tool pendente ({approval.get('request_id')}: "
+                        f"{', '.join(approval.get('tools') or [])}): passa --decision approve|reject"
+                    )
+            else:
+                hitl_decision = hitl.read_decision(args.out)
+                decision = hitl_decision["response"] if hitl_decision else (args.decision or "approve")
 
             if st and st.get("engine", "").startswith("langgraph"):
                 from .langgraph_engine import resume_plan_langgraph

@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `fix/r005-kb-default` (a partir da `main` `4a8ab1e`: merge do #131); MCP: `claude/reels-analysis-tools-access-hwudk9` (MCP #22, a partir da `main` `c689feb`).
+- **Branch actual:** `feat/au20-hitl-kb` (empilhado no `fix/r005-kb-default`, PR #132, a partir da `main` `4a8ab1e`: merge do #131); MCP: `claude/reels-analysis-tools-access-hwudk9` (MCP #22, a partir da `main` `c689feb`).
 - **`main` de referência:** NAS `4a8ab1e` (merges até #131; o merge levou os 2 commits do #131); MCP `c689feb` (merge do #21).
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,37 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### P-22: texto para o upstream do MarkItDown (2026-10-07)
+- **Verificação:** os 2 achados reproduzem-se com o MarkItDown 0.1.8, a versão mais recente (venv isolado, script em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §4).
+- **Pesquisa no upstream:**
+  - o achado da tabela DOCX sem cabeçalho já está na issue [#2157](https://github.com/microsoft/markitdown/issues/2157), aberta;
+  - o PR #2160 trata só do escape, não do cabeçalho;
+  - não há issue para o `.pdf` em texto, mas esse comportamento parece pretendido (o tipo é detectado pelo conteúdo).
+- **Opções A/B/C, RECOMENDADA B:** um comentário na #2157 com a reprodução mínima e a oferta de um PR para o cabeçalho. Não se abre uma issue nova, que seria duplicada.
+- **Texto pronto, em inglês:** `MARKITDOWN-UPSTREAM.md` §3. Publica o DEV, na conta dele. ING-012 actualizado.
+
+### AU-20, seguimento: `act` pára no HITL e kb por passo (2026-10-07)
+- **Pedido do maestro:** "aprovação humana para o nível act (pára no HITL)" e "`retrieve_knowledge` com kb permitido ao passo".
+- **Executor (`tool_executor.py`):**
+  - `LEVELS_APPROVAL = ("act",)`;
+  - o loop pára **antes** de correr qualquer chamada do turno (`ToolApprovalRequired`, com o estado da conversa em JSON);
+  - retoma com `resume=` e `approvals=`; cada decisão vale para 1 chamada;
+  - args inválidos não chegam ao humano;
+  - `step_kbs` (`tool_kbs:` ou `knowledge.kb`), `kb` como enum na declaração, `kb_not_allowed` e `refused_policy`.
+- **Worker:**
+  - pedido `hitl-request-v1` com os args em `context.tool_calls`, validado contra o contrato;
+  - `tool_approval.json` e os eventos `tool_approval_requested`/`tool_approval_resolved`;
+  - a decisão é procurada **pelo id do pedido** (a do Node manda; uma aprovação antiga nunca aprova um pedido novo);
+  - os tokens de antes da pausa entram no total.
+- **Motores:** `paused_human_gate` + `status.tool_approval` + `HITL.md`; o resume grava a decisão e volta a correr o passo. `reject` recusa a chamada, não o run. Nativo e LangGraph (e o fallback por waves).
+- **Achado na revisão adversarial:** o `plan_runner resume` usava a última decisão do `hitl-decisions.jsonl` (de qualquer pedido) e, sem `--decision`, aprovava por omissão. Numa tool `act`, passa a contar só a decisão deste pedido, e o `--decision` é obrigatório.
+- **Achado e correcção:** o `tool_limits:` do #131 não estava no `plan.schema.json` (step com `additionalProperties: false`), por isso um plano com ele chumbava no W-006. Entra agora, com o `tool_kbs:`.
+- **Testes:**
+  - `test_tool_executor.py` passa de 25 para 45;
+  - 12 mutantes apanhados. Um sobreviveu (a decisão sem filtro por id), e o teste de defesa em profundidade passou a apanhá-lo;
+  - suite completa: 875 passed.
+- **CI do #132:** o `test-rag` falhou na 1.ª corrida. Era o meu teste: a ordem dos empates do `match_knowledge` muda depois do UPDATE. Reproduzi com a imagem `pgvector/pgvector:pg16`, corrigi (`1144dd4`) e o CI ficou verde nos 11 checks.
 
 ### Decisões do maestro, P-20 e regra A/B/C (2026-10-07)
 - **Pedido:** "Decisões tomadas pelo maestro. Executa pela ordem indicada": P-20/R-005 → §10 + `CLAUDE.md` → AU-20 → P-22.

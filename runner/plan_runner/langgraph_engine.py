@@ -18,6 +18,8 @@ from .engine import (
     _load_client_memory,
     _log_ignored_fields,
     _paused_budget,
+    _paused_tool_approval,
+    _resolve_tool_approval,
     _validate_out_dir,
     _worker_for,
     load_plan,
@@ -280,6 +282,10 @@ def run_plan_langgraph(
         _paused_budget(out, log, run_id, status, b.step_id, b.result, set(b.partial_state.get("completed") or []))
         return status
 
+    except _ToolApproval as t:
+        _paused_tool_approval(out, log, run_id, status, t.step_id, t.result, set(t.partial_state.get("completed") or []))
+        return status
+
     except Exception as e:
         # LangGraph compile/invoke falhou. Registar e fazer fallback.
         print(f"[langgraph] compile/invoke falhou: {type(e).__name__}: {e}", file=sys.stderr)
@@ -331,12 +337,24 @@ class _PausedBudget(Exception):
         self.partial_state = partial_state or {}
 
 
+class _ToolApproval(Exception):
+    """AU-20: o worker inline parou numa tool de nivel act; o run pausa em paused_human_gate."""
+
+    def __init__(self, step_id: str, result: Any, partial_state: dict | None = None):
+        super().__init__(step_id)
+        self.step_id = step_id
+        self.result = result
+        self.partial_state = partial_state or {}
+
+
 def _external(out: Path, step: Step, worker_obj: Any, log: EventLog, run_id: str, state: dict) -> Any:
     """Passo external. W-005: com worker inline o passo corre ja, como no engine native;
     sem worker fica em waiting_external (standalone + resume), como antes."""
     result = execute_external_request(out, step, worker_obj)
     if result.detail == "budget_exceeded":
         raise _PausedBudget(step.id, result, partial_state=dict(state))
+    if result.detail == "awaiting_tool_approval":
+        raise _ToolApproval(step.id, result, partial_state=dict(state))
     if result.detail == "waiting_external":
         payload: dict[str, Any] = {"step_id": step.id}
         if result.worker_error:
@@ -386,6 +404,9 @@ def _run_waves_fallback(
                 result = execute_external_request(out, step, worker_obj)
                 if result.detail == "budget_exceeded":  # W-005
                     _paused_budget(out, log, run_id, status, step.id, result, completed)
+                    return status
+                if result.detail == "awaiting_tool_approval":  # AU-20
+                    _paused_tool_approval(out, log, run_id, status, step.id, result, completed)
                     return status
                 if result.detail == "waiting_external":
                     if result.worker_error:
@@ -491,6 +512,16 @@ def resume_plan_langgraph(
                 "paused_at_step": status.get("paused_at_step"),
             },
         )
+
+    # AU-20: aprovacao de uma tool `act`. A decisao vai para o contrato HITL e o passo
+    # volta a correr; um reject recusa so a chamada (o modelo continua), nao o run.
+    if state == "paused_human_gate" and status.get("tool_approval"):
+        if decision not in {"approve", "reject"}:
+            raise PlanError("aprovacao de tool: decision must be approve|reject")
+        _resolve_tool_approval(out_dir, log, run_id, status, decision)
+        status["state"] = "running"
+        save_status(out_dir, status)
+        decision = "approve"
 
     # Reject nÃ£o precisa continuar o grafo.
     # Registramos a decisÃ£o e encerramos exatamente como o engine tradicional.
@@ -736,6 +767,11 @@ def resume_plan_langgraph(
     except _PausedBudget as b:
         done = set(status.get("completed") or []) | set(b.partial_state.get("completed") or [])
         _paused_budget(out_dir, log, run_id, status, b.step_id, b.result, done)
+        return status
+
+    except _ToolApproval as t:
+        done = set(status.get("completed") or []) | set(t.partial_state.get("completed") or [])
+        _paused_tool_approval(out_dir, log, run_id, status, t.step_id, t.result, done)
         return status
 
     except Exception as e:
