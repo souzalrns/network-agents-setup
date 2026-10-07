@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/governance-iso42001` (a partir da `main` `7cda6f1`: merges #122 e #123).
-- **`main` de referência:** NAS `7cda6f1` (merges até #123); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `docs/privacy-policy` (a partir da `main` `c9de58f`: merge do #124).
+- **`main` de referência:** NAS `c9de58f` (merges até #124); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Política de privacidade e fecho do GOV-IMPACT-1 (2026-10-07)
+- **Merge do #124** (11:03 UTC, `c9de58f`): política do AIMS, mapeamento ISO e teste de evidências no `main`.
+- **Estado medido** (só leituras ao Supabase do ANM): **0 dados de clientes**. Ficheiros `memory/<cliente>/`: 0. `memory_l4`: 0 linhas. `agent_log` (119) e `project_state` (19): sem e-mail, telefone nem CPF detectados.
+- **Dados pessoais de terceiros:** `transcripts` tem 99 linhas de 52 autores de conteúdo público. O Supabase está na UE (Frankfurt). O RLS está activo em todas as tabelas excepto `_prisma_migrations`.
+- **Feito no PR do branch `docs/privacy-policy`:**
+  - `docs/governance/PRIVACY-POLICY.md` (LGPD + GDPR, completa);
+  - avaliação de impacto real no AIMS §5, com a separação repo público/privado no §11;
+  - `config/deployment.yaml` (`repo_visibility`, `privacy_contact`), `/memory/*/` no `.gitignore` e `runner/tests/test_privacy_separation.py`. As mutações foram apanhadas: um ficheiro de cliente versionado num repo público e um repo privado sem contacto;
+  - mapeamento: 6.1.4, 8.4 e A.5.2–A.5.5 → Cumpre; A.10.4 corrigido (dizia "há clientes": não há).
+- **Achado relevante:** no Gemini gratuito, a Google usa o conteúdo para melhorar produtos. A regra passa a ser "dados de clientes só com Gemini pago".
+- **Novos:** GOV-RET-1, GOV-PRIV-1, S-005, P-41.
+- **Contagens:** 123 vivos (ABERTO 70, EM CURSO 6, BLOQUEADO 47), 116 de histórico (95 FECHADO), 41 decisões.
 
 ### ISO/IEC 42001 e pós-merge do #122 e do #123 (2026-10-07)
 - **Merges do maestro:** #122 (10:26 UTC, `4e38801`) e #123 (10:31 UTC, `7cda6f1`). A CI da `main` está verde (11 checks, incluindo o `delta` do ingest).
