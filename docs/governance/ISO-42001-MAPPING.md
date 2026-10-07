@@ -20,7 +20,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | Tabela | Cumpre | Parcial | Falta | N/A |
 |---|---:|---:|---:|---:|
 | Cláusulas 4–10 | 11 | 15 | 1 | 0 |
-| Anexo A | 26 | 12 | 0 | 0 |
+| Anexo A | 28 | 10 | 0 | 0 |
 
 **Leitura:**
 - Os controlos técnicos (dados, proveniência, V&V, HITL, deny-by-default) estão fortes.
@@ -71,7 +71,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.3.3 | Reporte de preocupações | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Reporte de preocupações`; `SECURITY.md::Reporting a vulnerability` | — |
 | A.4.2 | Documentação de recursos | Sim | Cumpre | `docs/generated/AGENTS.md`; `docs/generated/SKILLS.md`; `config/model-tiers.yaml` | — |
 | A.4.3 | Recursos de dados | Sim | Cumpre | `scripts/ingest_delta.py::MANIFEST`; `scripts/ingest_delta.py::EXCLUDED`; `docs/ops/RAG-CANONICAL.md` | — |
-| A.4.4 | Recursos de ferramentas | Sim | Parcial | `runner/plan_runner/skill_activation.py::def is_script_allowed`; `runner/plan_runner/capabilities.py::LEVELS` (execução de tools por decidir: P-37) | AU-20 |
+| A.4.4 | Recursos de ferramentas | Sim | Cumpre | `runner/plan_runner/tool_executor.py::LEVELS_ALLOWED`; `runner/plan_runner/tool_executor.py::def plan_tools`; `runner/plan_runner/skill_activation.py::def is_script_allowed`; `runner/tests/test_tool_executor.py` | — |
 | A.4.5 | Recursos de sistema e computação | Sim | Cumpre | `config/areas.yaml::max_tokens`; `config/model-prices.yaml`; `runner/plan_runner/cost.py::def ledger_cost_usd` | — |
 | A.4.6 | Recursos humanos | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis` (competências humanas não documentadas) | GOV-42001-1 |
 | A.5.2 | Processo de avaliação de impacto | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.1 Processo (A.5.2)` | — |
@@ -84,7 +84,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.6.2.3 | Documentação de concepção e desenvolvimento | Sim | Cumpre | `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md`; `docs/architecture/adr/ADR-META-AGENTS.md` | — |
 | A.6.2.4 | Verificação e validação | Sim | Cumpre | `runner/plan_runner/l5_eval.py`; `config/l5-golden-security.yaml`; `scripts/f5_evidence.py`; `.github/workflows/runner-tests.yml` | — |
 | A.6.2.5 | Implantação | Sim | Cumpre | `docs/initiatives/PENDENCIAS.md::## 9. Como fechar um item`; `.github/workflows/release.yml` | — |
-| A.6.2.6 | Operação e monitorização | Sim | Parcial | `config/areas.yaml::max_tokens`; `docs/ops/BUDGET.md` (limites de turnos/tool calls: P-37) | AU-20 |
+| A.6.2.6 | Operação e monitorização | Sim | Cumpre | `runner/plan_runner/tool_executor.py::HARD_MAX_TURNS`; `runner/plan_runner/external_worker.py::def _run_with_tools`; `config/areas.yaml::max_tokens`; `docs/ops/BUDGET.md` | — |
 | A.6.2.7 | Documentação técnica | Sim | Cumpre | `docs/ops/WORKER-EXTERNAL.md`; `docs/ops/ROUTER.md`; `docs/ops/MEMORY-L4.md` | — |
 | A.6.2.8 | Registos de eventos | Sim | Parcial | `runner/plan_runner/events.py::class EventLog`; `ANM:lib/tokenLedger.js::recordTokenUsage` (sem retenção nem detecção de adulteração) | B16 |
 | A.7.2 | Dados para desenvolvimento e melhoria | Sim | Cumpre | `config/l5-golden-security.yaml`; `config/router-golden.yaml` | — |
@@ -103,6 +103,6 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.10.3 | Fornecedores | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` (lista sem avaliação formal) | GOV-42001-1 |
 | A.10.4 | Clientes | Sim | Parcial | `docs/governance/PRIVACY-POLICY.md::## 5. Finalidades e bases legais` (obrigações perante clientes definidas; hoje não há clientes reais nem um acordo-modelo de tratamento de dados) | GOV-42001-1 |
 
-## Ligação ao P-37 (executor de tools)
+## Ligação ao P-37 (executor de tools, implementado)
 
-A tabela de controlos do executor ↔ norma está no contrato: `docs/architecture/AU-20-TOOL-EXECUTOR.md`, secção "ISO/IEC 42001". Quando o P-37 for implementado, A.4.4 e A.6.2.6 passam a `Cumpre` só com a evidência do código e dos testes.
+A tabela de controlos do executor ↔ norma está no contrato: `docs/architecture/AU-20-TOOL-EXECUTOR.md`, secção "ISO/IEC 42001". Implementado no AU-20 (`runner/plan_runner/tool_executor.py`, atrás da flag `PLAN_RUNNER_TOOLS`): A.4.4 e A.6.2.6 passam a `Cumpre` com a evidência do código e dos testes.

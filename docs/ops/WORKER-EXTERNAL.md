@@ -397,11 +397,31 @@ Antes do worker, o executor chama `activate_for_task` (`runner/plan_runner/skill
 - aplica a allow-list de scripts de `config/skills.yaml` (deny-by-default);
 - só com `should_search_external: true` no passo, pesquisa skills externas (candidatas, nunca instaladas).
 
-Escreve `pending_steps/<id>/skill_activation.json` e, só quando a skill tem scripts ou houve pesquisa, `SKILL_ACTIVATION.md`, que entra no fim do prompt do utilizador na secção "Activacao da skill (SEC-1.3)", nos dois modos. Sem isso, o prompt é igual ao de antes. O worker continua sem tools (AU-20; contrato proposto em `docs/architecture/AU-20-TOOL-EXECUTOR.md`). Contrato completo: [SKILL-ACTIVATION.md](./SKILL-ACTIVATION.md).
+Escreve `pending_steps/<id>/skill_activation.json` e, só quando a skill tem scripts ou houve pesquisa, `SKILL_ACTIVATION.md`, que entra no fim do prompt do utilizador na secção "Activacao da skill (SEC-1.3)", nos dois modos. Sem isso, o prompt é igual ao de antes. As tools do worker são o AU-20 (secção abaixo). Contrato completo: [SKILL-ACTIVATION.md](./SKILL-ACTIVATION.md).
+
+## Tools do worker (AU-20, P-37 = B, 2026-10-07)
+
+**Desligadas por omissão.** Com `PLAN_RUNNER_TOOLS=1`, um passo cujo `tools_allowed` tenha tools do registo passa a ter um loop de function calling. Sem a flag, o passo faz a chamada única de sempre.
+
+| Tool | Nível | O que faz |
+|---|---|---|
+| `read_repo_file(path)` | read | lê um ficheiro do repo pelas regras do SEC-1 (denylist de segredos, sem `..`, sem symlinks para fora, até 20 KB) |
+| `retrieve_knowledge(kb, query, top_k?)` | read | pesquisa o L5 (MCP, v2 com proveniência), até 8 trechos com a fonte |
+
+Regras do loop:
+- só as tools autorizadas são declaradas ao modelo; os nomes do plano fora do registo (ex.: `web_search`) ficam em `meta.tools.unsupported`;
+- os argumentos são validados antes de executar;
+- o resultado volta como **dados**, não instruções;
+- limites: `max_turns` 6 e `max_tool_calls` 12, ajustáveis no passo com `tool_limits:` (tectos 10 e 24). Ao atingir um limite, o passo fica em `waiting_external`;
+- o orçamento é verificado antes de cada turno extra (`paused_budget`);
+- cada turno é uma linha no ledger;
+- cada chamada é um evento `tool_called`, com o sha256 dos argumentos e nunca os argumentos em claro.
+
+Contrato e tabela de testes: [`docs/architecture/AU-20-TOOL-EXECUTOR.md`](../architecture/AU-20-TOOL-EXECUTOR.md).
 
 ## Limites actuais
 
-- **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A). Para ler ficheiros do repo, usa-se o `repo_files` (secção acima).
+- **Tools só com a flag.** Sem `PLAN_RUNNER_TOOLS=1`, o `tools_allowed` continua declarativo e o prompt diz ao modelo que não tem tools. Com a flag, só `read_repo_file` e `retrieve_knowledge` existem; `web_search` e tools `prepare`/`act` não (secção "Tools do worker"). O `repo_files` continua a funcionar como antes.
 - **Campos de plano que o runner não aplica (AU-22):** o `knowledge_refs` é lido mas não tem efeito; o L5 entra pelo bloco `knowledge:` do passo (S9). O `budget.max_replans` e o `steps[].on_fail` **foram removidos** do schema e dos planos do repo (P-10 = A; fora até ao F3, replanning). Nunca tiveram efeito: um passo que falha pára o run em `failed` e quem decide é o humano. Um plano antigo que ainda os declare corre na mesma, mas falha o `python -m plan_runner.plan_schema`. O motor regista estes 3 campos no evento `plan_fields_ignored` no arranque do run.
 - **`done_when` (AU-22, P-10 = A):** verificado no fim do run, nos 2 engines (`plan_runner/done_when.py`). Formas reconhecidas: `<caminho> exists` (ficheiro dentro do run) e `human_gate_resolved on <passo>`. Se alguma falhar, o run termina em `failed` com `detail = done_when` e a lista em `status.done_when_failed` (eventos `done_when_checked` e `done_when_failed`). Uma condição noutra forma gera `done_when_unverifiable` e não falha o run; reescrevê-la é o AU-22b. O `budget.max_steps` é aplicado nos 2 engines: no `native` passo a passo; no `langgraph` antes de arrancar (um plano com mais passos do que o tecto não corre nenhum, porque as ondas são paralelas).
 - **Worker inline nos 2 engines (W-005, 2026-10-03).** `--engine langgraph --worker gemini` corre cada passo como no `native`, incluindo as ondas paralelas, o `paused_budget` e o `worker_error` no status. Sem `--worker`, o langgraph continua a parar em `waiting_external` (worker standalone + `resume`, ou `resume --worker gemini`).

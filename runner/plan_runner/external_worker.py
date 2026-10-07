@@ -50,6 +50,8 @@ from . import cost
 from . import memory_wiring as mw
 from . import model_tiers as mt
 from . import repo_files as rf
+from . import tool_executor as te
+from .events import EventLog
 from .skills import _frontmatter, repo_root_from_out
 
 DEFAULT_MODEL = "gemini-flash-lite-latest"
@@ -220,19 +222,28 @@ def gemini_generate(
     max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
     timeout: float = 60.0,
     transport: Transport | None = None,
+    contents: list[dict[str, Any]] | None = None,
+    function_declarations: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Uma chamada generateContent. Devolve o JSON da resposta; lanca WorkerError.
 
     Partilhada pelo worker e pelo router (plan_runner/router.py).
+    AU-20: `contents` (a conversa do loop de tools) substitui o `user` e
+    `function_declarations` declara as tools autorizadas. Com tools, o
+    responseMimeType JSON nao e enviado (o JSON final e pedido no prompt e
+    lido por _parse_json_output, como antes).
     """
     generation: dict[str, Any] = {"maxOutputTokens": max_output_tokens}
-    if wants_json:
+    if wants_json and not function_declarations:
         generation["responseMimeType"] = "application/json"
-    body = {
+    body: dict[str, Any] = {
         "systemInstruction": {"parts": [{"text": system}]},
-        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "contents": contents if contents is not None else [{"role": "user", "parts": [{"text": user}]}],
         "generationConfig": generation,
     }
+    if function_declarations:
+        body["tools"] = [{"functionDeclarations": function_declarations}]
+        body["toolConfig"] = {"functionCallingConfig": {"mode": "AUTO"}}
     send = transport or httpx_transport
     try:
         # Chave no header (nao na query): nunca aparece em URLs de erro nem em logs.
@@ -570,6 +581,11 @@ def _build_prompt_legacy(out_root: Path, pending: Path, request: dict[str, Any])
     return "\n".join(system_parts), "\n".join(user_parts), wants_json
 
 
+# A frase que o prompt usa nos passos sem tools (modos opt e legacy). Com tools
+# activas, o worker substitui-a pela instrucao do executor (tool_executor.tools_instruction).
+NO_TOOLS_SENTENCE = "Nao tens tools neste passo: usa apenas o contexto desta mensagem e marca o que falta como lacuna."
+
+
 def _response_text(response: dict[str, Any]) -> tuple[str, str | None]:
     candidates = response.get("candidates") or []
     if not candidates:
@@ -604,6 +620,8 @@ class GeminiWorker:
         remote_ledger: RemoteSink | None | bool = True,
         context: str | None = None,
         memory: mw.MemoryStore | None | bool = True,
+        tools: bool | None = None,
+        knowledge_backend: Callable[[], Any] | None = None,
     ):
         self.model = model or os.environ.get("AGENT_MODEL") or DEFAULT_MODEL
         # L4 (D3): True = DATABASE_URL do ambiente (se houver); so e usada por planos com `memory:`.
@@ -615,6 +633,9 @@ class GeminiWorker:
         self.transport = transport or httpx_transport
         # True = Supabase se o ambiente o tiver; None/False = so jsonl local.
         self.remote_ledger = supabase_sink_from_env() if remote_ledger is True else (remote_ledger or None)
+        # AU-20 (P-37 = B): executor de tools, desligado por omissao (PLAN_RUNNER_TOOLS=1 liga).
+        self.tools = te.tools_enabled_from_env(dict(os.environ)) if tools is None else bool(tools)
+        self.knowledge_backend = knowledge_backend
 
     def process(self, out_root: Path, step_id: str, *, run_id: str | None = None) -> dict[str, Any]:
         """Executa o passo. Devolve o result.json escrito; lanca WorkerError/HumanGateBlocked."""
@@ -678,19 +699,30 @@ class GeminiWorker:
                     wants_memory = True
                     system += "\n" + _section("Memoria", mw.remember_instruction(sm, wants_json))
 
-        response = gemini_generate(
-            system,
-            user,
-            model=model,
-            api_key=self._api_key,
-            wants_json=wants_json,
-            max_output_tokens=self.max_output_tokens,
-            timeout=self.timeout,
-            transport=self.transport,
-        )
-
-        row = build_usage_row(run_id=run_id, agent_id=agent_id, model=model, response=response)
-        ledger = record_token_usage(out_root, row, step_id=step_id, run_id=run_id, remote=self.remote_ledger)
+        # AU-20: tools so com a flag e com tools_allowed ∩ registo; senao, a chamada unica de sempre.
+        tool_plan = te.plan_tools(request.get("tools_allowed")) if self.tools else None
+        tools_meta: dict[str, Any] | None = None
+        if tool_plan is not None and tool_plan.active:
+            response, row, ledger, tools_meta = self._run_with_tools(
+                out_root, step_id, run_id, system, user, model=model, agent_id=agent_id,
+                plan=tool_plan, step_raw=_plan_step(plan_raw, step_id) or {},
+            )
+        else:
+            response = gemini_generate(
+                system,
+                user,
+                model=model,
+                api_key=self._api_key,
+                wants_json=wants_json,
+                max_output_tokens=self.max_output_tokens,
+                timeout=self.timeout,
+                transport=self.transport,
+            )
+            row = build_usage_row(run_id=run_id, agent_id=agent_id, model=model, response=response)
+            ledger = record_token_usage(out_root, row, step_id=step_id, run_id=run_id, remote=self.remote_ledger)
+            if tool_plan is not None and (tool_plan.unsupported or tool_plan.refused_level):
+                tools_meta = {"enabled": False, "reason": "nenhuma tool do passo esta no registo",
+                              "unsupported": tool_plan.unsupported, "refused_level": tool_plan.refused_level}
 
         text, finish = _response_text(response)
         if not text.strip():
@@ -734,6 +766,8 @@ class GeminiWorker:
         }
         if tier is not None:
             result["meta"]["model_tier"] = tier
+        if tools_meta is not None:
+            result["meta"]["tools"] = tools_meta
         if summary:
             result["artifact_summary"] = summary  # o executor grava-o em <artefacto>.summary.md
         if wants_memory:
@@ -744,6 +778,62 @@ class GeminiWorker:
         (pending / "result.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (pending / ERROR_FILE).unlink(missing_ok=True)
         return result
+
+    def _run_with_tools(
+        self, out_root: Path, step_id: str, run_id: str | None, system: str, user: str,
+        *, model: str, agent_id: str | None, plan: te.ToolPlan, step_raw: dict[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
+        """AU-20: loop de function calling (plan_runner/tool_executor.py). Devolve (resposta final, row, ledger, meta)."""
+        if NO_TOOLS_SENTENCE not in system:
+            raise WorkerError("tools: o prompt nao tem a frase de 'sem tools' esperada (build_prompt mudou?)")
+        system = system.replace(NO_TOOLS_SENTENCE, te.tools_instruction(plan))
+        limits, warnings = te.ToolLimits.from_step(step_raw)
+        ctx = te.ToolContext(repo_root=repo_root_from_out(out_root), out_root=out_root, step_id=step_id,
+                             knowledge_backend=self.knowledge_backend)
+        events = EventLog(out_root / "events.jsonl")
+        rows: list[dict[str, Any]] = []
+        ledgers: list[dict[str, Any]] = []
+
+        def generate(contents: list[dict[str, Any]], declarations: list[dict[str, Any]]) -> dict[str, Any]:
+            response = gemini_generate(
+                system, user, model=model, api_key=self._api_key, wants_json=False,
+                max_output_tokens=self.max_output_tokens, timeout=self.timeout, transport=self.transport,
+                contents=contents, function_declarations=declarations,
+            )
+            row = build_usage_row(run_id=run_id, agent_id=agent_id, model=model, response=response)
+            rows.append(row)
+            ledgers.append(record_token_usage(out_root, row, step_id=step_id, run_id=run_id, remote=self.remote_ledger))
+            return response
+
+        def on_call(record: dict[str, Any]) -> None:
+            events.append("tool_called", run_id or "", {"step_id": step_id, **record})
+
+        try:
+            loop = te.run_tool_loop(
+                user=user, plan=plan, ctx=ctx, limits=limits, generate=generate,
+                before_turn=lambda _turn: check_budget(out_root, model), on_call=on_call,
+            )
+        except te.ToolLoopError as e:
+            raise WorkerError(f"tools: {e}") from e
+
+        def total(key: str) -> int | None:
+            vals = [r[key] for r in rows if isinstance(r.get(key), int)]
+            return sum(vals) if vals else None
+
+        row = {**rows[-1], "tokens_in": total("tokens_in"), "tokens_out": total("tokens_out"),
+               "tokens_total": total("tokens_total")}
+        meta = {
+            "enabled": True,
+            "allowed": plan.allowed,
+            "unsupported": plan.unsupported,
+            "refused_level": plan.refused_level,
+            "limits": {"max_turns": limits.max_turns, "max_tool_calls": limits.max_tool_calls},
+            "turns": loop.turns,
+            "calls": loop.calls,
+        }
+        if warnings:
+            meta["warnings"] = warnings
+        return loop.response, row, ledgers[-1], meta
 
 
 WORKERS = ("gemini",)
