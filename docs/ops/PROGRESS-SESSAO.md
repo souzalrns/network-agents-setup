@@ -35,10 +35,13 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
   - clone raso e endurecido do `owner/repo` da candidata (1 por repo), numa pasta temporária apagada no fim;
   - localiza a pasta da skill pelo `name:` da SKILL.md (senão, o repo inteiro);
   - `python -I -m skills_manager scan --ci` com timeout e um ambiente mínimo, sem segredos;
-  - veredicto `safe`/`risky`/`dangerous`, ou `not_scanned` (fail-closed) quando não há resultado.
+  - veredicto `safe`/`risky`/`dangerous`, ou `not_scanned` (fail-closed) quando não há resultado;
+  - rastreabilidade: o commit analisado (lido do `.git`, sem correr o `git`) e o sha256 da SKILL.md; o veredicto vale só para esse conteúdo.
   Nunca instala: `installed` e `trusted` continuam `false`. No prompt vai só o veredicto, sem paths do repo.
-- **Testes:** 31 em `test_skill_scan.py`, com skills sintéticas safe, risky e malicious contra o scanner real, mais 1 ajustado em `test_skill_activation.py`. 8 mutantes apanhados. Suite completa verde.
-- **Prova real (fora dos testes):** clone de `anthropics/skills`: `pdf` e `skill-creator` → `risky`, e um repo inexistente → `not_scanned`, em 2 s.
+- **Testes:** 33 em `test_skill_scan.py`, com skills sintéticas safe, risky e malicious contra o scanner real, mais 1 ajustado em `test_skill_activation.py`. 10 mutantes apanhados. Suite completa verde.
+- **CI do 1.º push (`4c79dd8`):** 10 de 11 verdes (o `test` correu os testes contra o scanner real); o `test-slow` falhou na recolha: a exigência "no CI o scanner tem de estar instalado" estava ao nível do módulo, e esse job não instala o `requirements-test.txt`. Passou a ser um teste (`test_no_ci_o_scanner_tem_de_estar_instalado`); reproduzido localmente nos 2 sentidos.
+- **ISO 42001:** A.10.3 (fornecedores: skills de terceiros) e A.7.5 (proveniência: commit e sha256) com a evidência nova; o A.10.3 continua Parcial (GOV-42001-1).
+- **Prova real (fora dos testes):** clone de `anthropics/skills`: `pdf` e `skill-creator` → `risky`, e um repo inexistente → `not_scanned`, em 2 s; o `pdf` com `commit: 683bc88`.
 - **Merges verificados:** o #140 (AU-20b) e o #141 (F2-ALLOW-1) entraram na `main` `37eccca` com todos os commits. O AU-20b fica por fechar no PENDENCIAS quando o maestro confirmar.
 
 ### F2-ALLOW-1: allowlist do `fetch` por área (2026-10-07)

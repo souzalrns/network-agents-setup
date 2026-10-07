@@ -3,7 +3,7 @@
 **Estado:** em produção no `main` (merge do #123, 2026-10-07, `7cda6f1`).
 **Item:** SEC-1.3, FECHADO (`docs/initiatives/PENDENCIAS.md` §7). Governança: ISO/IEC 42001, controlos A.4.4, A.7.5 e A.10.3 (`docs/governance/ISO-42001-MAPPING.md`). É um pré-requisito do AU-20 e **não fecha o AU-20**: o worker continua sem tools (P-37 por decidir).
 **Código:** `runner/plan_runner/skill_activation.py`, chamado em `runner/plan_runner/executor.py` → `execute_external_request`.
-**Testes:** `runner/tests/test_skill_activation.py` (39 testes, sem rede) e `runner/tests/test_skill_scan.py` (31 testes, SKILL-SCAN-1).
+**Testes:** `runner/tests/test_skill_activation.py` (39 testes, sem rede) e `runner/tests/test_skill_scan.py` (33 testes, SKILL-SCAN-1).
 **Scan das candidatas:** SKILL-SCAN-1 (EM CURSO, PR do branch `feat/skill-scan-1`), código em `runner/plan_runner/skill_scan.py`.
 
 ## Fluxo
@@ -133,12 +133,16 @@ Exemplo de uma candidata em `skill_activation.json`:
     "verdict": "dangerous", "blocked": true, "risk_level": "critical",
     "counts": {"low": 0, "medium": 0, "high": 2, "critical": 1},
     "findings": [{"severity": "critical", "rule": "private-key-material", "path": ".env", "issue": "Private key material found."}],
-    "scope": "skill", "path": "skills/evil"
+    "scope": "skill", "path": "skills/evil",
+    "commit": "683bc88e56f3e09ba94f7055977f3d3aa499f202",
+    "skill_sha256": "9f78b835…"
   }
 }
 ```
 
 E o resumo em `external.scan`: `{"scanner": "agentic-skills-manager 1.0.4", "mode": "static", "counts": {"safe": 1, "risky": 1, "dangerous": 1, "not_scanned": 1}, "status": "3/4 analisadas: …", "warnings": []}`.
+
+**O veredicto vale para um conteúdo exacto:** `commit` (lido de `.git/HEAD` do clone, sem correr o `git`) e `skill_sha256` (da SKILL.md analisada). Um install posterior pode trazer outro commit, e então tem de ser analisado de novo; se a skill for adoptada, o `skill_sha256` serve de pin (`pins:` em `config/skills.yaml`). `null` quando não há `.git` ou SKILL.md (`scope: repo`).
 
 No prompt, cada candidata leva só o veredicto (`- acme/skills@evil [scan: dangerous, critical]`) e a regra "nunca recomendes instalar uma `dangerous`". Os paths e textos das findings vêm do repo da candidata (não confiáveis) e ficam só no JSON, saneados.
 
@@ -155,7 +159,7 @@ No prompt, cada candidata leva só o veredicto (`- acme/skills@evil [scan: dange
 | Sem rede | `PLAN_RUNNER_SKILLS_OFFLINE=1` desliga também o clone |
 | Dependência | o scanner está em `requirements-test.txt` (corre no CI). Num ambiente sem ele, as candidatas ficam `not_scanned` com `scanner_unavailable` |
 
-### Testes (`runner/tests/test_skill_scan.py`, 31)
+### Testes (`runner/tests/test_skill_scan.py`, 33)
 
 Skills sintéticas criadas em runtime (a chave privada falsa é montada por partes, para nenhum detector de segredos a ver no código):
 
@@ -165,9 +169,9 @@ Skills sintéticas criadas em runtime (a chave privada falsa é montada por part
 | risky | `scripts/env.py` lê `os.environ` | `risky` (`environment-access`, medium) |
 | malicious | `curl … \| sh`, `rm -rf /`, chave privada em `.env` | `dangerous`, critical (`private-key-material`, `network-pipe-to-shell`, `destructive-remove`) |
 
-Cobrem também: o fluxo no `activate_for_task` com um monorepo de 3 skills (veredictos, 1 clone por repo, pasta temporária apagada, repo local sem alterações, `skill_activation.json`, prompt sem paths do repo); `not_scanned` sem scanner, offline, com `source` inválido, com falha de clone ou de scan e com o orçamento esgotado; o mapa de veredictos; o saneamento das findings; a localização pelo `name:` e pelos symlinks; o comando de clone e o ambiente sem segredos; o timeout que mata o grupo de processos; o pin igual ao `requirements-test.txt`. Sem rede: o clone real é proibido por fixture. Fora do CI, sem o scanner, os 5 testes que o usam são ignorados; no CI a falta é erro.
+Cobrem também: o fluxo no `activate_for_task` com um monorepo de 3 skills (veredictos, 1 clone por repo, pasta temporária apagada, repo local sem alterações, `skill_activation.json`, prompt sem paths do repo); `not_scanned` sem scanner, offline, com `source` inválido, com falha de clone ou de scan e com o orçamento esgotado; o mapa de veredictos; o commit e o sha256 analisados (incluindo uma ref com `..`, que nunca é seguida); o saneamento das findings; a localização pelo `name:` e pelos symlinks; o comando de clone e o ambiente sem segredos; o timeout que mata o grupo de processos; o pin igual ao `requirements-test.txt`. Sem rede: o clone real é proibido por fixture. Fora do CI, sem o scanner, os 5 testes que o usam são ignorados; no CI a falta é erro (`test_no_ci_o_scanner_tem_de_estar_instalado`: é um teste e não um erro na recolha, porque o job `test-slow` não instala o `requirements-test.txt`).
 
-**Prova real (2026-10-07, fora dos testes):** `scan_candidates` com o clone real contra `anthropics/skills`: `pdf` e `skill-creator` → `risky` (medium: `executable-file-mode`, `code-execution-primitive`, `environment-access`), e um repo inexistente → `not_scanned` (`git clone falhou`), em 2 s.
+**Prova real (2026-10-07, fora dos testes):** `scan_candidates` com o clone real contra `anthropics/skills`: `pdf` e `skill-creator` → `risky` (medium: `executable-file-mode`, `code-execution-primitive`, `environment-access`), e um repo inexistente → `not_scanned` (`git clone falhou`), em 2 s. O `pdf` ficou registado com `commit: 683bc88e56f3e09ba94f7055977f3d3aa499f202`.
 
 ## `skill_activation.json` (versão 1)
 
