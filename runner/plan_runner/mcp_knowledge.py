@@ -20,13 +20,14 @@ como pedido -- e porque o `requirements.txt` deste projeto ja fixa
 `httpx>=0.28.0`, nao `httpx2` -- este modulo fixa `mcp==1.30.0`, a ultima
 serie que ainda depende de `httpx` puro. Ver requirements.txt.
 
-Limitacoes conhecidas dos hits devolvidos (herdadas de retrieveKnowledgeHits,
-documentadas la e repetidas aqui para quem so ler este ficheiro):
-  - hit["metadata"] vem sempre None (a tabela knowledge_chunks nao tem
-    coluna metadata).
-  - hit["citation"]["locator"] vem sempre None (o schema so guarda a fonte,
-    nao uma posicao dentro dela).
-  - filters e aceite no payload mas SEM EFEITO do lado do MCP.
+Forma dos hits (de retrieveKnowledgeHits, em ANM:lib/knowledge.js):
+  - com KNOWLEDGE_RPC_V2=1 no MCP (activo em producao desde 2026-10-06, F3a), os
+    hits vem da match_knowledge_v2: hit["metadata"] traz document_type, status,
+    validade, etc.; hit["citation"] traz uri e locator (o locator so existe nas
+    fontes ingeridas depois do F3a); os filters (status, jurisdiction,
+    document_type, valid_at) tem efeito;
+  - sem a flag (v1): hit["metadata"] vem None, hit["citation"]["locator"] vem
+    None e os filters nao tem efeito.
 
 Le do ambiente:
     MCP_API_KEY  -- obrigatoria (sem default; falha explicitamente se em falta)
