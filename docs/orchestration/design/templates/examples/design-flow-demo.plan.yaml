@@ -14,6 +14,12 @@ steps:
     action: ux_flow
     vertical: design
     tools_allowed: [read_repo_file]
+    # F3c-DESIGN-1, opção A (maestro, 2026-10-07): o worker não executa tools (AU-20), por isso o
+    # pack de design entra no prompt por `repo_files` (SEC-1, só leitura). Fonte: skills/design/ux_flow/SKILL.md:44.
+    repo_files:
+      - docs/knowledge/design/ux-principles.md
+      - docs/knowledge/design/nielsen-heuristics.md
+      - docs/knowledge/design/cognitive-load.md
     output_artifact: artifacts/01-ux-flow.md
 
   - id: ui
@@ -21,6 +27,13 @@ steps:
     vertical: design
     depends_on: [ux]
     tools_allowed: [read_repo_file]
+    # F3c-DESIGN-1, opção A (maestro, 2026-10-07): o worker não executa tools (AU-20), por isso o
+    # pack de design entra no prompt por `repo_files` (SEC-1, só leitura). Fonte: skills/design/ui_spec/SKILL.md:30-36.
+    repo_files:
+      - docs/knowledge/design/tokens-three-tier.md
+      - docs/knowledge/design/component-states.md
+      - docs/knowledge/design/a11y-baseline.md
+      - docs/knowledge/design/design-system-anti-patterns.md
     inputs: [artifacts/01-ux-flow.md]
     output_artifact: artifacts/02-ui-spec.md
 
@@ -29,6 +42,11 @@ steps:
     vertical: design
     depends_on: [ux, ui]
     tools_allowed: [read_repo_file]
+    # F3c-DESIGN-1, opção A (maestro, 2026-10-07): o worker não executa tools (AU-20), por isso o
+    # pack de design entra no prompt por `repo_files` (SEC-1, só leitura). Fonte: skills/design/ux_writing/SKILL.md:57.
+    repo_files:
+      - docs/knowledge/design/ux-writing-principles.md
+      - docs/knowledge/design/ux-writing-examples.md
     inputs: [artifacts/01-ux-flow.md, artifacts/02-ui-spec.md]
     output_artifact: artifacts/03-ux-writing.md
 
@@ -37,6 +55,11 @@ steps:
     vertical: design
     depends_on: [copy_ui]
     tools_allowed: [read_repo_file]
+    # F3c-DESIGN-1, opção A (maestro, 2026-10-07): o worker não executa tools (AU-20), por isso o
+    # pack de design entra no prompt por `repo_files` (SEC-1, só leitura). Fonte: o pack nomeia o design_critic: nielsen-heuristics.md e a11y-baseline.md.
+    repo_files:
+      - docs/knowledge/design/nielsen-heuristics.md
+      - docs/knowledge/design/a11y-baseline.md
     inputs:
       - artifacts/01-ux-flow.md
       - artifacts/02-ui-spec.md
