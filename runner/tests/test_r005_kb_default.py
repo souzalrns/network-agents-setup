@@ -196,11 +196,15 @@ def test_idempotente_e_reclassifica_uma_vez_so(prod_like):
 
 def test_a_pesquisa_por_agent_id_nao_muda(prod_like):
     def search(agent):
-        return _q(
-            prod_like,
-            "SELECT source FROM match_knowledge(query_embedding => %s::vector, "
-            "match_agent_id => %s, match_count => 10)",
-            (str(_vec(0)), agent),
+        # O que volta, sem a ordem: com distâncias iguais, a ordem dos empates depende
+        # da posição física das linhas, que o UPDATE muda (visto no CI com pgvector:pg16).
+        return sorted(
+            _q(
+                prod_like,
+                "SELECT source FROM match_knowledge(query_embedding => %s::vector, "
+                "match_agent_id => %s, match_count => 10)",
+                (str(_vec(0)), agent),
+            )
         )
 
     agents = ("revisor-codigo", "design", "marketing", "security")
