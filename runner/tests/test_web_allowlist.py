@@ -80,7 +80,8 @@ def test_validador_recusa_area_inexistente_repetidos_e_formas_erradas(tmp_path):
     errors = wa.validate(repo, {"research", "legal", "docs"})
     assert any("`inventada`: não existe" in e for e in errors)
     assert any("`exemplo.org` repetido" in e for e in errors)
-    assert any("https://x.org" in e and "esquema" in e for e in errors)
+    rel = wa.ALLOWLIST_FILE.as_posix()
+    assert f"{rel}: área `research`: domínio 'https://x.org' inválido (sem esquema nem caminho (só o domínio))" in errors
     assert any("`legal`: os domínios têm de ser uma lista" in e for e in errors)
     assert not any("`docs`" in e for e in errors)  # `docs:` sem valor = lista vazia
     assert len(errors) == 4
