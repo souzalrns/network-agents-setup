@@ -22,7 +22,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -154,7 +154,7 @@ def load_state(state_path: Path) -> dict[str, Any]:
 
 def save_state(state_path: Path, sources: dict[str, Any]) -> None:
     payload = {
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "git_sha": os.environ.get("GITHUB_SHA") or os.environ.get("GIT_SHA"),
         "sources": sources,
     }

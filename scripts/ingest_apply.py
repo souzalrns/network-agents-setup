@@ -67,7 +67,6 @@ from plan_runner.provenance import (  # noqa: E402
     load_meta,
     to_source_columns,
 )
-from plan_runner.validity import apply_validity, load_policy  # noqa: E402
 from plan_runner.supabase_writer import (  # noqa: E402
     connect,
     has_f3_columns,
@@ -76,6 +75,7 @@ from plan_runner.supabase_writer import (  # noqa: E402
     source_state,
     update_source_provenance,
 )
+from plan_runner.validity import apply_validity, load_policy  # noqa: E402
 
 # Importa o manifesto e helpers do ingest_delta (sem correr o main).
 from scripts.ingest_delta import MANIFEST, sha256_file  # noqa: E402
