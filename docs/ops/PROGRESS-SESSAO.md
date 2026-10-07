@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/decisions-p37` (a partir da `main` `7879722`: merge do #129); MCP: `main` `c689feb` (merge do #21).
-- **`main` de referência:** NAS `7879722` (merges até #129); MCP: merge do #21 a 2026-10-07 12:42 UTC.
+- **Branch actual:** `feat/au20-tool-executor` (a partir da `main` `cf94666`: merge do #130); MCP: `main` `c689feb` (merge do #21).
+- **`main` de referência:** NAS `cf94666` (merges até #130); MCP: merge do #21 a 2026-10-07 12:42 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,24 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### AU-20: executor de tools implementado (2026-10-07)
+- **Pedido do maestro:** "a P-37 já foi decidida (B); avance e implemente". Antes disto não havia código: confirmado no `main`, sem `functionDeclarations` nem loop.
+- **Feito no PR do branch `feat/au20-tool-executor`:**
+  - `runner/plan_runner/tool_executor.py`:
+    - registo com `read_repo_file` (SEC-1) e `retrieve_knowledge` (L5);
+    - autorização = `tools_allowed` ∩ registo, só `read`;
+    - validação JSON Schema;
+    - limites `max_turns`/`max_tool_calls` com `tool_limits:` por passo;
+    - orçamento antes de cada turno;
+    - dados, não instruções;
+    - thought signatures preservadas;
+    - evento `tool_called` com o sha256 dos args.
+  - `external_worker.py`: `gemini_generate` aceita a conversa e as declarações; `GeminiWorker(tools=..., knowledge_backend=...)`; `_run_with_tools`.
+- **Flag `PLAN_RUNNER_TOOLS`, desligada por omissão.** 42 passos já declaram `read_repo_file`; ligar por omissão mudava o custo e o comportamento deles, incluindo o `seo-article-demo`, base das medições do B1-bis.
+- **Testes:** `runner/tests/test_tool_executor.py`, 25 testes, com 5 mutações apanhadas. Os testes do worker que já existiam continuam a passar.
+- **Docs:** contrato (secção "Implementação"), WORKER-EXTERNAL, SECURITY-AGENTS, mapeamento ISO (A.4.4 e A.6.2.6 → Cumpre; Anexo A 28/10/0) e evidence pack do F6.
+- **PENDENCIAS:** AU-20 → EM CURSO. Fecha com o merge e 1 run real com a flag (DEV).
 
 ### Decisões revistas: P-37 = B (2026-10-07)
 - **Correcção do maestro:** a P-37 já estava decidida (B, executor mínimo em Python), aprovada numa sessão anterior. O PENDENCIAS tinha-a como proposta pendente. Registada nas decididas, com a contradição V43 no §8.

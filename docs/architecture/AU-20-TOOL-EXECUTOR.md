@@ -1,9 +1,9 @@
-# AU-20: contrato do executor de tools do worker (PROPOSTA, contract-first §15.4)
+# AU-20: contrato do executor de tools do worker (contract-first §15.4)
 
-**Estado:** contrato aprovado. **P-37 = B decidida pelo maestro** (executor mínimo em Python dentro do `plan_runner`, D1). Ainda **não há código**: é o próximo passo do AU-20.
+**Estado:** **implementado atrás de uma flag** (`PLAN_RUNNER_TOOLS=1`, desligada por omissão). P-37 = B decidida pelo maestro: executor mínimo em Python dentro do `plan_runner` (D1). Código em `runner/plan_runner/tool_executor.py`, ligado em `external_worker.py`. Testes em `runner/tests/test_tool_executor.py` (25, Gemini falso). Ver "Implementação" no fim.
 **Pré-requisito feito:** `activate_for_task` + SEC-1.3 (`docs/ops/SKILL-ACTIVATION.md`, merge do #123).
 **Governança:** ISO/IEC 42001 (P-40), ver a secção "ISO/IEC 42001" abaixo.
-**Hoje:** o worker faz uma única chamada Gemini `generateContent` sem `tools` (`runner/plan_runner/external_worker.py`, `gemini_generate`), e o prompt diz "Nao tens tools neste passo". `tools_allowed` é só declarativo (`models.py`, `executor.py`).
+**Sem a flag** (omissão): o worker faz a chamada única de sempre, e o prompt diz "Nao tens tools neste passo", mesmo nos 42 passos que declaram `read_repo_file`. **Com a flag:** os passos com `tools_allowed` ∩ registo passam pelo loop de function calling.
 
 ## Padrões maduros que este contrato segue
 
@@ -61,3 +61,35 @@ Alinhamento voluntário, não certificação. A política é `docs/governance/AI
 | C | Adoptar pydantic-ai (MIT) como motor do loop | dependência nova + 2.º modelo de execução ao lado do LangGraph | médio: duplica o B3/D1 |
 
 Evidência para o B: o worker já tem transport injectável, `BudgetExceeded`, HITL e eventos. A diferença é um loop de no máximo `max_turns` à volta do `gemini_generate` existente, mais um registo de 2 tools que reutilizam código já testado (`repo_files.py`, `mcp_knowledge.py`).
+
+## Implementação (2026-10-07)
+
+| Item do contrato | Onde | Teste |
+|---|---|---|
+| Flag, desligada por omissão | `tool_executor.ENV_FLAG` (`PLAN_RUNNER_TOOLS`); `GeminiWorker(tools=...)` | `test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre` |
+| Autorizado = `tools_allowed` ∩ registo, só `read` | `plan_tools`, `LEVELS_ALLOWED` | `test_plano_de_tools_intersecta_com_o_registo_e_so_read` |
+| O modelo só vê as autorizadas; as outras vão para `unsupported` | `run_tool_loop` (declarações), `meta.tools.unsupported` | `test_com_flag_o_worker_usa_a_tool_e_audita` |
+| Chamada não autorizada não corre | `execute_call` → `tool_not_allowed` | `test_tool_nao_autorizada_nao_corre` |
+| `prepare` e `act` recusados até haver HITL para tools | `execute_call` → `requires_approval` | `test_tool_act_exige_aprovacao_e_nao_corre` |
+| Validação JSON Schema antes de executar | `VALIDATION` + `jsonschema` → `invalid_args` | `test_args_invalidos_sao_recusados_antes_de_executar` |
+| `read_repo_file`: SEC-1 (denylist, sem `..`, sem symlinks para fora, 20 KB) | `_read_repo_file` → `repo_files.read_repo_files` | `test_read_repo_file_le_e_recusa_segredos`, `test_com_flag_segredo_nunca_chega_ao_modelo` |
+| `retrieve_knowledge`: L5 com proveniência, backend injectável | `_retrieve_knowledge` → `McpKnowledge` | `test_retrieve_knowledge_com_backend_falso` |
+| Output como dados, nunca instrução | `DATA_NOTE` na `functionResponse` e no prompt | `test_com_flag_o_worker_usa_a_tool_e_audita` |
+| Thought signatures (Gemini 2.5/3) e `id` das chamadas | o conteúdo do modelo volta tal como veio | `test_loop_preserva_thought_signature_e_ids` |
+| `max_turns` 6 e `max_tool_calls` 12; `tool_limits:` por passo, com tecto 10/24 | `ToolLimits.from_step` | `test_limites_do_passo_com_tecto_rigido`, `test_loop_para_no_max_turns`, `test_loop_para_no_max_tool_calls`, `test_com_flag_limite_deixa_o_passo_em_waiting_external` |
+| Orçamento antes de cada turno extra | `before_turn` → `check_budget` | `test_com_flag_orcamento_para_antes_do_turno_seguinte` |
+| Ledger: 1 linha por turno; `meta.tokens_*` somados | `_run_with_tools` | `test_com_flag_o_worker_usa_a_tool_e_audita` |
+| Auditoria: evento `tool_called` com sha256 dos args (nunca os args em claro) | `on_call` → `events.jsonl` | idem |
+| Tool que rebenta não parte o passo | `execute_call` → `tool_error` | `test_tool_que_rebenta_volta_como_erro` |
+| Artefacto JSON com tools (sem `responseMimeType`) | `gemini_generate(function_declarations=...)` + `_parse_json_output` | `test_com_flag_artefacto_json_continua_a_ser_lido` |
+
+**Testes de mutação** (cada um parte o código de propósito): tirar a preservação das thought signatures, a validação, o orçamento por turno, a troca da frase "sem tools" ou a autorização faz falhar pelo menos um teste.
+
+**Para ligar num run real:**
+1. Corre `PLAN_RUNNER_TOOLS=1 python -m plan_runner run <plano> --mode external --worker gemini`.
+2. Confirma em `result.json → meta.tools` (turnos, chamadas, `unsupported`) e nos eventos `tool_called`.
+
+O AU-20 fecha com o merge e com um run real com a flag ligada (DEV).
+
+**Fica para depois** (não está no registo, fica `unsupported`): `web_search` (10 passos o declaram) e qualquer tool `prepare`/`act`. Estas precisam de HITL próprio antes de entrar no registo.
+

@@ -21,7 +21,7 @@ Itens que não puderam ser implantados nesta cadeia: precisam de produção, cre
 | F3-ART-1 | Proveniência na camada ARTIFACT (`uri`, estado e validade no bloco de conhecimento; fontes no `result.json`) | Prioridade (revisão de 2026-10-07) | PR do Claude, sem produção |
 | F4-MAT-1 | Escala de maturidade do E §15.7 (DECLARED … PROVEN) | Decisão P-38 | A decisão; depois, um PR do Claude |
 | F5-ROUTE-1 | Run real a partir do `route` (discover → select) | Credenciais do DEV | Um run do DEV |
-| AU-20 | O worker executa tools (`read_repo_file`, `retrieve_knowledge`) | **P-37 = B decidida** (executor mínimo em Python); falta a implementação | PRs do Claude, seguindo `docs/architecture/AU-20-TOOL-EXECUTOR.md` |
+| AU-20 | O worker executa tools (`read_repo_file`, `retrieve_knowledge`) | **Implementado atrás da flag `PLAN_RUNNER_TOOLS`** (P-37 = B); falta 1 run real com a flag | O DEV corre um plano com a flag ligada |
 | R-008 | Camada de grafo e entidades ao estilo do LightRAG (padrão, em Postgres) | A sequência do E §2.3 | Depois da avaliação de retrieval alargada (F3b-GS-1) |
 | R-009 | Sunset da `match_knowledge` v1 e da flag `KNOWLEDGE_RPC_V2` | A v2 estável durante um período a decidir | 1 PR no MCP (tirar a flag) + `DROP FUNCTION` pelo DEV |
 | ING-011 | Unstructured | DEFER: dependências de sistema pesadas (E §14.3) | O MarkItDown e o Docling falharem num formato real |
