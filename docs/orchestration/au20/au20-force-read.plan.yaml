@@ -1,0 +1,44 @@
+# AU-20: prova do executor de tools com um run real (DEV).
+#
+# Força o uso da tool: o passo NÃO tem `repo_files`, por isso o docs/ops/BUDGET.md não entra
+# no prompt, e as respostas pedidas só existem nesse ficheiro. O modelo só as consegue dar
+# chamando `read_repo_file`.
+#
+# Correr (a partir de runner/, com GEMINI_API_KEY no ambiente):
+#   PLAN_RUNNER_TOOLS=1 python -m plan_runner run ../docs/orchestration/au20/au20-force-read.plan.yaml \
+#     --mode external --worker gemini --out ../pilots/run-au20-force-read
+# Confirmar em pilots/run-au20-force-read/pending_steps/read_budget/result.json → meta.tools
+# (enabled: true, calls[0].tool = read_repo_file, ok: true, sources: [docs/ops/BUDGET.md])
+# e nos eventos tool_called de events.jsonl. Guia: docs/architecture/AU-20-TOOL-EXECUTOR.md.
+
+id: au20-force-read
+version: 1
+objective: >-
+  Provar que o worker executa a tool read_repo_file: responder a 3 perguntas cujas respostas
+  só existem em docs/ops/BUDGET.md, que não está no prompt.
+
+budget:
+  max_steps: 2
+  max_tokens: 30000
+
+steps:
+  - id: read_budget
+    action: planejador
+    vertical: meta
+    tools_allowed: [read_repo_file]
+    # Sem `repo_files` de propósito: o conteúdo tem de vir da tool.
+    tool_limits:
+      max_turns: 3
+      max_tool_calls: 2
+    task: >-
+      O ficheiro docs/ops/BUDGET.md NÃO está nesta mensagem. Lê-o com a tool read_repo_file
+      (path exacto: docs/ops/BUDGET.md) e responde, citando o ficheiro:
+      1) quantos tokens gastou o seo-article-demo na "Base real (B1, 2026-10-01)", com o número exacto;
+      2) o tecto de tokens por área das áreas de produção (marketing, docs, research, software);
+      3) o comando que retoma uma sessão de conselho parada em paused_budget.
+      No fim, uma linha "Fonte:" com o path do ficheiro lido. Se não conseguires ler o ficheiro,
+      diz isso e não inventes números.
+    output_artifact: artifacts/01-budget-answers.md
+
+done_when:
+  - artifacts/01-budget-answers.md exists

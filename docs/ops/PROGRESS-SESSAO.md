@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/r011-f4mat1-fechados` (a partir da `main` `e74a610`: merges do #135 e do #136); MCP: `main` `855057d`.
+- **Branch actual:** `feat/au20-force-read-plan` (a partir da `main` `7cdf1a2`: merge do #137).
 - **`main` de referência:** NAS `e74a610` (merges até #136; o #135 e o #136 levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,18 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### AU-20: plano de prova para o run real (2026-10-07)
+- **Contexto:** no 1.º run do DEV com o `design-flow-demo` não apareceu `meta.tools`. O maestro trouxe o diagnóstico do Grok (4 pontos).
+- **O que o código confirma:**
+  - O `request.json` não leva `functionDeclarations`: certo, o worker monta-as na chamada.
+  - O `design-flow-demo` não obriga à tool: certo, o `repo_files` injecta os ficheiros. **Mas isso não tira o `meta.tools`:** com a flag, qualquer passo com `read_repo_file` no `tools_allowed` grava `meta.tools` (`calls: []` se o modelo não chamar nada).
+  - Por isso a causa provável é a do ponto 3: a flag não chegou ao processo. Em PowerShell é `$env:PLAN_RUNNER_TOOLS = "1"`, na mesma sessão.
+  - Um `meta: {}` vazio não vem do worker Gemini, porque o `result.json` dele tem sempre `meta` com `worker`, `model` e `tokens`. Esse `meta` vazio deve ser de outro ficheiro, ou de um run em stub.
+- **Feito:**
+  - `docs/orchestration/au20/au20-force-read.plan.yaml`: 1 passo, `planejador`/`meta`, `tools_allowed: [read_repo_file]`, sem `repo_files`, com `tool_limits` 3/2 e `budget.max_tokens` 30 000. As 3 perguntas só têm resposta no `docs/ops/BUDGET.md`.
+  - 2 testes com o Gemini falso: com a flag, o BUDGET não está no 1.º pedido, só chega pela tool, e o `meta.tools` tem a chamada com `sources`; sem a flag, não há `meta.tools`.
+  - Suite completa: 905 passed.
 
 ### R-011 e F4-MAT-1 fechados (2026-10-07)
 - **Merges:**
