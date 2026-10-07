@@ -1,0 +1,35 @@
+# SEC-1.3 — allow-list de scripts por skill (deny-by-default).
+# Lido por runner/plan_runner/skill_activation.py (activate_for_task), antes do worker.
+# Contrato completo: docs/ops/SKILL-ACTIVATION.md
+#
+# Chaves: path relativo ao repo da SKILL.md (ex. skills/design/ux_flow/SKILL.md),
+# ou "vertical/action" (ex. marketing/review). O path da SKILL.md tem prioridade.
+# Valores: lista de paths relativos à pasta da skill, ou true (todos os scripts
+# dessa skill). Paths absolutos, com "..", ou que não existam como script ficam
+# de fora e geram aviso em skill_activation.json. Symlinks nunca são autorizados.
+#
+# allow_scripts: true          # opt-in global: aceite, mas gera aviso (evitar em produção)
+allow_scripts: {}
+# Exemplos:
+#   marketing/review:
+#     - scripts/check.sh
+#   skills/design/ux_flow/SKILL.md:
+#     - scripts/lint.py
+#
+# Hoje o worker não executa scripts (não tem tools; AU-20 / P-37). A allow-list é o
+# ponto de controlo que o futuro executor de tools tem de consultar (is_script_allowed).
+
+# Pinning opcional (OWASP Agentic Skills Top 10: update drift). sha256 esperado da
+# SKILL.md, entre aspas. Se a skill mudar, skill_activation.json regista
+# pin_mismatch e todos os scripts dessa skill ficam bloqueados.
+pins: {}
+#   skills/claude/idea-refine/SKILL.md: "<sha256 de 64 hex>"
+
+# Pesquisa de skills externas: só candidatas para revisão humana, nunca instala nada.
+# Por passo: should_search_external: true (ou search_external: true).
+# Global: quando true, pesquisa só se a skill local não resolver.
+search_external_default: false
+# Único provider suportado: skills_sh (API do directório skills.sh, a mesma que o
+# `npx skills find` usa por dentro, chamada por HTTPS directo, sem npx).
+# SKILLS_API_URL substitui o endpoint (só https). Sem rede: PLAN_RUNNER_SKILLS_OFFLINE=1.
+external_provider: skills_sh

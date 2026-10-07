@@ -379,7 +379,8 @@ def build_prompt_ctx(
 
     SEC-1: se o passo declarar `repo_files`, os ficheiros (so leitura, com
     exclusoes e limite: plan_runner/repo_files.py) entram no fim do prompt do
-    utilizador, nos dois modos. Sem `repo_files`, nada muda.
+    utilizador, nos dois modos. Sem `repo_files`, nada muda. O mesmo para
+    `SKILL_ACTIVATION.md` (SEC-1.3, plan_runner/skill_activation.py).
     """
     mode = cp.context_mode(context)
     if mode == "opt":
@@ -394,6 +395,12 @@ def build_prompt_ctx(
         if block:
             built["user"] += "\n" + _section("Ficheiros do repo (so leitura)", block)
         built["meta"]["repo_files"] = files_meta
+    # SEC-1.3 / activate_for_task: so existe quando a skill tem scripts ou o
+    # passo pediu pesquisa externa (skill_activation.py); sem ele, nada muda.
+    activation_md = pending / "SKILL_ACTIVATION.md"
+    if activation_md.is_file():
+        built["user"] += "\n" + _section("Activacao da skill (SEC-1.3)", _clip(activation_md.read_text(encoding="utf-8")))
+        built["meta"]["skill_activation"] = "SKILL_ACTIVATION.md"
     return built
 
 
