@@ -1,0 +1,25 @@
+# F2-ALLOW-1 (P-25 = A, maestro, 2026-10-07): domínios que o `fetch` (scripts/web_fetch.py)
+# pode buscar, por área do config/areas.yaml. Validado no E7 (`python -m plan_runner.areas`).
+#
+# Os domínios são POLÍTICA: escolhe-os o maestro. Até lá as listas ficam vazias, e uma área
+# sem domínios não busca nada com `--area`. Cada domínio aceita também os subdomínios
+# (`exemplo.org` aceita `www.exemplo.org`). Nada de esquema, caminho, porta, `*` nem IP.
+#
+#   python scripts/web_fetch.py <url> --area research                # domínios da área
+#   python scripts/web_fetch.py <url> --area research --allow x.org  # x.org tem de caber na área
+#   python scripts/web_fetch.py <url> --allow x.org                  # sem área: aviso no_area_allowlist
+#
+# Regras e uso: runner/plan_runner/web_allowlist.py e docs/ops/WEB-FETCH.md §2.1.
+
+version: 1
+areas:
+  software: []
+  marketing: []
+  legal: []
+  ops: []
+  research: []
+  finance: []
+  gamedev: []
+  security: []
+  docs: []
+  horizontal: []

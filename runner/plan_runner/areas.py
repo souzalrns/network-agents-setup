@@ -209,6 +209,9 @@ def validate_areas(repo_root: Path) -> list[str]:
     from .capabilities import load_runs
 
     errors += load_runs(repo_root)[1]  # F4-MAT-1: o registo de runs reais (PROVEN) tem de bater com a evidência
+    from .web_allowlist import validate as validate_web_allowlist
+
+    errors += validate_web_allowlist(repo_root, seen_areas)  # F2-ALLOW-1: allowlist do fetch por área
     return errors
 
 

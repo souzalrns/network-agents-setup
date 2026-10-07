@@ -14,7 +14,7 @@ pip install -r runner/requirements-ingest.txt   # o MarkItDown converte o HTML
 python scripts/web_fetch.py https://exemplo.org/pagina --allow exemplo.org [--out-dir docs/knowledge/ingested]
 ```
 
-- **Entrada:** 1 URL http/https e a allowlist de domínios (obrigatória; a CLI exige pelo menos 1 `--allow`).
+- **Entrada:** 1 URL http/https e a allowlist: a da área (`--area`, §2.1) e/ou domínios por chamada (`--allow`). A CLI exige pelo menos um dos dois.
 - **Saída:** Markdown normalizado, mais o `source_meta`: `uri` (sem credenciais nem fragmento), `final_url` (depois dos redirects), `title`, `document_type: html`, `retrieved_at`, `content_hash`, `status`, `http_status` e `content_type`.
 - **Para o L5:** com `--out-dir`, grava pelo `write_ingested` do F1 (`.md` + `.meta.yaml`), e daí segue o mesmo caminho do T6 (`INGEST-DOCUMENT.md` §7). **Nunca escreve no Supabase.**
 
@@ -38,6 +38,25 @@ O `ANM:.github/workflows/scrape.yml` lê a página inteira, sem allowlist nem ro
 **Avisos:** `redirected` (o `final_url` é diferente do `uri`), `title_from_host` (a página sem `<title>`) e `decode_errors_replaced` (charset inválido).
 
 **Limitação conhecida:** o nome é resolvido para a verificação de SSRF e depois outra vez pelo httpx. Um ataque de DNS rebinding entre as 2 resoluções fica fora do F2a.
+
+### 2.1 Allowlist por área (F2-ALLOW-1, P-25 = A)
+
+`config/web-allowlist.yaml` guarda, por área do `config/areas.yaml`, os domínios que o `fetch` pode buscar. **Os domínios são política e escolhe-os o maestro.** Até lá as listas estão vazias.
+
+| Chamada | Allowlist usada | Resultado |
+|---|---|---|
+| `--area research` | os domínios da área | área vazia ou desconhecida → `blocked_by_allowlist`, sem nenhum pedido de rede |
+| `--area research --allow x.org` | `x.org`, se couber na área (o próprio domínio ou um subdomínio) | fora da área → `blocked_by_allowlist`, sem rede: a chamada só pode estreitar a política |
+| só `--allow x.org` | `x.org` (como no F2a) | o resultado leva o aviso `no_area_allowlist` |
+
+O E7 (`python -m plan_runner.areas`) valida o ficheiro:
+- só áreas que existem;
+- domínios DNS em minúsculas, sem esquema, caminho, porta, `*` nem IP literal (um IP fugia à verificação de SSRF por nome);
+- sem domínios repetidos.
+
+Código: `runner/plan_runner/web_allowlist.py`. Testes: `runner/tests/test_web_allowlist.py`.
+
+**Passo seguinte, quando o maestro der os domínios:** tornar o `--area` obrigatório, para que o `--allow` deixe de funcionar sozinho.
 
 ## 3. Evidência: corrida real (2026-10-06)
 
@@ -68,5 +87,5 @@ Para correr contra outros hosts nesta sessão, é preciso acrescentá-los à pol
 | Fallback Playwright para páginas feitas em JavaScript (o `scrape.yml` tem-no) | Pesado (Chromium); só com caso real que o justifique | F2 canónico |
 | Crawl4AI `>=0.9.3` | Decisão canónica: só se superar isto, com evidência | F2 canónico |
 | `discover` (pesquisa) | Precisa de uma API de pesquisa (custo ou chave) | F2 canónico |
-| Allowlist por área (ADR §3, item 4) | São domínios de política, ou seja, decisão do maestro | P-25 |
+| Domínios da allowlist por área (ADR §3, item 4) | São política: escolhe-os o maestro. O mecanismo está feito (§2.1) | F2-ALLOW-1 (P-25 = A) |
 | O destino do `scrape.yml` | Escreve em produção, por fora do T6 | P-24 |
