@@ -5,13 +5,13 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f3c-design-repo-files` (a partir da `main` `f7e7551`: merges #119, #120 e #121).
-- **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `docs/governance-iso42001` (a partir da `main` `7cda6f1`: merges #122 e #123).
+- **`main` de referência:** NAS `7cda6f1` (merges até #123); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
   - a revisão do estado contra o EXECUTION-PLAN, com as lacunas novas F3-ART-1, F4-MAT-1 e F5-ROUTE-1.
-  Em paralelo, PR #123 (SEC-1.3, `activate_for_task`, pré-requisito do AU-20).
+  ISO/IEC 42001 (P-40): PR do branch `docs/governance-iso42001`; o #122 e o #123 já tiveram merge.
   Decisões pendentes de alto impacto: P-37 (AU-20) e P-38 (maturidade). O F6 canónico (D-EP8) continua BLOQUEADO.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
@@ -27,6 +27,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### ISO/IEC 42001 e pós-merge do #122 e do #123 (2026-10-07)
+- **Merges do maestro:** #122 (10:26 UTC, `4e38801`) e #123 (10:31 UTC, `7cda6f1`). A CI da `main` está verde (11 checks, incluindo o `delta` do ingest).
+- **Fechados (§7):** SEC-1.3 (#123); W-011, R-006 e H-002 (#122).
+- **P-40 decidida pelo maestro:**
+  - âmbito NAS + ANM;
+  - papéis maestro / DEV / Claude;
+  - auditoria interna trimestral e revisão da política semestral.
+- **Feito no PR do branch `docs/governance-iso42001`:**
+  - `docs/governance/AI-MANAGEMENT-SYSTEM.md` (política);
+  - `docs/governance/ISO-42001-MAPPING.md`: 27 cláusulas e 38 controlos. Cláusulas: 9 Cumpre, 15 Parcial, 3 Falta. Anexo A: 22 Cumpre, 11 Parcial, 5 Falta;
+  - `runner/tests/test_governance_mapping.py` (7 testes; evidências e símbolos verificados contra o repo; os resumos à mão estavam errados e o teste apanhou-os);
+  - secção ISO no contrato do AU-20.
+- **O #123 já tinha merge:** a secção ISO do contrato do AU-20 vai neste PR novo, não no #123.
+- **Novos:** GOV-42001-1 (EM CURSO) e GOV-IMPACT-1 (ABERTO, Alta: avaliação de impacto da memória de clientes); prefixo GOV- no §3.
+- **Contagens:** 121 vivos (ABERTO 68, EM CURSO 6, BLOQUEADO 47), 115 de histórico (94 FECHADO), 40 decisões.
 
 ### AU-20, pré-requisito: verificação do `activate_for_task` (2026-10-07)
 - **Pedido do maestro:** verificar a implementação e a documentação do branch `feat/activate-for-task-sec13` (outro agente), testar, corrigir e reforçar, com pesquisa de projectos maduros.
