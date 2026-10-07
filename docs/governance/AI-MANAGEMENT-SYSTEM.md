@@ -107,7 +107,7 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
 | Dados de cliente usados pela Google para treino (Gemini gratuito) | clientes | **alta** se houver dados de cliente no tier gratuito | média | regra da política §9: **dados de clientes só com Gemini pago**; no tier gratuito, só conteúdo sem dados de clientes | baixo, se a regra for cumprida |
 | Facto errado sobre uma pessoa memorizado e reutilizado | clientes, terceiros | média | média | L4 só activa com aprovação humana (`promote`); correcção por `supersedes`; direito de rectificação | baixo |
 | Prompt injection que leva um agente a revelar memória de outro cliente | clientes | baixa | alta | memória injectada só para o `client_id` do plano; o worker não tem tools (AU-20); output de tools como dados (P-37, contrato) | baixo |
-| Dados guardados além do necessário | todos | **média** | média | prazos na política §7; L4 com `expires_at`; purga diária automática nas transcrições (60 dias, `pg_cron`); nos restantes, **ainda manual** → GOV-RET-1 | médio até ao GOV-RET-1 |
+| Dados guardados além do necessário | todos | **média** | média | prazos na política §7; L4 com `expires_at`; purga diária automática do conteúdo extraído por link (transcrições e posts com 60 dias; páginas com 60 dias, ou 12 meses nos sites próprios; `pg_cron`); nos dados de clientes e no `token_usage`, **ainda manual** → GOV-RET-1 | médio até ao GOV-RET-1 |
 | Autor de conteúdo público analisado sem saber | terceiros | média | baixa | finalidade limitada (estudo), sem perfis nem contacto, oposição a qualquer momento (política §8) | baixo |
 | Decisão automatizada com efeito numa pessoa | clientes | baixa | alta | HITL obrigatório em `legal`, `finance` e `security`; nenhuma decisão só automatizada (política §6) | baixo |
 
@@ -115,7 +115,7 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
 - **finalidade legítima:** estudo de mercado e referências criativas;
 - **necessidade:** só título, autor, descrição e transcrição; sem contactos nem perfis;
 - **expectativa do titular:** o conteúdo foi publicado abertamente pelo autor;
-- **salvaguardas:** transcrições apagadas 60 dias depois da criação (purga diária automática), os outros conteúdos públicos em 12 meses, oposição e eliminação, nada publicado no repo (GOV-PRIV-1).
+- **salvaguardas:** transcrições e posts de terceiros apagados 60 dias depois da criação, páginas de terceiros também em 60 dias (purga diária automática), oposição e eliminação, nada publicado no repo (GOV-PRIV-1).
 
 Resultado: **o interesse prevalece**, com as salvaguardas acima.
 

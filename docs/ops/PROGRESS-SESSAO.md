@@ -28,6 +28,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### Retenção alargada a `image_posts` e `scrapes` (2026-10-07)
+- **Levantamento** (só leituras):
+  - `image_posts` vem do `extrair-imagem.yml` (gallery-dl, Instagram): 9 linhas de 1 autor de terceiros, todas tentativas falhadas (3 a pedir login, 6 sem imagens). O bucket `post-images` não tem nenhuma imagem do Instagram: 23 capturas `visual-review` e 3 `diagnostico-portal`.
+  - `scrapes` vem do `scrape.yml`: 2 linhas, ambas de `viannalegal.com.br` (site próprio).
+  - Nenhum dos fluxos traduz.
+- **Decisão do maestro:** `image_posts` com 60 dias; `scrapes` opção B (60 dias por omissão, 12 meses nos sites próprios).
+- **MCP #20:** `memory/retention.sql`, que substitui o `transcripts_retention.sql`:
+  - tabela `retention_own_domains` (RLS activo);
+  - trigger nos `scrapes`;
+  - `purge_expired_content()` e um só job, `purge-expired-content`, às 03:17 UTC.
+  - Testado 2x na imagem do Supabase com `pg_cron`.
+- **NAS #127:** política 1.1 (§7), AIMS §5.3 e §5.4, P-41 (falta só o `token_usage`), GOV-RET-1, lista do DEV.
+
 ### Retenção das transcrições: 60 dias (2026-10-07)
 - **Decisão do maestro:** apagar 60 dias depois da criação, sem período de graça ("se for o caso transcrevemos novamente"). Só `transcripts`.
 - **Verificado:** nenhum código lê a tabela `transcripts`. Só o `transcribe.yml` escreve e o `content_analyst` lê a transcrição acabada de fazer. O fluxo do reel não muda.
