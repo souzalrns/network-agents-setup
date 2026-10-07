@@ -48,7 +48,11 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
 ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS project      text;
 ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS content_hash text;
 ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS chunk_index  integer;
-ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS kb           text DEFAULT 'marketing';
+ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS kb           text;
+-- R-005 / P-20: sem DEFAULT (o 'marketing' classificava mal as linhas do MCP). Quem
+-- insere sem kb fica com kb = agent_id pelo trigger de
+-- scripts/migrations/r005_kb_default.sql, que também reclassifica a produção.
+ALTER TABLE knowledge_chunks ALTER COLUMN kb DROP DEFAULT;
 ALTER TABLE knowledge_chunks ADD COLUMN IF NOT EXISTS updated_at   timestamptz DEFAULT now();
 
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_agent ON knowledge_chunks (agent_id);

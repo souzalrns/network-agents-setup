@@ -63,6 +63,16 @@ pnpm --filter @network-agents/scripts validate:consistency
 - Isolamento de banco para demo pública: ver pendência em STATUS (ainda aberta; o estado vivo dos pendentes está em `docs/initiatives/PENDENCIAS.md`).
 - Commits claros; não inventar estado que o `PENDENCIAS.md` contradiz. Commits e PRs citam o ID do item (ex.: `AU-08: ...`).
 
+## Decisões e opções (regra do maestro, 2026-10-07)
+
+**Toda a apresentação de opções vem com recomendação explícita. SEM EXCEPÇÃO.**
+Formato: A/B/C + recomendação + razão curta. Se não houver recomendação, a decisão não está pronta.
+
+- Vale para relatórios, PRs, a §10 do `docs/initiatives/PENDENCIAS.md` e qualquer lista de decisões, curta ou longa.
+- Marcar a escolhida como **RECOMENDADA**, com a evidência (ficheiro:linha, SELECT, teste, run) que a sustenta.
+- Motivo da regra: numa sessão, foram listadas 11 decisões sem recomendação explícita, o que violou a regra do maestro.
+- Quem decide é o maestro; o Claude propõe e nunca assume uma decisão pendente como tomada.
+
 ## Onde está o resto
 
 | Precisas de… | Vai a… |

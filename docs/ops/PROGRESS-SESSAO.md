@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/au20-tool-executor` (a partir da `main` `cf94666`: merge do #130); MCP: `main` `c689feb` (merge do #21).
-- **`main` de referência:** NAS `cf94666` (merges até #130); MCP: merge do #21 a 2026-10-07 12:42 UTC.
+- **Branch actual:** `fix/r005-kb-default` (a partir da `main` `4a8ab1e`: merge do #131); MCP: `claude/reels-analysis-tools-access-hwudk9` (MCP #22, a partir da `main` `c689feb`).
+- **`main` de referência:** NAS `4a8ab1e` (merges até #131; o merge levou os 2 commits do #131); MCP `c689feb` (merge do #21).
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,33 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Decisões do maestro, P-20 e regra A/B/C (2026-10-07)
+- **Pedido:** "Decisões tomadas pelo maestro. Executa pela ordem indicada": P-20/R-005 → §10 + `CLAUDE.md` → AU-20 → P-22.
+- **P-20 verificada (só leitura, Supabase):** `kb` text, `DEFAULT 'marketing'::text`, nullable. As 201 linhas do MCP são de 18 `agent_id`, todas com `kb` = marketing. O `match_knowledge_v2` devolve o `kb`, mas não filtra por ele, por isso a pesquisa ainda não era afectada.
+- **Assimetria confirmada:** o `ingest_knowledge` recebe `agent` e o `retrieve_knowledge` recebe `kb`; os 2 vão para o `agent_id`. O insert não mapeava mal: omitia o `kb`.
+- **MCP #22 (2 commits: confirmar o head antes do merge):**
+  - `ingestDocument` grava `kb` = `agent_id`, ou o `kb` opcional validado do `ingest_knowledge`;
+  - regra A/B/C no `CLAUDE.md` do MCP;
+  - testes: unitários 31/31 e e2e 14/14; a mutação (tirar o `kb` do insert) é apanhada.
+- **Este PR:**
+  - `scripts/migrations/r005_kb_default.sql`: sem DEFAULT; trigger que põe `kb = agent_id`; reclassificação uma só vez (marca no COMMENT); ECC de segurança → `security`;
+  - `scripts/rag_schema.sql` sem o DEFAULT;
+  - `runner/tests/test_r005_kb_default.py`: 6 testes, com 6 mutações apanhadas e 2 equivalentes; está no job `test-rag`.
+- **Ordem para o DEV:** primeiro o deploy do MCP #22 e só depois o SQL. A ordem inversa também é segura, porque o trigger a cobre.
+- **§10:** as 11 decisões ficam registadas (P-11 = A, P-16 confirmada, P-17 adiada para o H-01, P-19 mantida, P-20, P-21 = A, P-22 = Sim, P-24 = A, P-25 = A, P-38 = B, P-39 = C). Ficam 0 pendentes.
+- **Itens novos:**
+  - AU-11b (P-11);
+  - R-011 (P-19);
+  - F2-ALLOW-1 (P-25);
+  - ING-012 (P-22).
+- **Itens actualizados:**
+  - F4-MAT-1 sem bloqueio;
+  - F1b, F2, F2-SEC-1 e H-01 anotados;
+  - R-005 → EM CURSO.
+- **Contagens:** 127 vivos (ABERTO 72, EM CURSO 8, BLOQUEADO 47).
+- **`CLAUDE.md`:** a regra "toda a apresentação de opções vem com recomendação explícita. SEM EXCEPÇÃO", com o motivo. Foi pedida porque 11 decisões tinham sido listadas sem recomendação.
+- **Nota do maestro:** a base fictícia (`seed_fake_clients`) é infra de teste. Não substitui um cliente real e não desbloqueia a Fase 2 (P-39 = C) nem o F6 canónico.
 
 ### AU-20: executor de tools implementado (2026-10-07)
 - **Pedido do maestro:** "a P-37 já foi decidida (B); avance e implemente". Antes disto não havia código: confirmado no `main`, sem `functionDeclarations` nem loop.
