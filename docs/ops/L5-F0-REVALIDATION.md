@@ -223,6 +223,12 @@ Com o desbloqueio, o F0.6 corre com os passos acima, e o S-003 (PENDENCIAS §4) 
   - `l5_eval validate` (offline) → `18 casos; 0 erros`;
   - `l5_eval run` sem `MCP_API_KEY` → falha logo (`McpKnowledgeError`), sem medir nada.
 - **Alternativa** (não usar para o gate): o teste offline `runner/tests/test_l5_eval.py` prova as métricas com um backend falso. Não mede o MCP real.
+- **Regra de regressão (R-011, P-19 mantida pelo maestro, 2026-10-07):** o `run` aplica o limiar do gate M1 a cada medição: `provenance_ok` = 1.0 e `source_hit@4` ≥ 0.8 (15 dos 18 casos).
+  - **Abaixo do limiar:** o run imprime `REGRESSAO <métrica> = <valor> (exige …)`, termina com `gate P-19: FALHOU (n)` e sai com o código 1.
+  - **Acima do limiar:** imprime `gate P-19: passou` e sai com 0.
+  - **Relatório:** o `--out` grava o bloco `gate` (`passed`, `failures` e os 2 mínimos).
+  - **Sem alvo:** o `chunk_hit` e o MRR continuam só registados, porque a P-19 não lhes fixou alvo.
+  - **Linha de base do F0.7b:** 1.0 / 1.0, por isso passa.
 
 **Passos (DEV, PowerShell, a partir de `network-agents-setup\runner`):**
 

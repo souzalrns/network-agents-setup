@@ -9,7 +9,12 @@ o excerto está certo (validade: EXECUTION-PLAN §15.8).
     python -m plan_runner.l5_eval run [--golden ...] [--out report.json]   # F0.7b, MCP real
 
 O `run` precisa de MCP_URL + MCP_API_KEY (as mesmas do McpKnowledge). Sem elas
-falha logo, sem medir nada. Pede `require_citations=False` ao retrieve para que
+falha logo, sem medir nada.
+
+R-011 (P-19 mantida pelo maestro, 2026-10-07): o limiar do gate M1 é a regra de
+regressão de todos os runs. `provenance_ok` = 1.0 e `source_hit@k` >= 0.8 (15 dos
+18 casos do golden de security); abaixo disso o `run` sai com 1 e diz que métrica
+falhou. O `chunk_hit` e o MRR continuam só registados (sem alvo, decisão da P-19). Pede `require_citations=False` ao retrieve para que
 um hit sem fonte conte como falha de proveniência, em vez de desaparecer.
 Python puro: o DeepEval/Ragas está bloqueado (S19).
 """
@@ -26,6 +31,9 @@ from typing import Any
 import yaml
 
 GOLDEN_DEFAULT = Path("config") / "l5-golden-security.yaml"
+# P-19 (opção A): mínimos de proveniência e de fonte; a linha de base do F0.7b é 1.0 e 1.0.
+MIN_PROVENANCE_OK = 1.0
+MIN_SOURCE_HIT = 0.8
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 Retrieve = Callable[[str, str, int], list[dict[str, Any]]]
@@ -113,6 +121,20 @@ def evaluate(golden: dict[str, Any], retrieve: Retrieve) -> dict[str, Any]:
     return {"summary": summary, "cases": rows}
 
 
+def regression_failures(summary: dict[str, Any]) -> list[str]:
+    """R-011: o que falha no limiar da P-19. Lista vazia = o run passa."""
+    failures = []
+    prov = summary.get("provenance_ok")
+    if prov is None:
+        failures.append("provenance_ok sem valor: nenhum caso devolveu hits (exige 1.0)")
+    elif prov < MIN_PROVENANCE_OK:
+        failures.append(f"provenance_ok = {prov} (exige {MIN_PROVENANCE_OK}): há hits sem fonte")
+    key = f"source_hit@{summary['k']}"
+    if summary[key] < MIN_SOURCE_HIT:
+        failures.append(f"{key} = {summary[key]} (exige >= {MIN_SOURCE_HIT})")
+    return failures
+
+
 def _has_v2_provenance(hit: dict[str, Any]) -> bool:
     """O hit veio da match_knowledge_v2: `metadata` preenchido e `citation.uri` (R-006)."""
     metadata = hit.get("metadata")
@@ -166,9 +188,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{mark}{row['id']} chunk_rank={row['chunk_rank']} source_rank={row['source_rank']} "
               f"hits={row['hits']}{' (stale)' if row['stale'] else ''}")
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
+    failures = regression_failures(report["summary"])
+    report["gate"] = {"min_provenance_ok": MIN_PROVENANCE_OK, "min_source_hit": MIN_SOURCE_HIT,
+                      "passed": not failures, "failures": failures}
     if args.out:
         args.out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    return 0
+    for f in failures:
+        print(f"REGRESSAO {f}")
+    print("gate P-19: " + ("passou" if not failures else f"FALHOU ({len(failures)})"))
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":
