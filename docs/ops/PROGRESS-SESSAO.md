@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/au20-hitl-kb` (empilhado no `fix/r005-kb-default`, PR #132, a partir da `main` `4a8ab1e`: merge do #131); MCP: `claude/reels-analysis-tools-access-hwudk9` (MCP #22, a partir da `main` `c689feb`).
-- **`main` de referência:** NAS `4a8ab1e` (merges até #131; o merge levou os 2 commits do #131); MCP `c689feb` (merge do #21).
+- **Branch actual:** `docs/r005-fechado` (a partir da `main` `a1716f1`: merges do #132 e do #133); MCP: `main` `855057d` (merge do #22, em produção na Vercel).
+- **`main` de referência:** NAS `a1716f1` (merges até #133; os 3 merges levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### R-005 fechado em produção (2026-10-07)
+- **Merges:** #132 (`ecb27d3`), #133 (`a1716f1`) e MCP #22 (`855057d`). Os 3 levaram todos os commits (confirmado no `git log`). O deploy de produção do MCP na Vercel terminou às 18:29 UTC.
+- **SQL do R-005 aplicado pelo DEV.** SELECTs de confirmação (maestro e Claude, só leitura):
+  - `column_default` do `kb` = NULL;
+  - trigger `knowledge_chunks_default_kb`: `BEFORE INSERT ... FOR EACH ROW`, activo (`tgenabled = O`), função com `search_path` vazio;
+  - marca "R-005 aplicado" no COMMENT da coluna `kb`, por isso uma 2.ª aplicação não reclassifica nada;
+  - 201 linhas do MCP, 19 valores de `kb`, 0 NULL; em todas, `kb` = `agent_id`, menos as 8 da ECC de segurança (`kb` = security, `agent_id` = revisor-codigo);
+  - marketing tem 3 linhas, as do agente `marketing`.
+- **PENDENCIAS:**
+  - R-005 → FECHADO (§7);
+  - 126 itens vivos (ABERTO 72, EM CURSO 7, BLOQUEADO 47); histórico com 119 linhas;
+  - a linha do AU-20 só espera pelo run real com `PLAN_RUNNER_TOOLS=1`.
 
 ### P-22: texto para o upstream do MarkItDown (2026-10-07)
 - **Verificação:** os 2 achados reproduzem-se com o MarkItDown 0.1.8, a versão mais recente (venv isolado, script em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §4).
