@@ -3,7 +3,7 @@
 **Referencial:** ISO/IEC 42001:2023, como **alinhamento voluntário**. Não é uma certificação, nem uma alegação de conformidade: certificar exige auditoria externa por um organismo acreditado.
 **Decisão:** P-40 (maestro, 2026-10-07): âmbito NAS + ANM; papéis maestro / DEV / Claude; auditoria interna trimestral e revisão desta política semestral.
 **Mapeamento cláusula a cláusula e Declaração de Aplicabilidade:** [`ISO-42001-MAPPING.md`](./ISO-42001-MAPPING.md).
-**Estado dos pendentes:** `docs/initiatives/PENDENCIAS.md` (único documento de estado). Lacunas deste AIMS: **GOV-42001-1**. Avaliação de impacto: **GOV-IMPACT-1**, fechada com a [política de privacidade](./PRIVACY-POLICY.md) (§5). Seguimento: GOV-RET-1 (purga por data) e GOV-PRIV-1 (ficheiro de terceiros no repo público do ANM).
+**Estado dos pendentes:** `docs/initiatives/PENDENCIAS.md` (único documento de estado). Lacunas deste AIMS: **GOV-42001-1**. Avaliação de impacto: **GOV-IMPACT-1**, fechada com a [política de privacidade](./PRIVACY-POLICY.md) (§5). Seguimento: GOV-RET-1 (purga por data). GOV-PRIV-1 resolvido com a opção C (MCP #20); a opção A (limpar o histórico) é o GOV-PRIV-2.
 **Texto da norma:** este documento cita só números e títulos curtos (tradução livre). O texto da ISO/IEC 42001 é protegido por direitos de autor e não é reproduzido aqui.
 
 ## 1. Âmbito (cláusulas 4.3 e 4.4)
@@ -97,7 +97,7 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
 **Conclusão:**
 - **Não há dados de clientes.**
 - Há dados pessoais de terceiros obtidos de **conteúdo público**, cobertos pela política (§3, §5 e §7).
-- O repo público do ANM tem um ficheiro `transcripts/latest.json` com a transcrição de um vídeo público de terceiros → **GOV-PRIV-1**.
+- O repo público do ANM versionava `transcripts/latest.json`, com a transcrição de um vídeo público de terceiros → **GOV-PRIV-1, resolvido (opção C, MCP #20):** removido do git, `/transcripts/` no `.gitignore` e um teste que falha se voltar (§11).
 
 ### 5.3 Impacto em indivíduos ou grupos (A.5.4)
 
@@ -206,4 +206,21 @@ Se houver dados pessoais, a comunicação aos titulares e às autoridades segue 
 4. usa uma chave **paga** do Gemini antes de pôr dados de clientes na memória;
 5. repete a avaliação de impacto (§5.1) com o 1.º cliente.
 
-**O repo público não guarda dados de clientes.** Verificado a 2026-10-07: 0 ficheiros `memory/<cliente>/` no git do NAS e 0 linhas na `memory_l4`. A excepção encontrada é conteúdo público de terceiros no ANM, que fica com **GOV-PRIV-1**.
+**O repo público não guarda dados de clientes.** Verificado a 2026-10-07: 0 ficheiros `memory/<cliente>/` no git do NAS e 0 linhas na `memory_l4`. A excepção encontrada (uma transcrição de terceiros versionada no ANM) foi resolvida pelo GOV-PRIV-1 (§11.1).
+
+### 11.1 Conteúdo de terceiros: transcrições (GOV-PRIV-1, opção C)
+
+| Opção | O quê | Estado |
+|---|---|---|
+| **C (adoptada)** | As transcrições vivem **só no Supabase** (`public.transcripts`, gravadas pelo `transcribe.yml`). O repo público deixa de as versionar: `git rm --cached transcripts/latest.json`, `/transcripts/` no `.gitignore`, uma secção "Dados e privacidade" no README do MCP, e `tests/publicRepo.test.mjs`, que falha se uma transcrição voltar ao git | MCP #20 |
+| A (upgrade) | Limpar também o **histórico** do git (o ficheiro continua no commit `fe3cc90`, de 2026-08-10). Exige `git filter-repo` + force push na `main` do MCP, e quem tiver um clone tem de clonar de novo | **GOV-PRIV-2** (decisão do DEV) |
+
+**Como a separação funciona, nos dois repos:**
+
+| Camada | NAS | MCP (ANM) |
+|---|---|---|
+| Onde vivem os dados | Supabase (UE) e, para a memória por cliente, ficheiros locais fora do git | Supabase (UE) |
+| O que o git ignora | `/memory/*/` | `/transcripts/` |
+| Teste que falha se algo escapar | `runner/tests/test_privacy_separation.py` (corre no CI) | `tests/publicRepo.test.mjs` (`npm test`; o MCP não tem CI para isto) |
+| Declaração | `config/deployment.yaml` (`repo_visibility: public`) | secção "Dados e privacidade" do README |
+

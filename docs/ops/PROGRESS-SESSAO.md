@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `test/fake-clients` (a partir da `main` `4c99fdd`: merge do #125).
-- **`main` de referência:** NAS `4c99fdd` (merges até #125); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `docs/gov-priv-1` (a partir da `main` `c487129`: merge do #126); MCP: `claude/reels-analysis-tools-access-hwudk9` (#20).
+- **`main` de referência:** NAS `c487129` (merges até #126); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,17 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### GOV-PRIV-1: transcrições fora do git do MCP (2026-10-07)
+- **Merge do #126** (`c487129`): os testes com clientes fictícios estão no `main`.
+- **MCP #20** (branch `claude/reels-analysis-tools-access-hwudk9`, recomeçado a partir da `main` porque o #19 já tinha merge):
+  - `git rm --cached transcripts/latest.json`;
+  - `/transcripts/` no `.gitignore`;
+  - secção "Dados e privacidade" no README;
+  - `tests/publicRepo.test.mjs`.
+  - `npm test`: 28 de 28. A mutação sem a correcção dá 2 falhas.
+- **Decisão do maestro:** "Resolvido: C. Transcrições no Supabase. A fica como upgrade." GOV-PRIV-1 → §7. Novo **GOV-PRIV-2** (limpar o histórico, decisão do DEV). AIMS §11.1.
+- **Contagens:** 123 vivos (ABERTO 70, EM CURSO 6, BLOQUEADO 47), 117 de histórico (96 FECHADO), 41 decisões.
 
 ### Clientes fictícios para testes (2026-10-07)
 - **Merge do #125** (`4c99fdd`): política de privacidade em vigor; GOV-IMPACT-1 FECHADO.

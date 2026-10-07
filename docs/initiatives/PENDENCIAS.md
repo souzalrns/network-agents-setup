@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **GOV-PRIV-1 (2026-10-07, `main` `c487129`, merge do #126):** resolvido com a opção C. As transcrições vivem no Supabase, e o MCP #20 tira `transcripts/latest.json` do git, põe `/transcripts/` no `.gitignore` e acrescenta um teste. A opção A (limpar o histórico) fica como upgrade: **GOV-PRIV-2**.
 > **Testes com clientes fictícios (2026-10-07, `main` `4c99fdd`, merge do #125):** `scripts/seed_fake_clients.py` (Faker, seed fixa, prefixo `FAKE-`, só BD local), fixture `disposable_pg` (RAG_TEST_DATABASE_URL ou testcontainers) e `docs/ops/TESTING.md`, no PR do branch `test/fake-clients`. Sem itens novos.
 > **Privacidade (2026-10-07, `main` `c9de58f`, merge do #124):** GOV-IMPACT-1 → FECHADO com a política de privacidade (LGPD + GDPR), a avaliação de impacto (AIMS §5) e a separação repo público/privado (`config/deployment.yaml`, `.gitignore`, teste). Estado medido: 0 dados de clientes. Novos: GOV-RET-1 (purga por data), GOV-PRIV-1 (transcrição de terceiros no repo público do MCP), S-005 (`_prisma_migrations` sem RLS) e a decisão P-41 (prazos).
 > **ISO/IEC 42001 e pós-merge (2026-10-07, `main` `7cda6f1`, merges #122 e #123):** SEC-1.3, W-011, R-006 e H-002 → FECHADO (§7). P-40 decidida pelo maestro (âmbito NAS + ANM; papéis maestro / DEV / Claude; auditoria trimestral e revisão semestral). Novos GOV-42001-1 (EM CURSO) e GOV-IMPACT-1 (ABERTO, Alta), prefixo GOV- no §3. Política e mapeamento em `docs/governance/` (PR do branch `docs/governance-iso42001`).
@@ -45,7 +46,7 @@
 >
 > **Contagens:**
 > - **123 itens vivos** (§4): ABERTO 70, EM CURSO 6, BLOQUEADO 47;
-> - **116 linhas de histórico** (§7): 95 fechadas, 21 obsoletas;
+> - **117 linhas de histórico** (§7): 96 fechadas, 21 obsoletas;
 > - **42 contradições resolvidas** (§8): 26 da auditoria #65 + 16 novas;
 > - **41 decisões** em A/B/C (§10): P-1 a P-10, P-12 a P-15 e P-18 decididas pelo maestro, P-26 a P-36 (2026-10-06) decididas pelo maestro e P-23 = A (2026-10-06) e P-40 (ISO/IEC 42001, 2026-10-07) decididas pelo maestro; pendentes P-11, P-16, P-17, P-19, P-20, P-21 (F1b), P-22 (upstream MarkItDown), P-24 (`scrape.yml`) e P-25 (allowlist por área).
 
@@ -252,7 +253,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | SKILL-EXT-1 | Provider SkillsCat na pesquisa de skills externas (pedido no relatório do `activate_for_task`) | FALTA-DECIDIR | BLOQUEADO | AMBOS | Baixa | Contrato da API não verificável (sem documentação; o endpoint `skills.cat/api/search` não está confirmado) e serviço AGPL-3.0. Desbloqueia com o contrato documentado e a decisão do maestro sobre as licenças dos candidatos | `docs/ops/SKILL-ACTIVATION.md` (secção "SkillsCat: estacionado"); hoje `external_provider: skillscat` dá o aviso `provider_unsupported` e não pesquisa | — | VERIFICADO |
 | GOV-42001-1 | ISO/IEC 42001 (P-40): sistema de gestão de IA, alinhamento voluntário (não certificação), âmbito NAS + ANM. Fechar as lacunas `Parcial`/`Falta` do mapeamento: avaliação de risco periódica (6.1.2, 8.2), objectivos mensuráveis (6.2, A.9.3), competências (7.2, A.4.6), fornecedores avaliados (A.10.3), clientes (A.10.4), reporte externo e incidentes (A.8.3, A.8.4), 1.ª auditoria interna (2027-01) e 1.ª revisão da política | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | #124 com merge (2026-10-07, `c9de58f`): política, mapeamento e teste em vigor. Falta fechar cada lacuna `Parcial`/`Falta` do mapeamento | `docs/governance/AI-MANAGEMENT-SYSTEM.md`; `docs/governance/ISO-42001-MAPPING.md` (27 cláusulas, 38 controlos, Declaração de Aplicabilidade); `runner/tests/test_governance_mapping.py` | — | VERIFICADO |
 | GOV-RET-1 | Retenção por data (política de privacidade §7): purga automática no fim do contrato + 90 dias (memória do cliente, `project_state` e `agent_log` por `project`, L4 por `expires_at`), 24 meses no `token_usage` e 12 meses no conteúdo público de terceiros. Hoje a única limpeza (`cleanup_old_transcripts_if_needed`) apaga por tamanho da BD (acima de 70 % de 500 MB), não por idade | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | SQL versionado (Claude) + agendamento e execução em produção (DEV); prazos da P-41 | `docs/governance/PRIVACY-POLICY.md` §7; definição da função lida no Supabase (2026-10-07, só leitura); AIMS §5.3 | — | VERIFICADO |
-| GOV-PRIV-1 | O repo público `agent-network-mcp` versiona `transcripts/latest.json`, com a transcrição de um vídeo público de terceiros (título, autor, descrição, fala). Remover do git e pôr no `.gitignore`; decidir se se reescreve o histórico | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | PR no MCP (Claude); reescrever o histórico é decisão do DEV (força push no `main` do MCP) | `git ls-files transcripts` no ANM (2026-10-07); política de privacidade §2; AIMS §5.2 e §11 | — | VERIFICADO |
+| GOV-PRIV-2 | Upgrade do GOV-PRIV-1 (opção A): limpar `transcripts/latest.json` também do **histórico** do git do `agent-network-mcp` (commit `fe3cc90`, 2026-08-10, com a transcrição de um vídeo público de terceiros) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão do DEV: reescrever a `main` do MCP (`git filter-repo` + force push) obriga quem tem um clone a clonar de novo. Até lá, o ficheiro já não está na árvore actual (GOV-PRIV-1, opção C) | `git log -- transcripts/latest.json` no MCP; MCP #20; AIMS §11.1 | GOV-PRIV-1 (opção A) | VERIFICADO |
 | S-005 | Tabela `_prisma_migrations` no esquema `public` do Supabase sem RLS (as restantes 23 tabelas têm). Não tem dados pessoais, mas fica legível pela API se as permissões do `anon` o permitirem | FALTA-CONSTRUIR | ABERTO | DEV | Baixa | SQL versionado (activar RLS sem políticas, ou mover para outro esquema); o DEV aplica | SELECT ao `pg_class` (2026-10-07, só leitura): `relrowsecurity = false` só nesta tabela | — | VERIFICADO |
 
 
@@ -338,11 +339,12 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Dono | N.º | IDs |
 |---|---:|---|
 | CLAUDE | 13 | F1b, F2, W-010, W-003, R-005, EX-B7, AU-22b, F3c-DESIGN-1, F2-SEC-1, F3-ART-1, ING-008, ING-009, R-007 |
-| DEV | 69 | F0.6, F0.12, F3b-VAL-1, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, ING-010, ING-011, S-005 |
-| AMBOS | 41 | F3, F6, F3-MCP-1, F3b-GS-1, F3b-AUTH-1, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004, F4-MAT-1, F5-ROUTE-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, GOV-42001-1, GOV-RET-1, GOV-PRIV-1 |
+| DEV | 70 | F0.6, F0.12, F3b-VAL-1, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, ING-010, ING-011, S-005, GOV-PRIV-2 |
+| AMBOS | 40 | F3, F6, F3-MCP-1, F3b-GS-1, F3b-AUTH-1, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, AU-20, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004, F4-MAT-1, F5-ROUTE-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, GOV-42001-1, GOV-RET-1 |
 
 **Só do DEV, sem código** (refeito na revisão de 2026-10-07; a lista anterior citava merges e SELECTs já feitos):
-- **merge** do PR do branch `test/fake-clients` (clientes fictícios com Faker, Postgres descartável com testcontainers, `docs/ops/TESTING.md`; só testes);
+- **merge** do MCP #20 (GOV-PRIV-1: transcrições fora do git) e do PR do branch `docs/gov-priv-1` (registo no AIMS e no PENDENCIAS);
+- **GOV-PRIV-2** (opcional): reescrever o histórico do MCP para tirar a transcrição antiga;
 - **P-41** (prazos de retenção) e o e-mail de contacto de privacidade (`config/deployment.yaml → privacy_contact`; obrigatório num repo privado);
 - **decisões:** P-37 (AU-20), P-38 (maturidade), P-11, P-16, P-17, P-19, P-20 e as propostas P-21, P-22, P-24, P-25;
 - **F3b-VAL-1:** os 2 sidecars com as datas reais (`legal/direito-br-pt.md`, `imobiliario/fipezap.md`);
@@ -359,19 +361,20 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 14 | R-005, F3, S20, AU-20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 50 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, F4-MAT-1, ING-009, R-010, GOV-42001-1, GOV-RET-1, GOV-PRIV-1 |
-| Baixa | 58 | F0.12, F1b, F3c-DESIGN-1, F2-SEC-1, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, S-005 |
+| Média | 49 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, F4-MAT-1, ING-009, R-010, GOV-42001-1, GOV-RET-1 |
+| Baixa | 59 | F0.12, F1b, F3c-DESIGN-1, F2-SEC-1, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, S-005, GOV-PRIV-2 |
 
 **Por estado:** ABERTO 70 · EM CURSO 6 · BLOQUEADO 47.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
-## 7. Histórico (116 linhas: 95 FECHADO, 21 OBSOLETO)
+## 7. Histórico (117 linhas: 96 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| GOV-PRIV-1 | O repo público do MCP versionava `transcripts/latest.json` (transcrição de um vídeo público de terceiros) | 2026-10-07 | MCP #20: `git rm --cached`, `/transcripts/` no `.gitignore`, README "Dados e privacidade", `tests/publicRepo.test.mjs`; AIMS §11.1 neste PR | FECHADO | **Resolvido: C. Transcrições no Supabase. A fica como upgrade** (GOV-PRIV-2: limpar o histórico). Fecha com o merge do MCP #20 |
 | GOV-IMPACT-1 | Avaliação de impacto (ISO/IEC 42001 6.1.4, 8.4, A.5.2–A.5.5) e política de privacidade (LGPD + GDPR) | 2026-10-07 | PR do branch `docs/privacy-policy`: `docs/governance/PRIVACY-POLICY.md`, AIMS §5 e §11, `config/deployment.yaml`, `runner/tests/test_privacy_separation.py` | FECHADO | #125 com merge (2026-10-07, `4c99fdd`). Estado medido: 0 dados de clientes; conteúdo público de terceiros coberto. Seguimento: GOV-RET-1, GOV-PRIV-1, S-005, P-41 |
 | SEC-1.3 | `activate_for_task` antes do worker + allow-list de scripts por skill (deny-by-default), sha256 e `pins:`, pesquisa externa opt-in | 2026-10-07 | #123 (merged 2026-10-07 10:31 UTC, `7cda6f1`); CI da `main` verde (11 checks) | FECHADO | Pré-requisito do AU-20, que continua ABERTO (P-37). SKILL-EXT-1 (SkillsCat) fica no §4 |
 | W-011 / R-006 / H-002 | Validação do `MCP_URL` e do bypass; `provenance_v2_ok` no `l5_eval`; avisos do ruff em `scripts/` | 2026-10-07 | #122 (merged 2026-10-07 10:26 UTC, `4e38801`); CI da `main` verde | FECHADO | Mesmo PR da revisão do estado contra o EXECUTION-PLAN e do F3c-DESIGN-1 opção A |
