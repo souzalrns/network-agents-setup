@@ -1,6 +1,6 @@
 # Política de Privacidade e Protecção de Dados
 
-**Versão:** 1.0. **Em vigor desde:** 2026-10-07.
+**Versão:** 1.1. **Em vigor desde:** 2026-10-07.
 **Aplica-se a:** este setup de agentes, o `network-agents-setup` (NAS, runner e agentes) e o `agent-network-mcp` (ANM, servidor MCP e memória no Supabase), e a qualquer cópia privada importada a partir dele (§2).
 **Leis:** Lei n.º 13.709/2018 (LGPD, Brasil) e Regulamento (UE) 2016/679 (RGPD/GDPR). Aplica-se a lei do titular e do estabelecimento do responsável. Havendo diferença, aplica-se a regra mais protectora para o titular.
 **Enquadramento:** avaliação de impacto em [`AI-MANAGEMENT-SYSTEM.md`](./AI-MANAGEMENT-SYSTEM.md) §5 (ISO/IEC 42001, 6.1.4). Mapeamento em [`ISO-42001-MAPPING.md`](./ISO-42001-MAPPING.md).
@@ -80,7 +80,8 @@ O titular pode pedir a revisão de qualquer resultado que o afecte (LGPD art. 20
 |---|---|---|
 | Memória do cliente, L4, `project_state` e `agent_log` do projecto do cliente | **enquanto durar o contrato + 90 dias** | no fim do contrato, o operador marca `expires_at` na L4, apaga a pasta `memory/<client_id>/` e corre a eliminação por `project` (procedimento em §8). Hoje não há purga automática por data: **GOV-RET-1** |
 | `token_usage` (sem conteúdo) | 24 meses (custos e auditoria) | idem, GOV-RET-1 |
-| Conteúdo público de terceiros | **12 meses** após a recolha, ou até o titular se opor | a função `cleanup_old_transcripts_if_needed` só apaga por tamanho da base de dados (acima de 70 % de 500 MB), não por idade: **GOV-RET-1** |
+| Transcrições de conteúdo público (`transcripts`) | **60 dias desde a criação** (decisão do maestro, 2026-10-07), ou antes, se o titular se opuser. Para voltar a ter uma, transcreve-se o link outra vez | `expires_at` por linha e um job diário do `pg_cron` (`purge-expired-transcripts`, 03:17 UTC): `agent-network-mcp/memory/transcripts_retention.sql`. A limpeza por tamanho (`cleanup_old_transcripts_if_needed`) fica como rede de segurança |
+| Outro conteúdo público de terceiros (`image_posts`, `scrapes`) | **12 meses** após a recolha, ou até o titular se opor (P-41, por decidir) | hoje só a limpeza por tamanho: **GOV-RET-1** |
 | Artefactos locais de runs | apagados no fim do trabalho, no máximo com o contrato + 90 dias | responsabilidade de quem corre o runner |
 | Cópias de segurança do Supabase | o ciclo do plano Supabase | um dado apagado sai das cópias quando o ciclo roda |
 
@@ -162,3 +163,4 @@ A avaliação de impacto (ISO/IEC 42001 6.1.4; LGPD art. 38 – relatório de im
 | Versão | Data | Alteração |
 |---|---|---|
 | 1.0 | 2026-10-07 | Primeira versão (GOV-IMPACT-1) |
+| 1.1 | 2026-10-07 | Transcrições: 60 dias desde a criação, com purga diária automática (P-41, decisão do maestro). É um prazo mais curto, não uma alteração material (§13) |
