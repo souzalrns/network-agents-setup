@@ -28,6 +28,14 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### Retenção das transcrições: 60 dias (2026-10-07)
+- **Decisão do maestro:** apagar 60 dias depois da criação, sem período de graça ("se for o caso transcrevemos novamente"). Só `transcripts`.
+- **Verificado:** nenhum código lê a tabela `transcripts`. Só o `transcribe.yml` escreve e o `content_analyst` lê a transcrição acabada de fazer. O fluxo do reel não muda.
+- **MCP #20:** `memory/transcripts_retention.sql` (`expires_at` preenchido a partir de `created_at`, default `now() + 60 dias`, `purge_expired_transcripts()` sem acesso para `anon`/`authenticated`, job diário do `pg_cron` às 03:17 UTC) e o README.
+  - Testado 2x em Postgres 16 e na imagem `supabase/postgres:15.8.1.085` com `pg_cron`: 1 só job, o `anon` não executa, a purga apaga só o expirado.
+  - O DEV aplica. Na 1.ª corrida saem 35 de 99.
+- **NAS #127:** política de privacidade 1.1 (§7); P-41 decidida para as transcrições; GOV-RET-1 com as transcrições feitas; AIMS §5.3 e §5.4.
+
 ### GOV-PRIV-1: transcrições fora do git do MCP (2026-10-07)
 - **Merge do #126** (`c487129`): os testes com clientes fictícios estão no `main`.
 - **MCP #20** (branch `claude/reels-analysis-tools-access-hwudk9`, recomeçado a partir da `main` porque o #19 já tinha merge):
