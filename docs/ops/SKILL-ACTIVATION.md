@@ -1,7 +1,7 @@
 # Activação da skill antes do worker (`activate_for_task`) + SEC-1.3
 
-**Estado:** implementado no branch `feat/activate-for-task-sec13` (PR draft, sem merge).
-**Item:** SEC-1.3 (registado em `docs/initiatives/PENDENCIAS.md` §4 pelo PR de estado #122, para não conflituar). É um pré-requisito do AU-20 e **não fecha o AU-20**: o worker continua sem tools (P-37 por decidir).
+**Estado:** em produção no `main` (merge do #123, 2026-10-07, `7cda6f1`).
+**Item:** SEC-1.3, FECHADO (`docs/initiatives/PENDENCIAS.md` §7). Governança: ISO/IEC 42001, controlos A.4.4, A.7.5 e A.10.3 (`docs/governance/ISO-42001-MAPPING.md`). É um pré-requisito do AU-20 e **não fecha o AU-20**: o worker continua sem tools (P-37 por decidir).
 **Código:** `runner/plan_runner/skill_activation.py`, chamado em `runner/plan_runner/executor.py` → `execute_external_request`.
 **Testes:** `runner/tests/test_skill_activation.py` (39 testes, sem rede).
 
