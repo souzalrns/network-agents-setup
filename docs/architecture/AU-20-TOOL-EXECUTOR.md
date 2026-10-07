@@ -67,6 +67,7 @@ Evidência para o B: o worker já tem transport injectável, `BudgetExceeded`, H
 | Item do contrato | Onde | Teste |
 |---|---|---|
 | Flag, desligada por omissão | `tool_executor.ENV_FLAG` (`PLAN_RUNNER_TOOLS`); `GeminiWorker(tools=...)` | `test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre` |
+| Flag desligada visível no `result.json` (AU-20b, P-42 = A): `meta.tools.enabled: false` num passo com `tools_allowed`; sem `tools_allowed`, nada muda | `tool_executor.flag_off_meta`, `GeminiWorker._run` | `test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre`, `test_plano_force_read_sem_flag_nao_tem_meta_tools`, `test_sem_flag_passo_sem_tools_allowed_nao_ganha_meta_tools` |
 | Autorizado = `tools_allowed` ∩ registo; `read` corre, `act` com aprovação, `prepare` recusado | `plan_tools`, `LEVELS_AUTO`, `LEVELS_APPROVAL`, `LEVELS_ALLOWED` | `test_plano_de_tools_intersecta_com_o_registo` |
 | O modelo só vê as autorizadas; as outras vão para `unsupported` | `run_tool_loop` (declarações), `meta.tools.unsupported` | `test_com_flag_o_worker_usa_a_tool_e_audita` |
 | Chamada não autorizada não corre | `execute_call` → `tool_not_allowed` | `test_tool_nao_autorizada_nao_corre` |
@@ -116,7 +117,7 @@ Run do DEV com `PLAN_RUNNER_TOOLS=1` e o Gemini real:
 O plano não tem `repo_files`, por isso o conteúdo do `BUDGET.md` só podia chegar ao modelo pela tool.
 
 **1.º run (antes deste):** com o `design-flow-demo`, o `result.json` saiu sem `meta.tools`. Com a flag, esse campo existe sempre, mesmo sem nenhuma chamada. Logo, a flag não chegou ao processo do worker.
-- **P-42 = A (maestro, 2026-10-07):** com a flag desligada, o `result.json` vai passar a dizê-lo (`meta.tools.enabled: false`). Fica como item **AU-20b**.
+- **P-42 = A (maestro, 2026-10-07):** com a flag desligada, o `result.json` passa a dizê-lo (`meta.tools.enabled: false`). Implementado no AU-20b.
 
 **Fica para depois** (não está no registo, fica `unsupported`): `web_search` (10 passos o declaram) e qualquer tool `prepare`/`act` real. O caminho de aprovação das `act` já existe e está testado com uma tool falsa; uma `act` real só entra no registo com idempotência + rollback (§15.6, item 10). `prepare` continua recusado até ter semântica definida.
 

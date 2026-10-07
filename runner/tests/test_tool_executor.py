@@ -278,7 +278,9 @@ def test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre(tmp_path, run_dir, monke
     assert "tools" not in body and len(script.bodies) == 1
     assert ew.NO_TOOLS_SENTENCE in body["systemInstruction"]["parts"][0]["text"]
     result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
-    assert "tools" not in result["meta"]
+    # P-42 = A (AU-20b): a flag desligada fica escrita no resultado, não só pela ausência do campo
+    assert result["meta"]["tools"] == {"enabled": False, "reason": "PLAN_RUNNER_TOOLS desligada",
+                                       "flag": "PLAN_RUNNER_TOOLS", "tools_allowed": ["read_repo_file", "web_search"]}
 
 
 @pytest.mark.parametrize("context", ["opt", "legacy"])
@@ -675,10 +677,21 @@ def test_plano_force_read_obriga_a_tool_e_mostra_meta_tools(run_dir, monkeypatch
 
 
 def test_plano_force_read_sem_flag_nao_tem_meta_tools(run_dir, monkeypatch):
-    """Sem PLAN_RUNNER_TOOLS no processo: chamada única, sem meta.tools (o sintoma do 1.º run do DEV)."""
+    """Sem PLAN_RUNNER_TOOLS no processo: chamada única, e o result.json diz que a flag estava desligada
+    (antes do AU-20b, o 1.º run do DEV só o mostrava pela ausência de meta.tools)."""
     script = Script([_text("Não consigo ler o ficheiro.\n")])
     monkeypatch.setattr(ew, "httpx_transport", script)
     assert run_plan(FORCE_READ, mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
     assert len(script.bodies) == 1 and "tools" not in script.bodies[0]
     meta = json.loads((run_dir / "pending_steps/read_budget/result.json").read_text(encoding="utf-8"))["meta"]
-    assert "tools" not in meta and meta["worker"] == "gemini"
+    assert meta["worker"] == "gemini" and meta["tools"]["enabled"] is False
+    assert meta["tools"]["reason"] == "PLAN_RUNNER_TOOLS desligada" and meta["tools"]["tools_allowed"] == ["read_repo_file"]
+
+
+def test_sem_flag_passo_sem_tools_allowed_nao_ganha_meta_tools(tmp_path, run_dir, monkeypatch):
+    """O AU-20b só marca os passos que declaram tools; os outros ficam como sempre."""
+    step = {**STEP, "tools_allowed": []}
+    script = Script([_text("# ok\n")])
+    monkeypatch.setattr(ew, "httpx_transport", script)
+    assert run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
+    assert "tools" not in json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))["meta"]

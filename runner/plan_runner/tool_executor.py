@@ -283,6 +283,12 @@ def tools_enabled_from_env(env: dict[str, str]) -> bool:
     return env.get(ENV_FLAG, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def flag_off_meta(tools_allowed: list[Any]) -> dict[str, Any]:
+    """`meta.tools` de um passo com `tools_allowed` quando a flag está desligada (P-42 = A, AU-20b)."""
+    return {"enabled": False, "reason": f"{ENV_FLAG} desligada", "flag": ENV_FLAG,
+            "tools_allowed": [str(t) for t in tools_allowed]}
+
+
 def tools_instruction(plan: ToolPlan) -> str:
     read = [n for n in plan.allowed if n not in plan.needs_approval]
     text = f"Tens tools SÓ DE LEITURA neste passo: {', '.join(read)}. " if read else ""

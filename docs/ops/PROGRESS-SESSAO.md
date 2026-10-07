@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/au20-fechado` (a partir da `main` `d4151e9`: merge do #138).
+- **Branch actual:** `feat/au20b-flag-off-meta` (a partir da `main` `8da0f49`: merge do #139); a seguir, `feat/f2-allow-1`.
 - **`main` de referência:** NAS `e74a610` (merges até #136; o #135 e o #136 levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,15 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### AU-20b: a flag desligada fica escrita no `result.json` (2026-10-07)
+- **Pedido do maestro:** "P-42 = A (aprovada). Avança com AU-20b e depois F2-ALLOW-1".
+- **Código:**
+  - `tool_executor.flag_off_meta(tools_allowed)`;
+  - no `GeminiWorker._run`, sem a flag e com `tools_allowed`, o resultado ganha `meta.tools = {"enabled": false, "reason": "PLAN_RUNNER_TOOLS desligada", "flag": ..., "tools_allowed": [...]}`;
+  - um passo sem `tools_allowed` fica sem `meta.tools`.
+- **Testes:** 2 ajustados (deixaram de exigir a ausência do campo) e 1 novo (passo sem `tools_allowed`). 2 mutantes apanhados (sem o ramo; o ramo sem a condição do `tools_allowed`).
+- **Docs:** WORKER-EXTERNAL ("Tools do worker"), contrato AU-20 (tabela e "Prova em run real"). AU-20b → EM CURSO.
 
 ### AU-20 FECHADO: run real com a tool (2026-10-07)
 - **Merge do #138** (`d4151e9`): o commit `9fe2a2f` está no `main`.
