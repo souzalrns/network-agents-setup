@@ -3,7 +3,7 @@
 **Referencial:** ISO/IEC 42001:2023, como **alinhamento voluntário**. Não é uma certificação, nem uma alegação de conformidade: certificar exige auditoria externa por um organismo acreditado.
 **Decisão:** P-40 (maestro, 2026-10-07): âmbito NAS + ANM; papéis maestro / DEV / Claude; auditoria interna trimestral e revisão desta política semestral.
 **Mapeamento cláusula a cláusula e Declaração de Aplicabilidade:** [`ISO-42001-MAPPING.md`](./ISO-42001-MAPPING.md).
-**Estado dos pendentes:** `docs/initiatives/PENDENCIAS.md` (único documento de estado). Lacunas deste AIMS: **GOV-42001-1**; avaliação de impacto: **GOV-IMPACT-1**.
+**Estado dos pendentes:** `docs/initiatives/PENDENCIAS.md` (único documento de estado). Lacunas deste AIMS: **GOV-42001-1**. Avaliação de impacto: **GOV-IMPACT-1**, fechada com a [política de privacidade](./PRIVACY-POLICY.md) (§5). Seguimento: GOV-RET-1 (purga por data) e GOV-PRIV-1 (ficheiro de terceiros no repo público do ANM).
 **Texto da norma:** este documento cita só números e títulos curtos (tradução livre). O texto da ISO/IEC 42001 é protegido por direitos de autor e não é reproduzido aqui.
 
 ## 1. Âmbito (cláusulas 4.3 e 4.4)
@@ -40,6 +40,7 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
    - validação, observabilidade e custo;
    - **e uma linha de risco (§4) e uma linha na Declaração de Aplicabilidade** (regra acrescentada por este AIMS).
 8. **Honestidade de estado.** Um item só fecha depois do merge, com evidência. Nada é "fechado só no papel" (lição do V34).
+9. **Dados pessoais.** Dados de clientes nunca no repo público (§11). Dados de clientes só seguem para o Gemini em nível pago. Tratamento conforme a [`PRIVACY-POLICY.md`](./PRIVACY-POLICY.md) (LGPD e GDPR).
 
 **Alinhamento com outras políticas (A.2.3):** `docs/architecture/SECURITY-AGENTS.md`, `CLAUDE.md` dos dois repos e o EXECUTION-PLAN §15. Em conflito, ganha a regra mais restritiva até o maestro decidir.
 
@@ -67,18 +68,65 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
 
 ## 5. Avaliação de impacto (6.1.4, 8.4, A.5)
 
-**Ainda não existe.** É a maior lacuna deste AIMS → **GOV-IMPACT-1** (Sev Alta). Âmbito mínimo:
+**Feita a 2026-10-07 (GOV-IMPACT-1).** Política que dela resulta: [`PRIVACY-POLICY.md`](./PRIVACY-POLICY.md). Serve também de relatório de impacto à protecção de dados (LGPD art. 38) e de avaliação de impacto (GDPR art. 35.º) para o âmbito actual.
 
-- a working memory por cliente (`memory/<client_id>/MEMORY.md`, injectada no prompt: S30, `runner/plan_runner/engine.py::_load_client_memory`);
-- a memória L4 (`scripts/create_memory_l4_table.sql`, `runner/plan_runner/memory_l4.py`), com retenção (`expires_at`) e esquecimento (`forget`);
-- as tabelas de memória do ANM (`agent_log`, `project_state`).
+### 5.1 Processo (A.5.2) e documentação (A.5.3)
 
-Para cada uma, a avaliação responde:
-- que dados pessoais entram (LGPD e GDPR);
-- quem os vê;
-- por quanto tempo ficam;
-- como um titular pede para apagar;
-- o que acontece se um prompt os expuser.
+- **Quem:** o Claude prepara, o DEV confirma o que existe em produção, o maestro aceita o risco residual.
+- **Onde fica:** esta secção, versionada no git. Cada revisão é um PR.
+- **Quando se repete** (8.4):
+  - categoria nova de dados ou tabela nova com dados pessoais;
+  - sub-processador novo;
+  - **1.º cliente real** ou 1.º `memory/<client_id>/MEMORY.md`;
+  - capacidade nova de tools (P-37);
+  - incidente;
+  - e sempre na revisão semestral.
+
+### 5.2 Estado medido (2026-10-07, SELECTs só de leitura ao Supabase do ANM)
+
+| Fonte | Linhas | Dados pessoais |
+|---|---:|---|
+| `memory/<client_id>/MEMORY.md` (NAS) | 0 ficheiros | não |
+| `memory_l4` | 0 | não |
+| `agent_log` | 119 | nenhum e-mail, telefone ou CPF detectado (padrões; só projectos internos e produtos próprios) |
+| `project_state` | 19 | idem |
+| `transcripts` | 99 (52 autores, 2 plataformas) | **sim:** autor, descrição e fala de conteúdo **público** de terceiros |
+| `image_posts` | 9 (1 autor) | sim, idem |
+| `scrapes` | 2 | possível (páginas públicas) |
+
+**Conclusão:**
+- **Não há dados de clientes.**
+- Há dados pessoais de terceiros obtidos de **conteúdo público**, cobertos pela política (§3, §5 e §7).
+- O repo público do ANM tem um ficheiro `transcripts/latest.json` com a transcrição de um vídeo público de terceiros → **GOV-PRIV-1**.
+
+### 5.3 Impacto em indivíduos ou grupos (A.5.4)
+
+| Risco | Quem | Probabilidade | Gravidade | Medidas | Residual |
+|---|---|---|---|---|---|
+| Memória de cliente exposta no git | clientes | baixa | alta | `/memory/*/` no `.gitignore`; `repo_visibility` + `test_privacy_separation.py`; dados no Supabase com RLS | baixo |
+| Dados de cliente usados pela Google para treino (Gemini gratuito) | clientes | **alta** se houver dados de cliente no tier gratuito | média | regra da política §9: **dados de clientes só com Gemini pago**; no tier gratuito, só conteúdo sem dados de clientes | baixo, se a regra for cumprida |
+| Facto errado sobre uma pessoa memorizado e reutilizado | clientes, terceiros | média | média | L4 só activa com aprovação humana (`promote`); correcção por `supersedes`; direito de rectificação | baixo |
+| Prompt injection que leva um agente a revelar memória de outro cliente | clientes | baixa | alta | memória injectada só para o `client_id` do plano; o worker não tem tools (AU-20); output de tools como dados (P-37, contrato) | baixo |
+| Dados guardados além do necessário | todos | **média** | média | prazos na política §7; L4 com `expires_at`; **a purga por data não é automática** → GOV-RET-1 | médio até ao GOV-RET-1 |
+| Autor de conteúdo público analisado sem saber | terceiros | média | baixa | finalidade limitada (estudo), sem perfis nem contacto, oposição a qualquer momento (política §8) | baixo |
+| Decisão automatizada com efeito numa pessoa | clientes | baixa | alta | HITL obrigatório em `legal`, `finance` e `security`; nenhuma decisão só automatizada (política §6) | baixo |
+
+**Ponderação do legítimo interesse** (conteúdo público de terceiros):
+- **finalidade legítima:** estudo de mercado e referências criativas;
+- **necessidade:** só título, autor, descrição e transcrição; sem contactos nem perfis;
+- **expectativa do titular:** o conteúdo foi publicado abertamente pelo autor;
+- **salvaguardas:** retenção de 12 meses, oposição e eliminação, nada publicado no repo (GOV-PRIV-1).
+
+Resultado: **o interesse prevalece**, com as salvaguardas acima.
+
+### 5.4 Impactos sociais (A.5.5)
+
+O setup produz conteúdo de marketing, análises e código para o próprio operador e para clientes. Riscos sociais identificados:
+- desinformação por conhecimento desactualizado: mitigada pela validade (F3b) e pela proveniência obrigatória (F3a);
+- conteúdo enganoso em marketing: mitigado pelo `grounding` obrigatório e pelo `design_critic`/HITL nas áreas sensíveis;
+- consumo de recursos: mitigado pelo tecto de tokens por área.
+
+Nenhum uso previsto envolve vigilância, avaliação de pessoas, crédito, emprego ou acesso a serviços essenciais. Esses usos ficam **fora do uso previsto** (A.9.4) e exigiriam uma nova avaliação antes de qualquer trabalho.
 
 ## 6. Operação e monitorização (8.1, 9.1, A.6.2.6, A.6.2.8)
 
@@ -98,10 +146,12 @@ Para cada uma, a avaliação responde:
 
 | Fornecedor | Para quê | Dados que recebe | Controlo actual |
 |---|---|---|---|
-| Google Gemini API | modelo dos workers, do router e dos conselhos | prompts (que podem incluir memória de cliente) | chave só por header; tecto de tokens; tier gratuito preferido |
+| Google Gemini API | modelo dos workers, do router e dos conselhos | prompts (que podem incluir memória de cliente) | chave só por header; tecto de tokens; tier gratuito **só sem dados de clientes** (no gratuito, a Google usa o conteúdo para melhorar produtos): política de privacidade §9 |
 | Supabase | memória, conhecimento, ledger | conteúdo de memória, chunks, uso | SQL de RLS das tabelas de conhecimento versionado (`scripts/migrations/enable_rls_knowledge_tables.sql`); service role só no servidor |
 | Vercel | alojamento do MCP | pedidos MCP | `MCP_API_KEY` fail-closed; protecção de deployment |
 | skills.sh (API) | pesquisa de skills externas, opt-in | só a query de pesquisa | HTTPS, sem redirects, timeout; candidatas nunca instaladas |
+| GitHub (Actions) | workflows (ex.: transcrição de conteúdo público) | conteúdo público processado; segredos cifrados | segredos só como secrets do repo; nada de dados de clientes nos logs |
+| Oracle Cloud | VM do `bridge-worker`, quando activo | pedidos encaminhados | VM do operador (S20) |
 | Skills de terceiros | instruções e scripts | — | SEC-1.3 deny-by-default; `pins:` sha256; revisão humana |
 
 Um fornecedor novo entra nesta tabela antes de ser usado (GOV-42001-1).
@@ -139,3 +189,21 @@ Se houver dados pessoais, a comunicação aos titulares e às autoridades segue 
 | **Melhoria contínua** | contínua | todos | itens no PENDENCIAS; contradições no §8 |
 
 **Primeira auditoria:** 2027-01 (o trimestre seguinte a esta política).
+
+## 11. Repositório público e repositório privado
+
+| | Público (este repo, e o `agent-network-mcp`) | Privado (cópia importada para trabalhar com clientes) |
+|---|---|---|
+| Para quê | modelo, portfólio, código e conhecimento curado | o mesmo setup a operar com clientes reais |
+| `config/deployment.yaml` | `repo_visibility: public` | `repo_visibility: private` + `privacy_contact` (e-mail do responsável) |
+| Dados de clientes | **nunca**: nem `memory/<cliente>/`, nem exportações de tabelas, nem fixtures reais, nem transcrições ou artefactos de runs reais | no Supabase (UE) e, quando há ficheiros, fora do git |
+| Guarda | `.gitignore` (`/memory/*/`) + `runner/tests/test_privacy_separation.py` (falha se um ficheiro de cliente for versionado) | o mesmo teste exige o `privacy_contact` |
+
+**Para importar para um repo privado:**
+1. muda `repo_visibility` para `private`;
+2. preenche o `privacy_contact`;
+3. revê a lista de sub-processadores (política §9);
+4. usa uma chave **paga** do Gemini antes de pôr dados de clientes na memória;
+5. repete a avaliação de impacto (§5.1) com o 1.º cliente.
+
+**O repo público não guarda dados de clientes.** Verificado a 2026-10-07: 0 ficheiros `memory/<cliente>/` no git do NAS e 0 linhas na `memory_l4`. A excepção encontrada é conteúdo público de terceiros no ANM, que fica com **GOV-PRIV-1**.
