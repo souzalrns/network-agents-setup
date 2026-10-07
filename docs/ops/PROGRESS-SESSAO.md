@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/gov-priv-1` (a partir da `main` `c487129`: merge do #126); MCP: `claude/reels-analysis-tools-access-hwudk9` (#20).
-- **`main` de referência:** NAS `c487129` (merges até #126); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `docs/retention-all` (a partir da `main` `666528f`: merge do #127); MCP: `claude/reels-analysis-tools-access-hwudk9` (#21).
+- **`main` de referência:** NAS `666528f` (merges até #127); MCP: merge do #19 a 2026-10-05 22:06 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -28,13 +28,27 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### P-41 decidida e GOV-RET-1 fechado (2026-10-07)
+- **Achado:** os merges do MCP #20 (12:01 UTC) e do NAS #127 (12:02 UTC) levaram só o 1.º commit de cada PR. A retenção (`5efcda9`, `eadecb2` no MCP; `0d07e1e`, `3eeac82` no NAS) ficou fora do `main`. Foi reaplicada sem conflitos: MCP #21 (branch de sessão recomeçado a partir do `main`, com rebase) e NAS no branch `docs/retention-all` (cherry-pick).
+- **Decisão do maestro (P-41):** `token_usage` com 24 meses.
+- **MCP #21:**
+  - `purge_expired_content()` passa a cobrir 4 tabelas;
+  - a limpeza do `agent_log` (90 dias), que corria em produção fora do git, fica versionada;
+  - testado 2x na imagem do Supabase com o `schema.sql` e o `token_usage.sql` reais.
+- **NAS:**
+  - política 1.1 §7 (`token_usage` 24 meses, `agent_log` 90 dias);
+  - **GOV-RET-1 → FECHADO**;
+  - novo **GOV-RET-2** (dados de clientes, BLOQUEADO até haver o 1.º cliente real);
+  - P-41 nas decididas.
+- **Contagens:** 123 vivos (ABERTO 69, EM CURSO 6, BLOQUEADO 48), 118 de histórico (97 FECHADO), 41 decisões.
+
 ### Retenção alargada a `image_posts` e `scrapes` (2026-10-07)
 - **Levantamento** (só leituras):
   - `image_posts` vem do `extrair-imagem.yml` (gallery-dl, Instagram): 9 linhas de 1 autor de terceiros, todas tentativas falhadas (3 a pedir login, 6 sem imagens). O bucket `post-images` não tem nenhuma imagem do Instagram: 23 capturas `visual-review` e 3 `diagnostico-portal`.
   - `scrapes` vem do `scrape.yml`: 2 linhas, ambas de `viannalegal.com.br` (site próprio).
   - Nenhum dos fluxos traduz.
 - **Decisão do maestro:** `image_posts` com 60 dias; `scrapes` opção B (60 dias por omissão, 12 meses nos sites próprios).
-- **MCP #20:** `memory/retention.sql`, que substitui o `transcripts_retention.sql`:
+- **MCP #20 → #21:** `memory/retention.sql`, que substitui o `transcripts_retention.sql`:
   - tabela `retention_own_domains` (RLS activo);
   - trigger nos `scrapes`;
   - `purge_expired_content()` e um só job, `purge-expired-content`, às 03:17 UTC.
@@ -44,7 +58,7 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 ### Retenção das transcrições: 60 dias (2026-10-07)
 - **Decisão do maestro:** apagar 60 dias depois da criação, sem período de graça ("se for o caso transcrevemos novamente"). Só `transcripts`.
 - **Verificado:** nenhum código lê a tabela `transcripts`. Só o `transcribe.yml` escreve e o `content_analyst` lê a transcrição acabada de fazer. O fluxo do reel não muda.
-- **MCP #20:** `memory/transcripts_retention.sql` (`expires_at` preenchido a partir de `created_at`, default `now() + 60 dias`, `purge_expired_transcripts()` sem acesso para `anon`/`authenticated`, job diário do `pg_cron` às 03:17 UTC) e o README.
+- **MCP #20 → #21:** `memory/transcripts_retention.sql` (`expires_at` preenchido a partir de `created_at`, default `now() + 60 dias`, `purge_expired_transcripts()` sem acesso para `anon`/`authenticated`, job diário do `pg_cron` às 03:17 UTC) e o README.
   - Testado 2x em Postgres 16 e na imagem `supabase/postgres:15.8.1.085` com `pg_cron`: 1 só job, o `anon` não executa, a purga apaga só o expirado.
   - O DEV aplica. Na 1.ª corrida saem 35 de 99.
 - **NAS #127:** política de privacidade 1.1 (§7); P-41 decidida para as transcrições; GOV-RET-1 com as transcrições feitas; AIMS §5.3 e §5.4.
