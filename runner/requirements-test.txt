@@ -1,0 +1,8 @@
+# Opcional - dados de teste FICTÍCIOS e Postgres descartável (docs/ops/TESTING.md).
+# Pins exactos: o seed_fake_clients.py usa seed fixa, e só com a mesma versão do Faker
+# gera os mesmos clientes. Para subir a versão, correr os testes e rever os snapshots.
+# Licenças: Faker MIT; testcontainers Apache-2.0.
+Faker==40.41.0
+# Postgres + pgvector num contentor, quando não há RAG_TEST_DATABASE_URL (precisa de Docker).
+# No CI o job test-rag já tem um serviço Postgres: o testcontainers não é usado lá.
+testcontainers[postgres]==4.15.0
