@@ -231,9 +231,10 @@ jobs:
         run: python -m pytest tests/test_rag_canonical.py -v -rs
 
       # F3a: migracao aditiva (2x, sobre dados antigos), match_knowledge_v2 com filtros,
+      # R-005: kb das linhas do MCP (sem DEFAULT, trigger, reclassificacao 1x),
       # writer compativel antes e depois do SQL, sidecar invalido / proveniencia mudada
       - name: proveniencia no retrieve (F3a, Postgres + pgvector)
-        run: python -m pytest tests/test_f3_provenance.py tests/test_provenance.py tests/test_f3b_validity.py -v -rs
+        run: python -m pytest tests/test_f3_provenance.py tests/test_provenance.py tests/test_f3b_validity.py tests/test_r005_kb_default.py -v -rs
 
       # L4 (D3): ciclo remember/recall/forget/promote + SQL (2x, idempotencia) + worker
       # + clientes FICTICIOS (Faker, prefixo FAKE-): isolamento por cliente e limpeza
