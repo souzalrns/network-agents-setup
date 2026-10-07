@@ -1,6 +1,6 @@
 # Política de Privacidade e Protecção de Dados
 
-**Versão:** 1.0. **Em vigor desde:** 2026-10-07.
+**Versão:** 1.1. **Em vigor desde:** 2026-10-07.
 **Aplica-se a:** este setup de agentes, o `network-agents-setup` (NAS, runner e agentes) e o `agent-network-mcp` (ANM, servidor MCP e memória no Supabase), e a qualquer cópia privada importada a partir dele (§2).
 **Leis:** Lei n.º 13.709/2018 (LGPD, Brasil) e Regulamento (UE) 2016/679 (RGPD/GDPR). Aplica-se a lei do titular e do estabelecimento do responsável. Havendo diferença, aplica-se a regra mais protectora para o titular.
 **Enquadramento:** avaliação de impacto em [`AI-MANAGEMENT-SYSTEM.md`](./AI-MANAGEMENT-SYSTEM.md) §5 (ISO/IEC 42001, 6.1.4). Mapeamento em [`ISO-42001-MAPPING.md`](./ISO-42001-MAPPING.md).
@@ -78,9 +78,11 @@ O titular pode pedir a revisão de qualquer resultado que o afecte (LGPD art. 20
 
 | Dados | Prazo | Como se cumpre |
 |---|---|---|
-| Memória do cliente, L4, `project_state` e `agent_log` do projecto do cliente | **enquanto durar o contrato + 90 dias** | no fim do contrato, o operador marca `expires_at` na L4, apaga a pasta `memory/<client_id>/` e corre a eliminação por `project` (procedimento em §8). Hoje não há purga automática por data: **GOV-RET-1** |
-| `token_usage` (sem conteúdo) | 24 meses (custos e auditoria) | idem, GOV-RET-1 |
-| Conteúdo público de terceiros | **12 meses** após a recolha, ou até o titular se opor | a função `cleanup_old_transcripts_if_needed` só apaga por tamanho da base de dados (acima de 70 % de 500 MB), não por idade: **GOV-RET-1** |
+| Memória do cliente, L4 e `project_state` do projecto do cliente | **enquanto durar o contrato + 90 dias** | no fim do contrato, o operador marca `expires_at` na L4, apaga a pasta `memory/<client_id>/` e corre a eliminação por `project` (procedimento em §8). Manual até haver o 1.º cliente real: **GOV-RET-2** |
+| Registo de execuções (`agent_log`) | **90 dias** desde a criação (mais curto do que o contrato) | job diário do `pg_cron` `cleanup-agent-logs-daily` (03:00 UTC), que já corria em produção; a função `cleanup_old_agent_logs()` está agora versionada em `agent-network-mcp/memory/retention.sql` |
+| `token_usage` (só contagens de tokens, sem conteúdo) | **24 meses** desde a criação (P-41, decisão do maestro): chega para a análise anual e para a auditoria ISO/IEC 42001, mas não é eterno | job diário `purge-expired-content` (03:17 UTC), `agent-network-mcp/memory/retention.sql` |
+| Conteúdo público de terceiros extraído por link: transcrições (`transcripts`) e posts de imagem (`image_posts`) | **60 dias desde a criação** (decisão do maestro, 2026-10-07), ou antes, se o titular se opuser. Para voltar a ter um, extrai-se o link outra vez | `expires_at` por linha e um job diário do `pg_cron` (`purge-expired-content`, 03:17 UTC): `agent-network-mcp/memory/retention.sql`. A limpeza por tamanho (`cleanup_old_transcripts_if_needed`) fica como rede de segurança |
+| Páginas web extraídas (`scrapes`) | **60 dias**, ou **12 meses** quando o site é do responsável (domínios em `public.retention_own_domains`, hoje `viannalegal.com.br`; os subdomínios contam) | o mesmo job; o prazo é dado por um trigger na inserção. Só apaga a cópia extraída, nunca o site |
 | Artefactos locais de runs | apagados no fim do trabalho, no máximo com o contrato + 90 dias | responsabilidade de quem corre o runner |
 | Cópias de segurança do Supabase | o ciclo do plano Supabase | um dado apagado sai das cópias quando o ciclo roda |
 
@@ -162,3 +164,4 @@ A avaliação de impacto (ISO/IEC 42001 6.1.4; LGPD art. 38 – relatório de im
 | Versão | Data | Alteração |
 |---|---|---|
 | 1.0 | 2026-10-07 | Primeira versão (GOV-IMPACT-1) |
+| 1.1 | 2026-10-07 | Retenção por data (P-41, decisões do maestro): transcrições e posts de imagem com 60 dias desde a criação; páginas web com 60 dias, ou 12 meses se o site for do responsável; `token_usage` com 24 meses; `agent_log` com 90 dias (já em vigor, agora documentado); purga diária automática. São prazos mais curtos ou iguais, não uma alteração material (§13) |

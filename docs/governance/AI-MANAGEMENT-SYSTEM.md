@@ -3,7 +3,7 @@
 **Referencial:** ISO/IEC 42001:2023, como **alinhamento voluntário**. Não é uma certificação, nem uma alegação de conformidade: certificar exige auditoria externa por um organismo acreditado.
 **Decisão:** P-40 (maestro, 2026-10-07): âmbito NAS + ANM; papéis maestro / DEV / Claude; auditoria interna trimestral e revisão desta política semestral.
 **Mapeamento cláusula a cláusula e Declaração de Aplicabilidade:** [`ISO-42001-MAPPING.md`](./ISO-42001-MAPPING.md).
-**Estado dos pendentes:** `docs/initiatives/PENDENCIAS.md` (único documento de estado). Lacunas deste AIMS: **GOV-42001-1**. Avaliação de impacto: **GOV-IMPACT-1**, fechada com a [política de privacidade](./PRIVACY-POLICY.md) (§5). Seguimento: GOV-RET-1 (purga por data). GOV-PRIV-1 resolvido com a opção C (MCP #20); a opção A (limpar o histórico) é o GOV-PRIV-2.
+**Estado dos pendentes:** `docs/initiatives/PENDENCIAS.md` (único documento de estado). Lacunas deste AIMS: **GOV-42001-1**. Avaliação de impacto: **GOV-IMPACT-1**, fechada com a [política de privacidade](./PRIVACY-POLICY.md) (§5). Retenção por data: GOV-RET-1 fechado (4 tabelas, purga diária automática); a parte dos dados de clientes é o GOV-RET-2. GOV-PRIV-1 resolvido com a opção C (MCP #20); a opção A (limpar o histórico) é o GOV-PRIV-2.
 **Texto da norma:** este documento cita só números e títulos curtos (tradução livre). O texto da ISO/IEC 42001 é protegido por direitos de autor e não é reproduzido aqui.
 
 ## 1. Âmbito (cláusulas 4.3 e 4.4)
@@ -107,7 +107,7 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
 | Dados de cliente usados pela Google para treino (Gemini gratuito) | clientes | **alta** se houver dados de cliente no tier gratuito | média | regra da política §9: **dados de clientes só com Gemini pago**; no tier gratuito, só conteúdo sem dados de clientes | baixo, se a regra for cumprida |
 | Facto errado sobre uma pessoa memorizado e reutilizado | clientes, terceiros | média | média | L4 só activa com aprovação humana (`promote`); correcção por `supersedes`; direito de rectificação | baixo |
 | Prompt injection que leva um agente a revelar memória de outro cliente | clientes | baixa | alta | memória injectada só para o `client_id` do plano; o worker não tem tools (AU-20); output de tools como dados (P-37, contrato) | baixo |
-| Dados guardados além do necessário | todos | **média** | média | prazos na política §7; L4 com `expires_at`; **a purga por data não é automática** → GOV-RET-1 | médio até ao GOV-RET-1 |
+| Dados guardados além do necessário | todos | baixa | média | prazos na política §7; L4 com `expires_at`; purga diária automática do conteúdo extraído por link (transcrições e posts com 60 dias; páginas com 60 dias, ou 12 meses nos sites próprios; `pg_cron`); `token_usage` com 24 meses e `agent_log` com 90 dias, também automáticos; só os dados de clientes ficam com um procedimento manual (não há clientes) → GOV-RET-2 | baixo |
 | Autor de conteúdo público analisado sem saber | terceiros | média | baixa | finalidade limitada (estudo), sem perfis nem contacto, oposição a qualquer momento (política §8) | baixo |
 | Decisão automatizada com efeito numa pessoa | clientes | baixa | alta | HITL obrigatório em `legal`, `finance` e `security`; nenhuma decisão só automatizada (política §6) | baixo |
 
@@ -115,7 +115,7 @@ Os compromissos abaixo **já estão em vigor** nos dois repos; esta política co
 - **finalidade legítima:** estudo de mercado e referências criativas;
 - **necessidade:** só título, autor, descrição e transcrição; sem contactos nem perfis;
 - **expectativa do titular:** o conteúdo foi publicado abertamente pelo autor;
-- **salvaguardas:** retenção de 12 meses, oposição e eliminação, nada publicado no repo (GOV-PRIV-1).
+- **salvaguardas:** transcrições e posts de terceiros apagados 60 dias depois da criação, páginas de terceiros também em 60 dias (purga diária automática), oposição e eliminação, nada publicado no repo (GOV-PRIV-1).
 
 Resultado: **o interesse prevalece**, com as salvaguardas acima.
 
