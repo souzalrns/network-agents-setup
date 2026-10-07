@@ -5,13 +5,13 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/f6-hardening-portfolio` (PR #121, contra a `main`; contém o #119 e o #120). **Cadeia F1 → F6 concluída**; o merge é do maestro.
+- **Branch actual:** `docs/f3c-design-repo-files` (a partir da `main` `f7e7551`: merges #119, #120 e #121).
 - **`main` de referência:** NAS `3930efe` (merges até #117); MCP: merge do #19 a 2026-10-05 22:06 UTC.
-- **Itens em trabalho** (opção B confirmada pelo maestro, 2026-10-06):
-  - **F6-CADEIA** (hardening + evidence pack + WHAT-I-CONTRIBUTED): C.1 a C.6 feitos, PR #121 com CI verde. **Fecha no merge do #121**;
-  - **F6 canónico** (EXECUTION-PLAN, D-EP8: domínio de prova com uso real): **continua BLOQUEADO**. Não é o mesmo item;
-  - ordem de merge: #119 (F3c) → #120 (F3b-validade, só com CI verde na base `main`) → #121. Depois do merge do #119, o Claude faz merge da `main` no branch do #120 para a CI correr na nova base;
-  - **F3b-AUTH-1** (autoridade e conflitos, P-31 a P-33): estacionado no fim do §4, fora do caminho crítico. Desbloqueia com o SQL da v3 (DEV) e a flag no MCP. A opção A (fazer a v3 primeiro) foi rejeitada para já.
+- **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
+  - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
+  - W-011 e R-006;
+  - a revisão do estado contra o EXECUTION-PLAN, com as lacunas novas F3-ART-1, F4-MAT-1 e F5-ROUTE-1.
+  Decisões pendentes de alto impacto: P-37 (AU-20) e P-38 (maturidade). O F6 canónico (D-EP8) continua BLOQUEADO.
 
 ### Fila activa (no máximo 5; o resto do PENDENCIAS é inventário)
 1. **CLAUDE — cadeia F1:** T6b (PDF) → T6c (DOCX/XLSX) → T6d (segurança de entrada, com a mitigação 3) → T6e (encaixe no T6) → T6f (fecho). Estado em `PENDENCIAS_T6.md`.
@@ -26,6 +26,29 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Revisão contra o EXECUTION-PLAN e correcções (2026-10-07)
+- **Merges do maestro** (2026-10-06, 21:22–21:24 UTC): #119, #120, #121.
+  - A CI da `main` está verde em cada merge, incluindo `test-rag` e `test-ingest` no #120. Assim, o código do #120 foi validado na `main`, embora o PR não tenha tido CI própria antes do merge.
+  - Produção do F3c (SELECT só de leitura): 7 fontes, 15 chunks, todos com `locator`.
+- **F3c-DESIGN-1, opção A:** `repo_files:` nos 4 passos de design dos 2 planos de design, com os ficheiros que cada skill nomeia; o crítico recebe os 2 que o pack lhe destina.
+  - Novo `test_plan_repo_files.py`: sem a alteração, 3 dos 4 testes falham.
+  - V42: a razão "as skills de design lêem o ficheiro" estava errada para o worker Gemini.
+- **W-011:** o `MCP_URL` com `/api/mcp` já não duplica o caminho; um bypass com menos de 16 caracteres falha logo, sem mostrar o valor.
+- **R-006:** `provenance_v2_ok` no `l5_eval`.
+- **Revisão do Done de cada fase do E §7:**
+  - F2: falta a capability que use o `fetch`;
+  - F3: proveniência no artefacto → **F3-ART-1**;
+  - F4: escala de maturidade do §15.7 → **F4-MAT-1** / P-38;
+  - F5: run a partir do `route` → **F5-ROUTE-1**.
+  - F1, F4 e F5 continuam FECHADOS: o Done que os fechou está cumprido.
+- **Estado no `PENDENCIAS.md`:**
+  - F3c, F3b-VALIDADE e F6-CADEIA → §7;
+  - o F3 passa a BLOQUEADO (só tem estacionados);
+  - AU-20 → P-37 (recomendada B: executor mínimo em Python);
+  - §5 do DEV refeito;
+  - contagens: 112 vivos (ABERTO 61, EM CURSO 7, BLOQUEADO 44), 112 de histórico, 42 contradições, 38 decisões.
+- **Portfolio:** README e `PORTFOLIO.md` com os números de hoje (836 testes pytest, 100 PRs com merge, mais 195 de TypeScript) e o link para o WHAT-I-CONTRIBUTED; evidence pack actualizado.
 
 ### Opção B confirmada pelo maestro (2026-10-06)
 - **P-23 = A decidida.** No `PENDENCIAS.md` §4 ficam 2 linhas distintas: **F6-CADEIA** (EM CURSO, fecha no merge do #121) e **F6 canónico** (BLOQUEADO, D-EP8).
@@ -1040,11 +1063,9 @@ O maestro colou uma análise e um plano em fases (A–F). Confrontei-os com o PE
 
 | PR | Branch | Item | Estado |
 |---|---|---|---|
-| NAS #119 | `feat/f3c-knowledge-coverage` | F3c (P-35, P-36) + registo das decisões P-27 a P-36 | Aberto |
-| NAS (PR do branch) | `feat/f3b-validity` | F3b, validade (P-27 a P-29), empilhado no #119 | Aberto |
-| NAS #118 | `fix/deps-proxy-addr-source-map-js` | Alertas do Dependabot (`proxy-addr` 2.0.8, `source-map-js` 1.2.2) | Aberto |
+| NAS (PR do branch) | `docs/f3c-design-repo-files` | F3c-DESIGN-1 (opção A), W-011, R-006, revisão do estado contra o EXECUTION-PLAN | Aberto |
 
-Já com merge: NAS #63–#117 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC; #116 e #117 a 2026-10-06); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
+Já com merge: NAS #63–#121 (o #104 entrou antes do commit `63719de`, que chegou à `main` pelo #105; #106–#109 a 2026-10-05 17:39–17:40 UTC; #110–#112 a 2026-10-05 19:09–19:22 UTC; #113–#115 a 2026-10-06 16:32–16:35 UTC; #116–#118 a 2026-10-06 18:41–18:57 UTC; #119–#121 a 2026-10-06 21:22–21:24 UTC); MCP #10–#19 (o #19 a 2026-10-05 22:06 UTC).
 
 ## Checklist para o DEV (comandos prontos a colar; não executados pelo Claude)
 
@@ -1087,9 +1108,16 @@ cd ..\agent-network-mcp;        graphify update .
 - **Não tocar sem decisão:** F0.12 (apagar a t6), S20/S27/S19 (Oracle), W-004.
 
 ## Próximos 3 passos recomendados
-1. **Maestro:** decidir a **P-23** (F6 da cadeia vs F6 canónico; recomendada A, que mantém os 2) e confirmar a P-21, a P-22, a P-24 e a P-25. Merge do PR do F5 (só docs).
+1. **Maestro:**
+   - merge do PR do branch `docs/f3c-design-repo-files`;
+   - decidir a **P-37** (AU-20; recomendada B: executor mínimo em Python) e a **P-38** (maturidade; recomendada B: derivada da evidência);
+   - confirmar as propostas P-21, P-22, P-24 e P-25.
 2. **DEV:**
-   - ~~correr o SQL do F3a~~ feito (verificado no catálogo a 2026-10-06);
-   - ~~provar a v2 em produção~~ feito (2026-10-06, `tools/call` com `metadata` preenchido): F3a FECHADO;
-   - para o `locator` aparecer, re-ingerir as fontes (acontece sozinho quando cada `.md` do MANIFEST mudar).
-3. **Claude:** o R-006 e o W-011 (o `l5_eval` mede a v2; o runner valida o `MCP_URL` e o bypass), num PR pequeno com testes. Depois, o F3b (validade e conflitos, autoridade, golden set) e o F6 conforme a P-23.
+   - F3b-VAL-1 (os 2 sidecars com as datas reais);
+   - F0.6 (expor o MCP ao conector);
+   - quando quiser, o F3b-AUTH-1 (SQL da v3 + flag) e o F5-ROUTE-1 (run a partir do `route`);
+   - S20 até 2026-10-12.
+3. **Claude, por esta ordem, sem tocar em produção:**
+   - **F3-ART-1:** proveniência no artefacto, com `uri`, estado e validade no bloco de conhecimento e as fontes no `result.json`;
+   - **a capability do F2:** um registo e um plano que usem o `fetch`;
+   - depois da P-37, o **AU-20**, e da P-38, o **F4-MAT-1**.

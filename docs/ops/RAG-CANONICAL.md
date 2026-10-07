@@ -147,6 +147,8 @@ WHERE project = 'network-agents-setup' AND source LIKE 'docs/knowledge/marketing
 GROUP BY source, agent_id ORDER BY source;   -- esperado: 7 fontes, agent_id marketing, 15 chunks no total
 ```
 
+**Confirmado em produção (2026-10-07, SELECT só de leitura depois do merge do #119):** 7 fontes, `agent_id` marketing, 15 chunks, **todos com `locator`**, `status` active e `document_type` md. O `ingest-knowledge` do merge do #121 (`f7e7551`) terminou com sucesso; os 2 anteriores foram cancelados pela concorrência do workflow.
+
 ## F3b: validade das fontes (2026-10-06, P-27 = C, P-28 = C, P-29 = A)
 
 > Política em `config/knowledge-validity.yaml`; código em `runner/plan_runner/validity.py`; aplicada pelo `scripts/ingest_apply.py` a cada fonte. **Sem SQL novo**: a `match_knowledge_v2` (F3a) já filtra por `effective_from`/`effective_until` contra o `valid_at` (por omissão, agora).

@@ -22,8 +22,9 @@ NAS = `souzalrns/network-agents-setup`; MCP = `souzalrns/agent-network-mcp`. O m
 | F5 | [NAS #116](https://github.com/souzalrns/network-agents-setup/pull/116) | merged 2026-10-06 | Run real PASSOU; F5 e F4 fechados |
 | F3a | [NAS #117](https://github.com/souzalrns/network-agents-setup/pull/117) | merged 2026-10-06 | F3a fechado com a prova da v2 em produção |
 | Segurança | [NAS #118](https://github.com/souzalrns/network-agents-setup/pull/118) | merged 2026-10-06 | 2 alertas do Dependabot (`proxy-addr` 2.0.8, `source-map-js` 1.2.2) |
-| F3c | [NAS #119](https://github.com/souzalrns/network-agents-setup/pull/119) | **aberto** (CI verde) | Todo o `.md` de `docs/knowledge/` no MANIFEST ou no `EXCLUDED`, com teste |
-| F3b | [NAS #120](https://github.com/souzalrns/network-agents-setup/pull/120) | **aberto** | Classes de validade no ingest (P-27 a P-29) |
-| F6 | PR do branch `docs/f6-hardening-portfolio` | **aberto** | Este pacote, hardening e resumo de portfolio |
+| F3c | [NAS #119](https://github.com/souzalrns/network-agents-setup/pull/119) | merged 2026-10-06 | Todo o `.md` de `docs/knowledge/` no MANIFEST ou no `EXCLUDED`, com teste |
+| F3b | [NAS #120](https://github.com/souzalrns/network-agents-setup/pull/120) | merged 2026-10-06 | Classes de validade no ingest (P-27 a P-29) |
+| F6 | [NAS #121](https://github.com/souzalrns/network-agents-setup/pull/121) | merged 2026-10-06 | Este pacote, hardening e resumo de portfolio |
+| Revisão | PR do branch `docs/f3c-design-repo-files` | **aberto** | Pack de design por `repo_files` (F3c-DESIGN-1), W-011, R-006 e revisão do estado contra o EXECUTION-PLAN |
 
 **Antes da cadeia, já com merge, que a sustentam:** MCP #15 (o `ingestDocument` só apaga linhas do MCP), MCP #16 (CHECK do `token_usage`), MCP #17 (`next` com a correcção crítica), MCP #18 (higiene e actions pinadas).
