@@ -28,6 +28,15 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### P-22: texto para o upstream do MarkItDown (2026-10-07)
+- **Verificação:** os 2 achados reproduzem-se com o MarkItDown 0.1.8, a versão mais recente (venv isolado, script em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §4).
+- **Pesquisa no upstream:**
+  - o achado da tabela DOCX sem cabeçalho já está na issue [#2157](https://github.com/microsoft/markitdown/issues/2157), aberta;
+  - o PR #2160 trata só do escape, não do cabeçalho;
+  - não há issue para o `.pdf` em texto, mas esse comportamento parece pretendido (o tipo é detectado pelo conteúdo).
+- **Opções A/B/C, RECOMENDADA B:** um comentário na #2157 com a reprodução mínima e a oferta de um PR para o cabeçalho. Não se abre uma issue nova, que seria duplicada.
+- **Texto pronto, em inglês:** `MARKITDOWN-UPSTREAM.md` §3. Publica o DEV, na conta dele. ING-012 actualizado.
+
 ### AU-20, seguimento: `act` pára no HITL e kb por passo (2026-10-07)
 - **Pedido do maestro:** "aprovação humana para o nível act (pára no HITL)" e "`retrieve_knowledge` com kb permitido ao passo".
 - **Executor (`tool_executor.py`):**
