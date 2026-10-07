@@ -21,6 +21,24 @@ J5-b no PLANO). Regras:
   a capability é `partial` (há executor, mas ainda nenhum fluxo a usa).
   Escala: planned < deferred < partial < implemented.
 
+Maturidade (F4-MAT-1, P-38 = B): **medida, não declarada.** Nenhum campo novo nos
+YAML de capabilities; o `status` continua a ser o âmbito declarado. A escala é a do
+EXECUTION-PLAN §15.7 e cada nível exige o anterior:
+
+- DRAFT: sem `action`;
+- DECLARED: `action`, mas falta o agente ou a skill (ou não existem);
+- WIRED: `action` + agente + skill existentes (o executor está ligado);
+- EXECUTABLE: e pelo menos 1 plano do runner usa a `action`;
+- VALIDATED: e um teste de `runner/tests/` corre esse plano com o Gemini falso
+  (o ficheiro de teste cita o path do plano e troca o transport do worker);
+- PROVEN: e um run real desse plano está registado em `config/capability-runs.yaml`,
+  com o documento de evidência a citar o plano, o run e o `anchor` (verificado no E7).
+
+Uma capability que não está `implemented` fica no máximo em EXECUTABLE: várias
+partilham a mesma `action` e o mesmo agente (ex.: `secrets_hygiene` usa o
+`security_audit`), e um run do auditor não prova a parte que o `status: partial` diz
+que falta. `python -m plan_runner.areas --maturity` mostra a tabela.
+
 O inventário (`python -m plan_runner.areas --inventory`) lista, sem falhar o CI:
 agentes sem skill, skills sem agente (fora do pack `skills/claude/`), agentes
 do runner que carregam skills do pack Claude (prompts longos, lição B1-bis) e
@@ -28,6 +46,8 @@ skills partilhadas cujo `action:` difere do agente.
 """
 from __future__ import annotations
 
+import re
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +61,12 @@ ACTIVE = ("implemented", "partial")
 FORBIDDEN_ONLY = ("offensive", "act_in_production")
 CLAUDE_PACK = "skills/claude/"
 PLAN_GLOB = "docs/orchestration/**/*.plan.yaml"
+MATURITY = ("DRAFT", "DECLARED", "WIRED", "EXECUTABLE", "VALIDATED", "PROVEN")
+RUNS_FILE = "config/capability-runs.yaml"
+TESTS_GLOB = "runner/tests/test_*.py"
+# Um teste "com o Gemini falso" troca o transport HTTP do worker (external_worker.httpx_transport).
+FAKE_GEMINI_MARKER = "httpx_transport"
+_PLAN_PATH = re.compile(r"docs/orchestration/[\w./-]+?\.plan\.yaml")
 
 
 def capability_files(repo_root: Path) -> list[Path]:
@@ -50,27 +76,140 @@ def capability_files(repo_root: Path) -> list[Path]:
 def plan_actions(repo_root: Path) -> dict[str, list[str]]:
     """`action` → planos do runner que a usam (evidência de maturidade, F4)."""
     found: dict[str, list[str]] = {}
+    for rel, actions in actions_by_plan(repo_root).items():
+        for action in actions:
+            found.setdefault(action, []).append(rel)
+    return found
 
-    def walk(node: Any, rel: str) -> None:
+
+def actions_by_plan(repo_root: Path) -> dict[str, list[str]]:
+    """Plano do runner (path relativo) → `action`s que usa, por ordem de aparição."""
+    out: dict[str, list[str]] = {}
+
+    def walk(node: Any, acc: list[str]) -> None:
         if isinstance(node, dict):
             action = node.get("action")
-            if isinstance(action, str) and action:
-                found.setdefault(action, [])
-                if rel not in found[action]:
-                    found[action].append(rel)
+            if isinstance(action, str) and action and action not in acc:
+                acc.append(action)
             for value in node.values():
-                walk(value, rel)
+                walk(value, acc)
         elif isinstance(node, list):
             for value in node:
-                walk(value, rel)
+                walk(value, acc)
 
     for path in sorted(repo_root.glob(PLAN_GLOB)):
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8"))
         except (OSError, yaml.YAMLError):
             continue  # o plan_schema (W-006) já reporta planos ilegíveis
-        walk(data, path.relative_to(repo_root).as_posix())
-    return found
+        acc: list[str] = []
+        walk(data, acc)
+        out[path.relative_to(repo_root).as_posix()] = acc
+    return out
+
+
+def validated_plans(repo_root: Path) -> dict[str, list[str]]:
+    """Plano → testes que o correm com o Gemini falso (VALIDATED, §15.7)."""
+    out: dict[str, list[str]] = {}
+    for test in sorted(repo_root.glob(TESTS_GLOB)):
+        text = test.read_text(encoding="utf-8")
+        if FAKE_GEMINI_MARKER not in text:
+            continue
+        rel = test.relative_to(repo_root).as_posix()
+        for plan in sorted(set(_PLAN_PATH.findall(text))):
+            if (repo_root / plan).is_file():
+                out.setdefault(plan, []).append(rel)
+    return out
+
+
+def load_runs(repo_root: Path) -> tuple[list[dict[str, Any]], list[str]]:
+    """Runs reais registados (PROVEN). Devolve (runs válidos e `passed`, erros). Sem ficheiro: ([], [])."""
+    path = repo_root / RUNS_FILE
+    if not path.is_file():
+        return [], []
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except yaml.YAMLError as e:
+        return [], [f"{RUNS_FILE}: não é YAML legível ({e})"]
+    runs = data.get("runs") if isinstance(data, dict) else None
+    if not isinstance(runs, list):
+        return [], [f"{RUNS_FILE}: falta a lista `runs`"]
+    errors: list[str] = []
+    ok: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for i, run in enumerate(runs):
+        rid = run.get("id") if isinstance(run, dict) else None
+        where = f"{RUNS_FILE}: runs[{i}]" + (f" `{rid}`" if rid else "")
+        if not isinstance(run, dict) or not isinstance(rid, str) or not rid or rid in seen:
+            errors.append(f"{where}: `id` em falta ou repetido")
+            continue
+        seen.add(rid)
+        before = len(errors)
+        if not isinstance(run.get("date"), date):
+            errors.append(f"{where}: `date` tem de ser uma data (AAAA-MM-DD)")
+        plan = run.get("plan")
+        if not isinstance(plan, str) or not (repo_root / plan).is_file() or not plan.endswith(".plan.yaml"):
+            errors.append(f"{where}: `plan` tem de ser um plano do runner que existe")
+        if run.get("worker") != "gemini":
+            errors.append(f"{where}: `worker` tem de ser `gemini` (um run real com o provider; stub não conta)")
+        if run.get("verdict") not in ("passed", "failed"):
+            errors.append(f"{where}: `verdict` tem de ser passed ou failed")
+        evidence = _rel_file(repo_root, run.get("evidence"))
+        anchor = run.get("anchor")
+        if evidence is None:
+            errors.append(f"{where}: `evidence` tem de ser um ficheiro do repo")
+        elif not isinstance(anchor, str) or not anchor.strip():
+            errors.append(f"{where}: falta `anchor` (texto que o documento de evidência tem de conter)")
+        else:
+            doc = evidence.read_text(encoding="utf-8")
+            for label, needle in (("anchor", anchor), ("plano", Path(str(plan)).name), ("run_id", run.get("run_id"))):
+                if needle and str(needle) not in doc:
+                    errors.append(f"{where}: o documento {run['evidence']} não contém o {label} {needle!r}")
+        if len(errors) == before and run["verdict"] == "passed":
+            ok.append(run)
+    return ok, errors
+
+
+def capability_maturity(repo_root: Path, known: dict[str, Path]) -> list[dict[str, Any]]:
+    """Maturidade medida de cada capability (§15.7, P-38 = B), com a evidência que a sustenta."""
+    by_plan = actions_by_plan(repo_root)
+    tested = validated_plans(repo_root)
+    runs, _ = load_runs(repo_root)
+    out: list[dict[str, Any]] = []
+    for path in capability_files(repo_root):
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue  # o E7 já reporta
+        for cap in data.get("capabilities") or []:
+            if not isinstance(cap, dict) or not cap.get("id"):
+                continue
+            action, agent, skill, status = cap.get("action"), cap.get("agent"), cap.get("skill"), cap.get("status")
+            plans = [p for p, acts in by_plan.items() if action and action in acts]
+            tests = sorted({t for p in plans for t in tested.get(p, [])})
+            proven = [r["id"] for r in runs if r["plan"] in plans]
+            checks = [
+                bool(action),
+                agent in known and _rel_file(repo_root, skill) is not None,
+                bool(plans),
+                bool(tests),
+                bool(proven),
+            ]
+            level = 0
+            for passed in checks:
+                if not passed:
+                    break
+                level += 1
+            note = None
+            ceiling = MATURITY.index("EXECUTABLE")
+            if status != "implemented" and level > ceiling:
+                note = f"limitado a EXECUTABLE pelo status `{status}` (a evidência é da action partilhada)"
+                level = ceiling
+            out.append({
+                "domain": data.get("domain"), "id": cap["id"], "status": status, "maturity": MATURITY[level],
+                "action": action, "plans": plans, "tests": tests, "runs": proven, "note": note,
+            })
+    return out
 
 
 def _rel_file(repo_root: Path, rel: Any) -> Path | None:
