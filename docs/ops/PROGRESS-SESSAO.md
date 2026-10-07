@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f4-mat-1-maturity` (empilhado no `feat/r011-l5-regression`, PR #135, a partir da `main` `e3348ac`).
-- **`main` de referência:** NAS `e3348ac` (merges até #134); MCP `855057d`.
+- **Branch actual:** `docs/r011-f4mat1-fechados` (a partir da `main` `e74a610`: merges do #135 e do #136); MCP: `main` `855057d`.
+- **`main` de referência:** NAS `e74a610` (merges até #136; o #135 e o #136 levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,19 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### R-011 e F4-MAT-1 fechados (2026-10-07)
+- **Merges:**
+  - #135 (`fc372d5`, head `eaaf21d`);
+  - #136 (`e74a610`, head `49cfbba`);
+  - os 2 commits estão no `main` (`git merge-base --is-ancestor`).
+- **Decisão do maestro:** a opção A da evidência do F4-MAT-1 (registo de runs + verificação contra os documentos) está aprovada.
+- **Verificado no `main`:**
+  - `test_l5_eval.py`, `test_capabilities.py` e `test_areas.py`: 98 passed;
+  - `python -m plan_runner.areas --maturity` dá `security.defensive_audit: PROVEN`.
+- **PENDENCIAS:**
+  - R-011 e F4-MAT-1 passam a FECHADO (§7); P-19 e P-38 dadas como aplicadas;
+  - 124 itens vivos (ABERTO 70, EM CURSO 7, BLOQUEADO 47); histórico com 121 linhas (100 fechadas).
 
 ### F4-MAT-1: maturidade das capabilities medida (2026-10-07)
 - **P-38 = B:** a maturidade é derivada da evidência e não há campo novo nos YAML de capabilities. O `status` continua a ser o âmbito declarado.
