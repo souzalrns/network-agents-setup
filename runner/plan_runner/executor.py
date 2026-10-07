@@ -6,10 +6,10 @@ from typing import Any
 
 from .models import Step
 from .skills import (
+    activate_for_task,
+    materialize_activation,
     read_text_if_exists,
     repo_root_from_out,
-    resolve_agent_path,
-    resolve_skill_path,
 )
 
 
@@ -80,14 +80,13 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     pending.mkdir(parents=True, exist_ok=True)
 
     repo_root = repo_root_from_out(out_root)
-    # S34: vertical era sempre "marketing" (omissao de resolve_skill_path),
-    # partindo a resolucao para qualquer plano fora desse vertical (ex.
-    # design-flow-demo.plan.yaml). Aditivo, mesmo padrao do bloco
-    # `knowledge:` (opt-in por step, via step.raw) -- planos existentes
-    # sem `vertical:` continuam a resolver contra "marketing", inalterados.
-    vertical = str(step.raw.get("vertical") or "marketing") if isinstance(step.raw, dict) else "marketing"
-    skill_path = resolve_skill_path(repo_root, step.action, vertical)
-    agent_path = resolve_agent_path(repo_root, step.action, vertical)
+    # Worker chama activate_for_task antes de executar: resolve skill/agent,
+    # aplica SEC-1.3 (allow-list de scripts) e, se should_search_external,
+    # consulta npx skills find / SkillsCat. Resultado entra no request.json
+    # e no prompt (skill_activation.json + SKILL.md/AGENT.md).
+    activation = activate_for_task(repo_root, step)
+    skill_path = activation.skill_path
+    agent_path = activation.agent_path
 
     req: dict[str, Any] = {
         "step_id": step.id,
@@ -96,19 +95,17 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
         "inputs": step.inputs,
         "output_artifact": step.output_artifact,
         "output_schema": step.output_schema,
-        "agent_path": str(agent_path.relative_to(repo_root)).replace("\\", "/") if agent_path else None,
-        "skill_path": str(skill_path.relative_to(repo_root)).replace("\\", "/") if skill_path else None,
+        "agent_path": activation.agent_rel,
+        "skill_path": activation.skill_rel,
         "instruction": (
             "Load agent_path + skill_path from the repo. "
-            "Execute the skill. Write result.json: "
+            "Execute the skill. Respect allowed_scripts (SEC-1.3); do not run blocked_scripts. "
+            "Write result.json: "
             "{ok: bool, detail?: str, artifact_content?: str|object}. "
             "Or write the output_artifact file and result.json {ok: true}."
         ),
     }
-    if skill_path:
-        req["skill_preview_head"] = (read_text_if_exists(skill_path) or "")[:2000]
-    if agent_path:
-        req["agent_preview_head"] = (read_text_if_exists(agent_path) or "")[:1500]
+    req.update(activation.to_request_fields())
 
     # S30: working memory do cliente (out/client_memory.md, escrito uma vez
     # no arranque do run por engine.py::_load_client_memory) -- aditivo,
@@ -121,10 +118,7 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
         json.dumps(req, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
 
-    if skill_path and skill_path.is_file():
-        (pending / "SKILL.md").write_text(skill_path.read_text(encoding="utf-8"), encoding="utf-8")
-    if agent_path and agent_path.is_file():
-        (pending / "AGENT.md").write_text(agent_path.read_text(encoding="utf-8"), encoding="utf-8")
+    materialize_activation(pending, activation)
     if client_memory_path.is_file():
         (pending / "CLIENT_MEMORY.md").write_text(
             client_memory_path.read_text(encoding="utf-8"), encoding="utf-8"
