@@ -80,8 +80,8 @@ O titular pode pedir a revisão de qualquer resultado que o afecte (LGPD art. 20
 |---|---|---|
 | Memória do cliente, L4, `project_state` e `agent_log` do projecto do cliente | **enquanto durar o contrato + 90 dias** | no fim do contrato, o operador marca `expires_at` na L4, apaga a pasta `memory/<client_id>/` e corre a eliminação por `project` (procedimento em §8). Hoje não há purga automática por data: **GOV-RET-1** |
 | `token_usage` (sem conteúdo) | 24 meses (custos e auditoria) | idem, GOV-RET-1 |
-| Transcrições de conteúdo público (`transcripts`) | **60 dias desde a criação** (decisão do maestro, 2026-10-07), ou antes, se o titular se opuser. Para voltar a ter uma, transcreve-se o link outra vez | `expires_at` por linha e um job diário do `pg_cron` (`purge-expired-transcripts`, 03:17 UTC): `agent-network-mcp/memory/transcripts_retention.sql`. A limpeza por tamanho (`cleanup_old_transcripts_if_needed`) fica como rede de segurança |
-| Outro conteúdo público de terceiros (`image_posts`, `scrapes`) | **12 meses** após a recolha, ou até o titular se opor (P-41, por decidir) | hoje só a limpeza por tamanho: **GOV-RET-1** |
+| Conteúdo público de terceiros extraído por link: transcrições (`transcripts`) e posts de imagem (`image_posts`) | **60 dias desde a criação** (decisão do maestro, 2026-10-07), ou antes, se o titular se opuser. Para voltar a ter um, extrai-se o link outra vez | `expires_at` por linha e um job diário do `pg_cron` (`purge-expired-content`, 03:17 UTC): `agent-network-mcp/memory/retention.sql`. A limpeza por tamanho (`cleanup_old_transcripts_if_needed`) fica como rede de segurança |
+| Páginas web extraídas (`scrapes`) | **60 dias**, ou **12 meses** quando o site é do responsável (domínios em `public.retention_own_domains`, hoje `viannalegal.com.br`; os subdomínios contam) | o mesmo job; o prazo é dado por um trigger na inserção. Só apaga a cópia extraída, nunca o site |
 | Artefactos locais de runs | apagados no fim do trabalho, no máximo com o contrato + 90 dias | responsabilidade de quem corre o runner |
 | Cópias de segurança do Supabase | o ciclo do plano Supabase | um dado apagado sai das cópias quando o ciclo roda |
 
@@ -163,4 +163,4 @@ A avaliação de impacto (ISO/IEC 42001 6.1.4; LGPD art. 38 – relatório de im
 | Versão | Data | Alteração |
 |---|---|---|
 | 1.0 | 2026-10-07 | Primeira versão (GOV-IMPACT-1) |
-| 1.1 | 2026-10-07 | Transcrições: 60 dias desde a criação, com purga diária automática (P-41, decisão do maestro). É um prazo mais curto, não uma alteração material (§13) |
+| 1.1 | 2026-10-07 | Retenção por data do conteúdo extraído por link (P-41, decisão do maestro): transcrições e posts de imagem com 60 dias desde a criação; páginas web com 60 dias, ou 12 meses se o site for do responsável; purga diária automática. São prazos mais curtos, não uma alteração material (§13) |
