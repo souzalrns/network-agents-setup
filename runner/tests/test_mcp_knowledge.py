@@ -370,3 +370,31 @@ def test_o_segredo_nao_aparece_nas_mensagens_de_erro(monkeypatch):
     with pytest.raises(McpKnowledgeError) as exc:
         McpKnowledge().retrieve("security", "q", top_k=4, filters=None, require_citations=False)
     assert VALOR_BYPASS_FICTICIO not in str(exc.value)
+
+
+# --- W-011: MCP_URL com /api/mcp e bypass truncado (os 2 primeiros runs do F5) ----------------
+
+
+@pytest.mark.parametrize(
+    "valor",
+    [
+        "https://agent-network-mcp-oddn.vercel.app/api/mcp",
+        "https://agent-network-mcp-oddn.vercel.app/api/mcp/",
+        " https://agent-network-mcp-oddn.vercel.app/api/mcp ",
+    ],
+)
+def test_mcp_url_com_api_mcp_nao_duplica_o_caminho(monkeypatch, valor):
+    monkeypatch.setenv("MCP_URL", valor)
+    assert mcp_knowledge._mcp_url() == "https://agent-network-mcp-oddn.vercel.app/api/mcp"
+
+
+def test_bypass_truncado_falha_cedo_sem_mostrar_o_valor(monkeypatch):
+    monkeypatch.setenv("VERCEL_PROTECTION_BYPASS", "x")
+    with pytest.raises(mcp_knowledge.McpKnowledgeError) as exc:
+        mcp_knowledge._request_headers("chave")
+    assert "1 caracteres" in str(exc.value) and "'x'" not in str(exc.value)
+
+
+def test_bypass_com_tamanho_normal_passa(monkeypatch):
+    monkeypatch.setenv("VERCEL_PROTECTION_BYPASS", "a" * 32)
+    assert mcp_knowledge._request_headers("chave")["x-vercel-protection-bypass"] == "a" * 32

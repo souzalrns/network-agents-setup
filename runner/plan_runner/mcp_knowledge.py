@@ -106,19 +106,35 @@ def _api_key() -> str:
 # de erro. Ver docs/ops/L5-F0-REVALIDATION.md §6.2.
 VERCEL_BYPASS_ENV = "VERCEL_PROTECTION_BYPASS"
 VERCEL_BYPASS_HEADER = "x-vercel-protection-bypass"
+# W-011: o segredo de bypass da Vercel tem 32 caracteres. Um valor muito curto é uma
+# colagem truncada (2.º run do F5, 2026-10-06: 1 carácter), e a Vercel responde com uma
+# página de erro pouco clara. Falha-se antes, sem nunca mostrar o valor.
+MIN_BYPASS_CHARS = 16
 
 
 def _request_headers(api_key: str) -> dict[str, str]:
     headers = {"Authorization": f"Bearer {api_key}"}
     bypass = os.environ.get(VERCEL_BYPASS_ENV, "").strip()
     if bypass:
+        if len(bypass) < MIN_BYPASS_CHARS:
+            raise McpKnowledgeError(
+                f"{VERCEL_BYPASS_ENV} tem {len(bypass)} caracteres (o segredo da Vercel tem 32): "
+                "parece uma colagem truncada. Colar outra vez (docs/ops/F5-E2E-RUN.md §2)."
+            )
         headers[VERCEL_BYPASS_HEADER] = bypass
     return headers
 
 
 def _mcp_url() -> str:
-    base = os.environ.get("MCP_URL", MCP_URL_DEFAULT).strip() or MCP_URL_DEFAULT
-    return base.rstrip("/") + MCP_PATH
+    """URL do endpoint MCP. O `MCP_URL` é a base; o `/api/mcp` é acrescentado aqui.
+
+    W-011: um `MCP_URL` que já termine em `/api/mcp` (1.º run do F5, 2026-10-06) dava
+    `/api/mcp/api/mcp`. Esse sufixo é tirado uma vez, para o pedido ir sempre ao sítio certo.
+    """
+    base = (os.environ.get("MCP_URL", MCP_URL_DEFAULT).strip() or MCP_URL_DEFAULT).rstrip("/")
+    if base.endswith(MCP_PATH):
+        base = base[: -len(MCP_PATH)].rstrip("/")
+    return base + MCP_PATH
 
 
 class McpKnowledge:
