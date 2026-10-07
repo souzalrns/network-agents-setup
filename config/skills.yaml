@@ -1,0 +1,15 @@
+# SEC-1.3 — allow-list de scripts por skill (default: deny)
+# Chaves: path relativo ao repo da SKILL.md, ou "vertical/action".
+# Valores: lista de paths relativos à pasta da skill, ou true (todos).
+#
+# allow_scripts: true          # opt-in global (evitar em produção)
+allow_scripts: {}
+# Exemplos:
+#   marketing/review:
+#     - scripts/check.sh
+#   skills/design/ux_flow/SKILL.md:
+#     - scripts/lint.py
+
+# Quando true, se a skill local não resolver, o executor pesquisa
+# npx skills find / SkillsCat (também activável por step: should_search_external: true).
+search_external_default: false
