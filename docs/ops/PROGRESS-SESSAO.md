@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/retention-all` (a partir da `main` `666528f`: merge do #127); MCP: `claude/reels-analysis-tools-access-hwudk9` (#21).
-- **`main` de referência:** NAS `666528f` (merges até #127); MCP: merge do #19 a 2026-10-05 22:06 UTC.
+- **Branch actual:** `docs/retention-confirmed` (a partir da `main` `85d06ff`: merge do #128); MCP: `main` `c689feb` (merge do #21).
+- **`main` de referência:** NAS `85d06ff` (merges até #128); MCP: merge do #21 a 2026-10-07 12:42 UTC.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,18 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Retenção confirmada em produção (2026-10-07)
+- **Merges:** MCP #21 (12:42 UTC, `c689feb`) e NAS #128 (12:42 UTC, `85d06ff`), com todos os commits (desta vez verificado commit a commit).
+- **O DEV aplicou `memory/retention.sql`.** Confirmação do maestro, e SELECT só de leitura desta sessão:
+  - a função `purge_expired_content` existe;
+  - job `purge-expired-content`, `17 3 * * *`, `select public.purge_expired_content()`, ao lado do `cleanup-agent-logs-daily` (03:00);
+  - `anon` sem execução; RLS activo na `retention_own_domains` (`viannalegal.com.br`).
+- **À espera da 1.ª purga** (2026-10-08 03:17 UTC): 35 de 99 `transcripts` e as 9 `image_posts` estão expiradas. Os 2 `scrapes` expiram a 2027-07-31. O `token_usage` (38 linhas) não perde nada antes de 2028-10.
+- **PENDENCIAS:**
+  - GOV-RET-1 (FECHADO) com a evidência de produção;
+  - P-41 decidida por inteiro;
+  - a lista do DEV deixa de pedir o merge do MCP #20 e a aplicação do SQL, e passa a pedir a confirmação da 1.ª purga.
 
 ### P-41 decidida e GOV-RET-1 fechado (2026-10-07)
 - **Achado:** os merges do MCP #20 (12:01 UTC) e do NAS #127 (12:02 UTC) levaram só o 1.º commit de cada PR. A retenção (`5efcda9`, `eadecb2` no MCP; `0d07e1e`, `3eeac82` no NAS) ficou fora do `main`. Foi reaplicada sem conflitos: MCP #21 (branch de sessão recomeçado a partir do `main`, com rebase) e NAS no branch `docs/retention-all` (cherry-pick).
