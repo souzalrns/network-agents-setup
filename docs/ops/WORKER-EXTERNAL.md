@@ -389,6 +389,16 @@ steps:
 
 **Não confundir com o `knowledge_refs`** do topo do plano, que continua sem ser lido (AU-22): o `repo_files` é por passo e explícito, para não mudar os prompts dos planos existentes (incluindo o `seo-article-demo`, base do B1-bis-R2).
 
+## Activação da skill e scripts (`activate_for_task`, SEC-1.3, 2026-10-07)
+
+Antes do worker, o executor chama `activate_for_task` (`runner/plan_runner/skill_activation.py`). Faz quatro coisas:
+- resolve agente + skill;
+- regista o sha256 de cada um;
+- aplica a allow-list de scripts de `config/skills.yaml` (deny-by-default);
+- só com `should_search_external: true` no passo, pesquisa skills externas (candidatas, nunca instaladas).
+
+Escreve `pending_steps/<id>/skill_activation.json` e, só quando a skill tem scripts ou houve pesquisa, `SKILL_ACTIVATION.md`, que entra no fim do prompt do utilizador na secção "Activacao da skill (SEC-1.3)", nos dois modos. Sem isso, o prompt é igual ao de antes. O worker continua sem tools (AU-20; contrato proposto em `docs/architecture/AU-20-TOOL-EXECUTOR.md`). Contrato completo: [SKILL-ACTIVATION.md](./SKILL-ACTIVATION.md).
+
 ## Limites actuais
 
 - **Não usa tools.** O `tools_allowed` do passo (ex.: `web_search`) não é executado: o prompt diz ao modelo que não tem tools e que deve marcar lacunas. Tools ficam para o porte do `ToolExecutor` (D1, VIA A). Para ler ficheiros do repo, usa-se o `repo_files` (secção acima).
