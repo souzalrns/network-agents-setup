@@ -3,10 +3,12 @@
 Skills sintéticas criadas em runtime (nada malicioso fica no repo: a chave privada falsa é
 montada por partes). Sem rede: o clone é sempre substituído por um `fetch` que monta o repo
 numa pasta temporária. O scanner é o real (`agentic-skills-manager`, runner/requirements-test.txt);
-fora do CI, sem ele instalado, os testes que o usam são ignorados. No CI a falta é erro.
+fora do CI, sem ele instalado, os testes que o usam são ignorados. No CI a falta é erro
+(`test_no_ci_o_scanner_tem_de_estar_instalado`).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -20,8 +22,6 @@ from plan_runner import skill_scan as sk
 from plan_runner.models import Step
 
 HAS_SCANNER = sk.scanner_version() is not None
-if os.environ.get("CI") and not HAS_SCANNER:
-    raise RuntimeError(f"CI sem o scanner: pip install -r runner/requirements-test.txt ({sk.SCANNER_DIST})")
 needs_scanner = pytest.mark.skipif(not HAS_SCANNER, reason=f"{sk.SCANNER_DIST} não instalado (requirements-test.txt)")
 
 # Chave falsa montada por partes: nenhum detector de segredos a vê no código.
@@ -66,6 +66,10 @@ def _monorepo(dest: Path) -> Path:
     return dest
 
 
+def _sha(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
 def _cand(name: str, source: str = "acme/skills") -> dict:
     return {"name": name, "slug": f"{source}/{name}" if source else name, "source": source, "installs": 1,
             "url": None, "provider": "skills_sh", "installed": False, "trusted": False}
@@ -80,6 +84,16 @@ def _sem_rede(monkeypatch):
 
 
 # --------------------------------------------------------------------------- scanner real
+
+
+def test_no_ci_o_scanner_tem_de_estar_instalado():
+    """No CI, os testes do scanner real não podem ser ignorados em silêncio.
+
+    É um teste e não um erro ao importar o ficheiro: o job test-slow não instala o
+    requirements-test.txt e só recolhe os testes `slow`; um erro na recolha rebentava-o.
+    """
+    if os.environ.get("CI") and not HAS_SCANNER:
+        pytest.fail(f"CI sem o scanner: pip install -r runner/requirements-test.txt ({sk.SCANNER_DIST})")
 
 
 @needs_scanner
@@ -131,10 +145,15 @@ def test_activate_for_task_junta_o_veredicto_e_nunca_instala(tmp_path):
     _w(repo / "skills" / "marketing" / "review" / "SKILL.md", _skill_md("review"))
     before = sorted(p.relative_to(repo).as_posix() for p in repo.rglob("*"))
     clones: list[Path] = []
+    clones_md: dict[str, bytes] = {}
 
     def fetch(source, dest):
         clones.append(dest)
-        return _monorepo(dest)
+        _monorepo(dest)
+        _w(dest / ".git" / "HEAD", "ref: refs/heads/main\n")
+        _w(dest / ".git" / "refs" / "heads" / "main", "a" * 40 + "\n")
+        clones_md["evil"] = (dest / "skills" / "evil" / "SKILL.md").read_bytes()
+        return dest
 
     search = _search(_cand("good"), _cand("envy"), _cand("evil"), _cand("ghost", source=""))
     act = sa.activate_for_task(repo, _step(should_search_external=True), search=search, fetch=fetch)
@@ -143,6 +162,9 @@ def test_activate_for_task_junta_o_veredicto_e_nunca_instala(tmp_path):
     assert got == {"good": "safe", "envy": "risky", "evil": "dangerous", "ghost": "not_scanned"}
     by = {c["name"]: c for c in act.external_candidates}
     assert by["envy"]["scan"]["path"] == "skills/envy-dir" and by["envy"]["scan"]["scope"] == "skill"
+    # rastreabilidade: o veredicto diz que conteúdo foi analisado
+    assert by["evil"]["scan"]["skill_sha256"] == _sha(clones_md["evil"])
+    assert by["good"]["scan"]["commit"] == "a" * 40
     assert all(c["installed"] is False and c["trusted"] is False for c in act.external_candidates)
     assert len(clones) == 1  # um clone por repo, não por candidata
     assert not clones[0].exists()  # pasta temporária apagada
@@ -265,6 +287,24 @@ def test_localiza_pelo_nome_da_pasta_e_ignora_symlinks(tmp_path):
     (root / "ext").symlink_to(outside, target_is_directory=True)
     assert sk.locate_skill(root, "plain") == (root / "skills" / "plain", "skill")
     assert sk.locate_skill(root, "linked") == (root, "repo")
+
+
+def test_commit_do_clone_lido_sem_correr_o_git(tmp_path):
+    g = tmp_path / ".git"
+    assert sk.head_commit(tmp_path) is None  # sem .git
+    _w(g / "HEAD", "b" * 40 + "\n")
+    assert sk.head_commit(tmp_path) == "b" * 40  # HEAD destacado
+    _w(g / "HEAD", "ref: refs/heads/main\n")
+    _w(g / "packed-refs", "# pack-refs with: peeled\n" + "c" * 40 + " refs/heads/main\n")
+    assert sk.head_commit(tmp_path) == "c" * 40  # só em packed-refs
+    _w(g / "refs" / "heads" / "main", "d" * 40)
+    assert sk.head_commit(tmp_path) == "d" * 40  # a ref solta tem prioridade
+    _w(tmp_path / "fora", "e" * 40)
+    _w(g / "HEAD", "ref: refs/../../fora\n")
+    assert sk.head_commit(tmp_path) is None  # ref com `..` nunca é seguida
+    _w(g / "HEAD", "ref: refs/heads/main\n")
+    _w(g / "refs" / "heads" / "main", "nao-e-sha")
+    assert sk.head_commit(tmp_path) is None
 
 
 # --------------------------------------------------------------------------- clone e processo filho

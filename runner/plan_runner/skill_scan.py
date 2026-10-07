@@ -18,7 +18,9 @@ Fluxo por candidata (`scan_candidates`):
    ambiente mínimo. Só o scan estático: o scanner lê os ficheiros e nunca executa código da skill.
    A revisão por IA (`--ai-checks`) fica desligada: chamaria um CLI de agente pago (claude, codex,
    cursor) com o código não confiável;
-5. converte o resultado num veredicto e apaga a pasta temporária.
+5. converte o resultado num veredicto, com o commit analisado e o sha256 da SKILL.md (o
+   veredicto vale só para esse conteúdo: um install posterior de outro commit tem de ser
+   analisado de novo), e apaga a pasta temporária.
 
 Veredicto (a mesma política por omissão do scanner, que bloqueia high e critical):
 - `dangerous`: o scanner bloqueia (alguma finding high ou critical);
@@ -33,6 +35,7 @@ Nada aqui falha o passo: cada erro fica no veredicto da candidata.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.metadata
 import importlib.util
 import json
@@ -65,6 +68,8 @@ OFFLINE_ENV = "PLAN_RUNNER_SKILLS_OFFLINE"
 _GITHUB_SOURCE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9._-]{1,100}$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]|\x1b\[[0-9;?]*[ -/]*[@-~]")
 _RULE = re.compile(r"^[a-z0-9][a-z0-9-]{0,79}$")
+_SHA1 = re.compile(r"^[0-9a-f]{40}$")
+_REF = re.compile(r"^refs/[A-Za-z0-9._/-]{1,200}$")
 _NAME_LINE = re.compile(r"^name:\s*['\"]?([^'\"\r\n]+?)['\"]?\s*$", re.MULTILINE)
 # Só o que o git e o scanner precisam. Nunca as variáveis do runner (chaves, tokens).
 _ENV_PASSTHROUGH = (
@@ -160,6 +165,36 @@ def run_scanner(path: Path, timeout: float = SCAN_TIMEOUT_S) -> dict[str, Any]:
     if code not in (0, 1) or (code == 0) != report["safe"]:
         raise ScanError(f"exit {code} não confere com safe={report['safe']}")
     return report
+
+
+def head_commit(root: Path) -> str | None:
+    """sha do commit do clone, lido dos ficheiros do `.git` (sem correr o git). None se não houver."""
+    git = root / ".git"
+    try:
+        head = (git / "HEAD").read_text(encoding="ascii").strip()
+        if _SHA1.match(head):
+            return head
+        ref = head.removeprefix("ref: ").strip()
+        if not _REF.match(ref) or ".." in ref:
+            return None
+        loose = git / ref
+        if loose.is_file() and not loose.is_symlink():
+            sha = loose.read_text(encoding="ascii").strip()
+            return sha if _SHA1.match(sha) else None
+        packed = git / "packed-refs"
+        for line in packed.read_text(encoding="ascii").splitlines() if packed.is_file() else []:
+            sha, _, name = line.partition(" ")
+            if name.strip() == ref and _SHA1.match(sha):
+                return sha
+    except (OSError, UnicodeDecodeError):
+        return None
+    return None
+
+
+def _file_sha256(path: Path) -> str | None:
+    if not path.is_file() or path.is_symlink():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _frontmatter_name(skill_md: Path) -> str | None:
@@ -305,4 +340,5 @@ def _scan_each(candidates: list[dict[str, Any]], fetch: FetchFn, scan: ScanFn, b
                 c["scan"] = _not_scanned(f"scan: {e if isinstance(e, ScanError) else type(e).__name__}")
                 continue
             rel = target.relative_to(root).as_posix()
-            c["scan"] = {**result, "scope": scope, "path": "" if rel == "." else rel}
+            c["scan"] = {**result, "scope": scope, "path": "" if rel == "." else rel,
+                         "commit": head_commit(root), "skill_sha256": _file_sha256(target / "SKILL.md")}
