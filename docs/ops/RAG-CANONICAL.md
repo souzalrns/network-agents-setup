@@ -132,7 +132,7 @@ Numa conversa com o conector do `agent-network-mcp`, pedir ao agente `marketing`
 | `marketing/` | 7 | 15 | **MANIFEST** (`marketing`, P1) | Lidos pelos agentes `creative_review`, `influencer`, `media_buyer`, `ugc` e `editor_video` e pelas skills `creative_review`, `critic` e `seo_brief`; o `kb: marketing` tem 16 dos 17 blocos `knowledge:` dos planos |
 | `imported-from-production/` (conteúdo) | 7 | 109 | EXCLUDED: duplicado | Cópias ou resumos de `agent-network-mcp/ingestion/`, cujo conteúdo já está em produção pelo MCP (`project` NULL: "ECC marketing-agent", "ECC planner+architect+…", etc.). O teste confirma o cabeçalho de cópia |
 | `imported-from-production/` (2 docs) | 2 | 5 | EXCLUDED: cópia sem consumidor | `ADDENDUM_PADROES_ORQUESTRADORES.md` e `PADROES_ERROS_IA.md` |
-| `design/` | 10 | 22 | EXCLUDED (P-36 = A) | Sem consumidor de `kb: design`; as skills de design lêem o ficheiro. O teste falha se um plano passar a usar `kb: design` → **F3c-DESIGN-1** |
+| `design/` | 10 | 22 | EXCLUDED (P-36 = A) | Sem consumidor de `kb: design` no RAG. Os 4 passos de design dos planos recebem os ficheiros que as skills nomeiam por `repo_files:` (SEC-1, só leitura; F3c-DESIGN-1, opção A, 2026-10-07), porque o worker não executa tools (AU-20). *Correcção (V42): até 2026-10-07 dizia "as skills de design lêem o ficheiro", o que só era verdade com um worker humano ou o Claude Code.* O teste falha se um plano passar a usar `kb: design` → **F3c-DESIGN-1** |
 | `imported-from-harnesses.md` | 1 | 17 | EXCLUDED: sem consumidor | Só citado em docs de portfólio |
 | READMEs, MANIFEST e `skills-map.md` | 5 | 21 | EXCLUDED: meta | Índices e mapas |
 
