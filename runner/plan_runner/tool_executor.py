@@ -7,11 +7,20 @@ mapeamento à ISO/IEC 42001). Resumo do que este módulo garante:
   `GeminiWorker(tools=True)`). Sem a flag, o worker faz a chamada única de sempre,
   mesmo nos passos que já declaram `tools_allowed` (42 passos declaram
   `read_repo_file`; ligar por omissão mudava o custo e o comportamento deles).
-- **Autorização = `step.tools_allowed` ∩ registo, e só nível `read`.** O modelo só
-  vê as tools autorizadas. Nomes do plano que não estão no registo (ex.:
-  `web_search`) ficam em `unsupported`. Uma chamada a uma tool não autorizada não
-  corre: volta ao modelo como erro `tool_not_allowed`. Tools de nível `prepare` ou
-  `act` são recusadas (`requires_approval`) até existir o caminho de HITL para elas.
+- **Autorização = `step.tools_allowed` ∩ registo.** O modelo só vê as tools
+  autorizadas. Nomes do plano que não estão no registo (ex.: `web_search`) ficam em
+  `unsupported`. Uma chamada a uma tool não autorizada não corre: volta ao modelo
+  como erro `tool_not_allowed`.
+- **Níveis:** `read` corre logo. `act` corre **só com aprovação humana, chamada a
+  chamada**: o loop pára antes de executar (`ToolApprovalRequired`, com o estado da
+  conversa), o worker abre um pedido HITL (`hitl-requests.jsonl`) e o run fica em
+  `paused_human_gate`. No resume, `approve` executa essa chamada e `reject` devolve
+  `rejected_by_human` ao modelo, que continua. Padrão das deferred tools do
+  pydantic-ai e do `needs_approval` do OpenAI Agents SDK. `prepare` e níveis
+  desconhecidos continuam recusados (`refused_level`).
+- **`kb` permitido ao passo:** o `retrieve_knowledge` só é oferecido se o passo
+  declarar os kb (`tool_kbs:`, ou o `kb` do bloco `knowledge:`), e só aceita esses
+  (`kb_not_allowed`, sem chegar ao L5). Sem kb declarado, fica em `refused_policy`.
 - **Validação:** os argumentos são validados com JSON Schema antes de executar.
   Inválidos → `invalid_args`, e a tool não corre.
 - **Limites:** `max_turns` (6) e `max_tool_calls` (12) por passo. Podem ser
@@ -31,6 +40,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -41,7 +51,10 @@ import jsonschema
 
 from . import repo_files as rf
 
-LEVELS_ALLOWED = ("read",)
+LEVELS_AUTO = ("read",)  # correm sem pedir nada
+LEVELS_APPROVAL = ("act",)  # cada chamada pára no HITL (decisão do maestro, 2026-10-07)
+LEVELS_ALLOWED = LEVELS_AUTO + LEVELS_APPROVAL
+KB_PATTERN = "^[A-Za-z0-9_+-]{1,40}$"
 DEFAULT_MAX_TURNS = 6
 DEFAULT_MAX_TOOL_CALLS = 12
 HARD_MAX_TURNS = 10
@@ -59,6 +72,20 @@ class ToolLoopError(RuntimeError):
     def __init__(self, reason: str, detail: str):
         super().__init__(f"{reason}: {detail}")
         self.reason = reason
+
+
+class ToolApprovalRequired(Exception):
+    """O modelo pediu tools de nível `act`: o loop pára ANTES de as executar.
+
+    `state` é JSON (a conversa até ao pedido, o turno e as chamadas já feitas) e volta
+    a `run_tool_loop(resume=state, approvals=...)` depois da decisão humana.
+    `pending` lista as chamadas à espera: name, args, args_sha256, id e key.
+    """
+
+    def __init__(self, state: dict[str, Any], pending: list[dict[str, Any]]):
+        super().__init__(f"aprovação humana pedida para {', '.join(p['name'] for p in pending)}")
+        self.state = state
+        self.pending = pending
 
 
 # --------------------------------------------------------------------------- registo
@@ -80,6 +107,7 @@ class Tool:
     level: str
     handler: Callable[[dict[str, Any], ToolContext], dict[str, Any]]
     max_output_chars: int = TOOL_OUTPUT_MAX_CHARS
+    kb_scoped: bool = False  # o argumento `kb` tem de estar nos kb permitidos ao passo
 
     def declaration(self) -> dict[str, Any]:
         return {"name": self.name, "description": self.description, "parameters": self.parameters}
@@ -137,6 +165,7 @@ REGISTRY: dict[str, Tool] = {
         }, "required": ["kb", "query"]},
         level="read",
         handler=_retrieve_knowledge,
+        kb_scoped=True,
     ),
 }
 
@@ -146,7 +175,7 @@ VALIDATION: dict[str, dict[str, Any]] = {
     "read_repo_file": {"type": "object", "additionalProperties": False, "required": ["path"],
                        "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 300}}},
     "retrieve_knowledge": {"type": "object", "additionalProperties": False, "required": ["kb", "query"],
-                           "properties": {"kb": {"type": "string", "pattern": "^[A-Za-z0-9_+-]{1,40}$"},
+                           "properties": {"kb": {"type": "string", "pattern": KB_PATTERN},
                                           "query": {"type": "string", "minLength": 1, "maxLength": 1000},
                                           "top_k": {"type": "integer", "minimum": 1, "maximum": KNOWLEDGE_MAX_TOP_K}}},
 }
@@ -187,31 +216,66 @@ class ToolLimits:
 
 @dataclass
 class ToolPlan:
-    """O que o passo pode usar: autorizadas (declaradas ao modelo) e não suportadas."""
+    """O que o passo pode usar: autorizadas (declaradas ao modelo) e o que ficou de fora, com o motivo."""
 
     allowed: list[str] = field(default_factory=list)
     unsupported: list[str] = field(default_factory=list)
     refused_level: list[str] = field(default_factory=list)
+    refused_policy: list[str] = field(default_factory=list)  # ex.: retrieve_knowledge sem kb declarado
+    needs_approval: list[str] = field(default_factory=list)  # autorizadas de nível `act`
+    kbs: list[str] = field(default_factory=list)  # kb permitidos ao passo (tools com kb_scoped)
 
     @property
     def active(self) -> bool:
         return bool(self.allowed)
 
 
-def plan_tools(tools_allowed: list[Any] | None, registry: dict[str, Tool] | None = None) -> ToolPlan:
+def step_kbs(step_raw: dict[str, Any] | None) -> tuple[list[str], list[str]]:
+    """kb permitidos ao passo: `tool_kbs:` se existir; senão o `kb` do bloco `knowledge:`; senão nenhum."""
+    raw = step_raw or {}
+    warnings: list[str] = []
+    if "tool_kbs" in raw:
+        vals = raw.get("tool_kbs")
+        if not isinstance(vals, list):
+            return [], ["tool_kbs tem de ser uma lista (ignorado: nenhum kb permitido)"]
+        source = "tool_kbs"
+    else:
+        kb = (raw.get("knowledge") or {}).get("kb") if isinstance(raw.get("knowledge"), dict) else None
+        vals = [kb] if kb is not None else []
+        source = "knowledge.kb"
+    kbs: list[str] = []
+    for v in vals:
+        if isinstance(v, str) and re.fullmatch(KB_PATTERN, v):
+            if v not in kbs:
+                kbs.append(v)
+        else:
+            warnings.append(f"{source}: kb inválido {v!r} (ignorado)")
+    return kbs, warnings
+
+
+def plan_tools(
+    tools_allowed: list[Any] | None,
+    registry: dict[str, Tool] | None = None,
+    *,
+    kbs: list[str] | None = None,
+) -> ToolPlan:
     registry = REGISTRY if registry is None else registry
-    plan = ToolPlan()
+    plan = ToolPlan(kbs=list(kbs or []))
     for name in tools_allowed or []:
         n = str(name)
-        if n in plan.allowed or n in plan.unsupported or n in plan.refused_level:
+        if n in plan.allowed or n in plan.unsupported or n in plan.refused_level or n in plan.refused_policy:
             continue
         tool = registry.get(n)
         if tool is None:
             plan.unsupported.append(n)
         elif tool.level not in LEVELS_ALLOWED:
             plan.refused_level.append(n)
+        elif tool.kb_scoped and not plan.kbs:
+            plan.refused_policy.append(n)
         else:
             plan.allowed.append(n)
+            if tool.level in LEVELS_APPROVAL:
+                plan.needs_approval.append(n)
     return plan
 
 
@@ -220,12 +284,34 @@ def tools_enabled_from_env(env: dict[str, str]) -> bool:
 
 
 def tools_instruction(plan: ToolPlan) -> str:
-    return (
-        f"Tens tools SÓ DE LEITURA neste passo: {', '.join(plan.allowed)}. "
-        "Usa-as só quando o contexto desta mensagem não chega, e no máximo as vezes necessárias. "
+    read = [n for n in plan.allowed if n not in plan.needs_approval]
+    text = f"Tens tools SÓ DE LEITURA neste passo: {', '.join(read)}. " if read else ""
+    if plan.needs_approval:
+        text += (f"Estas tools mudam coisas e cada chamada espera por aprovação humana: {', '.join(plan.needs_approval)}. "
+                 "Chama-as só quando forem mesmo necessárias; uma chamada recusada volta como `rejected_by_human`. ")
+    if plan.kbs:
+        text += f"Bases de conhecimento permitidas neste passo: {', '.join(plan.kbs)}. "
+    return text + (
+        "Usa as tools só quando o contexto desta mensagem não chega, e no máximo as vezes necessárias. "
         f"{DATA_NOTE} Quando tiveres o que precisas, devolve o artefacto final (sem chamar mais tools). "
         "O que continuar a faltar, marca como lacuna."
     )
+
+
+def declarations_for(plan: ToolPlan, registry: dict[str, Tool] | None = None) -> list[dict[str, Any]]:
+    """Declarações para o modelo. Nas tools com `kb_scoped`, o `kb` passa a enum dos kb do passo."""
+    registry = REGISTRY if registry is None else registry
+    out = []
+    for n in plan.allowed:
+        decl = registry[n].declaration()
+        if registry[n].kb_scoped:
+            params = json.loads(json.dumps(decl["parameters"]))
+            kb = params.setdefault("properties", {}).setdefault("kb", {"type": "string"})
+            kb["enum"] = list(plan.kbs)
+            kb["description"] = f"Base de conhecimento: uma de {', '.join(plan.kbs)}"
+            decl = {**decl, "parameters": params}
+        out.append(decl)
+    return out
 
 
 # --------------------------------------------------------------------------- execução de uma chamada
@@ -235,10 +321,31 @@ def _canonical_sha256(args: Any) -> str:
     return hashlib.sha256(json.dumps(args, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
+def call_key(call: dict[str, Any]) -> str:
+    """Identifica uma chamada para a aprovação: o id do modelo (se houver), a tool e os args canónicos."""
+    args = call.get("args") if isinstance(call.get("args"), dict) else {}
+    return _canonical_sha256({"id": call.get("id"), "name": str(call.get("name") or ""), "args": args})
+
+
+def _validation_error(tool: Tool, args: dict[str, Any], plan: ToolPlan) -> dict[str, Any] | None:
+    try:
+        jsonschema.validate(args, VALIDATION.get(tool.name, tool.parameters))
+    except jsonschema.ValidationError as e:
+        return {"ok": False, "error": "invalid_args", "detail": e.message[:300]}
+    if tool.kb_scoped and args.get("kb") not in plan.kbs:
+        return {"ok": False, "error": "kb_not_allowed", "detail": f"kb permitidos neste passo: {', '.join(plan.kbs)}"}
+    return None
+
+
 def execute_call(
     call: dict[str, Any], plan: ToolPlan, ctx: ToolContext, registry: dict[str, Tool] | None = None,
+    *, approval: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(response para o modelo, registo para auditoria). Nunca lança."""
+    """(response para o modelo, registo para auditoria). Nunca lança.
+
+    `approval` só conta nas tools de nível `act`: "approve" executa, qualquer outro
+    valor devolve `rejected_by_human`, e sem decisão (None) a tool não corre.
+    """
     registry = REGISTRY if registry is None else registry
     name = str(call.get("name") or "")
     args = call.get("args") if isinstance(call.get("args"), dict) else {}
@@ -256,12 +363,16 @@ def execute_call(
     if name not in plan.allowed or tool is None:
         return done({"ok": False, "error": "tool_not_allowed", "detail": f"tools deste passo: {', '.join(plan.allowed)}"})
     if tool.level not in LEVELS_ALLOWED:
-        return done({"ok": False, "error": "requires_approval", "detail": f"nível {tool.level} exige aprovação humana"})
-    schema = VALIDATION.get(name, tool.parameters)
-    try:
-        jsonschema.validate(args, schema)
-    except jsonschema.ValidationError as e:
-        return done({"ok": False, "error": "invalid_args", "detail": e.message[:300]})
+        return done({"ok": False, "error": "requires_approval", "detail": f"nível {tool.level} não é suportado"})
+    invalid = _validation_error(tool, args, plan)
+    if invalid is not None:
+        return done(invalid)
+    if tool.level in LEVELS_APPROVAL:
+        if approval is None:
+            return done({"ok": False, "error": "requires_approval", "detail": f"nível {tool.level} exige aprovação humana"})
+        record["approval"] = "approve" if approval == "approve" else "reject"
+        if approval != "approve":
+            return done({"ok": False, "error": "rejected_by_human", "detail": "a chamada foi recusada no HITL; continua sem ela"})
     try:
         out = tool.handler(args, ctx)
     except Exception as e:  # noqa: BLE001 -- uma tool que falha volta ao modelo como erro, não parte o passo
@@ -298,6 +409,24 @@ def _function_calls(response: dict[str, Any]) -> tuple[dict[str, Any] | None, li
     return content, calls
 
 
+def _pending_approvals(
+    calls: list[dict[str, Any]], plan: ToolPlan, approvals: dict[str, str], registry: dict[str, Tool],
+) -> list[dict[str, Any]]:
+    """Chamadas `act` autorizadas e com args válidos que ainda não têm decisão. As inválidas não incomodam o humano."""
+    pending = []
+    for call in calls:
+        name = str(call.get("name") or "")
+        tool = registry.get(name)
+        if tool is None or name not in plan.allowed or tool.level not in LEVELS_APPROVAL:
+            continue
+        args = call.get("args") if isinstance(call.get("args"), dict) else {}
+        if _validation_error(tool, args, plan) is not None or call_key(call) in approvals:
+            continue
+        pending.append({"name": name, "args": args, "args_sha256": _canonical_sha256(args),
+                        "id": call.get("id"), "key": call_key(call)})
+    return pending
+
+
 def run_tool_loop(
     *,
     user: str,
@@ -308,36 +437,58 @@ def run_tool_loop(
     before_turn: Callable[[int], None] | None = None,
     on_call: Callable[[dict[str, Any]], None] | None = None,
     registry: dict[str, Tool] | None = None,
+    resume: dict[str, Any] | None = None,
+    approvals: dict[str, str] | None = None,
 ) -> LoopResult:
     """Loop de function calling. `generate(contents, declarations)` faz uma chamada ao modelo.
 
     `before_turn(n)` corre antes de cada turno a partir do 2.º (orçamento).
     `on_call(record)` recebe o registo de auditoria de cada chamada (eventos).
+    Tools `act` sem decisão em `approvals` levantam `ToolApprovalRequired` antes de
+    correr; `resume` (o `state` dessa excepção) retoma no mesmo ponto, com as
+    decisões em `approvals` ({call_key: "approve" | "reject"}). Cada decisão vale
+    para uma chamada só.
     """
     registry = REGISTRY if registry is None else registry
-    declarations = [registry[n].declaration() for n in plan.allowed]
-    contents: list[dict[str, Any]] = [{"role": "user", "parts": [{"text": user}]}]
-    calls_done: list[dict[str, Any]] = []
+    approvals = dict(approvals or {})
+    declarations = declarations_for(plan, registry)
     responses: list[dict[str, Any]] = []
-    turn = 0
+    if resume is None:
+        contents: list[dict[str, Any]] = [{"role": "user", "parts": [{"text": user}]}]
+        calls_done: list[dict[str, Any]] = []
+        turn = 0
+        calls: list[dict[str, Any]] | None = None
+    else:
+        contents = list(resume["contents"])
+        calls_done = list(resume.get("calls") or [])
+        turn = int(resume["turn"])
+        last = contents[-1] if contents else {}
+        calls = [p["functionCall"] for p in last.get("parts") or []
+                 if isinstance(p, dict) and isinstance(p.get("functionCall"), dict)]
+        if last.get("role") != "model" or not calls:
+            raise ToolLoopError("resume_invalido", "o estado guardado não acaba num pedido de tools do modelo")
     while True:
-        turn += 1
-        if turn > 1 and before_turn is not None:
-            before_turn(turn)
-        response = generate(contents, declarations)
-        responses.append(response)
-        model_content, calls = _function_calls(response)
-        if not calls:
-            return LoopResult(response=response, turns=turn, calls=calls_done, responses=responses)
-        if turn >= limits.max_turns:
-            raise ToolLoopError("max_turns", f"o modelo ainda pedia tools ao fim de {turn} turnos (limite {limits.max_turns})")
-        if len(calls_done) + len(calls) > limits.max_tool_calls:
-            raise ToolLoopError("max_tool_calls", f"{len(calls_done) + len(calls)} chamadas pedidas (limite {limits.max_tool_calls})")
-        # o conteúdo do modelo volta tal como veio (thought signatures incluídas)
-        contents.append({"role": "model", "parts": list((model_content or {}).get("parts") or [])})
+        if calls is None:
+            turn += 1
+            if turn > 1 and before_turn is not None:
+                before_turn(turn)
+            response = generate(contents, declarations)
+            responses.append(response)
+            model_content, calls = _function_calls(response)
+            if not calls:
+                return LoopResult(response=response, turns=turn, calls=calls_done, responses=responses)
+            if turn >= limits.max_turns:
+                raise ToolLoopError("max_turns", f"o modelo ainda pedia tools ao fim de {turn} turnos (limite {limits.max_turns})")
+            if len(calls_done) + len(calls) > limits.max_tool_calls:
+                raise ToolLoopError("max_tool_calls", f"{len(calls_done) + len(calls)} chamadas pedidas (limite {limits.max_tool_calls})")
+            # o conteúdo do modelo volta tal como veio (thought signatures incluídas)
+            contents.append({"role": "model", "parts": list((model_content or {}).get("parts") or [])})
+        pending = _pending_approvals(calls, plan, approvals, registry)
+        if pending:
+            raise ToolApprovalRequired({"contents": contents, "turn": turn, "calls": calls_done}, pending)
         response_parts = []
         for call in calls:
-            result, record = execute_call(call, plan, ctx, registry)
+            result, record = execute_call(call, plan, ctx, registry, approval=approvals.pop(call_key(call), None))
             record["turn"] = turn
             calls_done.append(record)
             if on_call is not None:
@@ -347,3 +498,4 @@ def run_tool_loop(
                 fr["id"] = call["id"]
             response_parts.append({"functionResponse": fr})
         contents.append({"role": "user", "parts": response_parts})
+        calls = None

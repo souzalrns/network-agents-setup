@@ -17,6 +17,7 @@ class StepResult:
         artifact: str | None = None,
         worker_error: str | None = None,
         budget: dict[str, Any] | None = None,
+        approval: dict[str, Any] | None = None,
     ):
         self.ok = ok
         self.detail = detail
@@ -25,6 +26,8 @@ class StepResult:
         self.worker_error = worker_error
         # detail == "budget_exceeded": {"spent": N, "cap": M} (docs/ops/BUDGET.md)
         self.budget = budget
+        # detail == "awaiting_tool_approval" (AU-20, nivel act): {"request_id": "hitl_...", "tools": [...]}
+        self.approval = approval
 
 
 def _read_json(path: Path) -> Any:
@@ -121,10 +124,14 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
 
     result_path = pending / "result.json"
     if not result_path.exists() and worker is not None:
-        from .external_worker import BudgetExceeded, WorkerError
+        from .external_worker import BudgetExceeded, ToolApprovalPending, WorkerError
 
         try:
             worker.process(out_root, step.id)
+        except ToolApprovalPending as e:
+            # AU-20: tool de nivel act a espera de um humano; o motor pausa em paused_human_gate.
+            return StepResult(ok=False, detail="awaiting_tool_approval",
+                              approval={"request_id": e.request_id, "tools": e.tools})
         except BudgetExceeded as e:
             # Tecto de tokens (ou de custo, D6) atingido: o passo nao correu; o motor pausa o run (paused_budget).
             budget = {"spent": e.spent, "cap": e.cap}

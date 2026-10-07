@@ -152,6 +152,42 @@ def _paused_budget(out: Path, log: EventLog, run_id: str, status: dict[str, Any]
     )
 
 
+def _paused_tool_approval(out: Path, log: EventLog, run_id: str, status: dict[str, Any], step_id: str, result: Any, completed: set[str]) -> None:
+    """AU-20: uma tool de nivel act espera por um humano. O passo nao acabou: o resume decide e volta a corre-lo."""
+    approval = result.approval or {}
+    log.append("human_gate_requested", run_id, {"step_id": step_id, "kind": "tool_approval", **approval})
+    status["state"] = "paused_human_gate"
+    status["paused_at_step"] = step_id
+    status["completed"] = sorted(completed)
+    status["tool_approval"] = {"step_id": step_id, **approval}
+    save_status(out, status)
+    (out / "HITL.md").write_text(
+        f"# HITL: aprovacao de tool\n\nRun `{run_id}` parado no passo `{step_id}`: o modelo pediu "
+        f"{', '.join(approval.get('tools') or [])} (nivel act). Nada correu ainda.\n\n"
+        f"Pedido `{approval.get('request_id')}` em `hitl-requests.jsonl` (argumentos em `context.tool_calls`).\n\n"
+        f"Aprovar ou recusar:\n```\npython -m plan_runner resume {out} --decision approve\n"
+        f"python -m plan_runner resume {out} --decision reject\n```\n",
+        encoding="utf-8",
+    )
+
+
+def _resolve_tool_approval(out: Path, log: EventLog, run_id: str, status: dict[str, Any], decision: str) -> None:
+    """Resume de um paused_human_gate de tool: grava a decisao no contrato HITL (se o lado Node nao o fez) e segue."""
+    approval = status.pop("tool_approval")
+    if decision not in {"approve", "reject"}:
+        raise PlanError("aprovacao de tool: decision must be approve|reject")
+    request_id = approval.get("request_id")
+    already = any(d.get("id") == request_id for d in hitl._read_jsonl(out / hitl.DECISIONS_FILE))
+    if not already:
+        hitl.write_decision(out, request_id, response=decision, responder_id="cli")
+    log.append(
+        "human_gate_resolved",
+        run_id,
+        {"step_id": approval.get("step_id"), "decision": decision, "kind": "tool_approval", "request_id": request_id},
+        actor={"kind": "human", "id": "cli"},
+    )
+
+
 def _log_ignored_fields(plan_path: Path, log: EventLog, run_id: str) -> None:
     """AU-22: regista os campos do plano que o runner nao aplica (models.IGNORED_PLAN_FIELDS)."""
     try:
@@ -275,6 +311,9 @@ def run_plan(
             if result.detail == "budget_exceeded":
                 _paused_budget(out, log, run_id, status, step.id, result, completed)
                 return status
+            if result.detail == "awaiting_tool_approval":
+                _paused_tool_approval(out, log, run_id, status, step.id, result, completed)
+                return status
             if result.detail == "waiting_external":
                 _waiting_external(log, run_id, status, step.id, result)
                 status["state"] = "waiting_external"
@@ -365,7 +404,10 @@ def resume_run(
             {"current_step": status.get("current_step"), "paused_at_step": status.get("paused_at_step")},
         )
 
-    if state == "paused_human_gate":
+    if state == "paused_human_gate" and status.get("tool_approval"):
+        # AU-20: o passo parou numa tool `act`; reject recusa a chamada (o modelo continua), nao o run.
+        _resolve_tool_approval(out_dir, log, run_id, status, decision)
+    elif state == "paused_human_gate":
         if decision not in {"approve", "reject", "edit"}:
             raise PlanError("decision must be approve|reject|edit")
         paused = status.get("paused_at_step")
@@ -438,6 +480,9 @@ def resume_run(
             result = execute_external_request(out_dir, step, worker_obj)
             if result.detail == "budget_exceeded":
                 _paused_budget(out_dir, log, run_id, status, step.id, result, completed)
+                return status
+            if result.detail == "awaiting_tool_approval":
+                _paused_tool_approval(out_dir, log, run_id, status, step.id, result, completed)
                 return status
             if result.detail == "waiting_external":
                 _waiting_external(log, run_id, status, step.id, result)

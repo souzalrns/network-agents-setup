@@ -95,6 +95,20 @@
           }
         },
         "repo_files": {"$ref": "#/$defs/strings", "description": "SEC-1 (repo_files.py)"},
+        "tool_limits": {
+          "type": "object",
+          "description": "AU-20 (tool_executor.py): limites do loop de tools; acima do tecto vale o tecto",
+          "additionalProperties": false,
+          "properties": {
+            "max_turns": {"type": "integer", "minimum": 1},
+            "max_tool_calls": {"type": "integer", "minimum": 1}
+          }
+        },
+        "tool_kbs": {
+          "type": "array",
+          "description": "AU-20: kb que o retrieve_knowledge pode usar neste passo (sem isto: o kb do bloco knowledge:; sem nenhum, a tool fica de fora)",
+          "items": {"type": "string", "pattern": "^[A-Za-z0-9_+-]{1,40}$"}
+        },
         "context": {
           "type": "object",
           "description": "B1-bis (context_policy.py)",

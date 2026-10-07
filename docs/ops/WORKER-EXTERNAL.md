@@ -406,7 +406,7 @@ Escreve `pending_steps/<id>/skill_activation.json` e, só quando a skill tem scr
 | Tool | Nível | O que faz |
 |---|---|---|
 | `read_repo_file(path)` | read | lê um ficheiro do repo pelas regras do SEC-1 (denylist de segredos, sem `..`, sem symlinks para fora, até 20 KB) |
-| `retrieve_knowledge(kb, query, top_k?)` | read | pesquisa o L5 (MCP, v2 com proveniência), até 8 trechos com a fonte |
+| `retrieve_knowledge(kb, query, top_k?)` | read | pesquisa o L5 (MCP, v2 com proveniência), até 8 trechos com a fonte; **só nos kb permitidos ao passo** |
 
 Regras do loop:
 - só as tools autorizadas são declaradas ao modelo; os nomes do plano fora do registo (ex.: `web_search`) ficam em `meta.tools.unsupported`;
@@ -416,6 +416,25 @@ Regras do loop:
 - o orçamento é verificado antes de cada turno extra (`paused_budget`);
 - cada turno é uma linha no ledger;
 - cada chamada é um evento `tool_called`, com o sha256 dos argumentos e nunca os argumentos em claro.
+
+**kb permitido ao passo** (decisão do maestro, 2026-10-07):
+- os kb vêm de `tool_kbs: [legal, global]` no passo; sem isso, do `kb` do bloco `knowledge:`;
+- o modelo vê o `kb` como enum desses valores;
+- um kb fora da lista volta como `kb_not_allowed` e não chega ao L5;
+- um passo sem kb declarado não recebe o `retrieve_knowledge`, que fica em `meta.tools.refused_policy`.
+
+**Nível `act`: aprovação humana em cada chamada** (decisão do maestro, 2026-10-07):
+- quando o modelo pede uma tool `act`, o loop **pára antes de correr qualquer chamada desse turno**;
+- o worker escreve:
+  - um pedido em `hitl-requests.jsonl` (contrato `hitl-request-v1`, com os argumentos em `context.tool_calls`, para o humano ver o que aprova);
+  - o estado da conversa em `pending_steps/<id>/tool_approval.json`;
+  - o evento `tool_approval_requested`;
+- o run fica em `paused_human_gate`, com `status.tool_approval` e o `HITL.md`;
+- decide-se com `python -m plan_runner resume <run> --decision approve|reject`, ou do lado Node no mesmo contrato. Aqui o `--decision` é obrigatório: aprovar nunca é o default. Se o Node já respondeu a esse pedido, é essa a decisão que conta; uma decisão de outro pedido nunca conta;
+- `approve` executa a chamada tal como foi pedida. `reject` devolve `rejected_by_human` ao modelo, que continua: o run não acaba;
+- cada decisão vale para uma chamada e para o seu pedido (por id), e `edit` não é aceite;
+- `prepare` continua recusado;
+- o registo ainda não tem nenhuma tool `act` real: entram só com idempotência e rollback (contrato §15.6).
 
 Contrato e tabela de testes: [`docs/architecture/AU-20-TOOL-EXECUTOR.md`](../architecture/AU-20-TOOL-EXECUTOR.md).
 

@@ -40,13 +40,14 @@ import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
 import yaml
 
 from . import context_policy as cp
-from . import cost
+from . import cost, hitl
 from . import memory_wiring as mw
 from . import model_tiers as mt
 from . import repo_files as rf
@@ -78,6 +79,22 @@ class WorkerError(RuntimeError):
 
 class HumanGateBlocked(WorkerError):
     """O passo ou o run esperam uma decisao humana; o worker nao avanca."""
+
+
+class ToolApprovalPending(HumanGateBlocked):
+    """AU-20: o modelo pediu uma tool de nivel `act`; ha um pedido HITL a espera de decisao.
+
+    O executor converte isto em `awaiting_tool_approval` e o motor pausa o run em
+    `paused_human_gate` (com `status.tool_approval`). Nao e um erro do passo.
+    """
+
+    def __init__(self, request_id: str, tools: list[str]):
+        super().__init__(f"aprovacao humana pedida ({request_id}) para: {', '.join(tools)}")
+        self.request_id = request_id
+        self.tools = tools
+
+
+TOOL_APPROVAL_FILE = "tool_approval.json"
 
 
 class BudgetExceeded(WorkerError):
@@ -660,6 +677,8 @@ class GeminiWorker:
 
         try:
             return self._run(out_root, pending, request, step_id, run_id, model=model, tier=tier)
+        except ToolApprovalPending:
+            raise  # pausa a espera de um humano, nao e um erro do passo
         except WorkerError as e:
             (pending / ERROR_FILE).write_text(
                 json.dumps({"at": _now(), "model": model, "error": str(e)}, indent=2, ensure_ascii=False) + "\n",
@@ -700,12 +719,14 @@ class GeminiWorker:
                     system += "\n" + _section("Memoria", mw.remember_instruction(sm, wants_json))
 
         # AU-20: tools so com a flag e com tools_allowed ∩ registo; senao, a chamada unica de sempre.
-        tool_plan = te.plan_tools(request.get("tools_allowed")) if self.tools else None
+        step_raw = _plan_step(plan_raw, step_id) or {}
+        kbs, kb_warnings = te.step_kbs(step_raw)
+        tool_plan = te.plan_tools(request.get("tools_allowed"), kbs=kbs) if self.tools else None
         tools_meta: dict[str, Any] | None = None
         if tool_plan is not None and tool_plan.active:
             response, row, ledger, tools_meta = self._run_with_tools(
                 out_root, step_id, run_id, system, user, model=model, agent_id=agent_id,
-                plan=tool_plan, step_raw=_plan_step(plan_raw, step_id) or {},
+                plan=tool_plan, step_raw=step_raw, warnings=kb_warnings,
             )
         else:
             response = gemini_generate(
@@ -720,9 +741,14 @@ class GeminiWorker:
             )
             row = build_usage_row(run_id=run_id, agent_id=agent_id, model=model, response=response)
             ledger = record_token_usage(out_root, row, step_id=step_id, run_id=run_id, remote=self.remote_ledger)
-            if tool_plan is not None and (tool_plan.unsupported or tool_plan.refused_level):
+            if tool_plan is not None and (tool_plan.unsupported or tool_plan.refused_level or tool_plan.refused_policy):
                 tools_meta = {"enabled": False, "reason": "nenhuma tool do passo esta no registo",
                               "unsupported": tool_plan.unsupported, "refused_level": tool_plan.refused_level}
+                if tool_plan.refused_policy:
+                    tools_meta["reason"] = "nenhuma tool do passo pode correr (registo ou politica do passo)"
+                    tools_meta["refused_policy"] = tool_plan.refused_policy
+                if kb_warnings:
+                    tools_meta["warnings"] = kb_warnings
 
         text, finish = _response_text(response)
         if not text.strip():
@@ -782,12 +808,21 @@ class GeminiWorker:
     def _run_with_tools(
         self, out_root: Path, step_id: str, run_id: str | None, system: str, user: str,
         *, model: str, agent_id: str | None, plan: te.ToolPlan, step_raw: dict[str, Any],
+        warnings: list[str] | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]]:
-        """AU-20: loop de function calling (plan_runner/tool_executor.py). Devolve (resposta final, row, ledger, meta)."""
+        """AU-20: loop de function calling (plan_runner/tool_executor.py). Devolve (resposta final, row, ledger, meta).
+
+        Tools `act`: o loop para antes de as executar; aqui abre-se o pedido HITL, guarda-se
+        o estado em `tool_approval.json` e levanta-se ToolApprovalPending. Na volta (resume),
+        com a decisao em `hitl-decisions.jsonl`, o loop retoma no mesmo ponto.
+        """
         if NO_TOOLS_SENTENCE not in system:
             raise WorkerError("tools: o prompt nao tem a frase de 'sem tools' esperada (build_prompt mudou?)")
         system = system.replace(NO_TOOLS_SENTENCE, te.tools_instruction(plan))
-        limits, warnings = te.ToolLimits.from_step(step_raw)
+        limits, limit_warnings = te.ToolLimits.from_step(step_raw)
+        warnings = list(warnings or []) + limit_warnings
+        pending_dir = out_root / "pending_steps" / step_id
+        resume_state, approvals, before = self._tool_approval_resume(out_root, pending_dir, step_id, run_id)
         ctx = te.ToolContext(repo_root=repo_root_from_out(out_root), out_root=out_root, step_id=step_id,
                              knowledge_backend=self.knowledge_backend)
         events = EventLog(out_root / "events.jsonl")
@@ -808,17 +843,24 @@ class GeminiWorker:
         def on_call(record: dict[str, Any]) -> None:
             events.append("tool_called", run_id or "", {"step_id": step_id, **record})
 
+        def total(key: str) -> int | None:
+            vals = [r[key] for r in rows if isinstance(r.get(key), int)]
+            if isinstance(before.get(key), int):
+                vals.append(before[key])
+            return sum(vals) if vals else None
+
         try:
             loop = te.run_tool_loop(
                 user=user, plan=plan, ctx=ctx, limits=limits, generate=generate,
                 before_turn=lambda _turn: check_budget(out_root, model), on_call=on_call,
+                resume=resume_state, approvals=approvals,
             )
         except te.ToolLoopError as e:
             raise WorkerError(f"tools: {e}") from e
-
-        def total(key: str) -> int | None:
-            vals = [r[key] for r in rows if isinstance(r.get(key), int)]
-            return sum(vals) if vals else None
+        except te.ToolApprovalRequired as e:
+            usage = {k: total(k) for k in ("tokens_in", "tokens_out", "tokens_total")}
+            raise self._open_tool_approval(out_root, pending_dir, step_id, run_id, e, usage, events) from None
+        (pending_dir / TOOL_APPROVAL_FILE).unlink(missing_ok=True)
 
         row = {**rows[-1], "tokens_in": total("tokens_in"), "tokens_out": total("tokens_out"),
                "tokens_total": total("tokens_total")}
@@ -831,9 +873,75 @@ class GeminiWorker:
             "turns": loop.turns,
             "calls": loop.calls,
         }
+        if plan.refused_policy:
+            meta["refused_policy"] = plan.refused_policy
+        if plan.needs_approval:
+            meta["needs_approval"] = plan.needs_approval
+        if plan.kbs:
+            meta["kbs"] = plan.kbs
         if warnings:
             meta["warnings"] = warnings
         return loop.response, row, ledgers[-1], meta
+
+    def _tool_approval_resume(
+        self, out_root: Path, pending_dir: Path, step_id: str, run_id: str | None,
+    ) -> tuple[dict[str, Any] | None, dict[str, str], dict[str, Any]]:
+        """(estado do loop, decisoes por chamada, tokens ja gastos) se o passo parou a espera de aprovacao."""
+        path = pending_dir / TOOL_APPROVAL_FILE
+        if not path.is_file():
+            return None, {}, {}
+        saved = _read_json(path)
+        request_id = saved.get("request_id")
+        decision = next((d for d in reversed(hitl._read_jsonl(out_root / hitl.DECISIONS_FILE))
+                         if d.get("id") == request_id and d.get("response") in ("approve", "reject", "edit")), None)
+        if decision is None:
+            raise ToolApprovalPending(str(request_id), [p.get("name", "?") for p in saved.get("pending") or []])
+        # So `approve` aprova; `reject` e qualquer outra resposta (ex.: `edit`) recusam a chamada.
+        verdict = "approve" if decision["response"] == "approve" else "reject"
+        approvals = {p["key"]: verdict for p in saved.get("pending") or []}
+        EventLog(out_root / "events.jsonl").append(
+            "tool_approval_resolved", run_id or "",
+            {"step_id": step_id, "request_id": request_id, "decision": verdict,
+             "responder_id": decision.get("responder_id"), "tools": [p.get("name") for p in saved.get("pending") or []]},
+            actor={"kind": "human", "id": str(decision.get("responder_id") or "hitl")},
+        )
+        return saved["state"], approvals, saved.get("usage") or {}
+
+    def _open_tool_approval(
+        self, out_root: Path, pending_dir: Path, step_id: str, run_id: str | None,
+        exc: te.ToolApprovalRequired, usage: dict[str, Any], events: EventLog,
+    ) -> ToolApprovalPending:
+        """Pedido HITL (contrato hitl-request-v1) + estado do loop no disco. Devolve a excepcao a levantar."""
+        names = [p["name"] for p in exc.pending]
+        status_path = out_root / "status.json"
+        status = _read_json(status_path) if status_path.is_file() else {}
+        plan_raw = _load_plan_raw(out_root)
+        record = hitl.build_request(
+            step=SimpleNamespace(id=step_id, action=f"tool:{'+'.join(names)}", human_gate=None),
+            run_id=run_id, plan_id=plan_raw.get("id"), completed=status.get("completed") or [], mode=status.get("mode"),
+        )
+        record["title"] = f"Aprovar tool(s) {', '.join(names)} no passo '{step_id}'"
+        record["description"] = (
+            "O modelo pediu tools de nivel `act` (mudam coisas). Nada correu ainda. "
+            "approve executa estas chamadas exactamente com estes argumentos; reject devolve `rejected_by_human` ao modelo."
+        )
+        record["allow"] = ["approve", "reject"]
+        # O humano tem de ver o que aprova: os args vao no pedido (ficheiro local do run), nunca nos eventos.
+        record["context"]["tool_calls"] = [
+            {"name": p["name"], "args": p["args"], "args_sha256": p["args_sha256"]} for p in exc.pending]
+        record["risks"] = [f"`{n}` e uma tool de nivel act" for n in names]
+        record["metadata"] = {"kind": "tool_approval", "au20": True}
+        hitl._append_jsonl(out_root / hitl.REQUESTS_FILE, record)
+        pending_dir.mkdir(parents=True, exist_ok=True)
+        (pending_dir / TOOL_APPROVAL_FILE).write_text(
+            json.dumps({"request_id": record["id"], "requested_at": record["requested_at"], "pending": exc.pending,
+                        "state": exc.state, "usage": usage}, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        events.append("tool_approval_requested", run_id or "",
+                      {"step_id": step_id, "request_id": record["id"], "tools": names,
+                       "args_sha256": [p["args_sha256"] for p in exc.pending]})
+        return ToolApprovalPending(record["id"], names)
 
 
 WORKERS = ("gemini",)
