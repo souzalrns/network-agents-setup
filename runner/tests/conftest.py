@@ -161,29 +161,62 @@ def write_result_json():
 L4_SQL_FILES = [REPO_ROOT / "scripts/create_memory_l4_table.sql", REPO_ROOT / "scripts/create_recall_l4_rpc.sql"]
 
 
+@pytest.fixture(scope="session")
+def disposable_pg():
+    """Postgres + pgvector DESCARTAVEL: {"url", "hosts"} (docs/ops/TESTING.md).
+
+    1. RAG_TEST_DATABASE_URL (CI: servico do job; local: um Postgres teu);
+    2. senao, um testcontainer pgvector/pgvector:pg16 (requirements-test.txt + Docker);
+    3. senao, skip -- ou erro com RAG_TEST_REQUIRED=1 (o job nunca fica verde sem BD).
+    """
+    url = os.environ.get("RAG_TEST_DATABASE_URL", "").strip()
+    if url:
+        yield {"url": url, "hosts": frozenset()}
+        return
+    required = os.environ.get("RAG_TEST_REQUIRED") == "1"
+    try:
+        from testcontainers.postgres import PostgresContainer
+    except ImportError:
+        if required:
+            raise
+        pytest.skip("sem RAG_TEST_DATABASE_URL nem testcontainers (pip install -r requirements-test.txt)")
+    try:  # o construtor já fala com o Docker: tem de estar dentro do try
+        container = PostgresContainer("pgvector/pgvector:pg16", driver=None)
+        container.start()
+    except Exception as e:  # noqa: BLE001 -- sem Docker: skip (ou erro no CI)
+        if required:
+            raise
+        pytest.skip(f"testcontainers sem Docker disponivel ({type(e).__name__})")
+    try:
+        yield {"url": container.get_connection_url(), "hosts": frozenset({container.get_container_host_ip()})}
+    finally:
+        container.stop()
+
+
 @pytest.fixture
-def l4_opts():
+def l4_opts(disposable_pg):
     """Schema proprio com o SQL versionado aplicado 2x (idempotencia). Devolve as `options` de ligacao."""
     schema = f"l4_test_{uuid4().hex[:8]}"
-    with _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=True) as admin:
+    url = disposable_pg["url"]
+    with _psycopg().connect(url, autocommit=True) as admin:
         admin.execute("CREATE EXTENSION IF NOT EXISTS vector")
         admin.execute(f"CREATE SCHEMA {schema}")
     opts = f"-c search_path={schema},public"
     sql = [f.read_text(encoding="utf-8").replace("public.", f"{schema}.") for f in L4_SQL_FILES]
     try:
-        with _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=True, options=opts) as c:
+        with _psycopg().connect(url, autocommit=True, options=opts) as c:
             for _ in range(2):  # idempotencia
                 for text in sql:
                     c.execute(text)
         yield opts
     finally:
-        with _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=True) as admin:
+        with _psycopg().connect(url, autocommit=True) as admin:
             admin.execute(f"DROP SCHEMA {schema} CASCADE")
 
 
 @pytest.fixture
-def db(l4_opts):
-    conn = _psycopg().connect(os.environ["RAG_TEST_DATABASE_URL"], autocommit=False, row_factory=_psycopg().rows.dict_row, options=l4_opts)
+def db(l4_opts, disposable_pg):
+    conn = _psycopg().connect(disposable_pg["url"], autocommit=False, row_factory=_psycopg().rows.dict_row, options=l4_opts)
     try:
         yield conn
     finally:

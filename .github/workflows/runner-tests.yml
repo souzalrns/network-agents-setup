@@ -18,6 +18,7 @@ on:
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
       - 'scripts/ingest_benchmark.py'
+      - 'scripts/seed_fake_clients.py'
       # F2: primitiva fetch (servidor HTTP local nos testes)
       - 'scripts/web_fetch.py'
       # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
@@ -59,6 +60,7 @@ on:
       # F1: primitiva ingest_document (testada pelo job test-ingest)
       - 'scripts/ingest_document.py'
       - 'scripts/ingest_benchmark.py'
+      - 'scripts/seed_fake_clients.py'
       # F2: primitiva fetch (servidor HTTP local nos testes)
       - 'scripts/web_fetch.py'
       # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
@@ -109,6 +111,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install -r requirements-test.txt  # Faker + testcontainers (docs/ops/TESTING.md)
           python -m pip install -r requirements-langgraph.txt
           python -m pip install pytest
 
@@ -221,6 +224,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+          python -m pip install -r requirements-test.txt  # Faker + testcontainers (docs/ops/TESTING.md)
           python -m pip install pytest
 
       - name: ingest -> retrieve (Postgres + pgvector, embedder falso)
@@ -232,8 +236,9 @@ jobs:
         run: python -m pytest tests/test_f3_provenance.py tests/test_provenance.py tests/test_f3b_validity.py -v -rs
 
       # L4 (D3): ciclo remember/recall/forget/promote + SQL (2x, idempotencia) + worker
+      # + clientes FICTICIOS (Faker, prefixo FAKE-): isolamento por cliente e limpeza
       - name: memoria L4 (Postgres + pgvector, Gemini falso)
-        run: python -m pytest tests/test_memory_l4.py tests/test_memory_l4_worker.py -v -rs
+        run: python -m pytest tests/test_memory_l4.py tests/test_memory_l4_worker.py tests/test_fake_clients.py -v -rs
 
       # Bloco C: veredicto do conselho -> L4 candidate -> HITL -> active (criterio de DONE)
       - name: conselho + L4 (Postgres + pgvector, Gemini falso)
