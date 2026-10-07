@@ -22,3 +22,6 @@ Itens que não puderam ser implantados nesta cadeia: precisam de produção, cre
 | F4-MAT-1 | Escala de maturidade do E §15.7 (DECLARED … PROVEN) | Decisão P-38 | A decisão; depois, um PR do Claude |
 | F5-ROUTE-1 | Run real a partir do `route` (discover → select) | Credenciais do DEV | Um run do DEV |
 | AU-20 | O worker executa tools (`read_repo_file`, `retrieve_knowledge`) | Decisão P-37 (recomendada: executor mínimo em Python) | A decisão; depois, PRs do Claude |
+| R-008 | Camada de grafo e entidades ao estilo do LightRAG (padrão, em Postgres) | A sequência do E §2.3 | Depois da avaliação de retrieval alargada (F3b-GS-1) |
+| R-009 | Sunset da `match_knowledge` v1 e da flag `KNOWLEDGE_RPC_V2` | A v2 estável durante um período a decidir | 1 PR no MCP (tirar a flag) + `DROP FUNCTION` pelo DEV |
+| ING-011 | Unstructured | DEFER: dependências de sistema pesadas (E §14.3) | O MarkItDown e o Docling falharem num formato real |
