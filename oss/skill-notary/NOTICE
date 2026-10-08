@@ -1,0 +1,22 @@
+skill-notary
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+This project builds on the following works. None of their code is copied into this package
+except where stated.
+
+- agentic-skills-manager (https://github.com/mazen160/skills-manager), MIT License,
+  Copyright (c) Mazin Ahmed. Runtime dependency: the default scan engine ("asm").
+
+- Cisco AI Defense skill-scanner (https://github.com/cisco-ai-defense/skill-scanner),
+  Apache License 2.0. Optional dependency (extra "cisco"): the second scan engine.
+
+- @vercel/detect-agent 1.2.5 (https://github.com/vercel/vercel/tree/main/packages/detect-agent),
+  Apache License 2.0, Copyright Vercel, Inc. The list of environment variables and the order
+  of the checks in skill_notary/approval.py (`detect_agent`) are a Python port of its
+  `determineAgent` function.
+
+- The `owner/repo@skill` source syntax follows the skills CLI
+  (https://github.com/vercel-labs/skills, MIT License).
+
+- SARIF 2.1.0 (OASIS Standard). The schema is not distributed with this package; the tests
+  download it from the OASIS TC repository at a pinned commit and check its sha256.
