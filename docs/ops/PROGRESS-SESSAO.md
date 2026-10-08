@@ -41,6 +41,7 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
     - horizontal: `openapis.org`.
   - **3 retirados:** `justice.gov.pt`, `steamworks.steampowered.com` e `openapi.org` (substituídos por 3 dos acrescentados).
 - **Workflow:** o passo dos candidatos saiu.
+- **Sonda com a lista corrigida** (run `37817241033`): 93 `ok` em 128 (antes, 83 em 122). Os 4 originais que redireccionavam passam a `ok`.
 - **Teste:** `test_p46_aplicada_na_area_da_fonte`. A v1 fixada no teste passa a 128.
 - **PENDENCIAS:**
   - F2-ALLOW-1 → §7 (FECHADO);
