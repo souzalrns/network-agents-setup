@@ -72,7 +72,7 @@ python scripts/check_web_allowlist.py --candidate security=cve.org   # um domín
 
 Se a raiz de um domínio não tiver DNS, a sonda tenta o `www.` (que o domínio cobre).
 
-**1.ª sonda (2026-10-08, run `37806411775`):** 122 pares, 82 `ok`, 9 `fora`, 24 `http_error`, 7 `robots_disallowed`. O que falha divide-se em dois grupos:
+**Sonda da v1 (2026-10-08):** 122 pares. O run `37806411775` deu 82 `ok`; o run `37807283070`, já com o `www.`, deu 83 `ok`, 9 `fora`, 22 `http_error`, 7 `robots_disallowed` e 1 `timeout`. O que falha divide-se em dois grupos:
 - **corrigível na lista**, proposto na P-46 (PENDENCIAS §10): fontes que mudaram de endereço e nomes que não existem;
 - **não corrigível na lista:**
   - 403 do IP do runner (anti-bot);

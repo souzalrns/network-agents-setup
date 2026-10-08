@@ -74,11 +74,9 @@ jobs:
           --candidate docs=platform.claude.com
           --candidate docs=docs.astral.sh
           --candidate marketing=threads.com
-          --candidate marketing=business.google.com
           --candidate horizontal=openapis.org
           --candidate legal=justica.gov.pt
           --candidate gamedev=partner.steamgames.com
-          --candidate gamedev=dev.epicgames.com
 
       - name: Guardar os resultados (JSON)
         if: always()

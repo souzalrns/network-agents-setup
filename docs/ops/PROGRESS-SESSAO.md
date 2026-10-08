@@ -53,8 +53,13 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 - **A sonda ganhou** (2.º commit):
   - `www.` quando a raiz não tem DNS (`bportugal.pt`, `cmvm.pt`);
   - `--candidate área=domínio`, que sonda as propostas da P-46 sem mudar a lista.
+- **2.ª sonda** (run `37807283070`, commit `7a1be27`): 83 `ok` (o `cmvm.pt` passa pelo `www.`).
+- **Candidatos:**
+  - 7 de 11 dão `ok`;
+  - o `business.google.com` (vai para `support.google.com`) e o `dev.epicgames.com` (403) saem da proposta;
+  - o `openapis.org` (403 anti-bot) e o `threads.com` (robots) ficam, porque são o endereço certo.
 - **P-46 (pendente, recomendada A):**
-  - acrescentar 10 endereços actuais de fontes já aprovadas;
+  - acrescentar 9 endereços actuais de fontes já aprovadas;
   - tirar 3 nomes que não funcionam;
   - os 403 (anti-bot no IP do runner), os TLS inválidos, os robots e a raiz `gov.br` não se resolvem na lista: ficam documentados.
 
