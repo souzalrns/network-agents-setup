@@ -26,6 +26,9 @@ pins: {}
 #   skills/claude/idea-refine/SKILL.md: "<sha256 de 64 hex>"
 
 # Pesquisa de skills externas: só candidatas para revisão humana, nunca instala nada.
+# Cada candidata passa pelo scan estático do agentic-skills-manager (SKILL-SCAN-1,
+# runner/plan_runner/skill_scan.py) e ganha scan.verdict: safe, risky, dangerous ou
+# not_scanned. O veredicto nunca instala nem torna a candidata confiável.
 # Por passo: should_search_external: true (ou search_external: true).
 # Global: quando true, pesquisa só se a skill local não resolver.
 search_external_default: false

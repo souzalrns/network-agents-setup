@@ -9,6 +9,7 @@ import pytest
 
 from plan_runner import external_worker as ew
 from plan_runner import skill_activation as sa
+from plan_runner import skill_scan
 from plan_runner.executor import execute_external_request
 from plan_runner.models import Step
 
@@ -47,6 +48,7 @@ def _no_network(monkeypatch):
         raise AssertionError("rede proibida nos testes")
     monkeypatch.setattr(sa, "_http_get", deny)
     monkeypatch.setattr(sa.httpx, "stream", deny)
+    monkeypatch.setattr(skill_scan, "github_fetch", lambda *a, **k: pytest.fail("clone real proibido nos testes"))
     monkeypatch.delenv(sa.OFFLINE_ENV, raising=False)
     monkeypatch.delenv(sa.SKILLS_API_ENV, raising=False)
 
@@ -215,14 +217,20 @@ def test_flag_do_passo_pesquisa_e_saneia_candidatas(tmp_path):
             "nao e um dict",
         ]
 
-    act = sa.activate_for_task(tmp_path, _step(should_search_external=True), search=fake)
+    def fetch(source, dest):  # SKILL-SCAN-1: sem rede, o repo é montado aqui
+        _w(dest / source.split("/")[1] / "SKILL.md", "---\nname: x\n---\n")
+        return dest
+
+    act = sa.activate_for_task(tmp_path, _step(should_search_external=True), search=fake, fetch=fetch,
+                               scanner=lambda path: {"safe": True, "findings": []})
     assert seen == {"q": "review marketing", "limit": sa.SEARCH_LIMIT}
     assert act.external["reason"] == "step.should_search_external"
     assert [c["name"] for c in act.external_candidates] == ["top", "pr-review"]
     assert all(c["installed"] is False and c["trusted"] is False for c in act.external_candidates)
     assert act.external_candidates[0]["url"] == "https://skills.sh/x/y/top"
     block = act.prompt_block()
-    assert "NAO instaladas" in block and "- x/y@top" in block and "rm -rf" not in block
+    assert "NAO instaladas" in block and "- x/y@top [scan: safe]" in block and "rm -rf" not in block
+    assert [c["scan"]["verdict"] for c in act.external_candidates] == ["safe", "safe"]
 
 
 def test_alias_search_external_e_skill_query(tmp_path):

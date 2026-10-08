@@ -90,7 +90,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.7.2 | Dados para desenvolvimento e melhoria | Sim | Cumpre | `config/l5-golden-security.yaml`; `config/router-golden.yaml` | — |
 | A.7.3 | Aquisição de dados | Sim | Cumpre | `docs/ops/WEB-FETCH.md`; `scripts/ingest_delta.py::MANIFEST` | — |
 | A.7.4 | Qualidade dos dados | Sim | Parcial | `runner/plan_runner/validity.py::def apply_validity`; `config/knowledge-validity.yaml` (autoridade e conflitos por fazer) | F3b-AUTH-1 |
-| A.7.5 | Proveniência dos dados | Sim | Cumpre | `runner/plan_runner/provenance.py::def load_meta`; `ANM:lib/knowledge.js::match_knowledge_v2`; `runner/plan_runner/skill_activation.py::sha256` | — |
+| A.7.5 | Proveniência dos dados | Sim | Cumpre | `runner/plan_runner/provenance.py::def load_meta`; `ANM:lib/knowledge.js::match_knowledge_v2`; `runner/plan_runner/skill_activation.py::sha256`; `runner/plan_runner/skill_scan.py::def head_commit` (commit e sha256 da SKILL.md analisados) | — |
 | A.7.6 | Preparação dos dados | Sim | Cumpre | `runner/plan_runner/chunking.py::def chunk_markdown`; `docs/ops/INGEST-DOCUMENT.md` | — |
 | A.8.2 | Documentação e informação para utilizadores | Sim | Parcial | `docs/generated/AGENTS.md` (sem limites de uso por agente para quem usa o MCP) | GOV-42001-1 |
 | A.8.3 | Reporte externo | Sim | Parcial | `SECURITY.md::Reporting a vulnerability` (só vulnerabilidades; não cobre impactos adversos de IA) | GOV-42001-1 |
@@ -100,7 +100,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.9.3 | Objectivos de uso responsável | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 2. Política de IA` (sem objectivos mensuráveis) | GOV-42001-1 |
 | A.9.4 | Uso previsto | Sim | Cumpre | `config/areas.yaml`; `agents/meta/security_auditor.agent.md::description` | — |
 | A.10.2 | Atribuição de responsabilidades | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` | — |
-| A.10.3 | Fornecedores | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` (lista sem avaliação formal) | GOV-42001-1 |
+| A.10.3 | Fornecedores | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` (lista sem avaliação formal); skills de terceiros: scan estático antes da revisão humana, nunca instaladas (`runner/plan_runner/skill_scan.py::def scan_candidates`; `runner/tests/test_skill_scan.py`) | GOV-42001-1 |
 | A.10.4 | Clientes | Sim | Parcial | `docs/governance/PRIVACY-POLICY.md::## 5. Finalidades e bases legais` (obrigações perante clientes definidas; hoje não há clientes reais nem um acordo-modelo de tratamento de dados) | GOV-42001-1 |
 
 ## Ligação ao P-37 (executor de tools, implementado)

@@ -3,6 +3,7 @@
 > **Este é o ÚNICO documento com o estado dos pendentes** do `network-agents-setup` (e das partes do `agent-network-mcp` que este repo acompanha).
 > **Criado em 2026-10-03**, por decisão do maestro, a partir da auditoria cruzada (PR #65), sobre `main` `e7a29ae`.
 > **2.ª ronda (2026-10-03):** actualizado sobre `main` `2b27f66`, depois do merge dos PRs #63–#78. As evidências novas citam essa `main`; as siglas `P:`/`O:`/`E:` continuam ancoradas em `e7a29ae` (§0, item 7).
+> **SKILL-SCAN-1 (2026-10-07):** cada skill externa candidata do `activate_for_task` passa pelo scan estático do `agentic-skills-manager` 1.0.4 (MIT) e ganha `scan.verdict` (safe/risky/dangerous/not_scanned). Nunca instala. PR do branch `feat/skill-scan-1`. SKILL-SCAN-1 → EM CURSO.
 > **F2-ALLOW-1 (2026-10-07, P-25 = A):** allowlist do `fetch` por área (`config/web-allowlist.yaml`, validada no E7; `web_fetch.py --area`). As listas estão vazias à espera dos domínios do maestro. PR do branch `feat/f2-allow-1`. F2-ALLOW-1 → EM CURSO.
 > **AU-20b (2026-10-07, `main` `8da0f49`, merge do #139):** P-42 = A implementada: com a flag desligada, o `result.json` de um passo com `tools_allowed` diz `meta.tools.enabled: false`. PR do branch `feat/au20b-flag-off-meta`. AU-20b → EM CURSO.
 > **AU-20 FECHADO (2026-10-07, `main` `d4151e9`, merge do #138):** run real do DEV com `PLAN_RUNNER_TOOLS=1` no plano `au20-force-read` (`run_2382ec5b5c`, `state: done`): evento `tool_called` (`read_repo_file`, `ok: true`, `sources: [docs/ops/BUDGET.md]`) e `meta.tools` no `result.json`. **P-42 = A** registada (flag desligada → `meta.tools.enabled: false`), com o novo AU-20b.
@@ -58,7 +59,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **124 itens vivos** (§4): ABERTO 69, EM CURSO 8, BLOQUEADO 47;
+> - **125 itens vivos** (§4): ABERTO 69, EM CURSO 9, BLOQUEADO 47;
 > - **122 linhas de histórico** (§7): 101 fechadas, 21 obsoletas;
 > - **43 contradições resolvidas** (§8): 26 da auditoria #65 + 17 novas;
 > - **42 decisões** em A/B/C (§10): **todas decididas pelo maestro** (P-1 a P-42; P-42 a 2026-10-07); **0 pendentes**.
@@ -138,7 +139,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (124 itens vivos)
+## 4. Tabela única (125 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -261,6 +262,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | R-010 | Purge no ingest: uma fonte que sai do MANIFEST ou do git tem de sair do índice (regra T6, E §15.8 e §15.12). O `purge_one` existe no `ingest_apply.py`, mas nada o chama | FALTA-LIGAR | ABERTO | AMBOS | Média | Escreve em produção (apaga linhas): o código é do Claude, a activação é do DEV | `scripts/ingest_apply.py:268` (definido, sem chamadas); `scripts/ingest_delta.py:221` (`apply_purge_stub`). Hoje o MANIFEST só cresce, por isso ainda não há órfãos; revisão do EXECUTION-PLAN, 2026-10-07 | — | VERIFICADO |
 | F3b-AUTH-1 | Autoridade e conflitos do F3b (P-31 = D, P-32 = B, P-33 = B): `match_knowledge_v3` aditiva com a autoridade (`oficial`/`curado`/`experimental`, por path com override no sidecar) e o filtro `min_authority`; `superseded_by`; anotação de autoridade e data no bloco de conhecimento do runner e regra no prompt do worker; flag no MCP | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | Precisa de SQL em produção (o DEV corre a v3) e de um PR no MCP com flag; estacionado (maestro, 2026-10-06, opção B): não é pré-condição do F6-CADEIA | Decisões no §10; padrão do F3a (`scripts/migrations/f3_provenance_retrieve.sql`, `ANM:lib/knowledge.js`); a supersessão por `status: superseded` já funciona na v2 (`test_f3_provenance.py`) | — | VERIFICADO |
 | SKILL-EXT-1 | Provider SkillsCat na pesquisa de skills externas (pedido no relatório do `activate_for_task`) | FALTA-DECIDIR | BLOQUEADO | AMBOS | Baixa | Contrato da API não verificável (sem documentação; o endpoint `skills.cat/api/search` não está confirmado) e serviço AGPL-3.0. Desbloqueia com o contrato documentado e a decisão do maestro sobre as licenças dos candidatos | `docs/ops/SKILL-ACTIVATION.md` (secção "SkillsCat: estacionado"); hoje `external_provider: skillscat` dá o aviso `provider_unsupported` e não pesquisa | — | VERIFICADO |
+| SKILL-SCAN-1 | Scan estático das skills externas candidatas do `activate_for_task` com o `agentic-skills-manager` (veredicto safe/risky/dangerous/not_scanned; nunca instala) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Média | Merge do PR do branch `feat/skill-scan-1` | Decisão do maestro (2026-10-07, opção A: `agentic-skills-manager`); **2026-10-07:** `runner/plan_runner/skill_scan.py` (clone raso endurecido + `python -I -m skills_manager scan --ci`, só estático, ambiente mínimo sem segredos) chamado no `activate_for_task`; o veredicto regista o commit e o sha256 da SKILL.md analisados; pin em `runner/requirements-test.txt`; 33 testes em `runner/tests/test_skill_scan.py` (skills sintéticas safe, risky e malicious) e 1 ajustado; 10 mutantes apanhados; run real contra `anthropics/skills` (pdf e skill-creator → risky, 2 s; commit `683bc88`); `docs/ops/SKILL-ACTIVATION.md`, secção «Scan das candidatas»; ISO 42001 A.10.3 e A.7.5 com a evidência nova | — | VERIFICADO |
 | GOV-42001-1 | ISO/IEC 42001 (P-40): sistema de gestão de IA, alinhamento voluntário (não certificação), âmbito NAS + ANM. Fechar as lacunas `Parcial`/`Falta` do mapeamento: avaliação de risco periódica (6.1.2, 8.2), objectivos mensuráveis (6.2, A.9.3), competências (7.2, A.4.6), fornecedores avaliados (A.10.3), clientes (A.10.4), reporte externo e incidentes (A.8.3, A.8.4), 1.ª auditoria interna (2027-01) e 1.ª revisão da política | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | #124 com merge (2026-10-07, `c9de58f`): política, mapeamento e teste em vigor. Falta fechar cada lacuna `Parcial`/`Falta` do mapeamento | `docs/governance/AI-MANAGEMENT-SYSTEM.md`; `docs/governance/ISO-42001-MAPPING.md` (27 cláusulas, 38 controlos, Declaração de Aplicabilidade); `runner/tests/test_governance_mapping.py` | — | VERIFICADO |
 | GOV-RET-2 | Retenção dos dados de **clientes** (política de privacidade §7): no fim do contrato + 90 dias, apagar a memória do cliente (`memory/<client_id>/`), o `project_state` e a L4 (`expires_at`) do projecto. Hoje é um procedimento manual (§8 da política); automatizar quando houver contratos com data de fim | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | 1.º cliente real (hoje 0 dados de clientes: GOV-IMPACT-1) e um registo de contratos com data de fim | `docs/governance/PRIVACY-POLICY.md` §7 e §8; `runner/plan_runner/memory_l4.py` (`expires_at`, `forget`) | GOV-RET-1 (parte dos clientes) | VERIFICADO |
 | GOV-PRIV-2 | Upgrade do GOV-PRIV-1 (opção A): limpar `transcripts/latest.json` também do **histórico** do git do `agent-network-mcp` (commit `fe3cc90`, 2026-08-10, com a transcrição de um vídeo público de terceiros) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão do DEV: reescrever a `main` do MCP (`git filter-repo` + force push) obriga quem tem um clone a clonar de novo. Até lá, o ficheiro já não está na árvore actual (GOV-PRIV-1, opção C) | `git log -- transcripts/latest.json` no MCP; MCP #20; AIMS §11.1 | GOV-PRIV-1 (opção A) | VERIFICADO |
@@ -352,7 +354,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 14 | F1b, F2, W-010, W-003, EX-B7, AU-22b, F3c-DESIGN-1, F2-SEC-1, F3-ART-1, ING-008, ING-009, R-007, AU-11b, AU-20b |
+| CLAUDE | 15 | F1b, F2, W-010, W-003, EX-B7, AU-22b, F3c-DESIGN-1, F2-SEC-1, F3-ART-1, ING-008, ING-009, R-007, AU-11b, AU-20b, SKILL-SCAN-1 |
 | DEV | 70 | F0.6, F0.12, F3b-VAL-1, S20, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, ING-010, ING-011, S-005, GOV-PRIV-2 |
 | AMBOS | 40 | F3, F6, F3-MCP-1, F3b-GS-1, F3b-AUTH-1, R-001, AU-44, SEC-3, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, AU-12, H-01, G1.1, G2.1, S-004, F5-ROUTE-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, GOV-42001-1, GOV-RET-2, F2-ALLOW-1, ING-012 |
 
@@ -377,10 +379,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 12 | F3, S20, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 48 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, ING-009, R-010, GOV-42001-1, F2-ALLOW-1 |
+| Média | 49 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, ING-009, R-010, GOV-42001-1, F2-ALLOW-1, SKILL-SCAN-1 |
 | Baixa | 63 | F0.12, F1b, F3c-DESIGN-1, F2-SEC-1, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, S-005, GOV-PRIV-2, GOV-RET-2, AU-11b, ING-012, AU-20b |
 
-**Por estado:** ABERTO 69 · EM CURSO 8 · BLOQUEADO 47.
+**Por estado:** ABERTO 69 · EM CURSO 9 · BLOQUEADO 47.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (122 linhas: 101 FECHADO, 21 OBSOLETO)

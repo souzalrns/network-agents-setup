@@ -6,3 +6,7 @@ Faker==40.41.0
 # Postgres + pgvector num contentor, quando não há RAG_TEST_DATABASE_URL (precisa de Docker).
 # No CI o job test-rag já tem um serviço Postgres: o testcontainers não é usado lá.
 testcontainers[postgres]==4.15.0
+# SKILL-SCAN-1: scan estático das skills externas candidatas (runner/plan_runner/skill_scan.py).
+# MIT, só stdlib, sem dependências. Pin exacto: o veredicto depende das regras desta versão
+# (o teste test_pin_do_scanner_igual_ao_requirements exige o mesmo pin que skill_scan.SCANNER_PIN).
+agentic-skills-manager==1.0.4

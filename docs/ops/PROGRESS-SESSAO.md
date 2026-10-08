@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/f2-allow-1` (empilhado no `feat/au20b-flag-off-meta`, PR #140, a partir da `main` `8da0f49`).
-- **`main` de referência:** NAS `e74a610` (merges até #136; o #135 e o #136 levaram todos os commits); MCP `855057d`.
+- **Branch actual:** `feat/skill-scan-1` (a partir da `main` `37eccca`).
+- **`main` de referência:** NAS `37eccca` (merges até #141; o #140 e o #141 levaram todos os commits, incluindo o `6fce7c9`); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,22 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### SKILL-SCAN-1: scan das skills externas candidatas (2026-10-07)
+- **Decisão do maestro:** opção A, `agentic-skills-manager` (scan estático, bloqueia high/critical, modo CI, não executa código).
+- **Verificado antes de integrar:** 1.0.4 no PyPI, MIT, só stdlib (um ficheiro, `skills_manager.py`); `skills scan <pasta> --ci` dá um JSON com `safe`, `risk_level` e `findings`, e o exit code 0/1 confere com `safe`. A revisão por IA chama um CLI de agente local (claude, codex, cursor), por isso fica desligada (custo e código não confiável).
+- **Código:** `runner/plan_runner/skill_scan.py`, chamado no `activate_for_task` depois da pesquisa externa:
+  - clone raso e endurecido do `owner/repo` da candidata (1 por repo), numa pasta temporária apagada no fim;
+  - localiza a pasta da skill pelo `name:` da SKILL.md (senão, o repo inteiro);
+  - `python -I -m skills_manager scan --ci` com timeout e um ambiente mínimo, sem segredos;
+  - veredicto `safe`/`risky`/`dangerous`, ou `not_scanned` (fail-closed) quando não há resultado;
+  - rastreabilidade: o commit analisado (lido do `.git`, sem correr o `git`) e o sha256 da SKILL.md; o veredicto vale só para esse conteúdo.
+  Nunca instala: `installed` e `trusted` continuam `false`. No prompt vai só o veredicto, sem paths do repo.
+- **Testes:** 33 em `test_skill_scan.py`, com skills sintéticas safe, risky e malicious contra o scanner real, mais 1 ajustado em `test_skill_activation.py`. 10 mutantes apanhados. Suite completa verde.
+- **CI do 1.º push (`4c79dd8`):** 10 de 11 verdes (o `test` correu os testes contra o scanner real); o `test-slow` falhou na recolha: a exigência "no CI o scanner tem de estar instalado" estava ao nível do módulo, e esse job não instala o `requirements-test.txt`. Passou a ser um teste (`test_no_ci_o_scanner_tem_de_estar_instalado`); reproduzido localmente nos 2 sentidos.
+- **ISO 42001:** A.10.3 (fornecedores: skills de terceiros) e A.7.5 (proveniência: commit e sha256) com a evidência nova; o A.10.3 continua Parcial (GOV-42001-1).
+- **Prova real (fora dos testes):** clone de `anthropics/skills`: `pdf` e `skill-creator` → `risky`, e um repo inexistente → `not_scanned`, em 2 s; o `pdf` com `commit: 683bc88`.
+- **Merges verificados:** o #140 (AU-20b) e o #141 (F2-ALLOW-1) entraram na `main` `37eccca` com todos os commits. O AU-20b fica por fechar no PENDENCIAS quando o maestro confirmar.
 
 ### F2-ALLOW-1: allowlist do `fetch` por área (2026-10-07)
 - **P-25 = A:**
