@@ -47,6 +47,10 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
   - o `pipefail` em falta no workflow;
   - a tabela comparativa (o skills CLI mostra classificações remotas; o skill-guard não tem SARIF).
 - **Prova real:** `scan anthropics/skills@pdf` (2 motores, RISKY, commit `683bc88`); `install` recusado neste ambiente de agente (exit 4). Doc: `docs/ops/SKILL-NOTARY.md`.
+- **CI do PR #143:**
+  - 1.º push (`80a9b6d`): 12 de 13 verdes; o gitleaks (histórico completo) apanhou a chave FICTÍCIA de teste, porque o comentário acima dela citava a armadura PEM por extenso e o gitleaks juntou-o ao corpo. Corrigido o comentário; o commit `86d1802` foi para o `.gitleaksignore` com o motivo (sem force-push);
+  - 2.º push (`f7e9007`): 13 de 13 verdes;
+  - o check `skill-notary` da app `github-advanced-security` confirma que o GitHub code scanning processou o SARIF: "No new alerts in code changed by this pull request"; os 2 medium das skills do repo ficam como alertas do branch.
 
 ### SKILL-SCAN-1: scan das skills externas candidatas (2026-10-07)
 - **Decisão do maestro:** opção A, `agentic-skills-manager` (scan estático, bloqueia high/critical, modo CI, não executa código).
