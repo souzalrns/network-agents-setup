@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `docs/close-scout-and-allowlist-v1` (a partir da `main` `908491a`, merge do #144 com todos os commits).
-- **`main` de referência:** NAS `908491a` (merges até #144; #140, #142, #143 e #144 levaram todos os commits); MCP `855057d`.
+- **Branch actual:** `feat/p46-allowlist-fix` (a partir da `main` `42e6352`, merge do #145 com os 3 commits).
+- **`main` de referência:** NAS `42e6352` (merges até #145, todos com os commits completos); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,26 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### P-46 = A aplicada e F2-ALLOW-1 FECHADO (2026-10-08)
+- **Merge do #145 verificado:** `42e6352`, com os 3 commits (`2309707`, `7a1be27`, `b04c1c3`). O CI do head tinha 12/12 verdes.
+- **P-46 = A** (maestro: "são as mesmas fontes, só o endereço actual"). A v1 corrigida tem 128 domínios:
+  - **9 acrescentados**, cada um marcado `P-46` no YAML:
+    - security: `cve.org`, `sei.cmu.edu`;
+    - ops: `developer.hashicorp.com`;
+    - docs: `platform.claude.com`, `docs.astral.sh`;
+    - marketing: `threads.com`;
+    - legal: `justica.gov.pt`;
+    - gamedev: `partner.steamgames.com`;
+    - horizontal: `openapis.org`.
+  - **3 retirados:** `justice.gov.pt`, `steamworks.steampowered.com` e `openapi.org` (substituídos por 3 dos acrescentados).
+- **Workflow:** o passo dos candidatos saiu.
+- **Teste:** `test_p46_aplicada_na_area_da_fonte`. A v1 fixada no teste passa a 128.
+- **PENDENCIAS:**
+  - F2-ALLOW-1 → §7 (FECHADO);
+  - contagens: 124 vivos (EM CURSO 6) e 126 no histórico (105 FECHADO);
+  - 0 decisões pendentes;
+  - as linhas do F2 e da P-25 actualizadas.
 
 ### Fechos com padrão ouro + allowlist v1 (F2-ALLOW-1) (2026-10-08)
 - **Fechados (§7), com a regra do §9 (só depois do merge):**
