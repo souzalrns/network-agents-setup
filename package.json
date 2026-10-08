@@ -20,9 +20,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/supertest": "^6.0.2",
+    "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^5.0.3",
-    "supertest": "^7.0.0",
+    "supertest": "^7.3.1",
     "ts-node": "^10.9.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.0",
