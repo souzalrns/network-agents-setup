@@ -25,11 +25,11 @@ JavaScript, o Crawl4AI (só se superar isto, com evidência) e o `discover`.
 
 Uso (só lê e imprime JSON; com `--out-dir` grava os 2 ficheiros):
 
-    python scripts/web_fetch.py https://exemplo.org/pagina --allow exemplo.org [--out-dir DIR]
-    python scripts/web_fetch.py https://exemplo.org/pagina --area research [--allow exemplo.org]
+    python scripts/web_fetch.py https://arxiv.org/abs/2401.00001 --area research [--out-dir DIR]
+    python scripts/web_fetch.py https://arxiv.org/abs/2401.00001 --area research --allow arxiv.org
 
-F2-ALLOW-1 (P-25 = A): `--area` usa a allowlist da área (`config/web-allowlist.yaml`), e um
-`--allow` tem de caber nela. Sem `--area`, o resultado leva o aviso `no_area_allowlist`.
+F2-ALLOW-1 (P-25 = A): `--area` é obrigatória e dá a allowlist da área
+(`config/web-allowlist.yaml`); um `--allow` só a estreita (tem de caber nela).
 Regras: `runner/plan_runner/web_allowlist.py`.
 """
 
@@ -332,9 +332,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("url")
     parser.add_argument(
-        "--allow", action="append", help="domínio permitido (repetível); com --area, tem de caber nela"
+        "--allow", action="append", help="estreita a allowlist (repetível); tem de caber na área"
     )
-    parser.add_argument("--area", help="área do config/web-allowlist.yaml (F2-ALLOW-1)")
+    parser.add_argument("--area", help="área do config/web-allowlist.yaml (obrigatória, F2-ALLOW-1)")
     parser.add_argument("--timeout-s", type=float, default=DEFAULT_TIMEOUT_S)
     parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
     parser.add_argument("--out-dir", help="grava <nome>.md e <nome>.meta.yaml (pelo T6)")
@@ -344,8 +344,8 @@ def main(argv: list[str] | None = None) -> int:
         opts = parser.parse_args(argv)
     except SystemExit:
         return 2
-    if opts.area is None and not opts.allow:
-        print("error: passa --area <área> ou pelo menos 1 --allow <domínio>", file=sys.stderr)
+    if not opts.area:
+        print("error: --area <área> é obrigatória (config/web-allowlist.yaml)", file=sys.stderr)
         return 2
     wa = _load_web_allowlist()
     try:

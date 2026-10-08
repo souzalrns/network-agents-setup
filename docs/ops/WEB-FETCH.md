@@ -11,10 +11,10 @@ fetch(uri, allowlist, limites) -> {"content": str, "source_meta": dict, "warning
 
 ```bash
 pip install -r runner/requirements-ingest.txt   # o MarkItDown converte o HTML
-python scripts/web_fetch.py https://exemplo.org/pagina --allow exemplo.org [--out-dir docs/knowledge/ingested]
+python scripts/web_fetch.py https://arxiv.org/abs/2401.00001 --area research [--out-dir docs/knowledge/ingested]
 ```
 
-- **Entrada:** 1 URL http/https e a allowlist: a da área (`--area`, §2.1) e/ou domínios por chamada (`--allow`). A CLI exige pelo menos um dos dois.
+- **Entrada:** 1 URL http/https e a área (`--area`, obrigatória, §2.1), que dá a allowlist. Um `--allow` por chamada só a estreita.
 - **Saída:** Markdown normalizado, mais o `source_meta`: `uri` (sem credenciais nem fragmento), `final_url` (depois dos redirects), `title`, `document_type: html`, `retrieved_at`, `content_hash`, `status`, `http_status` e `content_type`.
 - **Para o L5:** com `--out-dir`, grava pelo `write_ingested` do F1 (`.md` + `.meta.yaml`), e daí segue o mesmo caminho do T6 (`INGEST-DOCUMENT.md` §7). **Nunca escreve no Supabase.**
 
@@ -41,13 +41,19 @@ O `ANM:.github/workflows/scrape.yml` lê a página inteira, sem allowlist nem ro
 
 ### 2.1 Allowlist por área (F2-ALLOW-1, P-25 = A)
 
-`config/web-allowlist.yaml` guarda, por área do `config/areas.yaml`, os domínios que o `fetch` pode buscar. **Os domínios são política e escolhe-os o maestro.** Até lá as listas estão vazias.
+`config/web-allowlist.yaml` guarda, por área do `config/areas.yaml`, os domínios que o `fetch` pode buscar. **Os domínios são política e escolhe-os o maestro.** A v1 (maestro, 2026-10-08) tem 122 domínios em 9 áreas; `software` fica vazia.
+
+Regras da v1, do maestro:
+- **domínio novo = decisão + linha no PENDENCIAS** (§10), nunca uma edição silenciosa. O teste `test_ficheiro_real_tem_a_v1_do_maestro` apanha uma edição que não actualize também a lista do teste;
+- **lista vazia = deny-by-default** nessa área;
+- **match por sufixo de domínio**: `exemplo.com` aceita `exemplo.com` e `*.exemplo.com`, e nunca `maisexemplo.com`;
+- de fora de propósito: as raízes `gov.br` e `jus.br` (só os órgãos listados) e as notícias de finanças (Reuters, FT, Bloomberg). reddit e medium, se um dia entrarem, só em `marketing`. Repetir um domínio em áreas diferentes é intencional.
 
 | Chamada | Allowlist usada | Resultado |
 |---|---|---|
 | `--area research` | os domínios da área | área vazia ou desconhecida → `blocked_by_allowlist`, sem nenhum pedido de rede |
 | `--area research --allow x.org` | `x.org`, se couber na área (o próprio domínio ou um subdomínio) | fora da área → `blocked_by_allowlist`, sem rede: a chamada só pode estreitar a política |
-| só `--allow x.org` | `x.org` (como no F2a) | o resultado leva o aviso `no_area_allowlist` |
+| sem `--area` (com ou sem `--allow`) | nenhuma | saída 2, sem rede: a área é obrigatória desde a v1 (o modo só com `--allow` e o aviso `no_area_allowlist` foi a transição) |
 
 O E7 (`python -m plan_runner.areas`) valida o ficheiro:
 - só áreas que existem;
@@ -56,7 +62,12 @@ O E7 (`python -m plan_runner.areas`) valida o ficheiro:
 
 Código: `runner/plan_runner/web_allowlist.py`. Testes: `runner/tests/test_web_allowlist.py`.
 
-**Passo seguinte, quando o maestro der os domínios:** tornar o `--area` obrigatório, para que o `--allow` deixe de funcionar sozinho.
+**Redirects:** cada salto é verificado contra a lista da área. Um domínio aprovado que redireccione para um host fora da lista falha com `blocked_by_allowlist`, mesmo que o URL pedido esteja na lista. A sonda `scripts/check_web_allowlist.py` corre no CI (job `web-allowlist-probe`, informativo, nunca bloqueia) e mostra, por área e domínio, o estado HTTP e para onde o domínio redirecciona. Uma linha `fora` é um candidato a decisão do maestro (P-46), não uma correcção automática.
+
+```bash
+python scripts/check_web_allowlist.py                  # todas as áreas; tabela Markdown no stdout
+python scripts/check_web_allowlist.py --area finance   # uma área
+```
 
 ## 3. Evidência: corrida real (2026-10-06)
 

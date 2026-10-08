@@ -354,10 +354,11 @@ def test_saida_pelo_t6_com_proveniencia_valida(server, tmp_path) -> None:
     assert f"{server}/ok.html" in meta.read_text(encoding="utf-8")
 
 
-def test_cli_exige_allowlist(capsys) -> None:
+def test_cli_exige_area(capsys) -> None:
     assert wf.main(["https://exemplo.org/"]) == 2
+    assert wf.main(["https://exemplo.org/", "--allow", "exemplo.org"]) == 2  # sem área, nem com --allow
 
 
 def test_cli_erro_tipado(capsys) -> None:
-    assert wf.main(["ftp://exemplo.org/x", "--allow", "exemplo.org"]) == 1
+    assert wf.main(["ftp://arxiv.org/x", "--area", "research"]) == 1  # recusado antes da rede
     assert json.loads(capsys.readouterr().out)["error"] == "invalid_uri"
