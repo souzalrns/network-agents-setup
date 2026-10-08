@@ -81,7 +81,17 @@ Bug encontrado durante esta ronda, também no `runner`: a limpeza de caracteres 
 - a análise por LLM da Cisco, desligada de propósito por custo e por enviar o código para fora;
 - a sandbox e os testes de comportamento (Fase 2).
 
-**As skills deste repo e a spec:** o scan do `skills/` dá 37 findings de spec (17 `invalid-name`, porque usam `_` como `ux_flow`, e 20 `missing-description`). São skills internas do `plan_runner`, resolvidas pelo `action:`. Decisão P-45 no `PENDENCIAS.md` §10.
+**As skills deste repo e a spec:** o scan do `skills/` dava 37 findings de spec: 17 `invalid-name` (usam `_`, como `ux_flow`) e 20 `missing-description`. São skills internas do `plan_runner`, resolvidas pelo `action:`.
+
+**P-45 = A** (maestro, 2026-10-08), aplicada: as 20 skills ganharam `description` (o que fazem e quando usar, em português como o corpo, 1-267 caracteres), sem mudar nomes. O scan passa de 37 para 19 findings de spec: ficam os 17 `invalid-name` (alertas de qualidade conhecidos; mudar os nomes seria a opção B) e 2 `name-folder-mismatch` (low).
+
+**Custo em tokens:**
+- no modo `opt` (o de omissão), zero: o worker tira o frontmatter da skill (há teste);
+- no `legacy` (o prompt antigo byte a byte, só para A/B e rollback), +2,7% no plano SEO de demonstração (há teste com tecto de 3%).
+
+A calibração da projecção contra o B1 real usa as entradas da época (`token_projection.project(drop_skill_keys=("description",))`).
+
+**P-44 = A** (maestro, 2026-10-08): o `runner/plan_runner/skill_scan.py` e o `skill-scout` ficam separados até à Fase 3 (nota no docstring do módulo).
 
 ## 4. Fase 2 (SKILL-SCOUT-2): diferenciar
 

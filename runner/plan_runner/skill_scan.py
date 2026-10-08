@@ -5,6 +5,11 @@ As candidatas são dados não confiáveis, só para revisão humana. Este módul
 estático do `agentic-skills-manager` (MIT, PyPI, pin em runner/requirements-test.txt) em
 cada uma e junta um veredicto, para o humano não rever às cegas. Nunca instala nada.
 
+P-44 = A (maestro, 2026-10-08): este scan e o do `skill-scout` (oss/skill-scout) ficam separados
+até à Fase 3 (SKILL-SCOUT-3); depois o runner passa a depender do `skill-scout` publicado, com
+versão fixa. Até lá, uma correcção de segurança num dos dois vai também para o outro (como a
+limpeza de sequências ANSI de 2026-10-08).
+
 Fluxo por candidata (`scan_candidates`):
 1. `source` tem de ser `owner/repo` do GitHub (o mesmo que o `npx skills add owner/repo@skill`);
 2. clone raso para uma pasta temporária (`github_fetch`): HTTPS só, profundidade 1, sem tags,
