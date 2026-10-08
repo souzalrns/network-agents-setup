@@ -1,0 +1,135 @@
+name: skill-notary
+
+# oss/skill-notary: the standalone "scan, approve, pin and audit" tool for Agent Skills.
+# Self-contained, so it moves with the package when it gets its own repository (phase 3).
+#
+# - test: Python 3.10 and 3.13; ruff lint + format; pytest (CI=true: the SARIF schema test
+#   must reach raw.githubusercontent.com, the scanner must be installed);
+# - test-cisco: the optional Cisco engine for real (~650 MB of dependencies, so a job of its own);
+# - package: sdist + wheel, `twine check --strict`, install the wheel in a clean venv, smoke run;
+# - code-scanning: scan this repository's skills/ and upload the SARIF to GitHub code scanning
+#   (dogfooding; findings become alerts, they do not fail the job).
+#
+# Public repository: Actions minutes are free. Actions pinned by SHA.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oss/skill-notary/**'
+      - 'skills/**'
+      - '.github/workflows/skill-notary.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oss/skill-notary/**'
+      - 'skills/**'
+      - '.github/workflows/skill-notary.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-notary-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash # explicit: `bash -eo pipefail` (the implicit default has no pipefail, and `| tee` would hide a failure)
+    working-directory: oss/skill-notary
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install -e '.[test]' ruff==0.16.9
+      - name: Lint and format
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+      - name: Tests
+        run: python -m pytest tests -v
+
+  test-cisco:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Install with the Cisco engine
+        run: python -m pip install -e '.[test,cisco]'
+      - name: Cisco engine tests (no API key; offline analyzers only)
+        run: |
+          skill-scanner --version
+          python -m pytest tests -v -k cisco -rs
+          python -m pytest tests -q -rs | tee pytest.log
+          ! grep -q "SKIPPED.*cisco" pytest.log
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build==1.6.1 twine==7.0.0
+          python -m build --outdir dist .
+          twine check --strict dist/*
+      - name: Wheel contents (licences in, tests out)
+        run: |
+          python -m zipfile -l dist/*.whl | tee wheel.txt
+          grep -q "licenses/LICENSE" wheel.txt && grep -q "licenses/NOTICE" wheel.txt
+          ! grep -q "tests/" wheel.txt
+      - name: Install the wheel in a clean venv and run it
+        run: |
+          python -m venv /tmp/sn
+          /tmp/sn/bin/pip install dist/*.whl
+          /tmp/sn/bin/skill-notary --version
+          /tmp/sn/bin/skill-notary scan ../../skills --fail-on none
+          /tmp/sn/bin/python -m skill_notary verify --lock /tmp/none.json --audit /tmp/none.jsonl
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: skill-notary-dist
+          path: oss/skill-notary/dist/
+          retention-days: 7
+
+  code-scanning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: python -m pip install ./oss/skill-notary
+      - name: Scan skills/ (SARIF)
+        run: skill-notary scan ./skills --format sarif -o skill-notary.sarif --fail-on none --category skill-notary
+      - name: Upload to GitHub code scanning
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: skill-notary.sarif
+          category: skill-notary
