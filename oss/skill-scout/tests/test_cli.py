@@ -1,4 +1,4 @@
-"""The command line: exit codes (README, "Exit codes"), output formats, `python -m skill_notary`."""
+"""The command line: exit codes (README, "Exit codes"), output formats, `python -m skill_scout`."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ import sys
 
 import pytest
 
-from skill_notary import __version__, cli
-from skill_notary import install as inst
-from skill_notary.errors import (
+from skill_scout import __version__, cli
+from skill_scout import install as inst
+from skill_scout.errors import (
     EXIT_APPROVAL,
     EXIT_BLOCKED,
     EXIT_ENGINE,
@@ -19,7 +19,7 @@ from skill_notary.errors import (
     EXIT_USAGE,
     EXIT_VERIFY,
 )
-from skill_notary.treehash import tree_hash
+from skill_scout.treehash import tree_hash
 
 from .helpers import make_dangerous, make_risky, make_safe, monorepo
 
@@ -73,7 +73,7 @@ def test_scan_github_source_selects_the_skill(tmp_path, github, monkeypatch, cap
 
 
 def test_engine_failure_exit_code(tmp_path, monkeypatch):
-    from skill_notary import engines
+    from skill_scout import engines
 
     monkeypatch.setattr(engines, "_run_json", lambda cmd, name: ({}, 2))
     assert cli.main(["scan", str(make_safe(tmp_path / "s"))]) == EXIT_ENGINE
@@ -82,7 +82,7 @@ def test_engine_failure_exit_code(tmp_path, monkeypatch):
 def test_usage_errors(tmp_path, capsys):
     assert cli.main(["scan", "not a source"]) == EXIT_USAGE
     assert cli.main(["scan", str(tmp_path), "--engine", "nope"]) == EXIT_ENGINE
-    assert "skill-notary:" in capsys.readouterr().err
+    assert "skill-scout:" in capsys.readouterr().err
 
 
 def test_install_and_verify_through_the_cli(tmp_path, monkeypatch, no_agent, capsys):
@@ -111,7 +111,7 @@ def test_install_refused_in_this_agent_environment(tmp_path, monkeypatch):
     """Not mocked: when this suite runs inside an AI agent, the real environment must refuse."""
     import os
 
-    from skill_notary.approval import detect_agent
+    from skill_scout.approval import detect_agent
 
     if detect_agent(os.environ) is None:
         monkeypatch.setenv("AI_AGENT", "test-agent")
@@ -125,11 +125,11 @@ def test_version_and_python_dash_m(tmp_path):
     with pytest.raises(SystemExit) as e:
         cli.main(["--version"])
     assert e.value.code == 0
-    out = subprocess.run([sys.executable, "-m", "skill_notary", "--version"], capture_output=True, text=True)
-    assert out.returncode == 0 and out.stdout.strip() == f"skill-notary {__version__}"
+    out = subprocess.run([sys.executable, "-m", "skill_scout", "--version"], capture_output=True, text=True)
+    assert out.returncode == 0 and out.stdout.strip() == f"skill-scout {__version__}"
     d = make_risky(tmp_path / "s")
     run = subprocess.run(
-        [sys.executable, "-m", "skill_notary", "scan", str(d), "--fail-on", "medium"], capture_output=True, text=True
+        [sys.executable, "-m", "skill_scout", "scan", str(d), "--fail-on", "medium"], capture_output=True, text=True
     )
     assert run.returncode == EXIT_FINDINGS and "RISKY" in run.stdout
 

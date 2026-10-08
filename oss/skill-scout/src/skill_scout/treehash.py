@@ -1,4 +1,4 @@
-"""Deterministic content hash of a skill directory (`skill-notary-tree-v1`).
+"""Deterministic content hash of a skill directory (`skill-scout-tree-v1`).
 
 The hash is what a human approves and what the lock file pins, so it must be the same on
 every machine for the same bytes:
@@ -25,7 +25,7 @@ from pathlib import Path
 
 from .errors import UsageError
 
-TREE_ALGO = "skill-notary-tree-v1"
+TREE_ALGO = "skill-scout-tree-v1"
 MAX_FILES = 5000
 MAX_BYTES = 50 * 1024 * 1024
 _CHUNK = 1024 * 1024

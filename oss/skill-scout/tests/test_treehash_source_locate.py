@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from skill_notary import source as src_mod
-from skill_notary.errors import FetchError, UsageError
-from skill_notary.locate import discover, frontmatter_name, install_name, select
-from skill_notary.source import fetch, parse_source
-from skill_notary.treehash import TREE_ALGO, tree_hash
+from skill_scout import source as src_mod
+from skill_scout.errors import FetchError, UsageError
+from skill_scout.locate import discover, frontmatter_name, install_name, select
+from skill_scout.source import fetch, parse_source
+from skill_scout.treehash import TREE_ALGO, tree_hash
 
 from .helpers import make_safe, monorepo, skill_md, write
 
@@ -66,7 +66,7 @@ def test_symlinks_and_root_git_are_not_hashed(tmp_path):
 
 
 def test_too_large_is_refused(tmp_path, monkeypatch):
-    from skill_notary import treehash
+    from skill_scout import treehash
 
     d = make_safe(tmp_path / "s")
     write(d / "x", "x")

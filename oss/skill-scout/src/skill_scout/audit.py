@@ -4,9 +4,9 @@ Each record: `seq` (1, 2, …), `ts`, `event`, `actor`, `data`, `prev` (hash of 
 record, 64 zeros for the first) and `hash` = sha256 of the record's canonical JSON without
 `hash`. Editing, deleting or reordering a record breaks the chain and `verify` reports it.
 Cutting the tail cannot be seen from the log alone, so every lock entry also stores the
-`seq` and `hash` of its `installed` record: `skill-notary verify` checks they are still there.
+`seq` and `hash` of its `installed` record: `skill-scout verify` checks they are still there.
 
-Events: `scan`, `blocked`, `approval_rejected`, `installed`.
+Events: `scan`, `blocked`, `approval_rejected`, `installed`, `uninstalled`, `waiver_added`.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from .errors import VerifyError
 from .report import now
 
 GENESIS = "0" * 64
-EVENTS = ("scan", "blocked", "approval_rejected", "installed")
+EVENTS = ("scan", "blocked", "approval_rejected", "installed", "uninstalled", "waiver_added")
 
 try:  # POSIX: serialise concurrent appends
     import fcntl
@@ -39,8 +39,8 @@ def record_hash(record: dict) -> str:
 
 
 def actor() -> str:
-    """Who ran the command: SKILL_NOTARY_ACTOR, else the OS user. Never e-mail or host name."""
-    value = os.environ.get("SKILL_NOTARY_ACTOR") or ""
+    """Who ran the command: SKILL_SCOUT_ACTOR, else the OS user. Never e-mail or host name."""
+    value = os.environ.get("SKILL_SCOUT_ACTOR") or ""
     if not value:
         try:
             value = getpass.getuser()

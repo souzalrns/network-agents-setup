@@ -187,7 +187,7 @@ def _fetch_git(source: Source, dest: Path, *, base_url: str, timeout: float) -> 
         "-c",
         "core.fsmonitor=false",
     ]
-    with tempfile.TemporaryDirectory(prefix="skill-notary-git-home-") as home_dir:
+    with tempfile.TemporaryDirectory(prefix="skill-scout-git-home-") as home_dir:
         env = minimal_env(Path(home_dir))
         dest.mkdir(parents=True)
         steps = [

@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from skill_notary import engines as eng
-from skill_notary.engines import AsmEngine, CiscoEngine, Finding, get_engines
-from skill_notary.errors import EngineError
-from skill_notary.report import ScanReport, scan_dir, verdict_for
-from skill_notary.sarif import LEVEL, SECURITY_SEVERITY, to_sarif
+from skill_scout import engines as eng
+from skill_scout.engines import AsmEngine, CiscoEngine, Finding, get_engines
+from skill_scout.errors import EngineError
+from skill_scout.report import ScanReport, scan_dir, verdict_for
+from skill_scout.sarif import LEVEL, SECURITY_SEVERITY, to_sarif
 
 from .helpers import FAKE_KEY_BODY, make_dangerous, make_risky, make_safe, monorepo, write
 
@@ -156,7 +156,7 @@ def test_symlink_in_a_skill_makes_it_dangerous(tmp_path):
     (d / "link").symlink_to("/etc/passwd")
     r = _scan(d)
     assert r.verdict == "dangerous"
-    assert any(f.engine == "skill-notary" and f.rule == "unpinnable-entry" and f.path == "link" for f in r.findings)
+    assert any(f.engine == "skill-scout" and f.rule == "unpinnable-entry" and f.path == "link" for f in r.findings)
 
 
 def test_many_skills_each_get_a_verdict(tmp_path):
@@ -169,7 +169,7 @@ def test_many_skills_each_get_a_verdict(tmp_path):
     }
     assert r.verdict == "dangerous"
     doc = r.to_json()
-    assert doc["schema"] == "skill-notary/report-v1" and doc["content"]["sha256"] == r.tree.digest
+    assert doc["schema"] == "skill-scout/report-v1" and doc["content"]["sha256"] == r.tree.digest
 
 
 # --------------------------------------------------------------------------- SARIF
@@ -203,14 +203,18 @@ def test_sarif_is_valid_against_the_official_schema(tmp_path, sarif_schema):
 def test_sarif_meets_github_code_scanning_rules(tmp_path):
     doc = _sarif(tmp_path)
     run = doc["runs"][0]
-    assert doc["version"] == "2.1.0" and run["tool"]["driver"]["name"] == "skill-notary"
-    assert run["automationDetails"]["id"] == "skill-notary/"
+    assert doc["version"] == "2.1.0" and run["tool"]["driver"]["name"] == "skill-scout"
+    assert run["automationDetails"]["id"] == "skill-scout/"
     assert {e["name"] for e in run["tool"]["extensions"]} == {"asm"}
     rules = {r["id"]: r for r in run["tool"]["driver"]["rules"]}
     for rule in rules.values():
         sev = rule["properties"].get("security-severity")
         assert sev is None or 0 < float(sev) <= 10
-        assert "security" in rule["properties"]["tags"] and rule["help"]["text"]
+        if rule["id"].startswith("spec/"):
+            assert "security" not in rule["properties"]["tags"] and sev is None  # quality, not security
+        else:
+            assert "security" in rule["properties"]["tags"]
+        assert rule["help"]["text"]
     assert rules["asm/private-key-material"]["properties"]["security-severity"] == SECURITY_SEVERITY["critical"]
     for res in run["results"]:
         loc = res["locations"][0]["physicalLocation"]
@@ -219,7 +223,7 @@ def test_sarif_meets_github_code_scanning_rules(tmp_path):
         assert not uri.startswith("/") and loc["region"]["startLine"] >= 1
         assert res["level"] == LEVEL[res["properties"]["severity"]]
         assert run["tool"]["driver"]["rules"][res["ruleIndex"]]["id"] == res["ruleId"]
-        assert len(res["partialFingerprints"]["skillNotaryFinding/v1"]) == 32
+        assert len(res["partialFingerprints"]["skillScoutFinding/v1"]) == 32
 
 
 def test_sarif_has_no_secret_and_no_absolute_path(tmp_path):
@@ -231,7 +235,7 @@ def test_sarif_has_no_secret_and_no_absolute_path(tmp_path):
 def test_sarif_fingerprints_are_stable(tmp_path):
     a = _sarif(tmp_path / "a")
     b = _sarif(tmp_path / "b")
-    fp = lambda d: sorted(r["partialFingerprints"]["skillNotaryFinding/v1"] for r in d["runs"][0]["results"])  # noqa: E731
+    fp = lambda d: sorted(r["partialFingerprints"]["skillScoutFinding/v1"] for r in d["runs"][0]["results"])  # noqa: E731
     assert fp(a) == fp(b)
 
 
@@ -248,3 +252,15 @@ def test_sarif_reports_engine_failures(tmp_path, monkeypatch):
     inv = doc["runs"][0]["invocations"][0]
     assert inv["executionSuccessful"] is False
     assert "engine asm failed" in inv["toolExecutionNotifications"][0]["message"]["text"]
+
+
+@pytest.mark.parametrize(
+    "raw, clean",
+    [
+        ("\x1b[31mred\x1b[0m", "red"),  # the whole CSI sequence, not just ESC
+        ("\x1b]0;pwned title\x07ok", "ok"),  # OSC (sets the terminal title)
+        ("a\x07b\nc\x7f", "abc"),
+    ],
+)
+def test_clean_removes_whole_escape_sequences(raw, clean):
+    assert eng.clean(raw) == clean

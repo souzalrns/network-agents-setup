@@ -5,7 +5,7 @@ Order of checks (`approve`):
 2. an AI coding agent is detected in the environment → refused: an agent must not approve
    its own install, even with `--approve-sha256`. Run the command in your own terminal;
 3. `--approve-sha256 <hash>` → must be the full content hash of THIS fetch (the human copies
-   it from a `skill-notary scan` report); a different hash means the content changed since
+   it from a `skill-scout scan` report); a different hash means the content changed since
    the human looked at it (time-of-check/time-of-use) and the install stops;
 4. otherwise, an interactive terminal → the human types the first 12 characters of the content
    hash after reading the verdict and the findings;
@@ -72,23 +72,22 @@ class Approval:
         return {"mode": self.mode, "actor": self.actor, "at": self.at}
 
 
-def approve(
-    report: ScanReport,
+def confirm(
+    digest: str,
     *,
+    what: str,
+    summary: str,
     approve_sha256: str | None,
     env: Mapping[str, str],
     interactive: bool,
     ask: Callable[[str], str] = input,
     out: Callable[[str], None] = lambda s: print(s, file=sys.stderr),
 ) -> Approval:
-    digest = report.tree.digest
-    if report.verdict in ("dangerous", "not_scanned"):
-        raise BlockedError(f"blocked: verdict {report.verdict} (never installable; see the findings)")
+    """A human confirms `what` for content `digest` (rules 2-5 of the module docstring)."""
     agent = detect_agent(env)
     if agent:
         raise ApprovalError(
-            f"refused: an AI agent ({agent}) cannot approve an install. "
-            "Run `skill-notary install` yourself, in your own terminal."
+            f"refused: an AI agent ({agent}) cannot approve {what}. Run the command yourself, in your own terminal."
         )
     if approve_sha256 is not None:
         given = approve_sha256.strip().lower()
@@ -103,13 +102,37 @@ def approve(
     if not interactive:
         raise ApprovalError(
             "approval required: run in an interactive terminal, or pass "
-            "--approve-sha256 <content hash from `skill-notary scan`>"
+            "--approve-sha256 <content hash from `skill-scout scan`>"
         )
-    out(render_text(report))
+    out(summary)
     answer = ask(
-        f"Type the first {PREFIX_LEN} characters of the content hash to approve installing "
-        f"this {report.verdict.upper()} skill (anything else cancels): "
+        f"Type the first {PREFIX_LEN} characters of the content hash to approve {what} (anything else cancels): "
     )
     if (answer or "").strip().lower() != digest[:PREFIX_LEN]:
         raise ApprovalError("not approved")
     return Approval("tty", actor(), now())
+
+
+def approve(
+    report: ScanReport,
+    *,
+    approve_sha256: str | None,
+    env: Mapping[str, str],
+    interactive: bool,
+    ask: Callable[[str], str] = input,
+    out: Callable[[str], None] = lambda s: print(s, file=sys.stderr),
+    extra: str = "",
+) -> Approval:
+    """Approve installing `report`: blocked verdicts first, then a human confirmation."""
+    if report.verdict in ("dangerous", "not_scanned"):
+        raise BlockedError(f"blocked: verdict {report.verdict} (never installable; see the findings)")
+    return confirm(
+        report.tree.digest,
+        what=f"installing this {report.verdict.upper()} skill",
+        summary=render_text(report) + extra,
+        approve_sha256=approve_sha256,
+        env=env,
+        interactive=interactive,
+        ask=ask,
+        out=out,
+    )

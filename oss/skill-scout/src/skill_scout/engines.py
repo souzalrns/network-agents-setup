@@ -1,9 +1,9 @@
-"""Scan engines. skill-notary does not write its own rules: it runs mature scanners and merges them.
+"""Scan engines. skill-scout does not write its own rules: it runs mature scanners and merges them.
 
 - `asm`: agentic-skills-manager (MIT, stdlib only; a dependency, always available).
   `python -I -m skills_manager scan <dir> --ci`, static checks only.
 - `cisco`: Cisco AI Defense skill-scanner (Apache-2.0, optional: `pip install
-  skill-notary[cisco]` or any `skill-scanner` on PATH). `skill-scanner scan <dir> --format
+  skill-scout[cisco]` or any `skill-scanner` on PATH). `skill-scanner scan <dir> --format
   json --use-behavioral`: static (YAML + YARA), bytecode, pipeline, correlation and AST dataflow
   analyzers, all offline. LLM, VirusTotal and AI Defense analyzers are never enabled (they need
   API keys and send the source out).
@@ -34,7 +34,9 @@ from .source import minimal_env, run
 SEVERITIES = ("info", "low", "medium", "high", "critical")
 SCAN_TIMEOUT_S = 300.0
 FIELD_MAX = 300
-_CONTROL = re.compile(r"[\x00-\x1f\x7f]|\x1b\[[0-9;?]*[ -/]*[@-~]")
+# ANSI escape sequences first: with the single-character class first, ESC alone matched and
+# the rest of the sequence ("[31m") stayed in the text.
+_CONTROL = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?|[\x00-\x1f\x7f]")
 _RULE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,99}$")
 
 
@@ -52,9 +54,15 @@ class Finding:
     recommendation: str = ""
     line: int | None = None
     category: str = ""
+    waiver: str | None = None  # id of the active waiver that accepts this finding (waivers.py)
+    waiver_reason: str = ""
+
+    @property
+    def rule_id(self) -> str:
+        return f"{self.engine}/{self.rule}"
 
     def to_json(self) -> dict:
-        return {
+        out = {
             "engine": self.engine,
             "rule": self.rule,
             "severity": self.severity,
@@ -64,6 +72,9 @@ class Finding:
             "recommendation": self.recommendation,
             "category": self.category,
         }
+        if self.waiver:
+            out["waiver"] = {"id": self.waiver, "reason": self.waiver_reason}
+        return out
 
 
 def _rule(value: object) -> str:
@@ -142,7 +153,7 @@ class CiscoEngine(Engine):
         exe = self._bin()
         if not exe:
             return None
-        with tempfile.TemporaryDirectory(prefix="skill-notary-cisco-") as home:
+        with tempfile.TemporaryDirectory(prefix="skill-scout-cisco-") as home:
             try:
                 code, out, _ = run([exe, "--version"], timeout=60, env=minimal_env(Path(home)), cwd=Path(home))
             except FetchError:
@@ -153,7 +164,7 @@ class CiscoEngine(Engine):
     def scan(self, path: Path) -> list[Finding]:
         exe = self._bin()
         if not exe:
-            raise EngineError("engine cisco unavailable: pip install 'skill-notary[cisco]'")
+            raise EngineError("engine cisco unavailable: pip install 'skill-scout[cisco]'")
         report, code = _run_json([exe, "scan", str(path), "--format", "json", "--use-behavioral"], "cisco")
         if code != 0 or not isinstance(report.get("findings"), list):
             raise EngineError(f"engine cisco: exit {code} or report without `findings`")
@@ -188,7 +199,7 @@ def get_engines(names: list[str]) -> list[Engine]:
 
 
 def _run_json(cmd: list[str], engine: str) -> tuple[dict, int]:
-    with tempfile.TemporaryDirectory(prefix=f"skill-notary-{engine}-") as home:
+    with tempfile.TemporaryDirectory(prefix=f"skill-scout-{engine}-") as home:
         try:
             code, out, _ = run(cmd, timeout=SCAN_TIMEOUT_S, env=minimal_env(Path(home)), cwd=Path(home))
         except FetchError as e:

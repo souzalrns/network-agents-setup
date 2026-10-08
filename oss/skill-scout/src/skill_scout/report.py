@@ -7,6 +7,9 @@ Verdict (the default policy of the engines: high and critical block):
 - `safe`: info or low findings only. Still needs approval: a clean static scan is not proof
   that a skill is safe;
 - `not_scanned`: an engine failed. Fail-closed: never installable.
+
+Findings accepted by an active waiver (waivers.py) stay in the report, marked, but do not count
+for the verdict. The Agent Skills spec checks (spec.py) run on every scan.
 """
 
 from __future__ import annotations
@@ -16,13 +19,14 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import __version__
+from . import __version__, spec
+from . import waivers as waivers_mod
 from .engines import SEVERITIES, Engine, Finding
 from .errors import EngineError
 from .locate import SkillDir, discover
 from .treehash import TreeHash, tree_hash
 
-REPORT_SCHEMA = "skill-notary/report-v1"
+REPORT_SCHEMA = "skill-scout/report-v1"
 VERDICTS = ("safe", "risky", "dangerous", "not_scanned")
 BLOCKING = ("high", "critical")
 
@@ -34,14 +38,19 @@ def now() -> str:
 def verdict_for(findings: list[Finding], engines_ok: bool) -> str:
     if not engines_ok:
         return "not_scanned"
-    sev = {f.severity for f in findings}
+    sev = {f.severity for f in findings if f.waiver is None}
     if sev & set(BLOCKING):
         return "dangerous"
     return "risky" if "medium" in sev else "safe"
 
 
 def max_severity(findings: list[Finding]) -> str:
-    return max((f.severity for f in findings), key=SEVERITIES.index, default="none")
+    return max((f.severity for f in findings if f.waiver is None), key=SEVERITIES.index, default="none")
+
+
+def _counts(findings: list[Finding]) -> dict[str, int]:
+    c = Counter(f.severity for f in findings if f.waiver is None)
+    return {s: c.get(s, 0) for s in SEVERITIES}
 
 
 @dataclass
@@ -98,13 +107,17 @@ class ScanReport:
 
     @property
     def counts(self) -> dict[str, int]:
-        c = Counter(f.severity for f in self.findings)
-        return {s: c.get(s, 0) for s in SEVERITIES}
+        """Active findings per severity (waived ones excluded)."""
+        return _counts(self.findings)
+
+    @property
+    def waived(self) -> list[Finding]:
+        return [f for f in self.findings if f.waiver]
 
     def to_json(self) -> dict:
         return {
             "schema": REPORT_SCHEMA,
-            "tool": {"name": "skill-notary", "version": __version__},
+            "tool": {"name": "skill-scout", "version": __version__},
             "generated_at": self.generated_at,
             "source": {
                 "spec": self.source,
@@ -118,6 +131,7 @@ class ScanReport:
             "verdict": self.verdict,
             "max_severity": max_severity(self.findings),
             "counts": self.counts,
+            "waived": len(self.waived),
             "engines": [e.to_json() for e in self.engines],
             "skills": [s.to_json() for s in self.skills],
             "findings": [f.to_json() for f in sorted(self.findings, key=_order)],
@@ -137,8 +151,16 @@ def _owner(path: str, skills: list[SkillDir]) -> SkillDir | None:
     return best
 
 
-def scan_dir(path: Path, engines: list[Engine], *, source: str, source_type: str, **meta) -> ScanReport:
-    """Hash and scan `path` (one skill, or a tree with many) with every engine."""
+def scan_dir(
+    path: Path,
+    engines: list[Engine],
+    *,
+    source: str,
+    source_type: str,
+    waivers: list[waivers_mod.Waiver] | None = None,
+    **meta,
+) -> ScanReport:
+    """Hash and scan `path` (one skill, or a tree with many) with every engine, then apply waivers."""
     tree = tree_hash(path)
     runs: list[EngineRun] = []
     findings: list[Finding] = []
@@ -155,7 +177,7 @@ def scan_dir(path: Path, engines: list[Engine], *, source: str, source_type: str
         rel = entry.rsplit(" (", 1)[0]
         findings.append(
             Finding(
-                "skill-notary",
+                "skill-scout",
                 "unpinnable-entry",
                 "high",
                 rel,
@@ -164,17 +186,14 @@ def scan_dir(path: Path, engines: list[Engine], *, source: str, source_type: str
             )
         )
     skills = discover(path)
+    for s in skills:
+        findings.extend(spec.check(s))
+    findings = waivers_mod.apply(findings, tree.digest, waivers or [])
     verdicts = []
     for s in skills:
         own = [f for f in findings if _owner(f.path, skills) is s]
-        c = Counter(f.severity for f in own)
         verdicts.append(
-            SkillVerdict(
-                s.rel,
-                s.name,
-                verdict_for(own, bool(runs) and all(r.ok for r in runs)),
-                {k: c.get(k, 0) for k in SEVERITIES},
-            )
+            SkillVerdict(s.rel, s.name, verdict_for(own, bool(runs) and all(r.ok for r in runs)), _counts(own))
         )
     return ScanReport(source, source_type, path, tree, runs, findings, verdicts, **meta)
 
@@ -183,7 +202,7 @@ def render_text(report: ScanReport) -> str:
     d = report.to_json()
     src = d["source"]
     lines = [
-        f"skill-notary {__version__} — {report.source}",
+        f"skill-scout {__version__} — {report.source}",
         f"  verdict:   {report.verdict.upper()}  (max severity: {d['max_severity']})",
         f"  content:   {report.tree.digest}  ({report.tree.files} files, {report.tree.size} bytes)",
     ]
@@ -194,13 +213,20 @@ def render_text(report: ScanReport) -> str:
         + ", ".join(f"{e.name} {e.version or '?'}" + ("" if e.ok else f" FAILED ({e.error})") for e in report.engines)
     )
     counts = ", ".join(f"{k} {v}" for k, v in d["counts"].items() if v)
-    lines.append(f"  findings:  {len(report.findings)}" + (f" ({counts})" if counts else ""))
+    active = len(report.findings) - len(report.waived)
+    lines.append(
+        f"  findings:  {active}"
+        + (f" ({counts})" if counts else "")
+        + (f", {len(report.waived)} waived" if report.waived else "")
+    )
     if len(report.skills) > 1:
         lines.append("  skills:")
         lines += [f"    {s.verdict:<11} {s.rel or '.'}" for s in report.skills]
     for f in sorted(report.findings, key=_order)[:200]:
         loc = f.path + (f":{f.line}" if f.line else "")
-        lines.append(f"  [{f.severity.upper():<8}] {loc}: {f.title} ({f.engine}/{f.rule})")
+        tag = "WAIVED" if f.waiver else f.severity.upper()
+        extra = f" — waiver {f.waiver}: {f.waiver_reason}" if f.waiver else ""
+        lines.append(f"  [{tag:<8}] {loc}: {f.title} ({f.engine}/{f.rule}){extra}")
     if len(report.findings) > 200:
         lines.append(f"  … {len(report.findings) - 200} more (use --format json)")
     return "\n".join(lines) + "\n"

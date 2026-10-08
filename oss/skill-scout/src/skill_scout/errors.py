@@ -11,7 +11,7 @@ EXIT_VERIFY = 5  # verify: drift, tampered lock or audit log
 EXIT_ENGINE = 6  # fetch or scan engine failed (no verdict)
 
 
-class NotaryError(Exception):
+class ScoutError(Exception):
     exit_code = EXIT_USAGE
 
     def __init__(self, message: str, exit_code: int | None = None) -> None:
@@ -20,25 +20,25 @@ class NotaryError(Exception):
             self.exit_code = exit_code
 
 
-class UsageError(NotaryError):
+class UsageError(ScoutError):
     exit_code = EXIT_USAGE
 
 
-class FetchError(NotaryError):
+class FetchError(ScoutError):
     exit_code = EXIT_ENGINE
 
 
-class EngineError(NotaryError):
+class EngineError(ScoutError):
     exit_code = EXIT_ENGINE
 
 
-class BlockedError(NotaryError):
+class BlockedError(ScoutError):
     exit_code = EXIT_BLOCKED
 
 
-class ApprovalError(NotaryError):
+class ApprovalError(ScoutError):
     exit_code = EXIT_APPROVAL
 
 
-class VerifyError(NotaryError):
+class VerifyError(ScoutError):
     exit_code = EXIT_VERIFY

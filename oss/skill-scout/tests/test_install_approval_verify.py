@@ -8,15 +8,15 @@ import stat
 
 import pytest
 
-from skill_notary import audit, lock
-from skill_notary import install as inst
-from skill_notary.approval import detect_agent
-from skill_notary.engines import get_engines
-from skill_notary.errors import ApprovalError, BlockedError, UsageError, VerifyError
-from skill_notary.install import install
-from skill_notary.report import scan_dir
-from skill_notary.treehash import tree_hash
-from skill_notary.verify import verify
+from skill_scout import audit, lock
+from skill_scout import install as inst
+from skill_scout.approval import detect_agent
+from skill_scout.engines import get_engines
+from skill_scout.errors import ApprovalError, BlockedError, UsageError, VerifyError
+from skill_scout.install import install
+from skill_scout.report import scan_dir
+from skill_scout.treehash import tree_hash
+from skill_scout.verify import verify
 
 from .helpers import make_safe, monorepo, write
 
@@ -34,22 +34,22 @@ def _install(tmp_path, github, spec, **kw):
         spec,
         engines=get_engines(["asm"]),
         dest=tmp_path / "proj" / ".claude" / "skills",
-        lock_path=tmp_path / "proj" / "skill-notary.lock.json",
-        audit_path=tmp_path / "proj" / "skill-notary.audit.jsonl",
+        lock_path=tmp_path / "proj" / "skill-scout.lock.json",
+        audit_path=tmp_path / "proj" / "skill-scout.audit.jsonl",
         base_url=github.base_url,
         **kw,
     )
 
 
 def _content_hash(tmp_path, github, spec_dir: str) -> str:
-    """What a human reads in `skill-notary scan`: the hash of the skill folder at HEAD."""
+    """What a human reads in `skill-scout scan`: the hash of the skill folder at HEAD."""
     work = github.root / "_work" / "acme" / "skills" / spec_dir
     return tree_hash(work).digest
 
 
 def _paths(tmp_path):
     p = tmp_path / "proj"
-    return p / ".claude" / "skills", p / "skill-notary.lock.json", p / "skill-notary.audit.jsonl"
+    return p / ".claude" / "skills", p / "skill-scout.lock.json", p / "skill-scout.audit.jsonl"
 
 
 # --------------------------------------------------------------------------- agent detection
@@ -89,14 +89,14 @@ def test_safe_install_with_flag_pins_audits_and_copies_exactly(tmp_path, repo):
     dest, lock_path, audit_path = _paths(tmp_path)
     assert res.name == "good" and res.path == dest / "good" and res.approval.mode == "flag"
     assert tree_hash(dest / "good").digest == digest
-    entry = json.loads(lock_path.read_text())["skills"]["good"]
+    entry = json.loads(lock_path.read_text())["skills"][".claude/skills/good"]
     assert entry["content_sha256"] == digest and entry["commit"] == sha and entry["verdict"] == "safe"
-    assert entry["skill_path"] == "skills/good" and entry["install_path"] == ".claude/skills/good"
+    assert entry["skill_path"] == "skills/good" and entry["name"] == "good" and entry["spec"] == "acme/skills@good"
     assert entry["engines"][0]["name"] == "asm" and entry["approval"]["mode"] == "flag"
     events = [r["event"] for r in audit.read(audit_path)]
     assert events == ["scan", "installed"] and entry["audit"]["seq"] == 2
     assert verify(lock_path, audit_path, dest).ok
-    assert not [p for p in dest.iterdir() if p.name.startswith(".skill-notary")]  # no staging left behind
+    assert not [p for p in dest.iterdir() if p.name.startswith(".skill-scout")]  # no staging left behind
 
 
 def test_risky_install_needs_the_typed_hash_prefix(tmp_path, repo):
@@ -170,7 +170,7 @@ def test_toctou_workspace_change_between_scan_and_copy_aborts(tmp_path, repo, mo
         _install(tmp_path, github, "acme/skills@good", approve_sha256=digest)
     dest, lock_path, _ = _paths(tmp_path)
     assert not (dest / "good").exists() and not lock_path.exists()
-    assert not [p for p in dest.iterdir() if p.name.startswith(".skill-notary")]
+    assert not [p for p in dest.iterdir() if p.name.startswith(".skill-scout")]
 
 
 def test_install_never_keeps_setuid_or_group_write(tmp_path, no_agent):
@@ -202,7 +202,7 @@ def test_replace_only_when_the_installed_copy_is_untouched(tmp_path, repo):
     res = _install(tmp_path, github, "acme/skills@good", approve_sha256=new_digest, replace=True)
     dest, lock_path, audit_path = _paths(tmp_path)
     assert (dest / "good" / "extra.md").is_file() and res.report.commit == new
-    assert json.loads(lock_path.read_text())["skills"]["good"]["content_sha256"] == new_digest
+    assert json.loads(lock_path.read_text())["skills"][".claude/skills/good"]["content_sha256"] == new_digest
     assert verify(lock_path, audit_path).ok
     write(dest / "good" / "local-edit.md", "mine")
     with pytest.raises(VerifyError, match="not in the lock file"):
@@ -222,7 +222,7 @@ def test_local_source_and_hostile_names(tmp_path, no_agent):
     )
     assert (
         res.name == "local-skill"
-        and json.loads((tmp_path / "l.json").read_text())["skills"]["local-skill"]["source_type"] == "local"
+        and json.loads((tmp_path / "l.json").read_text())["skills"]["d/local-skill"]["source_type"] == "local"
     )
     bad = tmp_path / "bad"
     write(bad / "SKILL.md", "---\nname: ../../escape\n---\n")
@@ -310,7 +310,7 @@ def test_edited_and_rehashed_record_breaks_the_next_link(installed):
 
 
 def test_approve_itself_refuses_blocked_verdicts(tmp_path):
-    from skill_notary.approval import approve
+    from skill_scout.approval import approve
 
     report = scan_dir(make_safe(tmp_path / "s"), get_engines(["asm"]), source="./s", source_type="local")
     report.engines[0].ok = False  # → not_scanned
@@ -324,7 +324,7 @@ def test_cut_audit_tail_is_caught_through_the_lock(installed):
     audit_path.write_text("\n".join(lines[:2]) + "\n")  # still a valid chain on its own
     assert audit.verify(audit_path) == []
     result = verify(lock_path, audit_path)
-    assert any("envy: no matching `installed` record" in p for p in result.problems)
+    assert any(".claude/skills/envy: no matching `installed` record" in p for p in result.problems)
 
 
 @pytest.mark.parametrize("drift", ["edit", "add", "remove", "chmod", "symlink", "uninstall"])
@@ -346,13 +346,13 @@ def test_drift_after_approval_is_detected(installed, drift):
 
         shutil.rmtree(skill)
     result = verify(lock_path, audit_path)
-    assert not result.ok and all(p.startswith("good:") for p in result.problems)
+    assert not result.ok and all(p.startswith(".claude/skills/good:") for p in result.problems)
 
 
 def test_hand_edited_lock_is_detected(installed):
     _, lock_path, audit_path = installed
     data = json.loads(lock_path.read_text())
-    data["skills"]["good"]["content_sha256"] = "f" * 64
+    data["skills"][".claude/skills/good"]["content_sha256"] = "f" * 64
     lock_path.write_text(json.dumps(data))
     problems = verify(lock_path, audit_path).problems
     assert any("drifted" in p for p in problems) and any("no matching" in p for p in problems)
@@ -382,7 +382,7 @@ def test_scan_report_matches_what_install_pins(tmp_path):
 
 
 def test_actor_is_never_an_email_or_host(monkeypatch):
-    monkeypatch.setenv("SKILL_NOTARY_ACTOR", "alice")
+    monkeypatch.setenv("SKILL_SCOUT_ACTOR", "alice")
     assert audit.actor() == "alice"
-    monkeypatch.delenv("SKILL_NOTARY_ACTOR")
+    monkeypatch.delenv("SKILL_SCOUT_ACTOR")
     assert "@" not in audit.actor() and os.uname().nodename not in audit.actor()

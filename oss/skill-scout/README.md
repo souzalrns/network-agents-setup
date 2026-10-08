@@ -1,10 +1,11 @@
-# skill-notary
+# skill-scout
 
-**Scan, approve, pin and audit third-party Agent Skills before your agent trusts them.**
+**Find, scan, approve, pin and audit third-party Agent Skills before your agent trusts them.**
 
 An [Agent Skill](https://agentskills.io) is a folder (`SKILL.md`, scripts, references) that an
 agent loads and follows. Installing one from GitHub gives its author a say in what your agent
-reads, runs and sends. `skill-notary` puts a notary between the download and the agent:
+reads, runs and sends. `skill-scout` goes ahead of your agent, finds the skill and checks it before
+anything is trusted:
 
 1. **scan** with mature engines (it writes no rules of its own);
 2. **block** anything high or critical; never install on an engine failure;
@@ -15,18 +16,21 @@ reads, runs and sends. `skill-notary` puts a notary between the download and the
 6. **verify** later that nothing drifted.
 
 ```
-skill-notary install anthropics/skills@pdf
+skill-scout install anthropics/skills@pdf
 ```
 
 > Status: 0.1.0, alpha. Incubated in
-> [`souzalrns/network-agents-setup`](https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-notary);
+> [`souzalrns/network-agents-setup`](https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-scout);
 > not yet on PyPI.
 
 ## Why another tool
 
-| | skills CLI (`npx skills`) | agentic-skills-manager | skill-guard (PR gate) | Cisco skill-scanner | **skill-notary** |
+| | skills CLI (`npx skills`) | agentic-skills-manager | skill-guard (PR gate) | Cisco skill-scanner | **skill-scout** |
 |---|---|---|---|---|---|
+| Finds skills (skills.sh) | `find` | no | no | no | **`find`, and `find --scan` shows a verdict and hash per result** |
 | Installs from `owner/repo@skill` | yes | yes | no | no | **yes** |
+| Agents supported | ~80 | 4 (user folders) | n/a | n/a | **~80 (the skills CLI table), several at once with one approval** |
+| list / update / uninstall | yes | yes | n/a | n/a | **yes; `update` shows the diff and needs a new approval; `update --check` for CI** |
 | Security check before install | shows remote ratings (Gen, Socket, Snyk); does not block | yes, local static scan; blocks high/critical | n/a (gate on your own repo) | n/a (scanner only) | **yes, 1 or 2 local engines merged; blocks high/critical** |
 | Human approval, never automatic | no | no (passes → installs) | n/a | n/a | **yes, bound to the content hash** |
 | Refuses approval by an AI agent | no | no | n/a | n/a | **yes** |
@@ -34,6 +38,8 @@ skill-notary install anthropics/skills@pdf
 | Lock file with content hash | yes (locale-dependent hash) | install metadata | no | no | **yes, deterministic** |
 | Tamper-evident audit log | no | no | no | no | **yes (hash chain)** |
 | Drift check of installed skills | update check | update check | no | no | **yes (`verify`)** |
+| False positives | n/a | `--exclude RULE` (every future version) or `--unsafe-install` | `suppress` with a reason (inline comment + config); not bound to content, no expiry | policy presets and scoped suppressions | **waivers: one finding, one exact content, a reason, an expiry, a human, an audit record; never critical** |
+| Agent Skills spec checks | no | `analyze` (format, size) | `validate` | partly | **yes, on every scan (as quality, not security)** |
 | SARIF for GitHub code scanning | no | no | no (JSON, Markdown) | yes | **yes, validated against the OASIS schema** |
 | No secret in reports | n/a | n/a | n/a | JSON includes matched snippets | **yes (snippets and descriptions dropped)** |
 
@@ -41,13 +47,13 @@ Projects compared: [vercel-labs/skills](https://github.com/vercel-labs/skills),
 [agentic-skills-manager](https://github.com/mazen160/skills-manager),
 [skill-guard](https://github.com/vaibhavtupe/skill-guard),
 [cisco-ai-defense/skill-scanner](https://github.com/cisco-ai-defense/skill-scanner)
-(state of October 2026). skill-notary uses two of them as engines.
+(state of October 2026). skill-scout uses two of them as engines.
 
 ## Install
 
 ```bash
-pip install ./oss/skill-notary            # from this repository (Python 3.10+)
-pip install './oss/skill-notary[cisco]'   # + the Cisco engine (about 650 MB of dependencies)
+pip install ./oss/skill-scout            # from this repository (Python 3.10+)
+pip install './oss/skill-scout[cisco]'   # + the Cisco engine (about 650 MB of dependencies)
 ```
 
 `git` must be on `PATH` for GitHub sources.
@@ -55,23 +61,41 @@ pip install './oss/skill-notary[cisco]'   # + the Cisco engine (about 650 MB of 
 ## Use
 
 ```bash
+# 0. Find candidates (skills.sh); --scan N scans the first N and shows verdict + hash. Nothing installed.
+skill-scout find "pdf forms" --scan 5
+
 # 1. Look: nothing is installed. Note the content hash.
-skill-notary scan anthropics/skills@pdf
-skill-notary scan ./skills --format sarif -o skills.sarif     # whole folder, for code scanning
+skill-scout scan anthropics/skills@pdf
+skill-scout scan ./skills --format sarif -o skills.sarif     # whole folder, for code scanning
 
 # 2. Install. In a terminal you are asked to type the first 12 characters of the hash.
-skill-notary install anthropics/skills@pdf
+skill-scout install anthropics/skills@pdf
 #    Non-interactive (CI, scripts): pass the full hash you reviewed.
-skill-notary install anthropics/skills@pdf --approve-sha256 <hash from step 1>
+skill-scout install anthropics/skills@pdf --approve-sha256 <hash from step 1>
+
+#    For several agents at once (one approval): --agent claude --agent codex --agent windsurf
+skill-scout install anthropics/skills@pdf --agent claude --agent codex
 
 # 3. Later, and in CI: is everything still exactly what was approved?
-skill-notary verify --dest .claude/skills
+skill-scout verify --dest .claude/skills
+skill-scout list
+
+# 4. Day two.
+skill-scout update --check            # exit 1 when an update is available (CI)
+skill-scout update pdf                # shows what changed, scans, asks for approval of the new hash
+skill-scout uninstall pdf             # refuses if the installed copy was modified
+
+# A false positive that blocks: accept that one finding, for this exact content, until a date.
+skill-scout waive owner/repo@skill --rule asm/destructive-remove --path scripts/clean.sh \
+  --reason "resets the throwaway sandbox; see README" --expires 2026-12-31
 ```
 
 Sources: `owner/repo@skill` (the `npx skills add` syntax), `owner/repo`, `https://github.com/owner/repo`,
-or a local folder (`./path`). `--ref` fetches a branch, tag or commit. Default destination:
-`.claude/skills` (`--dest`). Files written next to it: `skill-notary.lock.json` and
-`skill-notary.audit.jsonl` (`--lock`, `--audit`). Commit both.
+or a local folder (`./path`). `--ref` fetches a branch, tag or commit (a commit pin is never moved
+by `update`). Default destination: `.claude/skills`; `--agent NAME` (repeatable) picks the
+agent's project folder from the skills CLI table (many agents share `.agents/skills`), `--dest DIR`
+overrides it. Files written next to it: `skill-scout.lock.json` and
+`skill-scout.audit.jsonl` (`--lock`, `--audit`). Commit both.
 
 ## How it decides
 
@@ -111,7 +135,33 @@ The install then writes only the files of the pinned manifest, checks each file'
 writing, re-hashes the staged copy and renames it into place. Modes become 0644 or 0755; setuid
 and group-write bits are dropped.
 
-### Content hash (`skill-notary-tree-v1`)
+### Waivers (false positives)
+
+`skill-scout waive SOURCE --rule ENGINE/RULE --path PATH --reason TEXT [--expires YYYY-MM-DD]`
+accepts **one** finding for **one** exact content:
+
+- bound to `(content hash, rule, path)`: when the skill changes, the waiver no longer matches and
+  the finding blocks again; nothing to clean up;
+- a reason (at least 10 characters) and an expiry (default 90 days, at most 365); `verify` fails
+  when an installed skill relies on an expired waiver;
+- approved by a human under the install rules (no AI agent; typed hash prefix or `--approve-sha256`);
+- recorded in the lock file and the audit chain. A waiver only counts when its `waiver_added`
+  record is in an intact audit chain, so a waiver written into the lock by hand is ignored (and
+  `verify` reports it);
+- never for `critical` findings (keys, credential theft), unpinnable files or engine failures.
+
+Waived findings stay in every report (`WAIVED` in text, `waiver` in JSON, an `accepted`
+suppression in SARIF).
+
+### Agent Skills spec
+
+Every scan also checks the [spec](https://agentskills.io/specification): frontmatter present,
+`name` (1-64 lowercase letters, digits and single hyphens, equal to the folder name),
+`description` (1-1024 characters), `compatibility` (≤ 500). Missing or invalid name or
+description is `medium` (an agent may not load it); cosmetic issues are `low`. In SARIF these
+rules are quality, not security.
+
+### Content hash (`skill-scout-tree-v1`)
 
 sha256 over one JSON line `[path, executable, sha256]` per regular file, sorted by code point
 (the `skills` CLI sorts with `localeCompare`, so its hash depends on the machine's locale).
@@ -134,10 +184,10 @@ permissions:
   security-events: write
 steps:
   - uses: actions/checkout@<sha>
-  - run: pip install ./oss/skill-notary
-  - run: skill-notary scan ./skills --format sarif -o skills.sarif --fail-on none
+  - run: pip install ./oss/skill-scout
+  - run: skill-scout scan ./skills --format sarif -o skills.sarif --fail-on none
   - uses: github/codeql-action/upload-sarif@<sha>
-    with: { sarif_file: skills.sarif, category: skill-notary }
+    with: { sarif_file: skills.sarif, category: skill-scout }
 ```
 
 Rules carry `security-severity` (critical 9.5, high 8.0, medium 5.5, low 3.0), results carry
@@ -149,11 +199,11 @@ engine snippets or descriptions, which can contain the matched secret.
 | Code | Meaning |
 |---|---|
 | 0 | OK |
-| 1 | `scan`: a finding at or above `--fail-on` (default `high`) |
+| 1 | `scan`: an active finding at or above `--fail-on` (default `high`); `update --check`: updates available |
 | 2 | usage error, skill not found, already installed |
-| 3 | `install`: blocked (`dangerous` or `not_scanned`) |
-| 4 | `install`: approval missing, rejected, for other content, or by an AI agent |
-| 5 | `verify`: drift, or tampered lock or audit log |
+| 3 | `install`, `waive`: blocked (`dangerous` or `not_scanned`; no waiver while an engine failed) |
+| 4 | `install`, `update`, `waive`: approval missing, rejected, for other content, or by an AI agent |
+| 5 | `verify`, `list`: drift, tampered lock or audit log, expired waiver; `update`: blocked or drifted |
 | 6 | fetch or engine failure (no verdict) |
 
 ## Threat model
@@ -172,9 +222,9 @@ Planned: sandboxed behaviour tests of a skill's scripts (subprocess limits), sig
 ## Development
 
 ```bash
-pip install -e './oss/skill-notary[test]'
-pytest oss/skill-notary/tests
-ruff check oss/skill-notary && ruff format --check oss/skill-notary
+pip install -e './oss/skill-scout[test]'
+pytest oss/skill-scout/tests
+ruff check oss/skill-scout && ruff format --check oss/skill-scout
 ```
 
 The tests build safe, risky and dangerous skills at run time (nothing malicious is stored), serve

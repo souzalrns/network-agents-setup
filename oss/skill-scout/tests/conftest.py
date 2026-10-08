@@ -7,7 +7,7 @@ import shutil
 
 import pytest
 
-from skill_notary import approval
+from skill_scout import approval
 
 from .helpers import AGENT_VARS, LocalGitHub
 

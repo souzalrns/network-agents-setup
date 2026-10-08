@@ -1,9 +1,10 @@
 """SARIF 2.1.0 for GitHub code scanning (and any SARIF viewer).
 
-One run, `tool.driver` = skill-notary, `tool.extensions` = the engines that ran. Rule ids are
+One run, `tool.driver` = skill-scout, `tool.extensions` = the engines that ran. Rule ids are
 `<engine>/<rule>`. What GitHub reads (docs: "SARIF support for code scanning"):
-- `properties.security-severity` on each rule (critical 9.5, high 8.0, medium 5.5, low 3.0;
-  info has none, so it shows as a plain note) and `properties.tags` with `security`;
+- `properties.security-severity` on each security rule (critical 9.5, high 8.0, medium 5.5,
+  low 3.0; info has none, so it shows as a plain note) and `properties.tags` with `security`.
+  Agent Skills spec rules (`spec/*`) are quality, not security: no security tag or severity;
 - `level`: critical/high → error, medium → warning, low/info → note;
 - a location per result, relative to `%SRCROOT%` (the repository root given by --srcroot), with
   `region.startLine` (1 when the engine gives no line);
@@ -11,6 +12,7 @@ One run, `tool.driver` = skill-notary, `tool.extensions` = the engines that ran.
   survives unrelated edits;
 - `automationDetails.id` as the category, and at most 25 000 results per run (capped at 5000).
 Findings never carry descriptions or snippets (see engines.py), so no matched secret reaches it.
+Waived findings are kept, with an `accepted` external suppression and the waiver's justification.
 """
 
 from __future__ import annotations
@@ -23,14 +25,15 @@ from .engines import Finding
 from .report import ScanReport
 
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
-INFO_URI = "https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-notary"
+INFO_URI = "https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-scout"
 MAX_RESULTS = 5000
 SECURITY_SEVERITY = {"critical": "9.5", "high": "8.0", "medium": "5.5", "low": "3.0"}
 LEVEL = {"critical": "error", "high": "error", "medium": "warning", "low": "note", "info": "note"}
 ENGINE_URI = {
     "asm": "https://github.com/mazen160/skills-manager",
     "cisco": "https://github.com/cisco-ai-defense/skill-scanner",
-    "skill-notary": INFO_URI,
+    "skill-scout": INFO_URI,
+    "spec": "https://agentskills.io/specification",
 }
 
 
@@ -51,7 +54,7 @@ def fingerprint(f: Finding, uri: str) -> str:
     return hashlib.sha256(f"{f.engine}/{f.rule}\0{uri}\0{f.title}".encode()).hexdigest()[:32]
 
 
-def to_sarif(reports: list[ScanReport], *, srcroot: Path | None = None, category: str = "skill-notary") -> dict:
+def to_sarif(reports: list[ScanReport], *, srcroot: Path | None = None, category: str = "skill-scout") -> dict:
     rules: dict[str, dict] = {}
     results: list[dict] = []
     engines: dict[str, str | None] = {}
@@ -74,11 +77,13 @@ def to_sarif(reports: list[ScanReport], *, srcroot: Path | None = None, category
                 continue
             rule_id = f"{f.engine}/{f.rule}"
             if rule_id not in rules:
+                quality = f.engine == "spec"  # format, not security: no security tag or severity
                 props: dict = {
-                    "tags": ["security", "agent-skills", f.engine] + ([f.category] if f.category else []),
-                    "precision": "medium",
+                    "tags": (["agent-skills", "spec", "quality"] if quality else ["security", "agent-skills", f.engine])
+                    + ([f.category] if f.category else []),
+                    "precision": "high" if quality else "medium",
                 }
-                if f.severity in SECURITY_SEVERITY:
+                if f.severity in SECURITY_SEVERITY and not quality:
                     props["security-severity"] = SECURITY_SEVERITY[f.severity]
                 rules[rule_id] = {
                     "id": rule_id,
@@ -112,7 +117,7 @@ def to_sarif(reports: list[ScanReport], *, srcroot: Path | None = None, category
                             }
                         }
                     ],
-                    "partialFingerprints": {"skillNotaryFinding/v1": fingerprint(f, uri)},
+                    "partialFingerprints": {"skillScoutFinding/v1": fingerprint(f, uri)},
                     "properties": {
                         "engine": f.engine,
                         "severity": f.severity,
@@ -121,6 +126,10 @@ def to_sarif(reports: list[ScanReport], *, srcroot: Path | None = None, category
                     },
                 }
             )
+            if f.waiver:  # a human accepted it for this exact content (waivers.py)
+                results[-1]["suppressions"] = [
+                    {"kind": "external", "status": "accepted", "justification": f"waiver {f.waiver}: {f.waiver_reason}"}
+                ]
     if truncated:
         notifications.append(
             {
@@ -132,7 +141,7 @@ def to_sarif(reports: list[ScanReport], *, srcroot: Path | None = None, category
     run = {
         "tool": {
             "driver": {
-                "name": "skill-notary",
+                "name": "skill-scout",
                 "version": __version__,
                 "semanticVersion": __version__,
                 "informationUri": INFO_URI,
