@@ -79,7 +79,9 @@ SEARCH_MAX_BYTES = 256 * 1024
 SEARCH_LIMIT = 10
 QUERY_MAX_CHARS = 200
 FIELD_MAX_CHARS = 200
-_CONTROL = re.compile(r"[\x00-\x1f\x7f]|\x1b\[[0-9;?]*[ -/]*[@-~]")
+# ANSI escape sequences first: with the single-character class first, ESC alone matched and
+# the rest of the sequence ("[31m") stayed in the text.
+_CONTROL = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?|[\x00-\x1f\x7f]")
 _SAFE_TOKEN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/@:-]*$")
 
 SearchFn = Callable[[str, int], list[dict[str, Any]]]

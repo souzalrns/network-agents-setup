@@ -66,7 +66,9 @@ FIELD_MAX_CHARS = 200
 OFFLINE_ENV = "PLAN_RUNNER_SKILLS_OFFLINE"
 # owner do GitHub: 1-39 [A-Za-z0-9-], sem hífen no início; repo: [A-Za-z0-9._-], sem `..`.
 _GITHUB_SOURCE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9._-]{1,100}$")
-_CONTROL = re.compile(r"[\x00-\x1f\x7f]|\x1b\[[0-9;?]*[ -/]*[@-~]")
+# ANSI escape sequences first: with the single-character class first, ESC alone matched and
+# the rest of the sequence ("[31m") stayed in the text.
+_CONTROL = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?|[\x00-\x1f\x7f]")
 _RULE = re.compile(r"^[a-z0-9][a-z0-9-]{0,79}$")
 _SHA1 = re.compile(r"^[0-9a-f]{40}$")
 _REF = re.compile(r"^refs/[A-Za-z0-9._/-]{1,200}$")
