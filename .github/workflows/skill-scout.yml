@@ -1,6 +1,6 @@
-name: skill-notary
+name: skill-scout
 
-# oss/skill-notary: the standalone "scan, approve, pin and audit" tool for Agent Skills.
+# oss/skill-scout: the standalone "find, scan, approve, pin and audit" tool for Agent Skills.
 # Self-contained, so it moves with the package when it gets its own repository (phase 3).
 #
 # - test: Python 3.10 and 3.13; ruff lint + format; pytest (CI=true: the SARIF schema test
@@ -16,28 +16,28 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'oss/skill-notary/**'
+      - 'oss/skill-scout/**'
       - 'skills/**'
-      - '.github/workflows/skill-notary.yml'
+      - '.github/workflows/skill-scout.yml'
   push:
     branches: [main]
     paths:
-      - 'oss/skill-notary/**'
+      - 'oss/skill-scout/**'
       - 'skills/**'
-      - '.github/workflows/skill-notary.yml'
+      - '.github/workflows/skill-scout.yml'
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: skill-notary-${{ github.ref }}
+  group: skill-scout-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash # explicit: `bash -eo pipefail` (the implicit default has no pipefail, and `| tee` would hide a failure)
-    working-directory: oss/skill-notary
+    working-directory: oss/skill-scout
 
 jobs:
   test:
@@ -98,15 +98,16 @@ jobs:
           ! grep -q "tests/" wheel.txt
       - name: Install the wheel in a clean venv and run it
         run: |
-          python -m venv /tmp/sn
-          /tmp/sn/bin/pip install dist/*.whl
-          /tmp/sn/bin/skill-notary --version
-          /tmp/sn/bin/skill-notary scan ../../skills --fail-on none
-          /tmp/sn/bin/python -m skill_notary verify --lock /tmp/none.json --audit /tmp/none.jsonl
+          python -m venv /tmp/ss
+          /tmp/ss/bin/pip install dist/*.whl
+          /tmp/ss/bin/skill-scout --version
+          /tmp/ss/bin/skill-scout scan ../../skills --fail-on none
+          /tmp/ss/bin/python -m skill_scout verify --lock /tmp/none.json --audit /tmp/none.jsonl
+          /tmp/ss/bin/skill-scout list --lock /tmp/none.json
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: skill-notary-dist
-          path: oss/skill-notary/dist/
+          name: skill-scout-dist
+          path: oss/skill-scout/dist/
           retention-days: 7
 
   code-scanning:
@@ -125,11 +126,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install
-        run: python -m pip install ./oss/skill-notary
+        run: python -m pip install ./oss/skill-scout
       - name: Scan skills/ (SARIF)
-        run: skill-notary scan ./skills --format sarif -o skill-notary.sarif --fail-on none --category skill-notary
+        run: skill-scout scan ./skills --format sarif -o skill-scout.sarif --fail-on none --category skill-scout
       - name: Upload to GitHub code scanning
         uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
-          sarif_file: skill-notary.sarif
-          category: skill-notary
+          sarif_file: skill-scout.sarif
+          category: skill-scout
