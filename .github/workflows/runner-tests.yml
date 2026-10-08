@@ -23,6 +23,8 @@ on:
       - 'scripts/web_fetch.py'
       # F2-ALLOW-1: allowlist do fetch por área, validada no E7
       - 'config/web-allowlist.yaml'
+      # F2-ALLOW-1: sonda da allowlist (test_check_web_allowlist.py, servidor local)
+      - 'scripts/check_web_allowlist.py'
       # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
       - 'scripts/f5_evidence.py'
       # L4 (D3): SQL versionado testado pelo job test-rag
@@ -71,6 +73,8 @@ on:
       - 'scripts/web_fetch.py'
       # F2-ALLOW-1: allowlist do fetch por área, validada no E7
       - 'config/web-allowlist.yaml'
+      # F2-ALLOW-1: sonda da allowlist (test_check_web_allowlist.py, servidor local)
+      - 'scripts/check_web_allowlist.py'
       # F5: recolhedor de evidencia do run real (test_f5_evidence.py)
       - 'scripts/f5_evidence.py'
       # L4 (D3): SQL versionado testado pelo job test-rag

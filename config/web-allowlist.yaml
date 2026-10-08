@@ -1,25 +1,155 @@
 # F2-ALLOW-1 (P-25 = A, maestro, 2026-10-07): domínios que o `fetch` (scripts/web_fetch.py)
 # pode buscar, por área do config/areas.yaml. Validado no E7 (`python -m plan_runner.areas`).
 #
-# Os domínios são POLÍTICA: escolhe-os o maestro. Até lá as listas ficam vazias, e uma área
-# sem domínios não busca nada com `--area`. Cada domínio aceita também os subdomínios
-# (`exemplo.org` aceita `www.exemplo.org`). Nada de esquema, caminho, porta, `*` nem IP.
+# v1 dos domínios: escolhidos pelo maestro a 2026-10-08, aplicados tal como dados.
+# - Domínio novo = decisão do maestro + linha no PENDENCIAS (§10), nunca uma edição silenciosa.
+# - Lista vazia = deny-by-default nessa área (`software` fica assim na v1).
+# - Cada domínio aceita também os subdomínios (`exemplo.com` aceita `*.exemplo.com`).
+#   Nada de esquema, caminho, porta, `*` nem IP.
+# - De fora de propósito na v1: as raízes gov.br e jus.br (só os órgãos listados), e as
+#   notícias de finanças (Reuters, FT, Bloomberg). reddit e medium, se um dia entrarem, só
+#   em `marketing`. Um domínio repetido entre áreas é intencional.
+# - Os redirects contam: cada salto é verificado contra a lista da área, e um destino fora
+#   dela falha com `blocked_by_allowlist`. A sonda `scripts/check_web_allowlist.py` (CI,
+#   informativa) mostra para onde cada domínio redirecciona.
 #
-#   python scripts/web_fetch.py <url> --area research                # domínios da área
-#   python scripts/web_fetch.py <url> --area research --allow x.org  # x.org tem de caber na área
-#   python scripts/web_fetch.py <url> --allow x.org                  # sem área: aviso no_area_allowlist
+#   python scripts/web_fetch.py <url> --area research                 # domínios da área
+#   python scripts/web_fetch.py <url> --area research --allow arxiv.org  # só estreita a área
 #
-# Regras e uso: runner/plan_runner/web_allowlist.py e docs/ops/WEB-FETCH.md §2.1.
+# `--area` é obrigatória. Regras e uso: runner/plan_runner/web_allowlist.py e
+# docs/ops/WEB-FETCH.md §2.1.
 
 version: 1
 areas:
   software: []
-  marketing: []
-  legal: []
-  ops: []
-  research: []
-  finance: []
-  gamedev: []
-  security: []
-  docs: []
-  horizontal: []
+  marketing:
+    - instagram.com
+    - tiktok.com
+    - facebook.com
+    - linkedin.com
+    - youtube.com
+    - x.com
+    - pinterest.com
+    - threads.net
+    - meta.com
+    - developers.facebook.com
+    - ads.google.com
+    - developers.google.com
+  legal:
+    - planalto.gov.br
+    - in.gov.br
+    - stf.jus.br
+    - stj.jus.br
+    - tst.jus.br
+    - tse.jus.br
+    - cnj.jus.br
+    - senado.leg.br
+    - camara.leg.br
+    - jusbrasil.com.br
+    - conjur.com.br
+    - dre.pt
+    - diariodarepublica.pt
+    - pgdlisboa.pt
+    - oa.pt
+    - justice.gov.pt
+    - tribunalconstitucional.pt
+    - stj.pt
+    - eur-lex.europa.eu
+    - curia.europa.eu
+  ops:
+    - github.com
+    - docs.github.com
+    - gitlab.com
+    - kubernetes.io
+    - docker.com
+    - docs.docker.com
+    - helm.sh
+    - prometheus.io
+    - grafana.com
+    - terraform.io
+    - cloud.google.com
+    - docs.aws.amazon.com
+    - learn.microsoft.com
+    - oracle.com
+    - sentry.io
+  research:
+    - wikipedia.org
+    - wikidata.org
+    - arxiv.org
+    - scholar.google.com
+    - pubmed.ncbi.nlm.nih.gov
+    - doi.org
+    - semanticscholar.org
+    - ssrn.com
+    - openalex.org
+    - crossref.org
+  finance:
+    - bcb.gov.br
+    - cvm.gov.br
+    - b3.com.br
+    - fazenda.gov.br
+    - ibge.gov.br
+    - bportugal.pt
+    - cmvm.pt
+    - ecb.europa.eu
+    - esma.europa.eu
+    - sec.gov
+    - federalreserve.gov
+    - imf.org
+    - worldbank.org
+    - oecd.org
+    - bis.org
+  gamedev:
+    - unity.com
+    - docs.unity3d.com
+    - unrealengine.com
+    - docs.unrealengine.com
+    - godotengine.org
+    - docs.godotengine.org
+    - khronos.org
+    - blender.org
+    - docs.blender.org
+    - itch.io
+    - steamworks.steampowered.com
+    - gamedeveloper.com
+  security:
+    - owasp.org
+    - nvd.nist.gov
+    - cve.mitre.org
+    - cwe.mitre.org
+    - attack.mitre.org
+    - cert.org
+    - first.org
+    - cisecurity.org
+    - cisa.gov
+    - enisa.europa.eu
+    - osv.dev
+    - snyk.io
+  docs:
+    - docs.python.org
+    - python.org
+    - nodejs.org
+    - developer.mozilla.org
+    - typescriptlang.org
+    - pydantic.dev
+    - fastapi.tiangolo.com
+    - react.dev
+    - nextjs.org
+    - supabase.com
+    - vercel.com
+    - ai.google.dev
+    - cloud.google.com
+    - platform.openai.com
+    - docs.anthropic.com
+    - pytest.org
+    - ruff.rs
+    - pnpm.io
+  horizontal:
+    - ietf.org
+    - datatracker.ietf.org
+    - rfc-editor.org
+    - w3.org
+    - schema.org
+    - openapi.org
+    - json-schema.org
+    - github.com

@@ -1,8 +1,9 @@
 """F2-ALLOW-1 (P-25 = A): allowlist do `fetch` por área.
 
 `config/web-allowlist.yaml` diz, por área do `config/areas.yaml`, que domínios o
-`scripts/web_fetch.py` pode buscar. Os domínios são política: escolhe-os o maestro. Até lá
-as listas ficam vazias, e uma área sem domínios não busca nada.
+`scripts/web_fetch.py` pode buscar. Os domínios são política: escolhe-os o maestro (v1 a
+2026-10-08). Uma área com a lista vazia não busca nada (deny-by-default). Domínio novo =
+decisão do maestro + linha no PENDENCIAS, nunca uma edição silenciosa.
 
 Regras do ficheiro (validadas no E7, `python -m plan_runner.areas`):
 - `version` inteiro; `areas` é um mapa área → lista de domínios;
@@ -16,9 +17,8 @@ Uso no `fetch` (`resolve_allowlist`):
 - `--area X` sem `--allow`: busca só nos domínios da área;
 - `--area X` com `--allow d`: cada `d` tem de caber na área (o próprio ou um subdomínio);
   a chamada só pode estreitar a política, nunca alargá-la;
-- só `--allow` (sem área): como no F2a, mas o resultado leva o aviso `no_area_allowlist`.
-  Fica assim enquanto as listas estiverem vazias; tornar a área obrigatória é o passo
-  seguinte, quando o maestro der os domínios.
+- sem `--area`: recusado. A área é obrigatória desde a v1 dos domínios (o modo só com
+  `--allow`, com o aviso `no_area_allowlist`, era a transição do F2-ALLOW-1).
 
 Só depende do PyYAML: o `scripts/web_fetch.py` carrega este ficheiro pelo caminho.
 """
@@ -33,7 +33,6 @@ from typing import Any
 import yaml
 
 ALLOWLIST_FILE = Path("config") / "web-allowlist.yaml"
-NO_AREA_WARNING = "no_area_allowlist"
 # Nome DNS: rótulos de 1 a 63 [a-z0-9-] (sem hífen nas pontas), pelo menos 2 rótulos.
 _LABEL = r"(?!-)[a-z0-9-]{1,63}(?<!-)"
 _DOMAIN = re.compile(rf"^{_LABEL}(\.{_LABEL})+$")
@@ -129,12 +128,15 @@ def _covers(domain: str, host: str) -> bool:
 def resolve_allowlist(
     repo_root: Path, area: str | None, allow: list[str] | None
 ) -> tuple[list[str], list[str]]:
-    """(allowlist efectiva, avisos) para uma chamada do `fetch`. Lança AllowlistError."""
+    """(allowlist efectiva, avisos) para uma chamada do `fetch`. Lança AllowlistError.
+
+    Os avisos ficam vazios hoje; o tuplo mantém-se para a política poder avisar sem mudar
+    quem chama."""
     allow = [a.strip().lower() for a in (allow or []) if a and a.strip()]
-    if area is None:
-        if not allow:
-            raise AllowlistError("sem `--area` nem `--allow`: nada pode ser buscado")
-        return allow, [NO_AREA_WARNING]
+    if not area:
+        raise AllowlistError(
+            f"`--area` é obrigatória: a allowlist vem da área em {ALLOWLIST_FILE.as_posix()}"
+        )
     domains = area_domains(repo_root, area)
     if not domains:
         raise AllowlistError(

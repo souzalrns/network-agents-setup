@@ -1,0 +1,90 @@
+name: web-allowlist-probe
+
+# F2-ALLOW-1: sonda da allowlist do `fetch` (scripts/check_web_allowlist.py). Para cada
+# (área, domínio) do config/web-allowlist.yaml pede a raiz com as regras do `fetch`
+# (allowlist da área em cada redirect, SSRF, robots.txt) e escreve a tabela no resumo do job.
+#
+# INFORMATIVA: nunca bloqueia (o script sai com 0 e o job tem continue-on-error). Uma linha
+# que não dá `ok` é evidência para o maestro decidir (PENDENCIAS §10), não uma correcção
+# automática: domínio novo = decisão + linha no PENDENCIAS.
+#
+# Rede real: ~2-3 pedidos por domínio, só quando a lista ou o código do fetch mudam (ou à mão).
+# Repositório público: os minutos do Actions são grátis. Actions fixadas por SHA.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'config/web-allowlist.yaml'
+      - 'scripts/check_web_allowlist.py'
+      - 'scripts/web_fetch.py'
+      - 'runner/plan_runner/web_allowlist.py'
+      - '.github/workflows/web-allowlist-probe.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'config/web-allowlist.yaml'
+      - 'scripts/check_web_allowlist.py'
+      - 'scripts/web_fetch.py'
+      - 'runner/plan_runner/web_allowlist.py'
+      - '.github/workflows/web-allowlist-probe.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-allowlist-probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0 (H-003: Node 24; era v4.4.0)
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0 (H-003: Node 24; era v5.6.0)
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: runner/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r runner/requirements.txt
+
+      - name: Sondar os domínios de cada área (informativa)
+        run: python scripts/check_web_allowlist.py --json web-allowlist-probe.json
+
+      # Candidatos da P-46 (PENDENCIAS §10): domínios PROPOSTOS, ainda fora da lista. Dá a
+      # evidência antes da decisão do maestro; sai deste ficheiro quando a P-46 for decidida.
+      - name: Sondar os candidatos da P-46 (informativa)
+        run: >-
+          python scripts/check_web_allowlist.py --json web-allowlist-candidates.json
+          --candidate security=cve.org
+          --candidate security=sei.cmu.edu
+          --candidate ops=developer.hashicorp.com
+          --candidate docs=platform.claude.com
+          --candidate docs=docs.astral.sh
+          --candidate marketing=threads.com
+          --candidate horizontal=openapis.org
+          --candidate legal=justica.gov.pt
+          --candidate gamedev=partner.steamgames.com
+
+      - name: Guardar os resultados (JSON)
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0 (H-003: Node 24; era v4.6.2)
+        with:
+          name: web-allowlist-probe
+          path: |
+            web-allowlist-probe.json
+            web-allowlist-candidates.json
+          if-no-files-found: ignore
+          retention-days: 30

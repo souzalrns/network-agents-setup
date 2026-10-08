@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/p45-skill-descriptions` (a partir da `main` `085d9d5`, merge do #143 com todos os commits).
-- **`main` de referência:** NAS `a0a5efe` (merges até #142; o #142 levou os 4 commits do SKILL-SCAN-1); MCP `855057d`.
+- **Branch actual:** `docs/close-scout-and-allowlist-v1` (a partir da `main` `908491a`, merge do #144 com todos os commits).
+- **`main` de referência:** NAS `908491a` (merges até #144; #140, #142, #143 e #144 levaram todos os commits); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,41 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### Fechos com padrão ouro + allowlist v1 (F2-ALLOW-1) (2026-10-08)
+- **Fechados (§7), com a regra do §9 (só depois do merge):**
+  - **SKILL-SCOUT-1:** #143, `085d9d5`, 10 commits no `main`, CI 17/17;
+  - **SKILL-SCAN-1:** #142, `a0a5efe`, 4 commits, CI 12/12;
+  - **AU-20b:** #140, `e0424bf`, 1 commit. O CI do merge tem 3 checks cancelados pelo `cancel-in-progress` (o #141 entrou 39 s depois); o merge seguinte, `37eccca`, contém-no e tem 11/11 verdes.
+
+  Os testes de prova foram re-corridos no `main` `908491a`: tool_executor 48, skill_scan 33, skill-scout 168 + 1 skipped.
+- **Contagens:** 125 vivos (EM CURSO 10 → 7); §7 com 125 linhas (104 FECHADO). O SKILL-SCOUT-2 deixa de esperar pelo SKILL-SCOUT-1. O F2-ALLOW-1 passa a CLAUDE: a parte do maestro, os domínios, está dada.
+- **Allowlist v1 (maestro):**
+  - 122 domínios em 9 áreas, aplicados tal como dados; a `software` fica vazia (deny-by-default);
+  - um teste fixa a v1 e apanha uma edição silenciosa;
+  - `--area` passa a ser obrigatória no resolver e na CLI (saída 2, sem rede);
+  - o modo só com `--allow` e o aviso `no_area_allowlist` saem.
+- **Sonda:**
+  - `scripts/check_web_allowlist.py`: as regras do `fetch` em cada salto, mais o robots;
+  - o workflow `web-allowlist-probe.yml` usa rede real, é informativo e nunca bloqueia;
+  - aqui não dá para sondar, porque o proxy da sessão bloqueia os hosts.
+- **1.ª sonda com rede real** (run `37806411775`, commit `2309707`): 122 pares; 82 `ok`, 9 `fora`, 24 `http_error`, 7 `robots_disallowed`. Corrigiu as minhas hipóteses:
+  - `docs.anthropic.com` vai para `platform.claude.com`, e não para `docs.claude.com`;
+  - `ruff.rs` vai para `github.com`;
+  - `docs.unrealengine.com` dá 403, não um redirect;
+  - casos novos: `threads.net`, `ads.google.com` e `cert.org`, e 2 nomes que não resolvem (`justice.gov.pt`, `steamworks.steampowered.com`).
+- **A sonda ganhou** (2.º commit):
+  - `www.` quando a raiz não tem DNS (`bportugal.pt`, `cmvm.pt`);
+  - `--candidate área=domínio`, que sonda as propostas da P-46 sem mudar a lista.
+- **2.ª sonda** (run `37807283070`, commit `7a1be27`): 83 `ok` (o `cmvm.pt` passa pelo `www.`).
+- **Candidatos:**
+  - 7 de 11 dão `ok`;
+  - o `business.google.com` (vai para `support.google.com`) e o `dev.epicgames.com` (403) saem da proposta;
+  - o `openapis.org` (403 anti-bot) e o `threads.com` (robots) ficam, porque são o endereço certo.
+- **P-46 (pendente, recomendada A):**
+  - acrescentar 9 endereços actuais de fontes já aprovadas;
+  - tirar 3 nomes que não funcionam;
+  - os 403 (anti-bot no IP do runner), os TLS inválidos, os robots e a raiz `gov.br` não se resolvem na lista: ficam documentados.
 
 ### P-44 = A e P-45 = A (2026-10-08)
 - **P-45:**
