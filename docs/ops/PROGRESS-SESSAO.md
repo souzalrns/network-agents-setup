@@ -28,6 +28,28 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 
 ## Log (mais recente no topo)
 
+### SKILL-SCOUT-1: o que faltava para ser a escolha + renome para `skill-scout` (P-43 = A) (2026-10-08)
+- **Pergunta do maestro:** "qual escolherias, sem contar reputação nem estrelas?" A resposta honesta foi não o nosso como ferramenta única: faltava o dia-a-dia. Implementado:
+  - `list`, e `update` com diff e nova aprovação (`--check` para o CI, pin a commit nunca se move);
+  - `uninstall`;
+  - `--agent`, com a tabela do skills CLI (79 agentes; uma aprovação para várias pastas);
+  - lock com **chave pelo caminho de instalação**;
+  - `waive`: uma finding, um conteúdo exacto, motivo, prazo, humano e auditoria; nunca `critical`; só vale com registo numa cadeia íntegra;
+  - `find` (skills.sh, `--scan N`) e a validação da spec Agent Skills.
+- **Encontrado e corrigido por mim:**
+  - o `install` aplicava excepções escritas à mão no lock; agora só as que a auditoria confirma;
+  - a limpeza de ANSI deixava `[31m` no texto: corrigida em 4 sítios, 2 deles no `runner/plan_runner`;
+  - as regras da spec saíam no SARIF como segurança: passaram a qualidade;
+  - a linha comparativa do `skill-guard` (tem `suppress` com motivo).
+- **Testes:** 169 (3.10, 3.12 e 3.13; motor Cisco real), 45 mutantes apanhados e 1 equivalente. O runner continua verde.
+- **Renome (P-43 = A):**
+  - `oss/skill-notary` → `oss/skill-scout`, módulo `skill_scout`, CLI `skill-scout`;
+  - ficheiros `skill-scout.lock.json` e `.audit.jsonl`, workflow `skill-scout.yml`;
+  - itens SKILL-SCOUT-1..3 (alias no §11), `docs/ops/SKILL-SCOUT.md`.
+
+  Ficam com o nome antigo o branch do PR #143, o histórico do PROGRESS e o caminho da entrada do `.gitleaksignore`.
+- **Novas decisões:** P-45 (skills internas e a spec; recomendada A: acrescentar `description`).
+
 ### SKILL-NOTARY-1: projecto autónomo `skill-notary`, Fase 1 (2026-10-08)
 - **Pesquisa antes de construir:**
   - `skill-guard` está ocupado no PyPI (Apache-2.0, porta de PR para skills): nome de trabalho `skill-notary`, P-43;
