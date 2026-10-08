@@ -130,10 +130,10 @@ def repo(tmp_path, monkeypatch):
     monkeypatch.setattr(cw, "REPO_ROOT", tmp_path)
     seen: list = []
 
-    def fake_probe_all(areas, workers, timeout_s):
-        seen.append(areas)
+    def fake_probe_all(pairs, workers, timeout_s):
+        seen.append(pairs)
         return [{"area": a, "domain": d, "verdict": "fora", "status": 301, "hops": ["x", "y"], "detail": "",
-                 "final_host": "y"} for a, ds in areas.items() for d in ds]
+                 "final_host": "y"} for a, d, _ in pairs]
 
     monkeypatch.setattr(cw, "probe_all", fake_probe_all)
     return seen
@@ -144,7 +144,7 @@ def test_cli_informativa_resumo_e_json(repo, tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
     out_json = tmp_path / "out.json"
     assert cw.main(["--json", str(out_json)]) == 0  # informativa: 0 mesmo com `fora`
-    assert repo == [{"research": ["arxiv.org"]}]  # a área vazia não é sondada
+    assert repo == [[("research", "arxiv.org", ["arxiv.org"])]]  # a área vazia não é sondada
     assert "Áreas vazias (deny-by-default): software." in capsys.readouterr().out
     assert "| research | arxiv.org | fora |" in summary.read_text(encoding="utf-8")
     assert json.loads(out_json.read_text(encoding="utf-8"))[0]["final_host"] == "y"
@@ -154,4 +154,33 @@ def test_cli_strict_e_area_desconhecida(repo, monkeypatch):
     monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
     assert cw.main(["--strict"]) == 1
     assert cw.main(["--area", "inventada"]) == 2
-    assert cw.main(["--area", "software"]) == 0 and repo[-1] == {}
+    assert cw.main(["--area", "software"]) == 0 and repo[-1] == []
+
+
+def test_cli_candidato_corre_com_a_lista_que_teria(repo, monkeypatch, capsys):
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    assert cw.main(["--candidate", "research=export.arxiv.org", "--candidate", "software=x.org"]) == 0
+    assert repo[-1] == [("research", "export.arxiv.org", ["arxiv.org", "export.arxiv.org"]),
+                        ("software", "x.org", ["x.org"])]
+    assert "## Sonda dos candidatos (ainda fora da allowlist)" in capsys.readouterr().out
+    for bad in ("inventada=x.org", "research=https://x.org", "research"):
+        assert cw.main(["--candidate", bad]) == 2
+
+
+def test_raiz_sem_dns_tenta_o_www(monkeypatch):
+    calls = []
+
+    def fake_probe_url(url, allowlist, *, client, **kw):
+        calls.append(url)
+        if url == "https://www.bportugal.pt/":
+            return {"verdict": "ok", "status": 200, "hops": [url], "detail": "", "final_host": "www.bportugal.pt"}
+        return {"verdict": "http_error", "status": None, "hops": [url], "final_host": None,
+                "detail": "o nome não resolve: [Errno -5]"}
+
+    monkeypatch.setattr(cw, "probe_url", fake_probe_url)
+    row = cw.probe_domain("bportugal.pt", ["bportugal.pt"], client=None)
+    assert calls == ["https://bportugal.pt/", "https://www.bportugal.pt/"]
+    assert row["verdict"] == "ok" and row["detail"] == "via www (bportugal.pt não resolve)"
+    calls.clear()
+    assert cw.probe_domain("www.x.org", ["x.org"], client=None)["verdict"] == "http_error"
+    assert calls == ["https://www.x.org/"]  # já é www: não há 2.ª tentativa

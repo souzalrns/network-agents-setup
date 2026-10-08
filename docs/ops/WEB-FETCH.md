@@ -67,7 +67,18 @@ Código: `runner/plan_runner/web_allowlist.py`. Testes: `runner/tests/test_web_a
 ```bash
 python scripts/check_web_allowlist.py                  # todas as áreas; tabela Markdown no stdout
 python scripts/check_web_allowlist.py --area finance   # uma área
+python scripts/check_web_allowlist.py --candidate security=cve.org   # um domínio proposto, sem mudar a lista
 ```
+
+Se a raiz de um domínio não tiver DNS, a sonda tenta o `www.` (que o domínio cobre).
+
+**1.ª sonda (2026-10-08, run `37806411775`):** 122 pares, 82 `ok`, 9 `fora`, 24 `http_error`, 7 `robots_disallowed`. O que falha divide-se em dois grupos:
+- **corrigível na lista**, proposto na P-46 (PENDENCIAS §10): fontes que mudaram de endereço e nomes que não existem;
+- **não corrigível na lista:**
+  - 403 do IP do runner (anti-bot);
+  - TLS inválido (a verificação nunca se desliga);
+  - robots.txt que proíbe a raiz (as redes sociais);
+  - a raiz `gov.br`, de fora de propósito.
 
 ## 3. Evidência: corrida real (2026-10-06)
 

@@ -63,11 +63,30 @@ jobs:
       - name: Sondar os domínios de cada área (informativa)
         run: python scripts/check_web_allowlist.py --json web-allowlist-probe.json
 
+      # Candidatos da P-46 (PENDENCIAS §10): domínios PROPOSTOS, ainda fora da lista. Dá a
+      # evidência antes da decisão do maestro; sai deste ficheiro quando a P-46 for decidida.
+      - name: Sondar os candidatos da P-46 (informativa)
+        run: >-
+          python scripts/check_web_allowlist.py --json web-allowlist-candidates.json
+          --candidate security=cve.org
+          --candidate security=sei.cmu.edu
+          --candidate ops=developer.hashicorp.com
+          --candidate docs=platform.claude.com
+          --candidate docs=docs.astral.sh
+          --candidate marketing=threads.com
+          --candidate marketing=business.google.com
+          --candidate horizontal=openapis.org
+          --candidate legal=justica.gov.pt
+          --candidate gamedev=partner.steamgames.com
+          --candidate gamedev=dev.epicgames.com
+
       - name: Guardar os resultados (JSON)
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0 (H-003: Node 24; era v4.6.2)
         with:
           name: web-allowlist-probe
-          path: web-allowlist-probe.json
+          path: |
+            web-allowlist-probe.json
+            web-allowlist-candidates.json
           if-no-files-found: ignore
           retention-days: 30

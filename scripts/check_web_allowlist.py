@@ -8,6 +8,12 @@ na página final) e diz o que o `fetch --area <área>` encontraria:
 - `fora`: um redirect sai da lista da área (o `fetch` daria `blocked_by_allowlist`);
 - `robots_disallowed`, `http_error`, `timeout`, `blocked_private_address`: o código do `fetch`.
 
+Se a raiz do domínio não resolver no DNS (ex.: só `www.` tem registo), tenta `https://www.<domínio>/`,
+que o domínio também cobre, e o detalhe diz `via www`.
+
+`--candidate área=domínio` sonda um domínio que AINDA NÃO está na lista (uma proposta do §10),
+com a lista da área mais esse domínio: dá a evidência antes da decisão, sem mudar o ficheiro.
+
 É INFORMATIVA: serve de evidência para o maestro decidir correcções à lista (PENDENCIAS §10).
 Não muda o ficheiro e, sem `--strict`, sai sempre com 0. Só a raiz de cada domínio é pedida
 (um GET, sem ler o corpo), mais o robots.txt do host final: 2 a 3 pedidos por domínio.
@@ -16,6 +22,7 @@ Não muda o ficheiro e, sem `--strict`, sai sempre com 0. Só a raiz de cada dom
     python scripts/check_web_allowlist.py --area finance    # uma área
     python scripts/check_web_allowlist.py --json out.json   # também em JSON
     python scripts/check_web_allowlist.py --strict          # sai com 1 se algum não der `ok`
+    python scripts/check_web_allowlist.py --candidate security=cve.org   # só os candidatos
 
 No GitHub Actions, a tabela vai também para o `$GITHUB_STEP_SUMMARY`.
 """
@@ -106,33 +113,48 @@ def probe_url(
     return result("ok")
 
 
-def probe_all(areas: dict[str, list[str]], *, workers: int = 8, timeout_s: float = 15.0) -> list[dict]:
+def probe_domain(domain: str, allowlist: list[str], *, client, **kw) -> dict[str, Any]:
+    """A raiz do domínio; se o nome não resolver, a raiz do `www.` (que o domínio cobre)."""
+    row = probe_url(f"https://{domain}/", allowlist, client=client, **kw)
+    if row["verdict"] == "http_error" and "não resolve" in row["detail"] and not domain.startswith("www."):
+        www = probe_url(f"https://www.{domain}/", allowlist, client=client, **kw)
+        if not (www["verdict"] == "http_error" and "não resolve" in www["detail"]):
+            www["detail"] = f"via www ({domain} não resolve)" + (f"; {www['detail']}" if www["detail"] else "")
+            return www
+    return row
+
+
+def probe_all(
+    pairs: list[tuple[str, str, list[str]]], *, workers: int = 8, timeout_s: float = 15.0
+) -> list[dict]:
+    """Sonda cada (área, domínio, allowlist com que o `fetch` correria), em paralelo."""
     import httpx
 
     headers = {"User-Agent": wf.USER_AGENT, "Accept": "text/html,application/xhtml+xml"}
 
-    def one(item: tuple[str, str]) -> dict:
-        area, domain = item
+    def one(item: tuple[str, str, list[str]]) -> dict:
+        area, domain, allowlist = item
         with httpx.Client(follow_redirects=False, headers=headers) as client:
-            row = probe_url(f"https://{domain}/", areas[area], client=client, timeout_s=timeout_s)
+            row = probe_domain(domain, allowlist, client=client, timeout_s=timeout_s)
         return {"area": area, "domain": domain, **row}
 
-    items = [(a, d) for a, ds in areas.items() for d in ds]
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        return list(pool.map(one, items))
+        return list(pool.map(one, pairs))
 
 
 def _cell(text: Any) -> str:
     return str(text if text is not None else "—").replace("|", "/").replace("\n", " ")
 
 
-def to_markdown(rows: list[dict], empty_areas: list[str]) -> str:
+def to_markdown(
+    rows: list[dict], empty_areas: list[str], title: str = "Sonda da allowlist do fetch (F2-ALLOW-1)"
+) -> str:
     counts: dict[str, int] = {}
     for r in rows:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
     summary = ", ".join(f"{k} {v}" for k, v in sorted(counts.items(), key=lambda kv: (kv[0] != "ok", kv[0])))
     lines = [
-        "## Sonda da allowlist do fetch (F2-ALLOW-1)",
+        f"## {title}",
         "",
         f"{len(rows)} pares (área, domínio): {summary or 'nenhum'}."
         + (f" Áreas vazias (deny-by-default): {', '.join(empty_areas)}." if empty_areas else ""),
@@ -158,6 +180,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workers", type=int, default=8)
     parser.add_argument("--timeout-s", type=float, default=15.0)
     parser.add_argument("--strict", action="store_true", help="sai com 1 se algum par não der `ok`")
+    parser.add_argument(
+        "--candidate", action="append", metavar="ÁREA=DOMÍNIO",
+        help="sonda só estes domínios propostos (ainda fora da lista), com a lista da área + o candidato",
+    )
     try:
         opts = parser.parse_args(argv)
     except SystemExit:
@@ -173,9 +199,29 @@ def main(argv: list[str] | None = None) -> int:
     if unknown:
         print(f"error: área(s) fora de {wa.ALLOWLIST_FILE.as_posix()}: {', '.join(unknown)}", file=sys.stderr)
         return 2
+    if opts.candidate:
+        return _probe_candidates(opts, areas)
     chosen = {a: list(areas[a] or []) for a in wanted}
-    rows = probe_all({a: d for a, d in chosen.items() if d}, workers=opts.workers, timeout_s=opts.timeout_s)
-    report = to_markdown(rows, [a for a, d in chosen.items() if not d])
+    pairs = [(a, d, ds) for a, ds in chosen.items() for d in ds]
+    rows = probe_all(pairs, workers=opts.workers, timeout_s=opts.timeout_s)
+    return _emit(to_markdown(rows, [a for a, d in chosen.items() if not d]), rows, opts)
+
+
+def _probe_candidates(opts, areas: dict) -> int:
+    pairs: list[tuple[str, str, list[str]]] = []
+    for raw in opts.candidate:
+        area, _, domain = raw.partition("=")
+        why = wa.domain_error(domain) or (None if area in areas else "área desconhecida")
+        if why:
+            print(f"error: candidato inválido {raw!r} (área=domínio: {why})", file=sys.stderr)
+            return 2
+        pairs.append((area, domain, list(areas[area] or []) + [domain]))  # a lista que teria
+    rows = probe_all(pairs, workers=opts.workers, timeout_s=opts.timeout_s)
+    report = to_markdown(rows, [], title="Sonda dos candidatos (ainda fora da allowlist)")
+    return _emit(report, rows, opts)
+
+
+def _emit(report: str, rows: list[dict], opts) -> int:
     print(report)
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:

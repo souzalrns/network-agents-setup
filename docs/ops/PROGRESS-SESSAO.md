@@ -45,10 +45,18 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
   - `scripts/check_web_allowlist.py`: as regras do `fetch` em cada salto, mais o robots;
   - o workflow `web-allowlist-probe.yml` usa rede real, é informativo e nunca bloqueia;
   - aqui não dá para sondar, porque o proxy da sessão bloqueia os hosts.
+- **1.ª sonda com rede real** (run `37806411775`, commit `2309707`): 122 pares; 82 `ok`, 9 `fora`, 24 `http_error`, 7 `robots_disallowed`. Corrigiu as minhas hipóteses:
+  - `docs.anthropic.com` vai para `platform.claude.com`, e não para `docs.claude.com`;
+  - `ruff.rs` vai para `github.com`;
+  - `docs.unrealengine.com` dá 403, não um redirect;
+  - casos novos: `threads.net`, `ads.google.com` e `cert.org`, e 2 nomes que não resolvem (`justice.gov.pt`, `steamworks.steampowered.com`).
+- **A sonda ganhou** (2.º commit):
+  - `www.` quando a raiz não tem DNS (`bportugal.pt`, `cmvm.pt`);
+  - `--candidate área=domínio`, que sonda as propostas da P-46 sem mudar a lista.
 - **P-46 (pendente, recomendada A):**
-  - 5 domínios aprovados redireccionam para o endereço oficial actual, fora da área: cve.org, developer.hashicorp.com, dev.epicgames.com, docs.astral.sh, docs.claude.com;
-  - o `openapi.org` deve ser `openapis.org`;
-  - `fazenda.gov.br`, `cvm.gov.br` e `doi.org` ficam, e o porquê está documentado.
+  - acrescentar 10 endereços actuais de fontes já aprovadas;
+  - tirar 3 nomes que não funcionam;
+  - os 403 (anti-bot no IP do runner), os TLS inválidos, os robots e a raiz `gov.br` não se resolvem na lista: ficam documentados.
 
 ### P-44 = A e P-45 = A (2026-10-08)
 - **P-45:**
