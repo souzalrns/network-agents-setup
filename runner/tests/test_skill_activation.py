@@ -417,3 +417,10 @@ def test_pin_invalido_e_ignorado_com_aviso(tmp_path):
     _cfg(tmp_path, "pins:\n  skills/x/SKILL.md: abc\n")
     policy = sa.load_policy(tmp_path)
     assert policy.pins == {} and any("pin de skills/x/SKILL.md" in w for w in policy.warnings)
+
+
+@pytest.mark.parametrize("raw, clean", [("\x1b[31mred\x1b[0m", "red"), ("\x1b]0;title\x07ok", "ok")])
+def test_sanitize_removes_whole_escape_sequences(raw, clean):
+    """Regressão: com a classe de 1 carácter primeiro, só o ESC saía e ficava "[31m" no texto."""
+    assert sa._sanitize(raw) == clean
+    assert skill_scan._sanitize(raw) == clean

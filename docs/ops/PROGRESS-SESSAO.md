@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/skill-scan-1` (a partir da `main` `37eccca`).
-- **`main` de referência:** NAS `37eccca` (merges até #141; o #140 e o #141 levaram todos os commits, incluindo o `6fce7c9`); MCP `855057d`.
+- **Branch actual:** `feat/skill-notary-phase1` (a partir da `main` `a0a5efe`).
+- **`main` de referência:** NAS `a0a5efe` (merges até #142; o #142 levou os 4 commits do SKILL-SCAN-1); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,52 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### SKILL-SCOUT-1: o que faltava para ser a escolha + renome para `skill-scout` (P-43 = A) (2026-10-08)
+- **Pergunta do maestro:** "qual escolherias, sem contar reputação nem estrelas?" A resposta honesta foi não o nosso como ferramenta única: faltava o dia-a-dia. Implementado:
+  - `list`, e `update` com diff e nova aprovação (`--check` para o CI, pin a commit nunca se move);
+  - `uninstall`;
+  - `--agent`, com a tabela do skills CLI (79 agentes; uma aprovação para várias pastas);
+  - lock com **chave pelo caminho de instalação**;
+  - `waive`: uma finding, um conteúdo exacto, motivo, prazo, humano e auditoria; nunca `critical`; só vale com registo numa cadeia íntegra;
+  - `find` (skills.sh, `--scan N`) e a validação da spec Agent Skills.
+- **Encontrado e corrigido por mim:**
+  - o `install` aplicava excepções escritas à mão no lock; agora só as que a auditoria confirma;
+  - a limpeza de ANSI deixava `[31m` no texto: corrigida em 4 sítios, 2 deles no `runner/plan_runner`;
+  - as regras da spec saíam no SARIF como segurança: passaram a qualidade;
+  - a linha comparativa do `skill-guard` (tem `suppress` com motivo).
+- **Testes:** 169 (3.10, 3.12 e 3.13; motor Cisco real), 45 mutantes apanhados e 1 equivalente. O runner continua verde.
+- **Renome (P-43 = A):**
+  - `oss/skill-notary` → `oss/skill-scout`, módulo `skill_scout`, CLI `skill-scout`;
+  - ficheiros `skill-scout.lock.json` e `.audit.jsonl`, workflow `skill-scout.yml`;
+  - itens SKILL-SCOUT-1..3 (alias no §11), `docs/ops/SKILL-SCOUT.md`.
+
+  Ficam com o nome antigo o branch do PR #143, o histórico do PROGRESS e o caminho da entrada do `.gitleaksignore`.
+- **Novas decisões:** P-45 (skills internas e a spec; recomendada A: acrescentar `description`).
+
+### SKILL-NOTARY-1: projecto autónomo `skill-notary`, Fase 1 (2026-10-08)
+- **Pesquisa antes de construir:**
+  - `skill-guard` está ocupado no PyPI (Apache-2.0, porta de PR para skills): nome de trabalho `skill-notary`, P-43;
+  - importados: `agentic-skills-manager` (MIT) como motor por omissão, o scanner da Cisco (Apache-2.0) como 2.º motor opcional (medido: ~8 s, ~650 MB), a lista de detecção de agentes do `@vercel/detect-agent` (Apache-2.0) e a sintaxe `owner/repo@skill` do skills CLI;
+  - o hash do `skills-lock.json` do skills CLI depende do locale (`localeCompare`): o nosso é determinístico;
+  - o esquema SARIF da OASIS não é MIT/Apache: não é distribuído, os testes descarregam-no num commit fixo com sha256.
+- **Código (`oss/skill-notary/`):** `scan`, `install` e `verify`. Pontos-chave:
+  - aprovação humana presa ao hash e recusada a agentes de IA;
+  - cópia só dos ficheiros aprovados, re-verificados;
+  - lockfile e auditoria encadeada;
+  - SARIF validado e sem segredos.
+- **Pacote:** `pyproject.toml`, wheel e sdist com `twine check --strict`, wheel testada numa venv limpa (Python 3.11).
+- **CI:** `.github/workflows/skill-notary.yml` com 4 jobs: testes em 3.10 e 3.13; motor Cisco real; build e smoke da wheel; upload para o code scanning. Validado com actionlint e semgrep.
+- **Testes:** 132 testes, 22 mutantes apanhados (os 2 que sobreviveram na 1.ª ronda geraram 2 testes novos). Corrigidos por mim antes do commit:
+  - 2 fugas de caminhos absolutos no SARIF;
+  - um teste de setuid que não provava nada;
+  - o `pipefail` em falta no workflow;
+  - a tabela comparativa (o skills CLI mostra classificações remotas; o skill-guard não tem SARIF).
+- **Prova real:** `scan anthropics/skills@pdf` (2 motores, RISKY, commit `683bc88`); `install` recusado neste ambiente de agente (exit 4). Doc: `docs/ops/SKILL-NOTARY.md`.
+- **CI do PR #143:**
+  - 1.º push (`80a9b6d`): 12 de 13 verdes; o gitleaks (histórico completo) apanhou a chave FICTÍCIA de teste, porque o comentário acima dela citava a armadura PEM por extenso e o gitleaks juntou-o ao corpo. Corrigido o comentário; o commit `86d1802` foi para o `.gitleaksignore` com o motivo (sem force-push);
+  - 2.º push (`f7e9007`): 13 de 13 verdes;
+  - o check `skill-notary` da app `github-advanced-security` confirma que o GitHub code scanning processou o SARIF: "No new alerts in code changed by this pull request"; os 2 medium das skills do repo ficam como alertas do branch.
 
 ### SKILL-SCAN-1: scan das skills externas candidatas (2026-10-07)
 - **Decisão do maestro:** opção A, `agentic-skills-manager` (scan estático, bloqueia high/critical, modo CI, não executa código).

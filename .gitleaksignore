@@ -16,3 +16,11 @@ b9ec8489bf573f9975e83d5b292f77282efc5d65:docs/initiatives/STATUS.md:generic-api-
 # usa outro nome e outro valor (VALOR_BYPASS_FICTICIO); só o commit ee95678 o tem, e
 # reescrever o histórico exigiria force-push (proibido).
 ee956781d67c0c9d30f9803bab1455ccabed5cb8:runner/tests/test_mcp_knowledge.py:generic-api-key:321
+#
+# SKILL-SCOUT-1 (era SKILL-NOTARY-1; 2026-10-08, PR #143): falso positivo. Chave privada FICTÍCIA de
+# teste em oss/skill-notary/tests/helpers.py (caminho no commit 86d1802; hoje oss/skill-scout/): o corpo é "QUFB" * 16 (base64 de "AAA..."), montado por
+# partes para os detectores não o verem; mas o comentário acima dela citava as linhas de
+# armadura PEM por extenso, e o gitleaks juntou o comentário ao resto. Nunca foi um segredo.
+# O ficheiro actual já não tem a armadura no comentário; só o commit 86d1802 o tem, e
+# reescrever o histórico exigiria force-push (proibido).
+86d1802069c4c95237f997c98088686cdd9c0f40:oss/skill-notary/tests/helpers.py:private-key:13

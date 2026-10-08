@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skill-scout"
+version = "0.1.0"
+description = "Find, scan, approve, pin and audit third-party Agent Skills before your agent trusts them."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{ name = "LRNSdigital" }]
+keywords = ["agent-skills", "skills", "security", "supply-chain", "sarif", "claude", "codex", "cursor"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# The default engine. MIT, standard library only. Patch updates allowed; the version used is
+# recorded in every report, lock entry and SARIF run.
+dependencies = ["agentic-skills-manager>=1.0.4,<1.1"]
+
+[project.optional-dependencies]
+# Second engine (Apache-2.0): YARA + AST dataflow, offline. Heavy (~650 MB with its deps).
+cisco = ["cisco-ai-skill-scanner>=2.2.1,<3"]
+test = ["pytest>=8", "jsonschema>=4.20"]
+
+[project.scripts]
+skill-scout = "skill_scout.cli:main"
+
+[project.urls]
+Repository = "https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-scout"
+Issues = "https://github.com/souzalrns/network-agents-setup/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # unicode arrows/dashes in messages are intended
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S108", "S603", "S607", "S310"]

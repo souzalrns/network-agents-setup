@@ -1,0 +1,17 @@
+# pre-commit hooks (https://pre-commit.com). Active once skill-scout has its own repository
+# (phase 3): pre-commit reads this file from the root of the hook repository.
+- id: skill-scout-scan
+  name: skill-scout scan (Agent Skills)
+  description: Scan the skills folder; fails on high or critical findings.
+  entry: skill-scout scan
+  args: [./skills]
+  language: python
+  pass_filenames: false
+  files: ^(skills|\.claude/skills|\.agents/skills)/
+- id: skill-scout-verify
+  name: skill-scout verify (lock file and audit chain)
+  description: Installed skills still match what was approved; the audit chain is intact.
+  entry: skill-scout verify
+  language: python
+  pass_filenames: false
+  files: ^(skill-scout\.lock\.json|skill-scout\.audit\.jsonl|\.claude/skills/|\.agents/skills/)
