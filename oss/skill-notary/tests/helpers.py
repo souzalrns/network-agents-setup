@@ -10,7 +10,8 @@ import os
 import subprocess
 from pathlib import Path
 
-# A fake key, built from parts: "-----BEGIN OPENSSH PRIVATE KEY-----" … never appears literally.
+# A fake key, built from parts so the PEM armour lines never appear literally in the source
+# (and never write them in a comment either: a secret scanner joins the comment to the body).
 FAKE_KEY = (
     "-----" + "BEGIN OPENSSH PRIVATE" + " KEY-----\n" + "QUFB" * 16 + "\n-----" + "END OPENSSH PRIVATE" + " KEY-----\n"
 )
