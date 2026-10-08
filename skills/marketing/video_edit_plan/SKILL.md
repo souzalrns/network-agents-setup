@@ -1,5 +1,6 @@
 ---
 name: video_edit_plan
+description: "Planeia a edição de um vídeo a partir do script ou do UGC brief: cortes com timestamps, legendas, orientação de música, specs de export e checklist de QA, marcando o que precisa de ferramenta ou humano. Usar depois de ugc_brief ou de um script."
 action: video_edit_plan
 version: 1
 vertical: marketing

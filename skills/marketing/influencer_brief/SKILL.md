@@ -1,5 +1,6 @@
 ---
 name: influencer_brief
+description: "Prepara o brief de uma parceria com creators: objectivo e KPI, critérios de fit, deliverables, mensagens-chave, disclosure legal, compensação como intervalo e timeline com aprovação humana. Usar quando o plano inclui marketing de influência; nunca inventa acordos."
 action: influencer_brief
 version: 1
 vertical: marketing

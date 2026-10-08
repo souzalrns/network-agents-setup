@@ -1,5 +1,6 @@
 ---
 name: trend_hunter
+description: "Procura tendências em várias superfícies (assistentes de IA, AI search, social e depois SEO clássico), separa tendência de ruído e propõe hooks com riscos de ToS e de claims. Usar antes de criar conteúdo social ou de campanha."
 action: trend_hunter
 version: 2
 vertical: marketing

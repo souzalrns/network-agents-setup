@@ -1,5 +1,6 @@
 ---
 name: seo_brief
+description: "Prepara o brief de SEO e de Findability multi-IA (intent, queries, outline e o bloco item_13 para citabilidade em ChatGPT, Claude, Gemini, Perplexity e AI overviews). Usar antes de copy_answer_first em artigos e landing pages; não escreve o artigo."
 action: seo_brief
 version: 2
 vertical: marketing

@@ -1,5 +1,6 @@
 ---
 name: creative_review
+description: "Avalia uma peça criativa com a rubrica de creative review (on-brief, clareza, canal-fit, …) com notas de 1 a 5, blockers e sugestões. Usar no step creative_review, antes ou entre rondas de HITL; não substitui critic_item13 em artigos SEO."
 action: creative_review
 version: 1
 vertical: marketing

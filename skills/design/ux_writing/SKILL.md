@@ -1,5 +1,6 @@
 ---
 name: ux_writing
+description: "Escreve a microcopy do produto: labels, CTAs, erros sem culpa, empty e loading states, tooltips e onboarding, com voz clara e honesta. Usar depois de ux_flow (idealmente com ui_spec); artigos, ads e posts são do vertical marketing."
 action: ux_writing
 version: 1
 vertical: design

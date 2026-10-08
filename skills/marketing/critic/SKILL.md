@@ -1,5 +1,6 @@
 ---
 name: critic
+description: "Crítica genérica de packs sociais e peças sem foco SEO completo: scores, blockers, sugestões e publish_ready em JSON, segundo a rubrica de creative review. Usar quando o plano não pede critic_item13."
 action: critic
 version: 1
 vertical: marketing

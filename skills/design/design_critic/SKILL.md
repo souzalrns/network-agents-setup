@@ -1,5 +1,6 @@
 ---
 name: design_critic
+description: "Revê a coerência entre UX flow, UI spec e microcopy (tokens, estados, acessibilidade, UX writing) com scores de 1 a 5 e blockers em JSON. Usar depois de ui_spec (e de ux_writing, se existir) e antes do HITL."
 action: design_critic
 version: 2
 vertical: design

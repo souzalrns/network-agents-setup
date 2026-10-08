@@ -1,5 +1,6 @@
 ---
 name: ux_flow
+description: "Desenha a jornada antes da UI: problema, utilizador, jobs-to-be-done, fluxo principal com decisões, estados (empty, loading, error, success) e tabela de ecrãs sem visual. Usar após o brief ou research de produto; cores, tipografia e copy de marketing ficam fora."
 action: ux_flow
 version: 1
 vertical: design

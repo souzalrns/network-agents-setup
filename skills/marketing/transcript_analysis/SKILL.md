@@ -1,5 +1,6 @@
 ---
 name: transcript_analysis
+description: "Analisa um vídeo, reel ou post: dispara o pipeline de transcrição do projecto, lê o resultado e devolve um resumo com uma recomendação objectiva (implementar ou não), confirmando nomes de ferramentas antes de os citar. Usar quando o utilizador envia um link de vídeo."
 action: transcript_analysis
 version: 1
 vertical: marketing

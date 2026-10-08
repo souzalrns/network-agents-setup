@@ -1,5 +1,6 @@
 ---
 name: research
+description: "Faz a pesquisa de partida de um pipeline de conteúdo ou marketing, separando factos com fonte de assumptions e marcando lacunas em vez de inventar. Usar no início do pipeline; a peça final e o seo_brief ficam para os steps seguintes."
 action: research
 version: 2
 vertical: marketing
