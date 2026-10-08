@@ -100,7 +100,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.9.3 | Objectivos de uso responsável | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 2. Política de IA` (sem objectivos mensuráveis) | GOV-42001-1 |
 | A.9.4 | Uso previsto | Sim | Cumpre | `config/areas.yaml`; `agents/meta/security_auditor.agent.md::description` | — |
 | A.10.2 | Atribuição de responsabilidades | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` | — |
-| A.10.3 | Fornecedores | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` (lista sem avaliação formal); skills de terceiros: scan estático antes da revisão humana, nunca instaladas (`runner/plan_runner/skill_scan.py::def scan_candidates`; `runner/tests/test_skill_scan.py`) | GOV-42001-1 |
+| A.10.3 | Fornecedores | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 7. Fornecedores` (lista sem avaliação formal); skills de terceiros: scan estático antes da revisão humana, nunca instaladas (`runner/plan_runner/skill_scan.py::def scan_candidates`; `runner/tests/test_skill_scan.py`); instalação só com aprovação humana presa ao hash, pin e auditoria encadeada (`oss/skill-notary/src/skill_notary/install.py::def install`) | GOV-42001-1 |
 | A.10.4 | Clientes | Sim | Parcial | `docs/governance/PRIVACY-POLICY.md::## 5. Finalidades e bases legais` (obrigações perante clientes definidas; hoje não há clientes reais nem um acordo-modelo de tratamento de dados) | GOV-42001-1 |
 
 ## Ligação ao P-37 (executor de tools, implementado)

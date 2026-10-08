@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/skill-scan-1` (a partir da `main` `37eccca`).
-- **`main` de referência:** NAS `37eccca` (merges até #141; o #140 e o #141 levaram todos os commits, incluindo o `6fce7c9`); MCP `855057d`.
+- **Branch actual:** `feat/skill-notary-phase1` (a partir da `main` `a0a5efe`).
+- **`main` de referência:** NAS `a0a5efe` (merges até #142; o #142 levou os 4 commits do SKILL-SCAN-1); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;
@@ -27,6 +27,26 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### SKILL-NOTARY-1: projecto autónomo `skill-notary`, Fase 1 (2026-10-08)
+- **Pesquisa antes de construir:**
+  - `skill-guard` está ocupado no PyPI (Apache-2.0, porta de PR para skills): nome de trabalho `skill-notary`, P-43;
+  - importados: `agentic-skills-manager` (MIT) como motor por omissão, o scanner da Cisco (Apache-2.0) como 2.º motor opcional (medido: ~8 s, ~650 MB), a lista de detecção de agentes do `@vercel/detect-agent` (Apache-2.0) e a sintaxe `owner/repo@skill` do skills CLI;
+  - o hash do `skills-lock.json` do skills CLI depende do locale (`localeCompare`): o nosso é determinístico;
+  - o esquema SARIF da OASIS não é MIT/Apache: não é distribuído, os testes descarregam-no num commit fixo com sha256.
+- **Código (`oss/skill-notary/`):** `scan`, `install` e `verify`. Pontos-chave:
+  - aprovação humana presa ao hash e recusada a agentes de IA;
+  - cópia só dos ficheiros aprovados, re-verificados;
+  - lockfile e auditoria encadeada;
+  - SARIF validado e sem segredos.
+- **Pacote:** `pyproject.toml`, wheel e sdist com `twine check --strict`, wheel testada numa venv limpa (Python 3.11).
+- **CI:** `.github/workflows/skill-notary.yml` com 4 jobs: testes em 3.10 e 3.13; motor Cisco real; build e smoke da wheel; upload para o code scanning. Validado com actionlint e semgrep.
+- **Testes:** 132 testes, 22 mutantes apanhados (os 2 que sobreviveram na 1.ª ronda geraram 2 testes novos). Corrigidos por mim antes do commit:
+  - 2 fugas de caminhos absolutos no SARIF;
+  - um teste de setuid que não provava nada;
+  - o `pipefail` em falta no workflow;
+  - a tabela comparativa (o skills CLI mostra classificações remotas; o skill-guard não tem SARIF).
+- **Prova real:** `scan anthropics/skills@pdf` (2 motores, RISKY, commit `683bc88`); `install` recusado neste ambiente de agente (exit 4). Doc: `docs/ops/SKILL-NOTARY.md`.
 
 ### SKILL-SCAN-1: scan das skills externas candidatas (2026-10-07)
 - **Decisão do maestro:** opção A, `agentic-skills-manager` (scan estático, bloqueia high/critical, modo CI, não executa código).
