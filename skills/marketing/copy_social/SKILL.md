@@ -1,5 +1,6 @@
 ---
 name: copy_social
+description: "Escreve variantes de copy por canal (Instagram, TikTok, LinkedIn, …) a partir de uma mensagem core, com notas de formato e CTA só se pedido. Usar depois de research ou trend_hunter; nunca publica automaticamente."
 action: copy_social
 version: 1
 vertical: marketing

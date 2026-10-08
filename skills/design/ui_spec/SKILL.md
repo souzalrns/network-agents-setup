@@ -1,5 +1,6 @@
 ---
 name: ui_spec
+description: "Especifica a UI a partir do UX flow: hierarquia visual por ecrã, tokens em 3 camadas, componentes com matriz de estados, baseline de acessibilidade e handoff para dev. Usar depois de ux_flow; não redefine a jornada nem gera código de produção."
 action: ui_spec
 version: 1
 vertical: design

@@ -24,6 +24,10 @@ tokens_in de cada passo e estimado assim:
 E uma PROJECCAO. A medicao que conta e um run real (o B1-bis do maestro):
     PLAN_RUNNER_CONTEXT=legacy|opt python -m plan_runner run ... --worker gemini
 
+`drop_skill_keys` reproduz as entradas da epoca do B1: tira essas chaves do frontmatter da
+copia da SKILL.md no passo (nunca do ficheiro do repo). O B1 correu antes do P-45, quando as
+skills de marketing nao tinham `description`; so o modo legacy as envia (o opt tira o frontmatter).
+
 CLI: python -m plan_runner.token_projection [plano.yaml]
 """
 from __future__ import annotations
@@ -112,8 +116,10 @@ def project(
     out_tokens: dict[str, int] | None = None,
     chars_per_token: dict[str, float] | None = None,
     summary_tokens: int = 300,
+    drop_skill_keys: tuple[str, ...] = (),
 ) -> list[dict[str, Any]]:
     """Linhas {step, tokens_in, tokens_out, total, injected} estimadas para o modo `context`."""
+    from . import executor
     from .engine import resume_run, run_plan
 
     out_tokens = out_tokens or {k: v[1] for k, v in B1_REAL.items()}
@@ -122,6 +128,15 @@ def project(
     out = REPO_ROOT / "pilots" / f"_projection_{uuid.uuid4().hex[:8]}"
     saved = (ew.httpx_transport, os.environ.get(cp.CONTEXT_ENV), os.environ.get("GEMINI_API_KEY"))
     ew.httpx_transport = fake
+    real_materialize = executor.materialize_activation
+    if drop_skill_keys:
+        def materialize(pending, activation):
+            real_materialize(pending, activation)
+            skill = Path(pending) / "SKILL.md"
+            if skill.is_file():
+                skill.write_text(_drop_frontmatter_keys(skill.read_text(encoding="utf-8"), drop_skill_keys),
+                                 encoding="utf-8")
+        executor.materialize_activation = materialize
     os.environ[cp.CONTEXT_ENV] = context
     os.environ.setdefault("GEMINI_API_KEY", "projeccao-sem-rede")
     try:
@@ -159,12 +174,22 @@ def project(
         return rows
     finally:
         ew.httpx_transport = saved[0]
+        executor.materialize_activation = real_materialize
         for key, val in ((cp.CONTEXT_ENV, saved[1]), ("GEMINI_API_KEY", saved[2])):
             if val is None:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = val
         shutil.rmtree(out, ignore_errors=True)
+
+
+def _drop_frontmatter_keys(text: str, keys: tuple[str, ...]) -> str:
+    """Remove as linhas `chave: valor` (de uma linha) destas chaves do frontmatter YAML."""
+    if not text.startswith("---\n"):
+        return text
+    head, sep, body = text[4:].partition("\n---")
+    kept = [ln for ln in head.split("\n") if not any(ln.startswith(f"{k}:") for k in keys)]
+    return "---\n" + "\n".join(kept) + sep + body
 
 
 def table(before: list[dict], after: list[dict]) -> str:

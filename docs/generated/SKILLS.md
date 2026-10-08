@@ -3,7 +3,7 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:skills`
 >
-> Gerado em: 2026-10-05
+> Gerado em: 2026-10-08
 > Fonte: `skills/**/SKILL.md`
 > Total: **72** skills
 >
@@ -56,31 +56,31 @@
 
 | Nome | Vertical/Role | Prioridade | Descrição | Ficheiro |
 |------|---------------|:----------:|-----------|----------|
-| `design_critic` | design | P0 | Após `ui_spec` e, se existir no plan, após `ux_writing`, antes de HITL. | `skills/design/design_critic/SKILL.md` |
-| `ui_spec` | design | P0 | Step `action: ui_spec` **depois** de `ux_flow` (ou equivalente). | `skills/design/ui_spec/SKILL.md` |
-| `ux_flow` | design | P0 | Step `action: ux_flow` após brief/research de produto (se existir). | `skills/design/ux_flow/SKILL.md` |
-| `ux_writing` | design | P0 | Step `action: ux_writing` após `ux_flow` e idealmente após ou em paralelo conceptual com `ui_spec`. | `skills/design/ux_writing/SKILL.md` |
+| `design_critic` | design | P0 | Revê a coerência entre UX flow, UI spec e microcopy (tokens, estados, acessibilidade, UX writing) com scores de 1 a 5 e blockers em JSON. Usar depois de ui_spec (e de ux_writing, se existir) e antes do HITL. | `skills/design/design_critic/SKILL.md` |
+| `ui_spec` | design | P0 | Especifica a UI a partir do UX flow: hierarquia visual por ecrã, tokens em 3 camadas, componentes com matriz de estados, baseline de acessibilidade e handoff para dev. Usar depois de ux_flow; não redefine a jornada nem gera código de produção. | `skills/design/ui_spec/SKILL.md` |
+| `ux_flow` | design | P0 | Desenha a jornada antes da UI: problema, utilizador, jobs-to-be-done, fluxo principal com decisões, estados (empty, loading, error, success) e tabela de ecrãs sem visual. Usar após o brief ou research de produto; cores, tipografia e copy de marketing ficam fora. | `skills/design/ux_flow/SKILL.md` |
+| `ux_writing` | design | P0 | Escreve a microcopy do produto: labels, CTAs, erros sem culpa, empty e loading states, tooltips e onboarding, com voz clara e honesta. Usar depois de ux_flow (idealmente com ui_spec); artigos, ads e posts são do vertical marketing. | `skills/design/ux_writing/SKILL.md` |
 
 ## Domínio `marketing`
 
 | Nome | Vertical/Role | Prioridade | Descrição | Ficheiro |
 |------|---------------|:----------:|-----------|----------|
-| `ad_creative` | marketing | P1 | 1. Ler media_plan / research se em inputs. | `skills/marketing/ad_creative/SKILL.md` |
-| `copy_answer_first` | marketing | P0 | Apos `seo_brief`. | `skills/marketing/copy_answer_first/SKILL.md` |
-| `copy_social` | marketing | P1 | Variantes por canal (Instagram, TikTok, LinkedIn, …) apos research/trends. | `skills/marketing/copy_social/SKILL.md` |
-| `creative_review` | marketing | P0 | Step `action: creative_review` (ex. template `approval_rounds`). | `skills/marketing/creative_review/SKILL.md` |
-| `critic` | marketing | P1 | Para packs sociais / pecas sem foco SEO full Item 13. | `skills/marketing/critic/SKILL.md` |
-| `critic_item13` | marketing | P0 | Apos copy/brief em pecas discoverable. | `skills/marketing/critic_item13/SKILL.md` |
-| `influencer_brief` | marketing | P1 | 1. Objectivo da parceria e KPI. | `skills/marketing/influencer_brief/SKILL.md` |
-| `internal_brief` | marketing | P0 | Step `action: internal_brief` (template `internal_brief`). | `skills/marketing/internal_brief/SKILL.md` |
-| `media_plan` | marketing | P1 | Step `action: media_plan` — estrutura paid, budget, audiência, tracking checklist. | `skills/marketing/media_plan/SKILL.md` |
-| `research` | marketing | P0 | Step `action: research` no início de pipelines de conteúdo/marketing. | `skills/marketing/research/SKILL.md` |
-| `seo_brief` | marketing | P0 | Step `action: seo_brief` (templates `seo_article`, `landing_copy`, `full_content_piece`). | `skills/marketing/seo_brief/SKILL.md` |
-| `storytelling` | marketing | P1 | Reforcar arco narrativo sobre copy social ou peca existente. | `skills/marketing/storytelling/SKILL.md` |
-| `transcript_analysis` | marketing | P1 | 1. Recebe um link de vídeo/reel/post (qualquer plataforma suportada pelo pipeline de transcrição configurado no projeto). | `skills/marketing/transcript_analysis/SKILL.md` |
-| `trend_hunter` | marketing | P1 | 1. Sinais em **varias superficies**: assistentes (ChatGPT, Claude, Gemini, …), AI search (Perplexity, overviews), social, e so depois SEO classico se relevante. | `skills/marketing/trend_hunter/SKILL.md` |
-| `ugc_brief` | marketing | P1 | 1. Product / offer / audience. | `skills/marketing/ugc_brief/SKILL.md` |
-| `video_edit_plan` | marketing | P1 | 1. Inputs: script/UGC brief/raw notes. | `skills/marketing/video_edit_plan/SKILL.md` |
+| `ad_creative` | marketing | P1 | Cria criativos de anúncio pagos: 2 a 4 ângulos com um recomendado, primary text, headlines e CTA por plataforma e specs de formato, com claims com fonte ou marcados como assumption. Usar depois de media_plan ou research. | `skills/marketing/ad_creative/SKILL.md` |
+| `copy_answer_first` | marketing | P0 | Escreve a peça a partir do seo_brief com a resposta directa nas primeiras linhas, H2 com valor e FAQ citável, para humanos e para assistentes de IA (ChatGPT, Claude, Gemini, Perplexity). Usar depois de seo_brief; não inventa dados. | `skills/marketing/copy_answer_first/SKILL.md` |
+| `copy_social` | marketing | P1 | Escreve variantes de copy por canal (Instagram, TikTok, LinkedIn, …) a partir de uma mensagem core, com notas de formato e CTA só se pedido. Usar depois de research ou trend_hunter; nunca publica automaticamente. | `skills/marketing/copy_social/SKILL.md` |
+| `creative_review` | marketing | P0 | Avalia uma peça criativa com a rubrica de creative review (on-brief, clareza, canal-fit, …) com notas de 1 a 5, blockers e sugestões. Usar no step creative_review, antes ou entre rondas de HITL; não substitui critic_item13 em artigos SEO. | `skills/marketing/creative_review/SKILL.md` |
+| `critic` | marketing | P1 | Crítica genérica de packs sociais e peças sem foco SEO completo: scores, blockers, sugestões e publish_ready em JSON, segundo a rubrica de creative review. Usar quando o plano não pede critic_item13. | `skills/marketing/critic/SKILL.md` |
+| `critic_item13` | marketing | P0 | Avalia a citabilidade de uma peça por sistemas de IA (ChatGPT, Claude, Gemini, Perplexity, Copilot, AI overviews, RAG) com a checklist do Item 13, para além do SEO de SERP. Usar depois de copy ou brief em peças que devem ser encontradas. | `skills/marketing/critic_item13/SKILL.md` |
+| `influencer_brief` | marketing | P1 | Prepara o brief de uma parceria com creators: objectivo e KPI, critérios de fit, deliverables, mensagens-chave, disclosure legal, compensação como intervalo e timeline com aprovação humana. Usar quando o plano inclui marketing de influência; nunca inventa acordos. | `skills/marketing/influencer_brief/SKILL.md` |
+| `internal_brief` | marketing | P0 | Escreve o brief interno de handoff para criação (copy, design, social): objectivo numa frase, audiência, mensagem e provas, deliverables e restrições. Usar no step internal_brief; não serve para propostas comerciais nem pede credenciais. | `skills/marketing/internal_brief/SKILL.md` |
+| `media_plan` | marketing | P1 | Estrutura um plano de media paga: objectivo e KPI, plataforma, campanhas, ad sets e ads, bandas de budget com stop-loss, audiências, compliance e checklist de tracking. Usar no step media_plan; não executa spend nem altera contas. | `skills/marketing/media_plan/SKILL.md` |
+| `research` | marketing | P0 | Faz a pesquisa de partida de um pipeline de conteúdo ou marketing, separando factos com fonte de assumptions e marcando lacunas em vez de inventar. Usar no início do pipeline; a peça final e o seo_brief ficam para os steps seguintes. | `skills/marketing/research/SKILL.md` |
+| `seo_brief` | marketing | P0 | Prepara o brief de SEO e de Findability multi-IA (intent, queries, outline e o bloco item_13 para citabilidade em ChatGPT, Claude, Gemini, Perplexity e AI overviews). Usar antes de copy_answer_first em artigos e landing pages; não escreve o artigo. | `skills/marketing/seo_brief/SKILL.md` |
+| `storytelling` | marketing | P1 | Reforça o arco narrativo de um copy social ou de uma peça existente (personagem, situação, tensão, resolução) sem contradizer o research nem o brief. Usar depois do copy; nunca fabrica cases de clientes. | `skills/marketing/storytelling/SKILL.md` |
+| `transcript_analysis` | marketing | P1 | Analisa um vídeo, reel ou post: dispara o pipeline de transcrição do projecto, lê o resultado e devolve um resumo com uma recomendação objectiva (implementar ou não), confirmando nomes de ferramentas antes de os citar. Usar quando o utilizador envia um link de vídeo. | `skills/marketing/transcript_analysis/SKILL.md` |
+| `trend_hunter` | marketing | P1 | Procura tendências em várias superfícies (assistentes de IA, AI search, social e depois SEO clássico), separa tendência de ruído e propõe hooks com riscos de ToS e de claims. Usar antes de criar conteúdo social ou de campanha. | `skills/marketing/trend_hunter/SKILL.md` |
+| `ugc_brief` | marketing | P1 | Escreve o brief de um vídeo UGC: hook de 3 segundos, problema, demo ou prova, CTA, script falado de 15 a 60 segundos, b-roll e disclosure. Usar quando o plano pede conteúdo de creators ou anúncios em formato UGC. | `skills/marketing/ugc_brief/SKILL.md` |
+| `video_edit_plan` | marketing | P1 | Planeia a edição de um vídeo a partir do script ou do UGC brief: cortes com timestamps, legendas, orientação de música, specs de export e checklist de QA, marcando o que precisa de ferramenta ou humano. Usar depois de ugc_brief ou de um script. | `skills/marketing/video_edit_plan/SKILL.md` |
 
 ## Domínio `meta`
 

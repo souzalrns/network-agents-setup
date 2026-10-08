@@ -1,5 +1,6 @@
 ---
 name: ad_creative
+description: "Cria criativos de anúncio pagos: 2 a 4 ângulos com um recomendado, primary text, headlines e CTA por plataforma e specs de formato, com claims com fonte ou marcados como assumption. Usar depois de media_plan ou research."
 action: ad_creative
 version: 1
 vertical: marketing

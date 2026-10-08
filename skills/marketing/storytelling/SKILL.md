@@ -1,5 +1,6 @@
 ---
 name: storytelling
+description: "Reforça o arco narrativo de um copy social ou de uma peça existente (personagem, situação, tensão, resolução) sem contradizer o research nem o brief. Usar depois do copy; nunca fabrica cases de clientes."
 action: storytelling
 version: 1
 vertical: marketing

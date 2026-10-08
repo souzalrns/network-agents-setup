@@ -1,5 +1,6 @@
 ---
 name: critic_item13
+description: "Avalia a citabilidade de uma peça por sistemas de IA (ChatGPT, Claude, Gemini, Perplexity, Copilot, AI overviews, RAG) com a checklist do Item 13, para além do SEO de SERP. Usar depois de copy ou brief em peças que devem ser encontradas."
 action: critic_item13
 version: 2
 vertical: marketing

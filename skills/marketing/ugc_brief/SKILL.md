@@ -1,5 +1,6 @@
 ---
 name: ugc_brief
+description: "Escreve o brief de um vídeo UGC: hook de 3 segundos, problema, demo ou prova, CTA, script falado de 15 a 60 segundos, b-roll e disclosure. Usar quando o plano pede conteúdo de creators ou anúncios em formato UGC."
 action: ugc_brief
 version: 1
 vertical: marketing

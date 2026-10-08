@@ -5,7 +5,7 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/skill-notary-phase1` (a partir da `main` `a0a5efe`).
+- **Branch actual:** `feat/p45-skill-descriptions` (a partir da `main` `085d9d5`, merge do #143 com todos os commits).
 - **`main` de referência:** NAS `a0a5efe` (merges até #142; o #142 levou os 4 commits do SKILL-SCAN-1); MCP `855057d`.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
@@ -27,6 +27,17 @@ Bloqueados por decisão: **F0.6** e **S-003** (o conector do Claude.ai não most
 **Gate:** M1 fechado a 2026-10-05 (decisão do maestro); o código do F1 está autorizado (D-EP4, P-13). Até lá não se abrem domínios nem meta-agentes novos.
 
 ## Log (mais recente no topo)
+
+### P-44 = A e P-45 = A (2026-10-08)
+- **P-45:**
+  - `description` nas 20 skills internas sem ela (4 de design, 16 de marketing). Em português, como o corpo, no formato da spec ("o que faz. Usar quando …"), entre 1 e 267 caracteres, validadas com `yaml.safe_load`, nomes iguais;
+  - findings de spec no `skills/`: 37 → 19 (ficam 17 `invalid-name` e 2 low);
+  - `docs/generated/SKILLS.md` regenerado com o gerador oficial (`generate-skills-doc.ts`).
+- **Custo em tokens, verificado:** zero no modo `opt` (o de omissão: o worker tira o frontmatter) e +2,7% no `legacy` (só A/B e rollback). Dois testes novos em `test_context_opt.py`.
+
+  O teste de calibração contra o B1 real falhou (+353 tokens no legacy), porque o B1 correu antes das descrições. Em vez de alargar a margem, a projecção ganhou `drop_skill_keys`, para reproduzir as entradas da época.
+- **P-44:** registada, mais uma nota no docstring do `runner/plan_runner/skill_scan.py`.
+- **Merge do #143 verificado:** `085d9d5`, com todos os commits até `fa6ee96`.
 
 ### SKILL-SCOUT-1: o que faltava para ser a escolha + renome para `skill-scout` (P-43 = A) (2026-10-08)
 - **Pergunta do maestro:** "qual escolherias, sem contar reputação nem estrelas?" A resposta honesta foi não o nosso como ferramenta única: faltava o dia-a-dia. Implementado:

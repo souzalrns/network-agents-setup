@@ -1,5 +1,6 @@
 ---
 name: internal_brief
+description: "Escreve o brief interno de handoff para criação (copy, design, social): objectivo numa frase, audiência, mensagem e provas, deliverables e restrições. Usar no step internal_brief; não serve para propostas comerciais nem pede credenciais."
 action: internal_brief
 version: 1
 vertical: marketing

@@ -224,8 +224,20 @@ def test_drop_doc_sections_nao_corta_seccoes_desconhecidas():
 # Tokens: o critic baixa 30-50% e o total baixa (projeccao calibrada no B1)
 # --------------------------------------------------------------------------
 
+# O B1 correu antes do P-45 (as skills de marketing nao tinham `description`): a calibracao e as
+# comparacoes legacy vs opt usam essas entradas. O custo do P-45 e medido a parte, abaixo.
+B1_INPUTS = ("description",)
+
+
 @pytest.fixture(scope="module")
 def projection():
+    return {ctx: {r["step"]: r for r in tp.project(context=ctx, drop_skill_keys=B1_INPUTS)}
+            for ctx in ("legacy", "opt")}
+
+
+@pytest.fixture(scope="module")
+def projection_now():
+    """Com as skills como estao hoje (com a `description` do P-45)."""
     return {ctx: {r["step"]: r for r in tp.project(context=ctx)} for ctx in ("legacy", "opt")}
 
 
@@ -234,6 +246,25 @@ def test_legacy_reproduz_o_b1_real(projection):
     assert abs(total - 13130) / 13130 < 0.02  # calibracao: +-2% do B1 real
     for step, (t_in, _) in tp.B1_REAL.items():
         assert abs(projection["legacy"][step]["tokens_in"] - t_in) / t_in < 0.03
+
+
+def test_p45_description_nao_custa_tokens_no_modo_opt(projection, projection_now):
+    """O modo opt (o de omissao) tira o frontmatter da skill: a `description` nunca chega ao prompt."""
+    for step, row in projection["opt"].items():
+        assert projection_now["opt"][step]["tokens_in"] == row["tokens_in"], step
+
+
+def test_p45_custo_no_modo_legacy_e_pequeno_e_conhecido(projection, projection_now):
+    """No legacy (prompt antigo byte a byte, so para A/B e rollback) a `description` entra: < 3%."""
+    before = sum(r["total"] for r in projection["legacy"].values())
+    after = sum(r["total"] for r in projection_now["legacy"].values())
+    assert 0 < after - before < before * 0.03, (before, after)
+
+
+def test_drop_frontmatter_keys_so_mexe_no_frontmatter():
+    text = '---\nname: x\ndescription: "a: b"\naction: x\n---\n# x\ndescription: fica no corpo\n'
+    assert tp._drop_frontmatter_keys(text, ("description",)) == "---\nname: x\naction: x\n---\n# x\ndescription: fica no corpo\n"
+    assert tp._drop_frontmatter_keys("# sem frontmatter\n", ("description",)) == "# sem frontmatter\n"
 
 
 def test_tokens_in_do_critic_cai_30_a_50_por_cento(projection):

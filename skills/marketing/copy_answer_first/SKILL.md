@@ -1,5 +1,6 @@
 ---
 name: copy_answer_first
+description: "Escreve a peça a partir do seo_brief com a resposta directa nas primeiras linhas, H2 com valor e FAQ citável, para humanos e para assistentes de IA (ChatGPT, Claude, Gemini, Perplexity). Usar depois de seo_brief; não inventa dados."
 action: copy_answer_first
 version: 2
 vertical: marketing

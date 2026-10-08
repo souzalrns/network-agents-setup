@@ -1,5 +1,6 @@
 ---
 name: media_plan
+description: "Estrutura um plano de media paga: objectivo e KPI, plataforma, campanhas, ad sets e ads, bandas de budget com stop-loss, audiências, compliance e checklist de tracking. Usar no step media_plan; não executa spend nem altera contas."
 action: media_plan
 version: 1
 vertical: marketing
