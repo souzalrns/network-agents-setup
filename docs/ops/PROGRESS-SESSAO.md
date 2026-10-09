@@ -5,8 +5,8 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/auditron` (empilhado no `feat/p48-security-suite`/#155).
-- **`main` de referência:** NAS `893726e`; MCP `855057d`. Por merge, por ordem: **#154** (P-47, Strix lab), **#155** (P-48, suite), **#auditron** (P-49). Cada um rebate sobre o anterior (contagens e `security-capabilities.yaml`/PENDENCIAS reconciliam-se no merge).
+- **Branch actual:** `feat/auditron` (empilhado no `feat/p48-security-suite`/#155), com o `main` (incl. #154/P-47 e #155/P-48) reconciliado por merge.
+- **`main` de referência:** NAS com #154 (P-47, Strix) e #155 (P-48, suite) merged. O #auditron (P-49) coexiste com ambos: as duas capabilities de lab (`external_pentest_lab` + `llm_redteam_lab`) ficam, mais o pacote autónomo `oss/auditron/`. Contagens reconciliadas: 130 vivos, 49 decisões.
 
 ### auditron — projecto autónomo de segurança (P-49, autonomia delegada, 2026-10-09)
 - **Pedido do maestro (a dormir):** transformar a suite num repo autónomo acoplável, tipo plugin MCP; no fim dizer se eu o escolheria; procurar nome livre; ir até ao fim sem pendências.
@@ -18,16 +18,26 @@
   - `examples/auditron.yml` acoplável; CI próprio `.github/workflows/auditron.yml`; `README` + `POSITIONING.md` (a escolha honesta).
 - **Defensivo** apenas; ofensivo (Strix/Garak) fica companheiro de lab, documentado.
 - **Verificado localmente** (venv-sec): demo com fixtures más → 3 engines disparam, SARIF 2.1.0 válido, exit 1; auditron sobre si mesmo → exit 0.
-- **PENDENCIAS:** P-49 + AUDITRON-1 (EM CURSO) + AUDITRON-2 (ABERTO, Fase 2: mais engines, wrapper MCP, repo próprio+PyPI). 129 vivos, 48 decisões.
+- **PENDENCIAS:** P-49 + AUDITRON-1 (EM CURSO) + AUDITRON-2 (ABERTO, Fase 2: mais engines, wrapper MCP, repo próprio+PyPI). 130 vivos, 49 decisões.
 - **Falta:** o maestro confirmar o nome ao acordar; AUDITRON-2 (Fase 2) e a troca do `security-suite.yml` para chamar o `auditron` (tira a duplicação) quando as 3 PRs tiverem merge.
+
+### Strix: piloto de pentest em lab (P-47 = A, 2026-10-09)
+- **Pergunta do maestro:** o repo Strix serve como a nossa área de cibersegurança? Resposta: sim, mas como ferramenta de laboratório, não como a área (é ofensivo; a área é `offensive: forbidden`).
+- **P-47 = A:** piloto de lab. Montado, sem tocar na política do runner:
+  - capability `external_pentest_lab` (lab, deferred) em `config/security-capabilities.yaml` — o E7 passa (nível `lab` só em `deferred`);
+  - `.github/workflows/strix-lab.yml`: `workflow_dispatch` apenas, `continue-on-error`, gated no segredo `LLM_API_KEY`, pacote `strix-agent` com versão fixa, modelo pelo input (Gemini Flash Lite);
+  - `docs/ops/STRIX-LAB.md`: regras, como correr, tabela de medição e critérios de saída;
+  - `docs/architecture/SECURITY-AGENTS.md`: linha na tabela de capabilities.
+- **PENDENCIAS:** novo SEC-STRIX-1 (EM CURSO, AMBOS, Baixa); P-47 registada e decidida. Merged (#154).
+- **Falta (DEV):** 1 run contra o NAS com a chave do LLM, e preencher a medição. O ANM (privado) é decisão à parte.
 
 ### Arsenal de segurança (P-48 = A, 2026-10-09)
 - **Pergunta do maestro:** incorporar tudo, padrão ouro, no mais alto nível. Feito com disciplina (nada bloqueante antes da linha de base estar provada).
 - **Verificado nesta sessão** (venv de scratch, rede via proxy): pip-audit limpo nos 5 requirements; bandit 0 High / 12 Medium (todas B608, SQL parametrizado) / 9 Low; zizmor 1 High (`release.yml` permissões) + 16 Medium (`artipacked`).
 - **Defensivo no CI** (`security-suite.yml`): pip-audit **bloqueia**; bandit e zizmor **informativos** com base documentada (`docs/ops/SECURITY-TOOLS.md`), a promover a bloqueantes após triagem (SEC-SUITE-1).
 - **Ofensivo em lab** (`llm-redteam-lab.yml`, manual, gated no segredo): Garak + promptfoo, capability `llm_redteam_lab` (deferred), a par do Strix. SEC-LLMRT-1.
-- **Capabilities:** `sast`, `workflow_security`, `supply_chain` (pip-audit) actualizadas; `llm_redteam_lab` nova. E7 passa.
-- **PENDENCIAS:** P-48 decidida; novos SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2 (osv-scanner/Trivy, futuro). 127 vivos, 47 decisões (sem P-47 neste branch).
+- **Capabilities:** `sast`, `workflow_security`, `supply_chain` (pip-audit) actualizadas; `llm_redteam_lab` nova, ao lado do `external_pentest_lab` do P-47. E7 passa.
+- **PENDENCIAS:** P-48 decidida; novos SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2 (osv-scanner/Trivy, futuro). Reconciliado com o P-47: 128 vivos, 48 decisões.
 - **Validação:** actionlint + zizmor nos 2 workflows novos (0 findings próprios); recount bate.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
