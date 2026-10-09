@@ -46,6 +46,9 @@ Issues = "https://github.com/souzalrns/network-agents-setup/issues"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+auditron = ["py.typed"]  # PEP 561: o pacote traz os seus tipos
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
