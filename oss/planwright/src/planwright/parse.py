@@ -9,7 +9,7 @@ so a plan can live inside a larger document.
 
 from __future__ import annotations
 
-from .model import Item, Plan, parse_estimate, parse_status
+from .model import Item, Plan, parse_autonomy, parse_complexity, parse_estimate, parse_status
 
 # Header alias → canonical column. Only id and title are required.
 _COLUMN_ALIASES = {
@@ -42,6 +42,12 @@ _COLUMN_ALIASES = {
     "group": "track",
     "fase": "track",
     "phase": "track",
+    "autonomy": "autonomy",
+    "autonomia": "autonomy",
+    "mode": "autonomy",
+    "execution_mode": "autonomy",
+    "complexity": "complexity",
+    "complexidade": "complexity",
 }
 
 
@@ -150,6 +156,8 @@ def _row_to_item(cells: list[str], header: dict[str, int], header_width: int, li
 
     try:
         estimate = parse_estimate(_cell(cells, header, "estimate"))
+        autonomy = parse_autonomy(_cell(cells, header, "autonomy"))
+        complexity = parse_complexity(_cell(cells, header, "complexity"))
     except ValueError as exc:
         raise ParseError(f"{source}:{lineno}: {exc}") from exc
 
@@ -164,6 +172,8 @@ def _row_to_item(cells: list[str], header: dict[str, int], header_width: int, li
         estimate_hours=estimate,
         depends=depends,
         track=_cell(cells, header, "track"),
+        autonomy=autonomy,
+        complexity=complexity,
         line=lineno,
     )
 

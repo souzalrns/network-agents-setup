@@ -111,6 +111,54 @@ def _split_deps(raw: str) -> list[str]:
     return seen
 
 
+# Autonomy: who can close the item. Orthogonal to complexity — a trivial item
+# may still need a human (it touches production), and a hard item may be
+# autonomous if it is isolated and verifiable.
+_AUTONOMY_ALIASES = {
+    "auto": "auto",
+    "autonomous": "auto",
+    "assisted": "assisted",
+    "human": "human",
+    "human-gate": "human",
+    "human_gate": "human",
+    "manual": "human",
+}
+
+# Complexity: cognitive risk, for later model-tier routing (cheap → expensive).
+# Deliberately separate from estimate (effort/duration).
+_COMPLEXITY_ALIASES = {
+    "c1": "C1",
+    "c2": "C2",
+    "c3": "C3",
+    "c4": "C4",
+    "low": "C1",
+    "medium": "C2",
+    "med": "C2",
+    "high": "C3",
+    "critical": "C4",
+    "crit": "C4",
+}
+
+
+def parse_autonomy(raw: str) -> str | None:
+    token = raw.strip().lower()
+    if token in EMPTY_TOKENS:
+        return None
+    if token not in _AUTONOMY_ALIASES:
+        valid = "auto, assisted, human"
+        raise ValueError(f"unknown autonomy {raw!r} (expected one of: {valid}, or a known alias)")
+    return _AUTONOMY_ALIASES[token]
+
+
+def parse_complexity(raw: str) -> str | None:
+    token = raw.strip().lower()
+    if token in EMPTY_TOKENS:
+        return None
+    if token not in _COMPLEXITY_ALIASES:
+        raise ValueError(f"unknown complexity {raw!r} (expected C1..C4, or low/medium/high/critical)")
+    return _COMPLEXITY_ALIASES[token]
+
+
 @dataclass
 class Item:
     """One unit of work. ``line`` is the 1-based source line, for error messages."""
@@ -122,6 +170,8 @@ class Item:
     estimate_hours: float | None = None
     depends: list[str] = field(default_factory=list)
     track: str = ""
+    autonomy: str | None = None  # auto | assisted | human (optional)
+    complexity: str | None = None  # C1..C4 (optional; cognitive risk, not effort)
     line: int = 0
 
     @property

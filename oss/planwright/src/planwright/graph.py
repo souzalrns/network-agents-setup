@@ -148,6 +148,38 @@ class Graph:
                 remaining[node] -= done_now
         return layers
 
+    def downstream(self, item_id: str) -> set[str]:
+        """Every not-done item that transitively depends on ``item_id``.
+
+        This is the real leverage of finishing an item: not just its direct
+        dependents, but the whole subtree of work it unblocks. Done items are
+        excluded (they are already unblocked)."""
+        # Reverse adjacency over not-done items.
+        pending = {it.id for it in self.plan if not it.status.completed}
+        rdeps: dict[str, set[str]] = {n: set() for n in pending}
+        for node in pending:
+            for dep in self._deps.get(node, []):
+                if dep in rdeps:
+                    rdeps[dep].add(node)
+        seen: set[str] = set()
+        stack = list(rdeps.get(item_id, set()))
+        while stack:
+            n = stack.pop()
+            if n in seen:
+                continue
+            seen.add(n)
+            stack.extend(rdeps.get(n, set()) - seen)
+        return seen
+
+    def downstream_hours(self, item_id: str) -> float:
+        """Summed estimate of the items ``item_id`` transitively unblocks."""
+        total = 0.0
+        for n in self.downstream(item_id):
+            it = self.plan.get(n)
+            if it is not None:
+                total += it.estimate_hours or 0.0
+        return total
+
     def critical_path(self) -> CriticalPath:
         """Longest path by summed estimate over all items (done + not done).
 

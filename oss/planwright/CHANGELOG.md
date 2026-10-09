@@ -4,6 +4,38 @@ All notable changes to planwright are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims
 for [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-10-09
+
+### Added
+
+- **The management layer** — turns the dependency engine into something a
+  manager can see and act on:
+  - `planwright mermaid` — Mermaid **dependency graph** (coloured by status) and
+    **Kanban board** (Ready / Doing / Blocked / Done); renders natively on
+    GitHub/Markdown, zero dependencies. `--view deps|board|all`.
+  - `planwright action` — a ranked action plan: what to start now ordered by
+    leverage (human decisions that unblock others first, then the critical path),
+    who-unblocks-what, the autonomous wave, and the critical chain.
+  - Optional **Autonomy** (`auto`/`assisted`/`human`) and **Complexity**
+    (`C1`..`C4`) columns, parsed when present and ignored when absent; complexity
+    is cognitive risk for later cheap→expensive model routing, kept separate from
+    effort (`Est`).
+- **Transitive-impact ranking** — `action` ranks ready work by the whole subtree
+  it unblocks (count + downstream effort), not just direct dependents, and
+  explains each (`destrava N a jusante (Xd)`). New `Graph.downstream()` /
+  `downstream_hours()`.
+- **Robust Mermaid** — injective per-plan node ids (distinct `A-1` and `A_1` no
+  longer collide), quote/backtick-safe labels, newline collapse, empty-plan safe.
+- **Drift guard** — `scripts/regen_planos_visual.py` regenerates the embedded
+  graph/board/action in `PLANOS-AUTONOMOS.md`; CI runs it with `--check` so the
+  diagrams can't silently diverge from the plan table.
+- **Honest scope** (POSITIONING): planwright *describes and prioritizes*;
+  governed execution, approvals, tools, budgets and model routing belong to an
+  execution runner. `Autonomy`/`Complexity` are planning intent/signals, not
+  runtime policy.
+- 13 new tests (parsing, Mermaid robustness, action ranking, transitive impact);
+  ruff-clean, build + `twine --strict` green.
+
 ## [0.1.0] — 2026-10-09
 
 ### Added
