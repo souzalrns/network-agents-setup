@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "planwright"
-version = "0.2.0"
+version = "0.3.0"
 description = "A maker of plans: turn a Markdown plan into what's ready, what runs in parallel, and the critical path. Plain data, zero dependencies, pluggable into any project or agent."
 readme = "README.md"
 license = "MIT"

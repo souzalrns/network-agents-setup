@@ -129,6 +129,18 @@ def _cmd_mermaid(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_export(args: argparse.Namespace) -> int:
+    try:
+        plan = _load(args.path)
+    except (FileNotFoundError, ParseError) as exc:
+        print(f"planwright: {exc}", file=sys.stderr)
+        return 2
+    from .export import plan_to_contract
+
+    print(json.dumps(plan_to_contract(plan), indent=2, ensure_ascii=False))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="planwright", description="A maker of plans.")
     parser.add_argument("--version", action="version", version=f"planwright {__version__}")
@@ -158,6 +170,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_action = sub.add_parser("action", help="a manager's action plan (ranked ready, blockers, critical)")
     add_common(p_action)
     p_action.set_defaults(func=_cmd_action)
+
+    p_export = sub.add_parser("export", help="emit the stable JSON contract for an execution runner")
+    p_export.add_argument("path", nargs="?", default=DEFAULT_PLAN, help=f"plan file (default: {DEFAULT_PLAN})")
+    p_export.set_defaults(func=_cmd_export)
 
     p_mermaid = sub.add_parser("mermaid", help="Mermaid diagrams (renders in GitHub/Markdown)")
     p_mermaid.add_argument("path", nargs="?", default=DEFAULT_PLAN, help=f"plan file (default: {DEFAULT_PLAN})")

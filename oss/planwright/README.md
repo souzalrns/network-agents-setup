@@ -68,6 +68,7 @@ planwright graph    PLAN.md          # ready now · parallel layers · blocked �
 planwright action   PLAN.md          # a manager's action plan: ranked ready, who-unblocks-what, critical
 planwright mermaid  PLAN.md          # Mermaid diagrams (deps + Kanban board) — render in GitHub/Markdown
 planwright next     PLAN.md          # just the ids ready to start now (one per line)
+planwright export   PLAN.md          # emit the stable JSON contract for an execution runner
 planwright validate PLAN.md [--strict]  # check the plan is sound (and disciplined)
 planwright status   PLAN.md          # one-line status counts
 ```
@@ -81,6 +82,15 @@ The path defaults to `PLAN.md` (override with `$PLANWRIGHT_PLAN`).
 so a manager sees the dependency graph (coloured by status) and a Kanban board
 without reading the CLI. `planwright action` ranks what to start now by leverage:
 human decisions that unblock others first, then the critical path, then the rest.
+
+### Hand-off to an execution runner
+
+`planwright export PLAN.md` emits a stable, versioned JSON contract
+(`planwright-plan/v1`) — the clean boundary between *planning* (planwright) and
+*execution* (a runner). planwright describes the plan; a runner imports it,
+authorizes, runs, and records. `autonomy`/`complexity` travel as **signals** for
+the runner's selection logic, never as runtime policy, and planwright holds no
+authz/budget/tools/events. See the monorepo's `docs/architecture/PLAN-CONTRACT.md`.
 
 ### Optional columns (for routing)
 

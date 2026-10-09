@@ -4,6 +4,21 @@ All notable changes to planwright are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims
 for [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-10-09
+
+### Added
+
+- **`planwright export`** — emits the stable JSON contract (`planwright-plan/v1`)
+  for an execution runner: per-item `id, title, status, owner, estimate_hours,
+  depends, track, autonomy, complexity`. This is the hand-off interface; planwright
+  still knows nothing about steps, authorization, budgets or tools. New
+  `planwright/export.py`; `autonomy`/`complexity` travel as **signals**, not policy.
+- The runner side of the contract lives in `plan_runner/plan_import.py` (maps a
+  contract to a schema-valid runner-plan skeleton; autonomy→human_gate), with
+  `docs/architecture/PLAN-CONTRACT.md` as the 1-page spec.
+- Tests: planwright export (contract shape, JSON round-trip, CLI) + runner import
+  (schema-valid, mapping, rejects). Still zero-dep, ruff-clean, build + twine green.
+
 ## [0.2.0] — 2026-10-09
 
 ### Added
