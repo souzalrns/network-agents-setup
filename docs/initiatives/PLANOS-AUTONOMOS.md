@@ -186,7 +186,7 @@ flowchart TB
 
 ### 3. planwright — Fase 1 ✅; falta ativação (#158)
 - **PW1 (done)** — plugin em camadas: #157 merged, 35 testes.
-- **PW2 (doing)** — ativação do hook de projeto; **#158 aberto, à espera de merge**.
+- **PW2 (done)** — ativação do hook de projeto; **#158 merged**, hook ativo no `main`.
 - **PW3 (todo)** — Fase 2 "integrar, não reconstruir" (adapters opcionais; ver `oss/planwright/POSITIONING.md`). Caminho crítico do conjunto.
 - **PW4 (blocked)** — publicar; depende de PW1 + XP1.
 
