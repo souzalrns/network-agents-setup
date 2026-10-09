@@ -5,8 +5,21 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/p48-security-suite` (a partir da `main` `893726e`, merge do #146).
-- **`main` de referência:** NAS `893726e`; MCP `855057d`. Em paralelo e por merge: #154 (P-47, Strix lab). O P-48 rebase-ia sobre ele (contagens +1 vivo/+1 decisão, e `external_pentest_lab` já no YAML).
+- **Branch actual:** `feat/auditron` (empilhado no `feat/p48-security-suite`/#155).
+- **`main` de referência:** NAS `893726e`; MCP `855057d`. Por merge, por ordem: **#154** (P-47, Strix lab), **#155** (P-48, suite), **#auditron** (P-49). Cada um rebate sobre o anterior (contagens e `security-capabilities.yaml`/PENDENCIAS reconciliam-se no merge).
+
+### auditron — projecto autónomo de segurança (P-49, autonomia delegada, 2026-10-09)
+- **Pedido do maestro (a dormir):** transformar a suite num repo autónomo acoplável, tipo plugin MCP; no fim dizer se eu o escolheria; procurar nome livre; ir até ao fim sem pendências.
+- **Nome:** `auditron` (livre em PyPI **e** npm; alternativas livres `agentaegis`, `aegiskit`). P-49.
+- **`oss/auditron/`** (MIT, auto-contido, padrão `skill-scout`):
+  - orquestra pip-audit + bandit + zizmor → modelo comum, relatório texto/JSON/**SARIF 2.1.0** (1 run por engine, versão real);
+  - política `auditron.toml` (`blocking`/`disabled`); por omissão só pip-audit bloqueia; engine que rebenta e é bloqueante, bloqueia;
+  - CLI `auditron scan`; 25 testes (offline + integração que salta sem engines); ruff + build + `twine --strict` verdes; wheel com licenças, sem testes;
+  - `examples/auditron.yml` acoplável; CI próprio `.github/workflows/auditron.yml`; `README` + `POSITIONING.md` (a escolha honesta).
+- **Defensivo** apenas; ofensivo (Strix/Garak) fica companheiro de lab, documentado.
+- **Verificado localmente** (venv-sec): demo com fixtures más → 3 engines disparam, SARIF 2.1.0 válido, exit 1; auditron sobre si mesmo → exit 0.
+- **PENDENCIAS:** P-49 + AUDITRON-1 (EM CURSO) + AUDITRON-2 (ABERTO, Fase 2: mais engines, wrapper MCP, repo próprio+PyPI). 129 vivos, 48 decisões.
+- **Falta:** o maestro confirmar o nome ao acordar; AUDITRON-2 (Fase 2) e a troca do `security-suite.yml` para chamar o `auditron` (tira a duplicação) quando as 3 PRs tiverem merge.
 
 ### Arsenal de segurança (P-48 = A, 2026-10-09)
 - **Pergunta do maestro:** incorporar tudo, padrão ouro, no mais alto nível. Feito com disciplina (nada bloqueante antes da linha de base estar provada).
