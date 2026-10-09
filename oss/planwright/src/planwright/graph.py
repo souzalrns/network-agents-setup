@@ -98,13 +98,13 @@ class Graph:
 
     def _done(self, item_id: str) -> bool:
         it = self.plan.get(item_id)
-        return it is not None and it.status.is_done
+        return it is not None and it.status.completed
 
     def ready(self) -> list[Item]:
         """Not-done items whose every known dependency is done."""
         out: list[Item] = []
         for it in self.plan:
-            if it.status.is_done:
+            if it.status.completed:
                 continue
             if all(self._done(d) for d in it.depends if self.plan.has(d)):
                 out.append(it)
@@ -114,7 +114,7 @@ class Graph:
         """{item_id: [unfinished dependency ids]} for not-done items that wait."""
         out: dict[str, list[str]] = {}
         for it in self.plan:
-            if it.status.is_done:
+            if it.status.completed:
                 continue
             waiting = [d for d in it.depends if self.plan.has(d) and not self._done(d)]
             if waiting:
@@ -131,7 +131,7 @@ class Graph:
         """
         if not self.is_schedulable():
             raise ValueError("cannot layer a plan with cycles or dangling dependencies")
-        pending = {it.id for it in self.plan if not it.status.is_done}
+        pending = {it.id for it in self.plan if not it.status.completed}
         # Edges restricted to unfinished items (done deps are already satisfied).
         remaining: dict[str, set[str]] = {
             node: {d for d in self._deps.get(node, []) if d in pending} for node in pending

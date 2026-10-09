@@ -41,11 +41,11 @@ class Status(str, Enum):
     DONE = "done"
 
     @property
-    def is_done(self) -> bool:
+    def completed(self) -> bool:
         return self is Status.DONE
 
     @property
-    def is_started(self) -> bool:
+    def started(self) -> bool:
         """True once work has been committed to the item (doing or done)."""
         return self in (Status.DOING, Status.DONE)
 

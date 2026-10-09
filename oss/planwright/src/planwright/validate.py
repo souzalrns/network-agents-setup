@@ -81,7 +81,7 @@ def validate_plan(plan: Plan) -> Report:
 
     # -- warnings: the plan is sloppy but schedulable -------------------
     for it in plan:
-        if it.status.is_started and not it.has_estimate:
+        if it.status.started and not it.has_estimate:
             findings.append(
                 Finding(
                     "warning",
@@ -90,10 +90,10 @@ def validate_plan(plan: Plan) -> Report:
                     it.id,
                 )
             )
-        if it.status.is_done:
+        if it.status.completed:
             for dep in it.depends:
                 d = plan.get(dep)
-                if d is not None and not d.status.is_done:
+                if d is not None and not d.status.completed:
                     findings.append(
                         Finding(
                             "warning",
