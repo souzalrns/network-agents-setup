@@ -44,14 +44,32 @@ capabilities:
     tools_guidance: [gitleaks]
     status: partial  # skill audit no runner + gitleaks no CI (SEC-2, .github/workflows/security-scan.yml)
 
-  - id: supply_chain
-    description: Dependências e imagens (OSV, Trivy guidance).
+  - id: sast
+    description: Análise estática de código (SAST) em Python e multilinguagem.
     levels: [read]
     action: security_audit
     agent: meta.security-auditor
     skill: skills/meta/security-audit/SKILL.md
-    tools_guidance: [osv-scanner, trivy]
-    status: partial
+    tools_guidance: [semgrep, codeql, bandit]
+    status: partial  # semgrep + CodeQL no CI (SEC-2); bandit no CI (SEC-SUITE-1, P-48)
+
+  - id: workflow_security
+    description: Segurança dos workflows do GitHub Actions (injecção, permissões, pinning).
+    levels: [read]
+    action: security_audit
+    agent: meta.security-auditor
+    skill: skills/meta/security-audit/SKILL.md
+    tools_guidance: [zizmor, actionlint]
+    status: partial  # zizmor no CI (SEC-SUITE-1, P-48); actionlint usado na revisão
+
+  - id: supply_chain
+    description: Dependências e imagens (pip-audit no CI; OSV/Trivy guidance).
+    levels: [read]
+    action: security_audit
+    agent: meta.security-auditor
+    skill: skills/meta/security-audit/SKILL.md
+    tools_guidance: [pip-audit, osv-scanner, trivy]
+    status: partial  # pip-audit no CI (SEC-SUITE-1, P-48, bloqueia); OSV/Trivy (binários Go) ficam para SEC-SCA-2
 
   - id: mcp_surface
     description: Superfície MCP / tools / excessive agency (LLM01, LLM03).
@@ -76,3 +94,14 @@ capabilities:
     agent: null
     skill: null
     status: deferred  # proibido no runner de produção
+
+  - id: llm_redteam_lab
+    description: >-
+      Red-team de LLM/agentes com Garak (NVIDIA) e promptfoo: prompt injection,
+      jailbreak, fuga de dados (OWASP LLM, ATLAS). Só em lab/CI manual, com chave
+      de LLM e custo medido; nunca no runner de produção.
+    levels: [lab]
+    action: null
+    agent: null
+    skill: null
+    status: deferred  # P-48 = A: workflow manual llm-redteam-lab.yml, fora do runner

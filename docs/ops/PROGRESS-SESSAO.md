@@ -5,8 +5,17 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/p46-allowlist-fix` (a partir da `main` `42e6352`, merge do #145 com os 3 commits).
-- **`main` de referência:** NAS `42e6352` (merges até #145, todos com os commits completos); MCP `855057d`.
+- **Branch actual:** `feat/p48-security-suite` (a partir da `main` `893726e`, merge do #146).
+- **`main` de referência:** NAS `893726e`; MCP `855057d`. Em paralelo e por merge: #154 (P-47, Strix lab). O P-48 rebase-ia sobre ele (contagens +1 vivo/+1 decisão, e `external_pentest_lab` já no YAML).
+
+### Arsenal de segurança (P-48 = A, 2026-10-09)
+- **Pergunta do maestro:** incorporar tudo, padrão ouro, no mais alto nível. Feito com disciplina (nada bloqueante antes da linha de base estar provada).
+- **Verificado nesta sessão** (venv de scratch, rede via proxy): pip-audit limpo nos 5 requirements; bandit 0 High / 12 Medium (todas B608, SQL parametrizado) / 9 Low; zizmor 1 High (`release.yml` permissões) + 16 Medium (`artipacked`).
+- **Defensivo no CI** (`security-suite.yml`): pip-audit **bloqueia**; bandit e zizmor **informativos** com base documentada (`docs/ops/SECURITY-TOOLS.md`), a promover a bloqueantes após triagem (SEC-SUITE-1).
+- **Ofensivo em lab** (`llm-redteam-lab.yml`, manual, gated no segredo): Garak + promptfoo, capability `llm_redteam_lab` (deferred), a par do Strix. SEC-LLMRT-1.
+- **Capabilities:** `sast`, `workflow_security`, `supply_chain` (pip-audit) actualizadas; `llm_redteam_lab` nova. E7 passa.
+- **PENDENCIAS:** P-48 decidida; novos SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2 (osv-scanner/Trivy, futuro). 127 vivos, 47 decisões (sem P-47 neste branch).
+- **Validação:** actionlint + zizmor nos 2 workflows novos (0 findings próprios); recount bate.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;
   - W-011 e R-006;

@@ -1,0 +1,100 @@
+name: Security suite (SEC-SUITE-1)
+
+# P-48 = A: arsenal defensivo em CI, a par do Security scan (SEC-2: gitleaks + semgrep) e do CodeQL.
+# Docs: docs/ops/SECURITY-TOOLS.md. Repo público: minutos de Actions grátis.
+#
+# - pip-audit: vulnerabilidades conhecidas nas dependências Python do runner. Linha de base
+#   LIMPA (2026-10-09, os 5 requirements*.txt), por isso BLOQUEIA.
+# - bandit: SAST de Python (runner/ + scripts/), severidade média+. Linha de base documentada
+#   (2026-10-09: 0 High, 12 Medium — todas B608 nos construtores de SQL com parâmetros —, 9 Low);
+#   informativo (continue-on-error) até à triagem (SEC-SUITE-1), depois passa a bloquear.
+# - zizmor: segurança dos próprios workflows do GitHub Actions. Linha de base documentada
+#   (2026-10-09: 1 High `excessive-permissions` no release.yml, 16 Medium `artipacked`);
+#   informativo até à triagem, depois bloqueia.
+#
+# Versões fixas (sem tags móveis). As ferramentas Python são instaladas por versão.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-suite-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BANDIT_VERSION: 1.9.4
+  PIP_AUDIT_VERSION: 2.10.1
+  ZIZMOR_VERSION: 1.30.1
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Instalar pip-audit (versão fixa)
+        run: python -m pip install "pip-audit==${PIP_AUDIT_VERSION}"
+      - name: Auditar as dependências Python (bloqueia)
+        run: |
+          rc=0
+          for req in runner/requirements.txt runner/requirements-ingest.txt \
+                     runner/requirements-fixtures.txt runner/requirements-langgraph.txt \
+                     runner/requirements-test.txt; do
+            echo "::group::pip-audit ${req}"
+            pip-audit -r "${req}" --progress-spinner off || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc
+
+  bandit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # informativo até à triagem (SEC-SUITE-1)
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Instalar bandit (versão fixa)
+        run: python -m pip install "bandit==${BANDIT_VERSION}"
+      - name: SAST Python (severidade média+, confiança média+)
+        run: bandit -r runner/plan_runner scripts -ll -ii
+
+  zizmor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # informativo até à triagem (SEC-SUITE-1)
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Instalar zizmor (versão fixa)
+        run: python -m pip install "zizmor==${ZIZMOR_VERSION}"
+      - name: Auditar os workflows do GitHub Actions
+        run: zizmor --persona=regular --no-online-audits .github/workflows
