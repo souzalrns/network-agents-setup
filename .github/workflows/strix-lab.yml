@@ -1,0 +1,89 @@
+name: strix-lab
+
+# SEC-STRIX-1 (P-47 = A): piloto de pentest em laboratório com o Strix (usestrix/strix, Apache-2.0).
+# Ofensivo por natureza — fica FORA do runner de produção. Ver docs/ops/STRIX-LAB.md.
+#
+# Regras:
+# - só MANUAL (workflow_dispatch); nunca em push nem em pull_request;
+# - NUNCA bloqueia (continue-on-error): é um piloto informativo;
+# - alvo: o próprio repo (público), ou o que o operador indicar em `target` (só repos próprios);
+# - sem o segredo LLM_API_KEY, o job não corre (sai 0, sem erro);
+# - modelo fixado pelo operador (Gemini Flash Lite): a premissa é custo zero;
+# - pacote `strix-agent` do PyPI com versão fixa (nunca `curl | sh`, nunca tag móvel).
+#
+# Repositório público: os minutos de Actions são grátis. Actions fixadas por SHA.
+
+on:
+  workflow_dispatch:
+    inputs:
+      strix_version:
+        description: Versão do pacote strix-agent no PyPI (fixa, ex. 0.1.8)
+        required: true
+      strix_llm:
+        description: Modelo (litellm) — Gemini Flash Lite; confirmar o id actual
+        required: true
+        default: gemini/gemini-flash-lite-latest
+      target:
+        description: Alvo (só repos próprios); por omissão, o código deste repo
+        required: true
+        default: "."
+      scan_mode:
+        description: Modo do scan (quick | deep)
+        required: true
+        default: quick
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strix-lab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pentest-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true # piloto informativo: nunca bloqueia
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Verificar o segredo do LLM
+        id: gate
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          if [ -z "${LLM_API_KEY}" ]; then
+            echo "secreto LLM_API_KEY ausente: nada a correr (ver docs/ops/STRIX-LAB.md)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Instalar o Strix (versão fixa)
+        if: steps.gate.outputs.run == 'true'
+        run: python -m pip install "strix-agent==${{ inputs.strix_version }}"
+
+      - name: Correr o Strix (ofensivo, só o nosso repo; não bloqueia)
+        if: steps.gate.outputs.run == 'true'
+        env:
+          STRIX_LLM: ${{ inputs.strix_llm }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: strix -n -t "${{ inputs.target }}" --scan-mode "${{ inputs.scan_mode }}"
+
+      - name: Guardar o relatório (strix_runs)
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: strix-lab-run
+          path: strix_runs/
+          if-no-files-found: ignore
+          retention-days: 30
