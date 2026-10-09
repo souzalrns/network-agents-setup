@@ -5,16 +5,26 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/p48-security-suite` (a partir da `main` `893726e`, merge do #146).
-- **`main` de referência:** NAS `893726e`; MCP `855057d`. Em paralelo e por merge: #154 (P-47, Strix lab). O P-48 rebase-ia sobre ele (contagens +1 vivo/+1 decisão, e `external_pentest_lab` já no YAML).
+- **Branch actual:** `feat/p48-security-suite` (#155), com o `main` (incl. #154/P-47) reconciliado por merge.
+- **`main` de referência:** NAS com #154 (P-47, Strix). O #155 (P-48) coexiste com o P-47: ambas as capabilities de lab ficam (`external_pentest_lab` + `llm_redteam_lab`). Contagens reconciliadas: 128 vivos, 48 decisões.
+
+### Strix: piloto de pentest em lab (P-47 = A, 2026-10-09)
+- **Pergunta do maestro:** o repo Strix serve como a nossa área de cibersegurança? Resposta: sim, mas como ferramenta de laboratório, não como a área (é ofensivo; a área é `offensive: forbidden`).
+- **P-47 = A:** piloto de lab. Montado, sem tocar na política do runner:
+  - capability `external_pentest_lab` (lab, deferred) em `config/security-capabilities.yaml` — o E7 passa (nível `lab` só em `deferred`);
+  - `.github/workflows/strix-lab.yml`: `workflow_dispatch` apenas, `continue-on-error`, gated no segredo `LLM_API_KEY`, pacote `strix-agent` com versão fixa, modelo pelo input (Gemini Flash Lite);
+  - `docs/ops/STRIX-LAB.md`: regras, como correr, tabela de medição e critérios de saída;
+  - `docs/architecture/SECURITY-AGENTS.md`: linha na tabela de capabilities.
+- **PENDENCIAS:** novo SEC-STRIX-1 (EM CURSO, AMBOS, Baixa); P-47 registada e decidida. Merged (#154).
+- **Falta (DEV):** 1 run contra o NAS com a chave do LLM, e preencher a medição. O ANM (privado) é decisão à parte.
 
 ### Arsenal de segurança (P-48 = A, 2026-10-09)
 - **Pergunta do maestro:** incorporar tudo, padrão ouro, no mais alto nível. Feito com disciplina (nada bloqueante antes da linha de base estar provada).
 - **Verificado nesta sessão** (venv de scratch, rede via proxy): pip-audit limpo nos 5 requirements; bandit 0 High / 12 Medium (todas B608, SQL parametrizado) / 9 Low; zizmor 1 High (`release.yml` permissões) + 16 Medium (`artipacked`).
 - **Defensivo no CI** (`security-suite.yml`): pip-audit **bloqueia**; bandit e zizmor **informativos** com base documentada (`docs/ops/SECURITY-TOOLS.md`), a promover a bloqueantes após triagem (SEC-SUITE-1).
 - **Ofensivo em lab** (`llm-redteam-lab.yml`, manual, gated no segredo): Garak + promptfoo, capability `llm_redteam_lab` (deferred), a par do Strix. SEC-LLMRT-1.
-- **Capabilities:** `sast`, `workflow_security`, `supply_chain` (pip-audit) actualizadas; `llm_redteam_lab` nova. E7 passa.
-- **PENDENCIAS:** P-48 decidida; novos SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2 (osv-scanner/Trivy, futuro). 127 vivos, 47 decisões (sem P-47 neste branch).
+- **Capabilities:** `sast`, `workflow_security`, `supply_chain` (pip-audit) actualizadas; `llm_redteam_lab` nova, ao lado do `external_pentest_lab` do P-47. E7 passa.
+- **PENDENCIAS:** P-48 decidida; novos SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2 (osv-scanner/Trivy, futuro). Reconciliado com o P-47: 128 vivos, 48 decisões.
 - **Validação:** actionlint + zizmor nos 2 workflows novos (0 findings próprios); recount bate.
 - **Itens em trabalho** (2026-10-07): **cadeia F1 → F6 fechada** (#119, #120 e #121 com merge). Neste branch:
   - F3c-DESIGN-1 opção A (`repo_files` nos passos de design) e a correcção V42;

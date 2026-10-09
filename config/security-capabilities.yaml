@@ -95,6 +95,17 @@ capabilities:
     skill: null
     status: deferred  # proibido no runner de produção
 
+  - id: external_pentest_lab
+    description: >-
+      Pentest externo com o Strix (usestrix/strix, Apache-2.0): corre a aplicação,
+      procura falhas OWASP e confirma-as com prova de conceito. Só em lab/CI isolado,
+      contra repos próprios e com autorização; nunca no runner de produção.
+    levels: [lab]
+    action: null
+    agent: null
+    skill: null
+    status: deferred  # P-47 = A: piloto em CI manual (workflow_dispatch), fora do runner
+
   - id: llm_redteam_lab
     description: >-
       Red-team de LLM/agentes com Garak (NVIDIA) e promptfoo: prompt injection,

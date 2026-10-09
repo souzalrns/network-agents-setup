@@ -42,6 +42,7 @@ As capabilities vivem em `config/security-capabilities.yaml`.
 | mcp_surface | auditor (skill security-audit) | READ | partial |
 | hardening_recommend | reporter → engenharia | PREPARE only | partial |
 | agent_redteam_lab | CI/lab isolado (PyRIT/DeepTeam) | lab only | deferred |
+| external_pentest_lab | Strix (CI/lab manual, repos próprios) | lab only | deferred (P-47 = A, piloto) |
 | llm_redteam_lab | CI/lab manual (Garak/promptfoo) | lab only | deferred (P-48 = A) |
 
 ## READ / PREPARE / ACT
@@ -62,6 +63,8 @@ Para decisões estruturais (threat model, política de segredos), não para cada
 `python -m plan_runner.areas` (no CI, job `test`) valida o `config/security-capabilities.yaml` contra os agentes, as skills e a área (`runner/plan_runner/capabilities.py`):
 - `policy.offensive` e `policy.act_in_production` só aceitam `forbidden`; `policy.hitl` tem de ser `required`, porque a área tem `hitl: required`;
 - o nível `act` é recusado; `lab` só em capabilities `deferred` (fora do runner de produção);
+
+**Strix (`external_pentest_lab`, P-47 = A):** pentester ofensivo de IA (usestrix/strix, Apache-2.0), só em `.github/workflows/strix-lab.yml` (manual, nunca bloqueia, contra repos próprios). Fica `deferred`/`lab`: fora do runner e de qualquer plano. A política da área não muda. Piloto e regras em `docs/ops/STRIX-LAB.md`.
 - `implemented`/`partial`: o agente existe, está em agents[] da área `security`, tem o mesmo `action:` da capability, e a skill existe com o mesmo `action:`;
 - qualquer `skill:` declarado por um agente tem de existir.
 
