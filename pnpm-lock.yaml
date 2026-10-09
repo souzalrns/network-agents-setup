@@ -76,8 +76,8 @@ importers:
         specifier: ^7.0.0
         version: 7.2.0
       pg:
-        specifier: ^8.11.0
-        version: 8.23.0
+        specifier: ^8.23.1
+        version: 8.23.1
       uuid:
         specifier: ^14.0.2
         version: 14.0.2
