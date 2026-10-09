@@ -1,0 +1,7 @@
+planwright
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+planwright has no third-party runtime dependencies. The plan it reads is a plain
+Markdown file, and the engine (parsing, dependency graph, critical path,
+validation) uses only the Python standard library. The optional test extra
+pulls in pytest (MIT) for development only; it is not required to run the tool.
