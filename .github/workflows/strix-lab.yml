@@ -70,14 +70,18 @@ jobs:
 
       - name: Instalar o Strix (versão fixa)
         if: steps.gate.outputs.run == 'true'
-        run: python -m pip install "strix-agent==${{ inputs.strix_version }}"
+        env:
+          STRIX_VERSION: ${{ inputs.strix_version }}
+        run: python -m pip install "strix-agent==${STRIX_VERSION}"
 
       - name: Correr o Strix (ofensivo, só o nosso repo; não bloqueia)
         if: steps.gate.outputs.run == 'true'
         env:
           STRIX_LLM: ${{ inputs.strix_llm }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-        run: strix -n -t "${{ inputs.target }}" --scan-mode "${{ inputs.scan_mode }}"
+          TARGET: ${{ inputs.target }}
+          SCAN_MODE: ${{ inputs.scan_mode }}
+        run: strix -n -t "$TARGET" --scan-mode "$SCAN_MODE"
 
       - name: Guardar o relatório (strix_runs)
         if: always() && steps.gate.outputs.run == 'true'
