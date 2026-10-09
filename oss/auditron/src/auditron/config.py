@@ -11,10 +11,14 @@ o repo fazer a triagem dos seus achados. Um `auditron.toml` no repo sobrepõe-se
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-import tomllib
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # 3.10: o tomllib ainda não está no stdlib
+    import tomli as tomllib
 
 ENGINES = ("pip-audit", "bandit", "zizmor")
 
