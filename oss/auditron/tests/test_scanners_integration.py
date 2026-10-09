@@ -49,6 +49,6 @@ def test_pip_audit_sem_requirements_e_limpo(clean_repo):
 
 
 def test_engine_em_falta_vira_erro_e_bloqueia_se_bloqueante(monkeypatch, clean_repo):
-    monkeypatch.setattr(scanners.shutil, "which", lambda _t: None)  # finge que nada está instalado
+    monkeypatch.setattr(scanners, "_which", lambda _t: None)  # finge que nada está instalado
     run = scanners.pip_audit(clean_repo, blocking=True)
     assert run.error and "não está instalado" in run.error

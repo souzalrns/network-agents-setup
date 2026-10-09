@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from auditron.model import Finding, ToolRun
@@ -21,14 +22,25 @@ _EXCLUDE = (".git", "node_modules", ".venv", "venv", "build", "dist", "__pycache
 _TIMEOUT = 600
 
 
+def _which(tool: str) -> str | None:
+    """Localiza o engine. Procura no PATH e também ao lado do Python actual, porque os engines
+    são dependências do auditron (console scripts na mesma pasta `bin`/`Scripts`): assim funciona
+    quando o auditron é chamado por caminho absoluto num venv fora do PATH."""
+    found = shutil.which(tool)
+    if found:
+        return found
+    candidate = Path(sys.executable).parent / tool
+    return str(candidate) if candidate.exists() else None
+
+
 def _run(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess:
-    return subprocess.run(args, capture_output=True, text=True, timeout=_TIMEOUT, cwd=cwd, check=False)  # noqa: S603
+    # args[0] é sempre um caminho resolvido por `_which` (nunca um nome dependente do PATH); sem shell.
+    return subprocess.run(  # noqa: S603  # nosemgrep: dangerous-subprocess-use-audit — args fixos, caminho resolvido, sem shell
+        args, capture_output=True, text=True, timeout=_TIMEOUT, cwd=cwd, check=False
+    )
 
 
-def _version(tool: str) -> str:
-    exe = shutil.which(tool)
-    if not exe:
-        return ""
+def _version(exe: str) -> str:
     try:
         out = _run([exe, "--version"])
     except (OSError, subprocess.SubprocessError):
@@ -51,14 +63,15 @@ def _iter_requirements(target: Path):
 
 
 def pip_audit(target: Path, blocking: bool) -> ToolRun:
-    if not shutil.which("pip-audit"):
+    exe = _which("pip-audit")
+    if not exe:
         return _missing("pip-audit", blocking)
-    run = ToolRun(tool="pip-audit", version=_version("pip-audit"), blocking=blocking)
+    run = ToolRun(tool="pip-audit", version=_version(exe), blocking=blocking)
     reqs = list(_iter_requirements(target))
     if not reqs:
         return run  # nada de requirements → nada a auditar (limpo)
     for req in reqs:
-        proc = _run(["pip-audit", "-r", str(req), "-f", "json", "--progress-spinner", "off"])
+        proc = _run([exe, "-r", str(req), "-f", "json", "--progress-spinner", "off"])
         try:
             data = json.loads(proc.stdout or "{}")
         except json.JSONDecodeError:
@@ -86,10 +99,11 @@ _BANDIT_LEVEL = {"HIGH": "error", "MEDIUM": "warning", "LOW": "note"}
 
 
 def bandit(target: Path, blocking: bool) -> ToolRun:
-    if not shutil.which("bandit"):
+    exe = _which("bandit")
+    if not exe:
         return _missing("bandit", blocking)
-    run = ToolRun(tool="bandit", version=_version("bandit"), blocking=blocking)
-    proc = _run(["bandit", "-r", str(target), "-f", "json", "-ll", "-ii", "-x", ",".join(_EXCLUDE)])
+    run = ToolRun(tool="bandit", version=_version(exe), blocking=blocking)
+    proc = _run([exe, "-r", str(target), "-f", "json", "-ll", "-ii", "-x", ",".join(_EXCLUDE)])
     try:
         data = json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:
@@ -118,13 +132,14 @@ def bandit(target: Path, blocking: bool) -> ToolRun:
 
 
 def zizmor(target: Path, blocking: bool) -> ToolRun:
-    if not shutil.which("zizmor"):
+    exe = _which("zizmor")
+    if not exe:
         return _missing("zizmor", blocking)
-    run = ToolRun(tool="zizmor", version=_version("zizmor"), blocking=blocking)
+    run = ToolRun(tool="zizmor", version=_version(exe), blocking=blocking)
     workflows = target / ".github" / "workflows"
     if not workflows.is_dir():
         return run  # sem workflows → nada a auditar (limpo)
-    proc = _run(["zizmor", "--format=sarif", "--persona=regular", "--no-online-audits", str(workflows)])
+    proc = _run([exe, "--format=sarif", "--persona=regular", "--no-online-audits", str(workflows)])
     try:
         data = json.loads(proc.stdout or "{}")
     except json.JSONDecodeError:

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import pytest
+
+from auditron.scanners import _which
 
 # Código Python com um problema que o bandit apanha em média+ (B602: subprocess com shell=True).
 BAD_PY = """import subprocess
@@ -27,7 +28,7 @@ jobs:
 
 
 def have(tool: str) -> bool:
-    return shutil.which(tool) is not None
+    return _which(tool) is not None
 
 
 def requires(tool: str):
