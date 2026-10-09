@@ -49,19 +49,19 @@ def test_ficheiro_real_existe_cobre_as_areas_e_passa_no_e7():
     assert validate_areas(REPO_ROOT) == []
 
 
-# A v1 do maestro (2026-10-08), por área. Mudar um domínio = decisão + linha no PENDENCIAS §10;
-# este teste apanha uma edição silenciosa do ficheiro.
+# A v1 do maestro (2026-10-08), por área, corrigida pela P-46 = A (2026-10-08). Mudar um domínio =
+# decisão + linha no PENDENCIAS §10; este teste apanha uma edição silenciosa do ficheiro.
 V1 = {
     "software": [],
     "marketing": ["instagram.com", "tiktok.com", "facebook.com", "linkedin.com", "youtube.com", "x.com",
-                  "pinterest.com", "threads.net", "meta.com", "developers.facebook.com", "ads.google.com",
+                  "pinterest.com", "threads.net", "threads.com", "meta.com", "developers.facebook.com", "ads.google.com",
                   "developers.google.com"],
     "legal": ["planalto.gov.br", "in.gov.br", "stf.jus.br", "stj.jus.br", "tst.jus.br", "tse.jus.br",
               "cnj.jus.br", "senado.leg.br", "camara.leg.br", "jusbrasil.com.br", "conjur.com.br", "dre.pt",
-              "diariodarepublica.pt", "pgdlisboa.pt", "oa.pt", "justice.gov.pt", "tribunalconstitucional.pt",
+              "diariodarepublica.pt", "pgdlisboa.pt", "oa.pt", "justica.gov.pt", "tribunalconstitucional.pt",
               "stj.pt", "eur-lex.europa.eu", "curia.europa.eu"],
     "ops": ["github.com", "docs.github.com", "gitlab.com", "kubernetes.io", "docker.com", "docs.docker.com",
-            "helm.sh", "prometheus.io", "grafana.com", "terraform.io", "cloud.google.com", "docs.aws.amazon.com",
+            "helm.sh", "prometheus.io", "grafana.com", "terraform.io", "developer.hashicorp.com", "cloud.google.com", "docs.aws.amazon.com",
             "learn.microsoft.com", "oracle.com", "sentry.io"],
     "research": ["wikipedia.org", "wikidata.org", "arxiv.org", "scholar.google.com", "pubmed.ncbi.nlm.nih.gov",
                  "doi.org", "semanticscholar.org", "ssrn.com", "openalex.org", "crossref.org"],
@@ -70,14 +70,15 @@ V1 = {
                 "worldbank.org", "oecd.org", "bis.org"],
     "gamedev": ["unity.com", "docs.unity3d.com", "unrealengine.com", "docs.unrealengine.com", "godotengine.org",
                 "docs.godotengine.org", "khronos.org", "blender.org", "docs.blender.org", "itch.io",
-                "steamworks.steampowered.com", "gamedeveloper.com"],
-    "security": ["owasp.org", "nvd.nist.gov", "cve.mitre.org", "cwe.mitre.org", "attack.mitre.org", "cert.org",
+                "partner.steamgames.com", "gamedeveloper.com"],
+    "security": ["owasp.org", "nvd.nist.gov", "cve.mitre.org", "cve.org", "cwe.mitre.org", "attack.mitre.org", "cert.org",
+                 "sei.cmu.edu",
                  "first.org", "cisecurity.org", "cisa.gov", "enisa.europa.eu", "osv.dev", "snyk.io"],
     "docs": ["docs.python.org", "python.org", "nodejs.org", "developer.mozilla.org", "typescriptlang.org",
              "pydantic.dev", "fastapi.tiangolo.com", "react.dev", "nextjs.org", "supabase.com", "vercel.com",
-             "ai.google.dev", "cloud.google.com", "platform.openai.com", "docs.anthropic.com", "pytest.org",
-             "ruff.rs", "pnpm.io"],
-    "horizontal": ["ietf.org", "datatracker.ietf.org", "rfc-editor.org", "w3.org", "schema.org", "openapi.org",
+             "ai.google.dev", "cloud.google.com", "platform.openai.com", "docs.anthropic.com", "platform.claude.com", "pytest.org",
+             "ruff.rs", "docs.astral.sh", "pnpm.io"],
+    "horizontal": ["ietf.org", "datatracker.ietf.org", "rfc-editor.org", "w3.org", "schema.org", "openapis.org",
                    "json-schema.org", "github.com"],
 }
 
@@ -85,7 +86,27 @@ V1 = {
 def test_ficheiro_real_tem_a_v1_do_maestro():
     areas = wa.load(REPO_ROOT / wa.ALLOWLIST_FILE)["areas"]
     assert {a: list(d or []) for a, d in areas.items()} == V1
-    assert sum(len(d) for d in V1.values()) == 122
+    assert sum(len(d) for d in V1.values()) == 128  # 122 da v1 + 9 da P-46 - 3 nomes trocados
+
+
+# P-46 = A: os endereços actuais das mesmas fontes (evidência: a sonda do CI, run 37807283070).
+P46_ADDED = {"security": ["cve.org", "sei.cmu.edu"], "ops": ["developer.hashicorp.com"],
+             "docs": ["platform.claude.com", "docs.astral.sh"], "marketing": ["threads.com"],
+             "legal": ["justica.gov.pt"], "gamedev": ["partner.steamgames.com"], "horizontal": ["openapis.org"]}
+P46_REMOVED = {"openapi.org", "justice.gov.pt", "steamworks.steampowered.com"}
+
+
+def test_p46_aplicada_na_area_da_fonte():
+    for area, domains in P46_ADDED.items():
+        for d in domains:
+            assert wa.resolve_allowlist(REPO_ROOT, area, [d]) == ([d], [])
+    assert sum(len(d) for d in P46_ADDED.values()) == 9
+    every = {d for ds in V1.values() for d in ds}
+    assert not P46_REMOVED & every
+    # os 6 que redireccionam ficam (uma página interna pode responder directamente)
+    assert {"cve.mitre.org", "cert.org", "terraform.io", "docs.anthropic.com", "ruff.rs", "threads.net"} <= every
+    with pytest.raises(wa.AllowlistError, match="fora da allowlist"):
+        wa.resolve_allowlist(REPO_ROOT, "marketing", ["business.google.com"])  # ficou de fora da P-46
 
 
 def test_v1_deny_by_default_e_exclusoes_de_proposito():

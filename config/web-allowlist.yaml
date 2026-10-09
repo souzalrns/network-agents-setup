@@ -1,7 +1,9 @@
 # F2-ALLOW-1 (P-25 = A, maestro, 2026-10-07): domínios que o `fetch` (scripts/web_fetch.py)
 # pode buscar, por área do config/areas.yaml. Validado no E7 (`python -m plan_runner.areas`).
 #
-# v1 dos domínios: escolhidos pelo maestro a 2026-10-08, aplicados tal como dados.
+# v1 dos domínios: escolhidos pelo maestro a 2026-10-08, aplicados tal como dados, e
+# corrigidos pela P-46 = A (maestro, 2026-10-08): 9 endereços actuais das mesmas fontes
+# (marcados `P-46`) e 3 nomes que não funcionavam trocados. Evidência: a sonda do CI.
 # - Domínio novo = decisão do maestro + linha no PENDENCIAS (§10), nunca uma edição silenciosa.
 # - Lista vazia = deny-by-default nessa área (`software` fica assim na v1).
 # - Cada domínio aceita também os subdomínios (`exemplo.com` aceita `*.exemplo.com`).
@@ -31,6 +33,7 @@ areas:
     - x.com
     - pinterest.com
     - threads.net
+    - threads.com  # P-46: o threads.net redirecciona para aqui
     - meta.com
     - developers.facebook.com
     - ads.google.com
@@ -51,7 +54,7 @@ areas:
     - diariodarepublica.pt
     - pgdlisboa.pt
     - oa.pt
-    - justice.gov.pt
+    - justica.gov.pt  # P-46: era justice.gov.pt (não resolve)
     - tribunalconstitucional.pt
     - stj.pt
     - eur-lex.europa.eu
@@ -67,6 +70,7 @@ areas:
     - prometheus.io
     - grafana.com
     - terraform.io
+    - developer.hashicorp.com  # P-46: o terraform.io redirecciona para aqui
     - cloud.google.com
     - docs.aws.amazon.com
     - learn.microsoft.com
@@ -110,15 +114,17 @@ areas:
     - blender.org
     - docs.blender.org
     - itch.io
-    - steamworks.steampowered.com
+    - partner.steamgames.com  # P-46: era steamworks.steampowered.com (não resolve)
     - gamedeveloper.com
   security:
     - owasp.org
     - nvd.nist.gov
     - cve.mitre.org
+    - cve.org  # P-46: o cve.mitre.org redirecciona para aqui
     - cwe.mitre.org
     - attack.mitre.org
     - cert.org
+    - sei.cmu.edu  # P-46: o cert.org redirecciona para aqui (o CERT/CC faz parte do SEI)
     - first.org
     - cisecurity.org
     - cisa.gov
@@ -141,8 +147,10 @@ areas:
     - cloud.google.com
     - platform.openai.com
     - docs.anthropic.com
+    - platform.claude.com  # P-46: o docs.anthropic.com redirecciona para aqui
     - pytest.org
     - ruff.rs
+    - docs.astral.sh  # P-46: doc oficial do ruff (o ruff.rs redirecciona para o github.com)
     - pnpm.io
   horizontal:
     - ietf.org
@@ -150,6 +158,6 @@ areas:
     - rfc-editor.org
     - w3.org
     - schema.org
-    - openapi.org
+    - openapis.org  # P-46: era openapi.org (TLS falha; não é o da OpenAPI Initiative)
     - json-schema.org
     - github.com

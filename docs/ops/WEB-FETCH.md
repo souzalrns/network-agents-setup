@@ -41,7 +41,7 @@ O `ANM:.github/workflows/scrape.yml` lê a página inteira, sem allowlist nem ro
 
 ### 2.1 Allowlist por área (F2-ALLOW-1, P-25 = A)
 
-`config/web-allowlist.yaml` guarda, por área do `config/areas.yaml`, os domínios que o `fetch` pode buscar. **Os domínios são política e escolhe-os o maestro.** A v1 (maestro, 2026-10-08) tem 122 domínios em 9 áreas; `software` fica vazia.
+`config/web-allowlist.yaml` guarda, por área do `config/areas.yaml`, os domínios que o `fetch` pode buscar. **Os domínios são política e escolhe-os o maestro.** A v1 (maestro, 2026-10-08) tem 122 domínios em 9 áreas; `software` fica vazia. A **P-46 = A** (maestro, 2026-10-08) corrigiu-a com a evidência da sonda: 9 endereços actuais das mesmas fontes e 3 nomes que não funcionavam trocados, ficando **128 domínios** (marcados `P-46` no ficheiro).
 
 Regras da v1, do maestro:
 - **domínio novo = decisão + linha no PENDENCIAS** (§10), nunca uma edição silenciosa. O teste `test_ficheiro_real_tem_a_v1_do_maestro` apanha uma edição que não actualize também a lista do teste;
@@ -62,7 +62,7 @@ O E7 (`python -m plan_runner.areas`) valida o ficheiro:
 
 Código: `runner/plan_runner/web_allowlist.py`. Testes: `runner/tests/test_web_allowlist.py`.
 
-**Redirects:** cada salto é verificado contra a lista da área. Um domínio aprovado que redireccione para um host fora da lista falha com `blocked_by_allowlist`, mesmo que o URL pedido esteja na lista. A sonda `scripts/check_web_allowlist.py` corre no CI (job `web-allowlist-probe`, informativo, nunca bloqueia) e mostra, por área e domínio, o estado HTTP e para onde o domínio redirecciona. Uma linha `fora` é um candidato a decisão do maestro (P-46), não uma correcção automática.
+**Redirects:** cada salto é verificado contra a lista da área. Um domínio aprovado que redireccione para um host fora da lista falha com `blocked_by_allowlist`, mesmo que o URL pedido esteja na lista. A sonda `scripts/check_web_allowlist.py` corre no CI (job `web-allowlist-probe`, informativo, nunca bloqueia) e mostra, por área e domínio, o estado HTTP e para onde o domínio redirecciona. Uma linha `fora` é um candidato a decisão do maestro (como foi a P-46), não uma correcção automática.
 
 ```bash
 python scripts/check_web_allowlist.py                  # todas as áreas; tabela Markdown no stdout
@@ -73,7 +73,7 @@ python scripts/check_web_allowlist.py --candidate security=cve.org   # um domín
 Se a raiz de um domínio não tiver DNS, a sonda tenta o `www.` (que o domínio cobre).
 
 **Sonda da v1 (2026-10-08):** 122 pares. O run `37806411775` deu 82 `ok`; o run `37807283070`, já com o `www.`, deu 83 `ok`, 9 `fora`, 22 `http_error`, 7 `robots_disallowed` e 1 `timeout`. O que falha divide-se em dois grupos:
-- **corrigível na lista**, proposto na P-46 (PENDENCIAS §10): fontes que mudaram de endereço e nomes que não existem;
+- **corrigível na lista**: fontes que mudaram de endereço e nomes que não existem. Foi a P-46 (PENDENCIAS §10), decidida A e aplicada. Com a lista corrigida (run `37817241033`), a sonda dá **93 `ok` em 128**;
 - **não corrigível na lista:**
   - 403 do IP do runner (anti-bot);
   - TLS inválido (a verificação nunca se desliga);
