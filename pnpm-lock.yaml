@@ -101,8 +101,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.8
       '@types/ws':
-        specifier: ^8.5.0
-        version: 8.18.1
+        specifier: ^8.18.2
+        version: 8.18.2
       typescript:
         specifier: ^5.0.0
         version: 5.9.3
@@ -719,6 +719,12 @@ packages:
 
   /@types/ws@8.18.1:
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
+    dependencies:
+      '@types/node': 20.19.43
+    dev: true
+
+  /@types/ws@8.18.2:
+    resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
     dependencies:
       '@types/node': 20.19.43
     dev: true
