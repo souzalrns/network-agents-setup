@@ -61,9 +61,31 @@ leveling, or stakeholder/budget tracking across many projects, reach for a real
 PM suite — planwright is a sharp instrument, not a suite, and it is honest about
 that. If you only ever have a five-item list, you do not need it at all.
 
-## The bar for Phase 2 (`PLANWRIGHT-2`)
+## The bar for Phase 2 (`PLANWRIGHT-2`) — integrate, don't rebuild
 
-Multi-plan roll-up; an MCP wrapper so any agent (not just Claude Code) can call
-`graph`/`next` as tools; optional calendar scheduling (dates from effort +
-availability); extraction to its own repo + PyPI publish. None of it is needed
-for the core promise above to stand on its own today.
+Phase 2 adds dated, resource-aware scheduling. The rule: **integrate mature
+engines behind optional extras; never pull them into the core.** `pip install
+planwright` stays zero-dependency (plan-as-data + critical path on effort);
+`pip install planwright[schedule]` unlocks the heavy parts. This is the same DNA
+as auditron, which orchestrates existing engines instead of reimplementing them.
+
+The layer breaks into four pieces with different build-vs-integrate answers:
+
+| Piece | What it adds | Decision |
+|---|---|---|
+| Dates from effort + working calendar | real start/end dates skipping weekends/holidays | **integrate** a calendar lib (e.g. `workalendar`) + a thin layer |
+| Resource-constrained scheduling / leveling (RCPSP) | "only N people — who does what, when, no overload" | **integrate** a solver — Google OR-Tools CP-SAT (Apache-2.0) via PyJobShop; never rebuild |
+| Gantt / timeline rendering | a visual schedule | **integrate** Mermaid `gantt` (zero-dep, renders in Markdown/GitHub) |
+| Portfolio roll-up across plans | merge N plans, namespace ids | **build** — thin connective code, and the governance differentiator |
+
+The integration work that remains is small but real, and is the whole of Phase 2:
+extend the plan schema to carry per-resource availability and calendars, map the
+plan to and from the engine, and keep every engine an **optional extra** so the
+core stays light and portable. An alternative adapter is to shell out to
+TaskJuggler (GPLv2) at arm's length — the way auditron invokes its engines —
+for a full dated+levelled schedule from a text plan; kept as an *additional*
+adapter, not the only one, so the GPL stays contained and no runtime is forced.
+
+Also in Phase 2: an MCP wrapper so any agent (not just Claude Code) can call
+`graph`/`next` as tools, and extraction to its own repo + PyPI/marketplace
+publish. None of it is needed for the Phase-1 promise above to stand today.
