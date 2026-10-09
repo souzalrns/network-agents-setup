@@ -15,4 +15,4 @@ from .model import Item, Plan, Status
 from .parse import ParseError, parse_plan, parse_text
 
 __all__ = ["Item", "ParseError", "Plan", "Status", "parse_plan", "parse_text"]
-__version__ = "0.2.0"
+__version__ = "0.3.0"

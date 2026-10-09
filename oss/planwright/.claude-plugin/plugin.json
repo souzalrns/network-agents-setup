@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin.json",
   "name": "planwright",
   "displayName": "planwright",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A maker of plans. Keep a plan as plain Markdown; get what's ready, what runs in parallel, and the critical path — with a hook that refuses to let the plan drift into a mess.",
   "author": { "name": "LRNSdigital" },
   "homepage": "https://github.com/souzalrns/network-agents-setup/tree/main/oss/planwright",
