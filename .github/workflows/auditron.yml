@@ -1,0 +1,93 @@
+name: auditron
+
+# oss/auditron: um gate defensivo de segurança acoplável (pip-audit + bandit + zizmor → 1 relatório).
+# Auto-contido, para sair para o seu próprio repositório sem mudanças (como o skill-scout).
+#
+# - test: Python 3.10 e 3.13; ruff lint + format; pytest (os 3 engines vêm como dependências);
+# - package: sdist + wheel, `twine check --strict`, instalar o wheel num venv limpo e correr.
+#
+# Repositório público: minutos de Actions grátis. Actions fixadas por SHA.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oss/auditron/**'
+      - '.github/workflows/auditron.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oss/auditron/**'
+      - '.github/workflows/auditron.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auditron-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: oss/auditron
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install -e '.[test]' ruff==0.16.9
+      - name: Lint and format
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+      - name: Tests (os 3 engines vêm como dependências; nada é saltado)
+        run: |
+          python -m pytest tests -q -rs | tee pytest.log
+          ! grep -q "SKIPPED" pytest.log
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build==1.6.1 twine==7.0.0
+          python -m build --outdir dist .
+          twine check --strict dist/*
+      - name: Wheel contents (licenças dentro, testes fora)
+        run: |
+          python -m zipfile -l dist/*.whl | tee wheel.txt
+          grep -q "licenses/LICENSE" wheel.txt && grep -q "licenses/NOTICE" wheel.txt
+          ! grep -q "tests/" wheel.txt
+      - name: Install the wheel in a clean venv and run it
+        run: |
+          python -m venv /tmp/at
+          /tmp/at/bin/pip install dist/*.whl
+          /tmp/at/bin/auditron --version
+          /tmp/at/bin/auditron scan . --sarif /tmp/at.sarif
+          test -s /tmp/at.sarif
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: auditron-dist
+          path: oss/auditron/dist/
+          retention-days: 7

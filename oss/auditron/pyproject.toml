@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auditron"
+version = "0.1.0"
+description = "One defensive security gate for a repo: pip-audit + bandit + zizmor, one report (JSON + SARIF), one policy. Plug it into any project."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{ name = "LRNSdigital" }]
+keywords = ["security", "sast", "sca", "supply-chain", "sarif", "github-actions", "bandit", "pip-audit", "zizmor", "ci"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+  "Topic :: Software Development :: Quality Assurance",
+]
+# Engines, todos open-source e pinados por intervalo compatível. A versão usada vai em cada
+# relatório e em cada run do SARIF, para a evidência ser reproduzível.
+dependencies = [
+  "pip-audit>=2.10,<3",   # SCA das dependências Python (Apache-2.0)
+  "bandit>=1.9,<2",       # SAST de Python (Apache-2.0)
+  "zizmor>=1.30,<2",      # segurança dos workflows do GitHub Actions (MIT/Apache-2.0)
+  "tomli>=2.0; python_version < '3.11'",  # tomllib do stdlib só a partir do 3.11
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "jsonschema>=4.20"]
+
+[project.scripts]
+auditron = "auditron.cli:main"
+
+[project.urls]
+Repository = "https://github.com/souzalrns/network-agents-setup/tree/main/oss/auditron"
+Issues = "https://github.com/souzalrns/network-agents-setup/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+auditron = ["py.typed"]  # PEP 561: o pacote traz os seus tipos
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # setas/traços unicode nas mensagens são de propósito
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S108", "S603", "S607", "S310"]

@@ -1,0 +1,17 @@
+auditron
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+auditron orchestrates the following open-source engines. None of their code is copied into
+this package; each runs as an installed dependency and its version is recorded in every report.
+
+- pip-audit (https://github.com/pypa/pip-audit), Apache License 2.0, Copyright the pip-audit
+  authors. Software Composition Analysis of Python dependencies.
+
+- bandit (https://github.com/PyCQA/bandit), Apache License 2.0, Copyright the Bandit authors.
+  Static analysis (SAST) for Python.
+
+- zizmor (https://github.com/zizmorcore/zizmor), MIT / Apache License 2.0, Copyright the
+  zizmor authors. Security analysis of GitHub Actions workflows.
+
+- SARIF 2.1.0 (OASIS Standard). The schema is not distributed with this package; the tests
+  download it from the OASIS TC repository at a pinned commit and check its sha256.
