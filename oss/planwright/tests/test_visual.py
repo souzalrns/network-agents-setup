@@ -89,3 +89,49 @@ def test_render_action_handles_no_metadata():
     out = render_action(plan)
     assert "Agora" in out
     assert "X" in out
+
+
+def test_mermaid_node_ids_do_not_collide():
+    # 'A-1' and 'A_1' both sanitise to 'A_1' — the map must keep them distinct.
+    plan = parse_text("| ID | Title | Depends |\n|--|--|--|\n| A-1 | a | - |\n| A_1 | b | A-1 |\n")
+    out = render_deps(plan)
+    decl = [ln for ln in out.splitlines() if ln.strip().endswith('"]') and "[" in ln]
+    tokens = [ln.strip().split("[")[0] for ln in decl]
+    assert len(tokens) == len(set(tokens)) == 2  # no duplicate node tokens
+    assert "-->" in out
+
+
+def test_mermaid_escapes_quotes_and_collapses_newlines():
+    plan = parse_text('| ID | Title |\n|--|--|\n| X | he said "hi" |\n')
+    out = render_deps(plan)
+    label_line = next(ln for ln in out.splitlines() if ln.strip().startswith("X["))
+    inner = label_line.split('["', 1)[1].rsplit('"]', 1)[0]
+    assert '"' not in inner
+
+
+def test_mermaid_empty_plan_is_safe():
+    out = render_deps(parse_text("| ID | Title |\n|--|--|\n"))
+    assert "flowchart LR" in out
+    assert out.rstrip().endswith("```")
+
+
+def test_mermaid_unicode_titles_pass_through():
+    plan = parse_text("| ID | Title |\n|--|--|\n| X | ação à prova de münchen |\n")
+    out = render_deps(plan)
+    assert "ação" in out
+
+
+def test_action_ranks_by_transitive_impact():
+    plan = parse_text(
+        "| ID | Title | Status | Est | Depends |\n|--|--|--|--|--|\n"
+        "| H  | hub   | todo | 1d | -  |\n"
+        "| M1 | mid   | todo | 1d | H  |\n"
+        "| M2 | leaf  | todo | 1d | M1 |\n"
+        "| L  | small | todo | 1d | -  |\n"
+        "| L2 | leaf2 | todo | 1d | L  |\n"
+    )
+    out = render_action(plan)
+    agora = out.split("##")[1]
+    order = [ln.split(".")[1].split()[0] for ln in agora.splitlines() if ln.strip()[:2] in ("1.", "2.")]
+    assert order[0] == "H"  # unblocks 2 transitively, beats L (unblocks 1)
+    assert "destrava 2 a jusante" in agora

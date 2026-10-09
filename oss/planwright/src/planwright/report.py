@@ -131,26 +131,23 @@ def render_action(plan: Plan) -> str:
     if not graph.is_schedulable():
         return render_graph(plan)  # fall back to the unschedulable message
 
-    # How many items each item blocks (fan-out over not-done dependents).
-    blocks: dict[str, int] = {it.id: 0 for it in plan}
-    for it in plan:
-        if it.status.completed:
-            continue
-        for dep in it.depends:
-            if dep in blocks:
-                blocks[dep] += 1
+    # Transitive leverage: the whole subtree of not-done work each item unblocks
+    # (not just its direct dependents), with that subtree's summed effort.
+    impact: dict[str, int] = {it.id: len(graph.downstream(it.id)) for it in plan}
+    impact_hours: dict[str, float] = {it.id: graph.downstream_hours(it.id) for it in plan}
 
     cp = set(graph.critical_path().ids)
     ready = graph.ready()
 
     def rank(it):
-        # Human gates that unblock others first; then critical-path items;
-        # then by how much they unblock; then by id for stability.
+        # Human gates that unblock others first (they stall work until decided);
+        # then critical-path items; then by transitive leverage; then id.
         human = it.autonomy == "human"
         return (
-            0 if (human and blocks[it.id] > 0) else 1,
+            0 if (human and impact[it.id] > 0) else 1,
             0 if it.id in cp else 1,
-            -blocks[it.id],
+            -impact[it.id],
+            -impact_hours[it.id],
             it.id,
         )
 
@@ -162,7 +159,8 @@ def render_action(plan: Plan) -> str:
     for i, it in enumerate(ready_sorted, 1):
         est = _fmt_hours(it.estimate_hours) if it.has_estimate else "?"
         owner = f" @{it.owner}" if it.owner else ""
-        unblocks = f" · destrava {blocks[it.id]}" if blocks[it.id] else ""
+        n = impact[it.id]
+        unblocks = f" · destrava {n} a jusante ({_fmt_hours(impact_hours[it.id])})" if n else ""
         star = " ★crítico" if it.id in cp else ""
         tags = _tags(it)
         tag_s = f"{tags} " if tags else ""

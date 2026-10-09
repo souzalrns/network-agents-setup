@@ -41,8 +41,9 @@ lê-as se presentes e ignora-as se ausentes.
 
 ## Vista de gestão (gerada pelo planwright)
 
-> Reproduzir: `planwright action|mermaid docs/initiatives/PLANOS-AUTONOMOS.md`.
-> Diagramas Mermaid renderizam no GitHub — não é preciso ler a CLI.
+> Gerada por `scripts/regen_planos_visual.py` a partir da tabela mestra.
+> **Não editar à mão** — correr o script; o CI falha se divergir da tabela.
+> Os diagramas Mermaid renderizam no GitHub.
 
 ### Grafo de dependências (o que prende o quê · cor = estado)
 
@@ -151,9 +152,9 @@ flowchart TB
 
 ```
 ## Agora (pronto, por ordem de alavancagem)
-  1. [C4][human] RE1  Decidir go/no-go + nome e âmbito da extracção do l5_eval para projeto autónomo  (4h @maestro) · destrava 1
+  1. [C4][human] RE1  Decidir go/no-go + nome e âmbito da extracção do l5_eval para projeto autónomo  (4h @maestro) · destrava 2 a jusante (7d)
   2. [C4][auto] PW3  Fase 2 scheduling: adapters opcionais (workalendar; OR-Tools/PyJobShop; Mermaid gantt) + roll-up multi-plano + wrapper MCP; core fica zero-dep  (10d @claude) ★crítico
-  3. [C2][assisted] XP1  Playbook partilhado de extracção+publicação: scaffold de repo próprio + CI + passos PyPI, reutilizado pelos 4  (2d @ambos) · destrava 4
+  3. [C2][assisted] XP1  Playbook partilhado de extracção+publicação: scaffold de repo próprio + CI + passos PyPI, reutilizado pelos 4  (2d @ambos) · destrava 4 a jusante (8d)
   4. [C3][auto] AD2  Fase 2 mais engines: osv-scanner/Trivy (via SEC-SCA-2) + engine de segredos + wrapper MCP para agentes chamarem o scan  (5d @claude)
   5. [C3][auto] SS2  Fase 2 sandbox: processo filho com limites de CPU/memória/ficheiros/rede + testes de comportamento  (5d @claude)
 

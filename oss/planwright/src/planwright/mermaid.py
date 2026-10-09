@@ -4,11 +4,13 @@ Two views, both plain text that GitHub, VS Code and most Markdown viewers render
 natively (zero dependencies, nothing to install):
 
 - **deps**: a dependency flowchart (what blocks what), nodes coloured by status.
-- **board**: a Kanban-style board (Done / Doing / Ready / Blocked), so the
+- **board**: a Kanban-style board (Ready / Doing / Blocked / Done), so the
   parallelism and the bottlenecks are visible at a glance.
 
 Output is wrapped in ```mermaid fences so it can be pasted straight into a
-Markdown document.
+Markdown document. Node ids are assigned by an injective per-plan map, so two
+distinct item ids that sanitise to the same token (``A-1`` and ``A_1``) never
+collide; labels still show the original id.
 """
 
 from __future__ import annotations
@@ -26,18 +28,39 @@ _CLASSDEFS = [
 ]
 
 
-def _node_id(item_id: str) -> str:
-    """Mermaid node ids must be identifier-safe; map anything else to '_'."""
-    return "".join(c if c.isalnum() else "_" for c in item_id)
+def _node_map(plan: Plan) -> dict[str, str]:
+    """Assign each item id a unique Mermaid-safe node token.
+
+    Sanitises non-alphanumerics to '_', prefixes a leading digit, and
+    disambiguates collisions with a numeric suffix so the map is injective.
+    """
+    mapping: dict[str, str] = {}
+    used: set[str] = set()
+    for it in plan:
+        base = "".join(c if c.isalnum() else "_" for c in it.id) or "n"
+        if base[0].isdigit():
+            base = "n" + base
+        name = base
+        i = 2
+        while name in used:
+            name = f"{base}__{i}"
+            i += 1
+        used.add(name)
+        mapping[it.id] = name
+    return mapping
 
 
 def _label(item_id: str, title: str, *, max_len: int = 40) -> str:
-    t = title.strip()
+    """A single-line, quote-safe label `id: title` for a Mermaid node."""
+    t = " ".join(title.split())  # collapse newlines/runs of whitespace
     if len(t) > max_len:
         t = t[: max_len - 1].rstrip() + "…"
-    # Escape double quotes for the Mermaid "..." label.
-    t = t.replace('"', "'")
-    return f"{item_id}: {t}"
+    # Inside a "..." Mermaid label, the only hard breaker is the double quote;
+    # backticks can also confuse some renderers. Neutralise both.
+    t = t.replace('"', "'").replace("`", "'")
+    head = str(item_id).replace('"', "'").replace("`", "'")
+    sep = ": " if t else ""
+    return f"{head}{sep}{t}"
 
 
 def _status_class(graph: Graph, item_id: str, ready_ids: set[str]) -> str:
@@ -57,30 +80,33 @@ def render_deps(plan: Plan) -> str:
     """Dependency flowchart: an edge dep --> item, nodes coloured by status."""
     graph = Graph(plan)
     ready_ids = {it.id for it in graph.ready()}
+    node = _node_map(plan)
     lines = ["```mermaid", "flowchart LR"]
+    if len(plan) == 0:
+        lines.append('  empty["(plano vazio)"]')
+        lines.append("```")
+        return "\n".join(lines)
 
     for it in plan:
-        nid = _node_id(it.id)
-        lines.append(f'  {nid}["{_label(it.id, it.title)}"]')
+        lines.append(f'  {node[it.id]}["{_label(it.id, it.title)}"]')
     lines.append("")
     for it in plan:
-        nid = _node_id(it.id)
         for dep in it.depends:
             if plan.has(dep):
-                lines.append(f"  {_node_id(dep)} --> {nid}")
+                lines.append(f"  {node[dep]} --> {node[it.id]}")
     lines.append("")
     for cd in _CLASSDEFS:
         lines.append(f"  {cd}")
     for it in plan:
-        cls = _status_class(graph, it.id, ready_ids)
-        lines.append(f"  class {_node_id(it.id)} {cls}")
+        lines.append(f"  class {node[it.id]} {_status_class(graph, it.id, ready_ids)}")
     lines.append("```")
     return "\n".join(lines)
 
 
 def render_board(plan: Plan) -> str:
-    """Kanban board: one subgraph per bucket (Done / Doing / Ready / Blocked)."""
+    """Kanban board: one subgraph per bucket (Ready / Doing / Blocked / Done)."""
     graph = Graph(plan)
+    node = _node_map(plan)
     ready = [it.id for it in graph.ready()]
     ready_set = set(ready)
     done = [it.id for it in plan if it.status is Status.DONE]
@@ -98,21 +124,16 @@ def render_board(plan: Plan) -> str:
         lines.append(f'  subgraph {key}["{label} ({len(ids)})"]')
         if ids:
             for item_id in ids:
-                lines.append(f'    {_node_id(item_id)}["{_label(item_id, _title(plan, item_id))}"]')
+                lines.append(f'    {node[item_id]}["{_label(item_id, _title(plan, item_id))}"]')
         else:
             lines.append(f"    {key}_empty[ ]")
         lines.append("  end")
     lines.append("")
     for cd in _CLASSDEFS:
         lines.append(f"  {cd}")
-    for item_id in done:
-        lines.append(f"  class {_node_id(item_id)} done")
-    for item_id in doing:
-        lines.append(f"  class {_node_id(item_id)} doing")
-    for item_id in ready:
-        lines.append(f"  class {_node_id(item_id)} ready")
-    for item_id in blocked:
-        lines.append(f"  class {_node_id(item_id)} blocked")
+    for bucket_ids, cls in ((done, "done"), (doing, "doing"), (ready, "ready"), (blocked, "blocked")):
+        for item_id in bucket_ids:
+            lines.append(f"  class {node[item_id]} {cls}")
     lines.append("```")
     return "\n".join(lines)
 

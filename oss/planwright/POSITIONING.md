@@ -61,6 +61,28 @@ leveling, or stakeholder/budget tracking across many projects, reach for a real
 PM suite — planwright is a sharp instrument, not a suite, and it is honest about
 that. If you only ever have a five-item list, you do not need it at all.
 
+## Honest status & boundary (what this is / isn't)
+
+To keep the claims accurate (and after an external audit of v0.2):
+
+| Capability | State |
+|---|---|
+| Deterministic planning (ready / parallel / critical path / cycles) | **done** |
+| Static visualization (Mermaid graph + Kanban) + initial prioritization (`action`) | **done (v0.2)** |
+| Transitive-impact ranking in `action` | **done (v0.2)** |
+| Interactive dashboard (drag, live recompute) | **not** — out of scope |
+| Governed autonomous execution (approvals, tools, permissions) | **not here — belongs to an execution runner** |
+| Dynamic model/cost routing | **not** — metadata is prepared (`Complexity`/`Autonomy`), the router is not built |
+
+**The boundary.** planwright **describes and prioritizes** a plan; it does not
+execute it. `Autonomy` (`auto`/`assisted`/`human`) and `Complexity` (`C1..C4`)
+are **planning intent and routing signals**, not runtime policy. The actual
+authority — who may run what, human approval gates, tool permissions, token
+budgets, real cost — lives in whatever **execution runner** drives the work, and
+that stays the source of truth at runtime. A visual board must never imply an
+agent is authorized to do something the runner would refuse. planwright exports
+the metadata; it does not enforce it.
+
 ## The bar for Phase 2 (`PLANWRIGHT-2`) — integrate, don't rebuild
 
 Phase 2 adds dated, resource-aware scheduling. The rule: **integrate mature

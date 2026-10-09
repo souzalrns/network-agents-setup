@@ -15,11 +15,15 @@ on:
     paths:
       - 'oss/planwright/**'
       - '.github/workflows/planwright.yml'
+      - 'scripts/regen_planos_visual.py'
+      - 'docs/initiatives/PLANOS-AUTONOMOS.md'
   push:
     branches: [main]
     paths:
       - 'oss/planwright/**'
       - '.github/workflows/planwright.yml'
+      - 'scripts/regen_planos_visual.py'
+      - 'docs/initiatives/PLANOS-AUTONOMOS.md'
   workflow_dispatch: {}
 
 permissions:
@@ -92,3 +96,25 @@ jobs:
           name: planwright-dist
           path: oss/planwright/dist/
           retention-days: 7
+
+  doc-visual:
+    # The embedded Mermaid graph/board + action plan in PLANOS-AUTONOMOS.md are
+    # generated from its master table; fail if someone changed the table without
+    # regenerating them (run: python scripts/regen_planos_visual.py).
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Plan validates and its visual section is not stale
+        run: |
+          PYTHONPATH=oss/planwright/src python3 -m planwright.cli validate docs/initiatives/PLANOS-AUTONOMOS.md --strict
+          python3 scripts/regen_planos_visual.py --check
