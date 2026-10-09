@@ -1,0 +1,98 @@
+name: llm-redteam-lab
+
+# SEC-LLMRT-1 (P-48 = A): red-team de LLM/agentes em laboratório, com Garak (NVIDIA, Apache-2.0)
+# e promptfoo (MIT). Testa prompt injection, jailbreak e fuga de dados (OWASP LLM, ATLAS).
+# Ofensivo por natureza — FORA do runner de produção. Ver docs/ops/SECURITY-TOOLS.md.
+#
+# Regras (como o strix-lab.yml):
+# - só MANUAL (workflow_dispatch); nunca em push nem em pull_request;
+# - NUNCA bloqueia (continue-on-error): é um piloto informativo;
+# - sem o segredo LLM_API_KEY, não corre (sai 0, sem erro);
+# - modelo fixado pelo operador (Gemini Flash Lite); a premissa é custo zero;
+# - só contra os nossos próprios modelos/agentes, com autorização.
+#
+# Repositório público: minutos de Actions grátis. Actions fixadas por SHA.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: Ferramenta (garak | promptfoo)
+        required: true
+        default: garak
+      garak_version:
+        description: Versão do pacote garak no PyPI (fixa), se tool=garak
+        required: false
+        default: ""
+      model:
+        description: Modelo (litellm) — Gemini Flash Lite; confirmar o id actual
+        required: true
+        default: gemini/gemini-flash-lite-latest
+
+permissions:
+  contents: read
+
+concurrency:
+  group: llm-redteam-lab-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  redteam-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true # piloto informativo: nunca bloqueia
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Verificar o segredo do LLM
+        id: gate
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          if [ -z "${LLM_API_KEY}" ]; then
+            echo "secreto LLM_API_KEY ausente: nada a correr (ver docs/ops/SECURITY-TOOLS.md)."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Python
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Correr o red-team (garak; não bloqueia)
+        if: steps.gate.outputs.run == 'true' && inputs.tool == 'garak'
+        env:
+          GARAK_VERSION: ${{ inputs.garak_version }}
+          MODEL: ${{ inputs.model }}
+          OPENAI_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          if [ -z "${GARAK_VERSION}" ]; then
+            echo "error: define garak_version (versão fixa do PyPI)"; exit 1
+          fi
+          python -m pip install "garak==${GARAK_VERSION}"
+          python -m garak --model_type litellm --model_name "$MODEL" --probes promptinject --report_prefix garak_run
+
+      - name: promptfoo (placeholder; a configuração vive no repo)
+        if: steps.gate.outputs.run == 'true' && inputs.tool == 'promptfoo'
+        run: |
+          echo "promptfoo: adicionar promptfooconfig.yaml e correr 'npx promptfoo@<versão> redteam run'."
+          echo "Fica como TODO do SEC-LLMRT-1 (docs/ops/SECURITY-TOOLS.md)."
+
+      - name: Guardar o relatório
+        if: always() && steps.gate.outputs.run == 'true'
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: llm-redteam-lab-run
+          path: |
+            garak_run*.*
+            *.jsonl
+          if-no-files-found: ignore
+          retention-days: 30

@@ -36,11 +36,14 @@ As capabilities vivem em `config/security-capabilities.yaml`.
 | defensive_audit | `meta.security-auditor` | READ | implemented |
 | security_report | `security.reporter` | READ / PREPARE | implemented |
 | secrets_hygiene | auditor + CI (gitleaks) | READ | partial |
-| supply_chain | auditor + OSV/Trivy guidance | READ | partial |
+| sast | CI (semgrep + CodeQL + bandit) | READ | partial |
+| workflow_security | CI (zizmor + actionlint) | READ | partial |
+| supply_chain | CI (pip-audit) + OSV/Trivy guidance | READ | partial |
 | mcp_surface | auditor (skill security-audit) | READ | partial |
 | hardening_recommend | reporter → engenharia | PREPARE only | partial |
-| agent_redteam_lab | CI/lab isolado | lab only | deferred |
+| agent_redteam_lab | CI/lab isolado (PyRIT/DeepTeam) | lab only | deferred |
 | external_pentest_lab | Strix (CI/lab manual, repos próprios) | lab only | deferred (P-47 = A, piloto) |
+| llm_redteam_lab | CI/lab manual (Garak/promptfoo) | lab only | deferred (P-48 = A) |
 
 ## READ / PREPARE / ACT
 
