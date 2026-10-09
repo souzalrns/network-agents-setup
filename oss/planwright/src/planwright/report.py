@@ -112,3 +112,78 @@ def render_validation(report: Report) -> str:
     lines.append("")
     lines.append(f"{len(report.errors)} error(s), {len(report.warnings)} warning(s)")
     return "\n".join(lines)
+
+
+def _tags(item) -> str:
+    """Compact [complexity][autonomy] tag for the action view."""
+    parts = []
+    if item.complexity:
+        parts.append(item.complexity)
+    if item.autonomy:
+        parts.append(item.autonomy)
+    return "".join(f"[{p}]" for p in parts)
+
+
+def render_action(plan: Plan) -> str:
+    """A manager's action plan: what to start now (ranked), what each blocker
+    unblocks, which work is autonomous, and the critical item."""
+    graph = Graph(plan)
+    if not graph.is_schedulable():
+        return render_graph(plan)  # fall back to the unschedulable message
+
+    # How many items each item blocks (fan-out over not-done dependents).
+    blocks: dict[str, int] = {it.id: 0 for it in plan}
+    for it in plan:
+        if it.status.completed:
+            continue
+        for dep in it.depends:
+            if dep in blocks:
+                blocks[dep] += 1
+
+    cp = set(graph.critical_path().ids)
+    ready = graph.ready()
+
+    def rank(it):
+        # Human gates that unblock others first; then critical-path items;
+        # then by how much they unblock; then by id for stability.
+        human = it.autonomy == "human"
+        return (
+            0 if (human and blocks[it.id] > 0) else 1,
+            0 if it.id in cp else 1,
+            -blocks[it.id],
+            it.id,
+        )
+
+    ready_sorted = sorted(ready, key=rank)
+
+    lines: list[str] = ["## Agora (pronto, por ordem de alavancagem)"]
+    if not ready_sorted:
+        lines.append("  (nada pronto — tudo espera por outra coisa)")
+    for i, it in enumerate(ready_sorted, 1):
+        est = _fmt_hours(it.estimate_hours) if it.has_estimate else "?"
+        owner = f" @{it.owner}" if it.owner else ""
+        unblocks = f" · destrava {blocks[it.id]}" if blocks[it.id] else ""
+        star = " ★crítico" if it.id in cp else ""
+        tags = _tags(it)
+        tag_s = f"{tags} " if tags else ""
+        lines.append(f"  {i}. {tag_s}{it.id}  {it.title}  ({est}{owner}){unblocks}{star}")
+
+    blocked = graph.blocked()
+    if blocked:
+        lines.append("")
+        lines.append("## Bloqueadas → quem destrava")
+        for item_id, deps in blocked.items():
+            lines.append(f"  {item_id} <- {', '.join(deps)}")
+
+    autos = [it.id for it in ready_sorted if it.autonomy == "auto"]
+    if autos:
+        lines.append("")
+        lines.append("## Autónomas nesta onda (Autonomy=auto, prontas)")
+        lines.append(f"  {', '.join(autos)}")
+
+    cp_obj = graph.critical_path()
+    if cp_obj.ids:
+        lines.append("")
+        lines.append(f"## Crítico: {_fmt_hours(cp_obj.hours)} — {' -> '.join(cp_obj.ids)}")
+        lines.append("  (encurtar o plano = atacar esta cadeia)")
+    return "\n".join(lines)

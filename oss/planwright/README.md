@@ -65,13 +65,31 @@ that has `ID` and `Title` and ignores everything else.
 
 ```bash
 planwright graph    PLAN.md          # ready now · parallel layers · blocked · critical path
+planwright action   PLAN.md          # a manager's action plan: ranked ready, who-unblocks-what, critical
+planwright mermaid  PLAN.md          # Mermaid diagrams (deps + Kanban board) — render in GitHub/Markdown
 planwright next     PLAN.md          # just the ids ready to start now (one per line)
 planwright validate PLAN.md [--strict]  # check the plan is sound (and disciplined)
 planwright status   PLAN.md          # one-line status counts
 ```
 
-Every command takes `--json` for machine output, and the path defaults to
-`PLAN.md` (override with `$PLANWRIGHT_PLAN`).
+`graph`/`next`/`status` take `--json`; `mermaid` takes `--view deps|board|all`.
+The path defaults to `PLAN.md` (override with `$PLANWRIGHT_PLAN`).
+
+### See it, don't read it
+
+`planwright mermaid` emits ```mermaid``` blocks that render natively on GitHub,
+so a manager sees the dependency graph (coloured by status) and a Kanban board
+without reading the CLI. `planwright action` ranks what to start now by leverage:
+human decisions that unblock others first, then the critical path, then the rest.
+
+### Optional columns (for routing)
+
+Two optional columns feed autonomy/complexity-aware routing; absent, they are
+ignored:
+
+- **Autonomy** — `auto` (an agent can close it) · `assisted` · `human` (needs a person).
+- **Complexity** — `C1`..`C4` (cognitive risk, for cheap→expensive model routing),
+  **independent** of `Est` (effort). A task can be `Est=S` and `C4`.
 
 Example:
 
