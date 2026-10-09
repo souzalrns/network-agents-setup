@@ -5,8 +5,23 @@
 > Horas em UTC, tiradas dos commits (`git log`).
 
 ## Estado actual
-- **Branch actual:** `feat/auditron` (empilhado no `feat/p48-security-suite`/#155), com o `main` (incl. #154/P-47 e #155/P-48) reconciliado por merge.
-- **`main` de referência:** NAS com #154 (P-47, Strix) e #155 (P-48, suite) merged. O #auditron (P-49) coexiste com ambos: as duas capabilities de lab (`external_pentest_lab` + `llm_redteam_lab`) ficam, mais o pacote autónomo `oss/auditron/`. Contagens reconciliadas: 130 vivos, 49 decisões.
+- **Branch actual:** `feat/planwright` (a partir do `main` `b47a21a`, já com #156/auditron merged).
+- **`main` de referência:** NAS com #154 (P-47), #155 (P-48) e #156 (P-49, auditron) merged. O #planwright (P-50) acrescenta o 3.º projecto autónomo `oss/planwright/`. Contagens reconciliadas: 132 vivos, 50 decisões.
+
+### planwright — método de gestão de projetos como plugin acoplável (P-50, autonomia delegada, 2026-10-09)
+- **Contexto do maestro:** cansado de correcções/pendências; falta método (ideia→pesquisa→plano→plano de execução com prazos, dependências, paralelo). Pergunta-chave: "é agente, é skill, é…?". Pediu análise, pesquisa dos repos de PM (VoltAgent, contains-studio, wshobson/conductor) e depois "avance com a recomendação; já estruture para repo independente".
+- **Pesquisa (fontes citadas no chat):** os PM dos VoltAgent/contains-studio são **subagentes sem estado** (persona que esquece — a causa da bagunça); o **conductor** acerta (plugin + ficheiros como fonte de verdade). Consenso 2026: skill=método, subagente=trabalho isolado, MCP=externo/determinístico, hook=imposição, plugin=distribuição.
+- **Decisão (P-50 = A):** **não é agente** — é um **plugin em camadas** chamado **`planwright`** (livre em PyPI **e** npm; alternativas livres `planloom`, `trackgraph`).
+- **`oss/planwright/`** (MIT, 0 dependências, stdlib só, padrão `skill-scout`/`auditron`):
+  - **dados**: plano = tabela Markdown (headers EN/PT, estimativas S/M/L ou `2h`/`3d`/`1w`);
+  - **motor determinístico**: `ready` (pronto agora), `blocked` (com os ids que esperam), camadas paralelas (topológico), **caminho crítico** (cadeia mais longa por esforço), deteção de ciclos/dependências inexistentes;
+  - **validador**: erros (parse, id duplicado, dep inexistente/própria, ciclo) + avisos de governança (começado sem estimativa; done antes da dependência); `--strict`;
+  - **CLI** `planwright validate|graph|next|status` (`--json`);
+  - **plugin Claude Code**: `plugin.json` + 3 slash commands (`plan-status`, `plan-new`, `plan-triage`) + skill `governed-planning` (5 portões + 1 regra) + **hook** `PostToolUse` que bloqueia um `PLAN.md`/`*.plan.md` inválido (a imposição que falta ao ecossistema);
+  - `examples/PLAN.md` (o próprio plano do planwright, dogfood), `README` + `POSITIONING.md` ("eu escolheria? sim, com limites honestos").
+- **Verificado localmente** (venv): 35 testes passam, ruff check + format limpos, `python -m build` + `twine check --strict` verdes, wheel com licenças e sem testes, `claude plugin validate` passa, CLI corre sobre o `examples/PLAN.md` (caminho crítico 7d).
+- **PENDENCIAS:** P-50 + PLANWRIGHT-1 (EM CURSO) + PLANWRIGHT-2 (ABERTO, Fase 2: roll-up multi-plano, wrapper MCP, agendamento por calendário, repo próprio+PyPI). 132 vivos, 50 decisões.
+- **Falta:** o maestro confirmar o nome ao acordar; PLANWRIGHT-2 (Fase 2) e adoptar o planwright como método do próprio NAS (apontar ao PENDENCIAS/`PLAN.md` + ligar o hook).
 
 ### auditron — projecto autónomo de segurança (P-49, autonomia delegada, 2026-10-09)
 - **Pedido do maestro (a dormir):** transformar a suite num repo autónomo acoplável, tipo plugin MCP; no fim dizer se eu o escolheria; procurar nome livre; ir até ao fim sem pendências.

@@ -1,0 +1,17 @@
+{
+  "description": "planwright: validate a plan file after it is edited; block on an unsound schedule (cycle, dangling dependency, duplicate id).",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/planwright_hook.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
