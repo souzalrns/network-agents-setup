@@ -55,14 +55,39 @@ def _step_from_item(item: dict[str, Any]) -> dict[str, Any]:
     return step
 
 
-def import_contract(contract: dict[str, Any], *, plan_id: str) -> dict[str, Any]:
-    """Map a planwright contract into a runner plan dict (schema-valid skeleton)."""
+def _signals_from_items(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Os sinais de planeamento (complexity/autonomy) por passo, para o runner LER.
+
+    Vao no bloco de topo `router.signals` (metadados, livre no schema), nunca em
+    campos do passo: `complexity` continua a NAO ser um campo do YAML, so um sinal.
+    A seleccao do runner (model_tiers) le daqui a complexidade quando o passo nao
+    declara `model_tier`. Ver docs/architecture/CANONICAL-SCENARIO.md.
+    """
+    signals: dict[str, dict[str, Any]] = {}
+    for it in items:
+        sig = {k: it[k] for k in ("complexity", "autonomy") if it.get(k) is not None}
+        if sig:
+            signals[str(it["id"])] = sig
+    return signals
+
+
+def import_contract(contract: dict[str, Any], *, plan_id: str, with_signals: bool = False) -> dict[str, Any]:
+    """Map a planwright contract into a runner plan dict (schema-valid skeleton).
+
+    `with_signals` (opt-in) carries the planning signals into `router.signals`, so
+    the runner's selection can read them; the default stays the thin skeleton.
+    """
     if not isinstance(contract, dict) or contract.get("schema") != CONTRACT_SCHEMA:
         raise ContractError(f"not a {CONTRACT_SCHEMA} contract")
     items = contract.get("items")
     if not isinstance(items, list) or not items:
         raise ContractError("contract has no items (a runner plan needs at least one step)")
-    return {"id": plan_id, "steps": [_step_from_item(it) for it in items]}
+    plan: dict[str, Any] = {"id": plan_id, "steps": [_step_from_item(it) for it in items]}
+    if with_signals:
+        signals = _signals_from_items(items)
+        if signals:
+            plan["router"] = {"signals": signals}
+    return plan
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -70,11 +95,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("contract", help="planwright export JSON (planwright-plan/v1)")
     ap.add_argument("--id", default="planwright-import", help="runner plan id (default: planwright-import)")
     ap.add_argument("--validate", action="store_true", help="validate against plan.schema.json and exit non-zero on error")
+    ap.add_argument("--signals", action="store_true", help="carry complexity/autonomy into router.signals (for the runner's selection)")
     args = ap.parse_args(argv)
 
     try:
         contract = json.loads(Path(args.contract).read_text(encoding="utf-8"))
-        plan = import_contract(contract, plan_id=args.id)
+        plan = import_contract(contract, plan_id=args.id, with_signals=args.signals)
     except (OSError, ValueError) as exc:
         print(f"plan_import: {exc}", file=sys.stderr)
         return 2

@@ -111,3 +111,76 @@ def test_tecto_de_custo_usa_o_preco_do_modelo_do_tier(tmp_path, tmp_run_dir, fak
 def test_config_real_valida_e_sem_modelos_escolhidos():
     """config/model-tiers.yaml existe, carrega e esta tudo a null (o DEV escolhe os modelos)."""
     assert mt.load_tiers() == {"planner": None, "executor": None, "verifier": None}
+
+
+# --------------------------------------------------------------------------
+# Sinal de complexidade (C1..C4) da planwright -> modelo (router.signals)
+# --------------------------------------------------------------------------
+
+def test_config_real_de_complexidade_valida_e_a_null():
+    """A seccao `complexity` existe, carrega e esta tudo a null: o sinal viaja, nao muda modelo."""
+    assert mt.load_complexity() == {"C1": None, "C2": None, "C3": None, "C4": None}
+
+
+def test_complexidade_escolhe_o_modelo_quando_nao_ha_model_tier(tmp_path, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"complexity": {"C1": "barato", "C4": "forte"}}), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    assert mt.resolve_model({}, "default", complexity="C4") == ("forte", None)
+    assert mt.resolve_model({}, "default", complexity="C1") == ("barato", None)
+    # sinal sem mapa ou desconhecido -> default, nunca parte (informa, nao decide)
+    assert mt.resolve_model({}, "default", complexity="C2") == ("default", None)
+    assert mt.resolve_model({}, "default", complexity="C9") == ("default", None)
+
+
+def test_model_tier_manda_sempre_sobre_a_complexidade(tmp_path, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"tiers": {"planner": "modelo-do-papel"}, "complexity": {"C4": "forte"}}), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    # com model_tier, a complexidade e ignorada: o papel e a autoridade
+    assert mt.resolve_model({"model_tier": "planner"}, "default", complexity="C4") == ("modelo-do-papel", "planner")
+
+
+def _plan_com_sinais(tmp_path: Path, complexities: dict[str, str]) -> Path:
+    plan = {
+        "id": "sinais", "objective": "x",
+        "router": {"signals": {sid: {"complexity": c} for sid, c in complexities.items()}},
+        "steps": [
+            {"id": "research", "action": "research", "output_artifact": "artifacts/research.md"},
+            {"id": "copy", "action": "copy_social", "depends_on": ["research"], "output_artifact": "artifacts/copy.md"},
+        ],
+    }
+    p = tmp_path / "plan.yaml"
+    p.write_text(json.dumps(plan), encoding="utf-8")  # JSON e YAML valido
+    return p
+
+
+def test_run_le_a_complexidade_de_router_signals_e_escolhe_o_modelo(tmp_path, tmp_run_dir, fake, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"complexity": {"C1": "modelo-barato", "C4": "modelo-forte"}}), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    plan = _plan_com_sinais(tmp_path, {"research": "C1", "copy": "C4"})
+    status = run_plan(plan, mode="external", out_dir=tmp_run_dir, worker="gemini")
+
+    assert status["state"] == "done"
+    assert _models(fake) == ["modelo-barato", "modelo-forte"]
+    meta = json.loads((tmp_run_dir / "pending_steps/copy/result.json").read_text(encoding="utf-8"))["meta"]
+    assert meta["model"] == "modelo-forte" and meta["complexity"] == "C4" and "model_tier" not in meta
+
+
+def test_sem_signals_a_complexidade_nao_entra(tmp_path, tmp_run_dir, fake, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"complexity": {"C4": "modelo-forte"}}), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    plan = _plan_com_sinais(tmp_path, {})  # plano sem router.signals
+    run_plan(plan, mode="external", out_dir=tmp_run_dir, worker="gemini")
+    assert _models(fake) == [ew.DEFAULT_MODEL, ew.DEFAULT_MODEL]
+    meta = json.loads((tmp_run_dir / "pending_steps/copy/result.json").read_text(encoding="utf-8"))["meta"]
+    assert "complexity" not in meta
+
+
+def test_config_com_complexidade_invalida_e_recusada(tmp_path):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"complexity": {"C9": "x"}}), encoding="utf-8")
+    with pytest.raises(mt.ModelTierError, match="desconhecido"):
+        mt.load_complexity(p)

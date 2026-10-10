@@ -46,7 +46,7 @@ plan — planwright does not know the runner's actions.
 | `track` | `action` | placeholder; `"unassigned"` when no track — the router/human sets the real action before a run |
 | `autonomy` = human/assisted | `human_gate: true` | planning *intent* → a gate; the runner's HITL remains the runtime authority |
 | `autonomy` = auto | (no gate) | — |
-| `complexity` | **not in the YAML** | a **signal** read from the export JSON by the runner's selection logic (`model_tiers`/`router`); never the sole decider, never policy |
+| `complexity` | **not a step field** | a **signal**: `plan_import --signals` carries it into `router.signals` (top-level metadata), which the runner's selection (`model_tiers`) reads to pick a model when the step has no `model_tier`; never the sole decider, never policy |
 
 ## What the contract does NOT guarantee / carry
 
@@ -76,8 +76,19 @@ one run, proven by `runner/tests/test_canonical_composition.py` and
 `oss/planwright/tests/test_export.py`. The composition is no longer an assertion;
 it is a test.
 
+## Signals consumed (the "integrate" row, done)
+
+The runner's selection now **reads** the signals, not just carries them:
+`plan_import --signals` writes `complexity`/`autonomy` into `router.signals`, and
+`model_tiers.resolve_model` picks a model from `complexity` (config
+`model-tiers.yaml`, section `complexity`, cheap→expensive) **when the step has no
+`model_tier`** — an explicit tier (role) always wins, and with the shipped all-null
+config nothing changes. Proven by `runner/tests/test_model_tier.py` and the signal
+leg of `test_canonical_composition.py`. `autonomy` was already consumed (→
+`human_gate`). `complexity` never becomes the role tier; it only picks the model,
+downstream.
+
 ## Next (beyond this contract)
 
-The runner's executor selection consuming `complexity`/`autonomy` from the export
-(the "integrate" row of the matrix) — the signals travel today, but nothing reads
-them yet to pick an `action`/`model_tier` automatically.
+Automatic `action` selection from the plan (the `track` placeholder → a real
+runner action) is still the router/human's job; nothing infers it yet.

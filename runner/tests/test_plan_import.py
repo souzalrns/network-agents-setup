@@ -68,3 +68,20 @@ def test_rejects_non_contract():
 def test_rejects_empty_items():
     with pytest.raises(ContractError):
         import_contract({"schema": CONTRACT_SCHEMA, "items": []}, plan_id="x")
+
+
+def test_default_import_carries_no_signals():
+    # o esqueleto fino nao ganhou router.signals: `complexity` continua a NAO estar no plano
+    plan = import_contract(CONTRACT, plan_id="demo")
+    assert "router" not in plan
+    assert all("complexity" not in s for s in plan["steps"])
+
+
+def test_with_signals_carries_complexity_and_autonomy_into_router():
+    plan = import_contract(CONTRACT, plan_id="demo", with_signals=True)
+    assert plan_errors(plan) == []  # router e um objecto livre, valido no schema
+    signals = plan["router"]["signals"]
+    assert signals["A1"] == {"complexity": "C2", "autonomy": "auto"}
+    assert signals["A2"] == {"complexity": "C4", "autonomy": "human"}
+    # continua a NAO ser um campo do passo
+    assert all("complexity" not in s for s in plan["steps"])

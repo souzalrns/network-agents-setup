@@ -120,15 +120,32 @@ o run terminar em `failed` com `detail: done_when`, não em `done`.
   dependências e porta); as três garantias de governação funcionam juntas no
   mesmo run; a conclusão é por evidência verificável.
 - **Não prova** (nem tenta): execução real com um LLM a sério (o Gemini é falso
-  no teste, de propósito — determinista e sem rede); a escolha automática de
-  `action`/`model_tier` a partir dos sinais `complexity`/`autonomy` (a linha
-  "integrar" da matriz, o próximo passo para lá deste cenário).
+  no teste, de propósito — determinista e sem rede); a escolha automática da
+  `action` (o placeholder `track` → uma action real continua a ser do router/humano).
+
+## Os sinais também são lidos (não só transportados)
+
+A linha "integrar" da matriz está fechada: além do `autonomy` (que já virava
+`human_gate`), agora o `complexity` **informa a escolha do modelo**.
+
+```bash
+# leva complexity/autonomy do contrato para router.signals (metadados de topo)
+python -m plan_runner.plan_import contract.json --id composicao-canonica --signals
+```
+
+No run, quando um passo **não** declara `model_tier`, a selecção
+(`model_tiers.resolve_model`) lê `router.signals[<passo>].complexity` e escolhe o
+modelo pela secção `complexity` de `config/model-tiers.yaml` (cheap→expensive). Um
+`model_tier` explícito (papel) manda sempre; com a config toda a `null` (como vai
+no repo) nada muda — o sinal viaja mas não força modelo nenhum. O `complexity`
+nunca é um campo do passo nem vira o papel; só escolhe o modelo, a jusante. Prova:
+`test_model_tier.py` + a perna de sinais de `test_canonical_composition.py`.
 
 ## Correr a prova
 
 ```bash
-# execução (runner): 4 testes
-cd runner && PYTHONPATH=. python3 -m pytest tests/test_canonical_composition.py -v
+# execução (runner): 5 testes (governação + a perna de sinais)
+cd runner && PYTHONPATH=. python3 -m pytest tests/test_canonical_composition.py tests/test_model_tier.py -v
 # export (planwright): a outra ponta
 cd oss/planwright && PYTHONPATH=src python3 -m pytest tests/test_export.py -v
 ```

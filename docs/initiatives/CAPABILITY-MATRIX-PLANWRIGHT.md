@@ -19,7 +19,7 @@ untested end-to-end) · **absent** · **N/V** (not verified).
 | 2 | Structural planning | — (human/doc) | **absent (auto)** | ADRs + `plan_runner/areas.py`/`plan_schema.py` describe structure, but goal→architecture is authored by a human/agent, not produced by the system | no automated structural planner; this is a meta-agent/concierge job, not built |
 | 3 | Executive planning (WBS, deps, effort, autonomy, blocks) | **planwright** | **proven** (repr+analysis) / partial (auto-decompose) | `oss/planwright/src/planwright/{model,parse,graph}.py`, Autonomy/Complexity cols · `oss/planwright/tests/` (48); runner plan form `plan_runner/plan_schema.py` · `test_plan_schema.py` | decomposing a goal *into* the table is still manual/agent, not automatic |
 | 4 | Visualization | **planwright** | **proven** (static) / partial (interactive) | `oss/planwright/src/planwright/{mermaid,report}.py` (graph+Kanban+action) · `test_visual.py` | static Mermaid only; no interactive board / live exec state |
-| 5 | Executor selection (model/agent/tool) | plan_runner | **partial** | `plan_runner/model_tiers.py` (planner/executor/verifier → `config/model-tiers.yaml`) · `test_model_tier.py`; `plan_runner/router.py` (area routing) · `test_router.py` | selection does **not** read planwright `Complexity`/`Autonomy`; not budget/availability-aware |
+| 5 | Executor selection (model/agent/tool) | plan_runner | **proven** (signal-aware) / partial (budget/availability) | `plan_runner/model_tiers.py` (role `model_tier` → `config/model-tiers.yaml`, **and** planwright `complexity` → model via `router.signals`, cheap→expensive) · `test_model_tier.py`; `plan_import.py --signals` carries the signal · `test_plan_import.py`; `plan_runner/router.py` (area routing) · `test_router.py` | selection now **reads** `Complexity` (role tier still wins; `Autonomy`→`human_gate` already consumed); not yet budget/availability-aware |
 | 6 | Governed execution (authz, HITL, retries, budget, cancel, recovery) | **plan_runner** | **proven** | `hitl.py` · `test_hitl_contract.py`; `tool_executor.py` (flag-gated authz) · `test_tool_executor.py`; `cost.py` (budget ceiling→paused_budget) · `test_budget.py`; `events.py` · `test_events.py`; `external_worker.py` · `test_external_worker.py`; recovery · `test_crash_recovery.py` | the runner's core strength — do **not** duplicate it in planwright |
 | 7 | Validation & completion (evidence, not self-declared) | **plan_runner** | **proven** (mechanisms) / partial (arbitrary criteria) | `done_when.py` (file exists/contains, no free-text trust) · `test_done_when.py`; `l5_eval.py` (regression gate, provenance_ok) · `test_l5_eval.py`; `test_f5_evidence.py`, `test_engenharia_ship_gate.py` | `done_when` supports limited forms; richer acceptance checks are future |
 | 8 | Operational learning (estimated vs actual, cost, quality) | plan_runner | **partial** | `cost.py` (actual cost from token ledger) · `test_budget.py`; `capabilities.py` capability-maturity · `test_capabilities.py`; `token_projection.py` **N/V** (its own docstring says not verified) | no loop feeding estimated-vs-actual back into future plans |
@@ -37,13 +37,16 @@ honest state: composition is *viable*, not yet *demonstrated end-to-end*.
 
 ## What to develop / integrate / leave
 
-- **Develop (small, highest-leverage): the contract.** A stable planwright **plan
-  export (JSON)** + a documented **importer/mapping in plan_runner** (planwright
-  item → runner step; `Autonomy`→intent, `Complexity`→`model_tier` signal). This
-  is the single missing piece that turns "two good tools" into the composition.
+- **Develop (small, highest-leverage): the contract.** ✅ **Done** (PR #164): a
+  stable planwright **plan export (JSON)** + a documented **importer/mapping in
+  plan_runner** (planwright item → runner step; `Autonomy`→intent,
+  `Complexity`→model signal). The canonical scenario (PR #165) proved it end-to-end.
 - **Integrate (no new code in planwright): executor selection reads the plan's
-  metadata.** `model_tiers.py`/`router.py` consume `Complexity`/`Autonomy` from
-  the imported plan. Routing/budget stay in the runner.
+  metadata.** ✅ **Done**: `plan_import --signals` carries `Complexity`/`Autonomy`
+  into `router.signals`, and `model_tiers.resolve_model` picks a model from
+  `Complexity` when the step has no `model_tier` (role tier always wins;
+  `Autonomy`→`human_gate` already consumed). Routing/budget stay in the runner.
+  `test_model_tier.py` + `test_canonical_composition.py`.
 - **Leave as-is:** governed execution, HITL, budget, tools, events, validation —
   all proven in plan_runner. **Never duplicate** them in planwright.
 - **Defer:** autonomous research/discovery loop (crit 1), automated structural

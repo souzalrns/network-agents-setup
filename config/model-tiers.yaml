@@ -10,3 +10,14 @@ tiers:
   planner: null
   executor: null
   verifier: null
+
+# Sinal de complexidade (C1..C4) -> modelo, cheap->expensive. É o `complexity` que
+# a planwright exporta (CANONICAL-SCENARIO.md), lido pela selecção do runner quando
+# o passo NÃO declara `model_tier`. O `model_tier` (papel) manda sempre; a
+# complexidade só preenche a lacuna — informa, nunca decide sozinha. Tudo a null =
+# comportamento de antes (o sinal viaja mas não muda modelo nenhum).
+complexity:
+  C1: null
+  C2: null
+  C3: null
+  C4: null
