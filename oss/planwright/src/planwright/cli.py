@@ -118,14 +118,50 @@ def _cmd_mermaid(args: argparse.Namespace) -> int:
     except (FileNotFoundError, ParseError) as exc:
         print(f"planwright: {exc}", file=sys.stderr)
         return 2
-    from .mermaid import render_all, render_board, render_deps
+    from .mermaid import render_all, render_board, render_deps, render_gantt
 
-    if args.view == "deps":
-        print(render_deps(plan))
-    elif args.view == "board":
-        print(render_board(plan))
-    else:
-        print(render_all(plan))
+    views = {"deps": render_deps, "board": render_board, "gantt": render_gantt, "all": render_all}
+    print(views[args.view](plan))
+    return 0
+
+
+def _cmd_gantt(args: argparse.Namespace) -> int:
+    try:
+        plan = _load(args.path)
+    except (FileNotFoundError, ParseError) as exc:
+        print(f"planwright: {exc}", file=sys.stderr)
+        return 2
+    from .mermaid import render_gantt
+
+    print(render_gantt(plan))
+    return 0
+
+
+def _cmd_load(args: argparse.Namespace) -> int:
+    try:
+        plan = _load(args.path)
+    except (FileNotFoundError, ParseError) as exc:
+        print(f"planwright: {exc}", file=sys.stderr)
+        return 2
+    from .views import render_load
+
+    print(render_load(plan))
+    return 0
+
+
+def _cmd_cost(args: argparse.Namespace) -> int:
+    try:
+        plan = _load(args.path)
+    except (FileNotFoundError, ParseError) as exc:
+        print(f"planwright: {exc}", file=sys.stderr)
+        return 2
+    from .views import CostModelError, render_cost
+
+    try:
+        print(render_cost(plan))
+    except CostModelError as exc:
+        print(f"planwright: {exc}", file=sys.stderr)
+        return 2
     return 0
 
 
@@ -178,9 +214,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_mermaid = sub.add_parser("mermaid", help="Mermaid diagrams (renders in GitHub/Markdown)")
     p_mermaid.add_argument("path", nargs="?", default=DEFAULT_PLAN, help=f"plan file (default: {DEFAULT_PLAN})")
     p_mermaid.add_argument(
-        "--view", choices=["deps", "board", "all"], default="all", help="which diagram (default: all)"
+        "--view", choices=["deps", "board", "gantt", "all"], default="all", help="which diagram (default: all)"
     )
     p_mermaid.set_defaults(func=_cmd_mermaid)
+
+    p_gantt = sub.add_parser("gantt", help="Mermaid gantt of relative effort (not a calendar)")
+    p_gantt.add_argument("path", nargs="?", default=DEFAULT_PLAN, help=f"plan file (default: {DEFAULT_PLAN})")
+    p_gantt.set_defaults(func=_cmd_gantt)
+
+    p_load = sub.add_parser("load", help="effort grouped by owner (estimate, not a calendar)")
+    p_load.add_argument("path", nargs="?", default=DEFAULT_PLAN, help=f"plan file (default: {DEFAULT_PLAN})")
+    p_load.set_defaults(func=_cmd_load)
+
+    p_cost = sub.add_parser("cost", help="indicative token/USD from Complexity (not the ledger)")
+    p_cost.add_argument("path", nargs="?", default=DEFAULT_PLAN, help=f"plan file (default: {DEFAULT_PLAN})")
+    p_cost.set_defaults(func=_cmd_cost)
     return parser
 
 
