@@ -49,13 +49,16 @@ def load_cost_model(path: str | None = None) -> dict[str, tuple[int, float]]:
     except (OSError, ValueError) as exc:
         raise CostModelError(f"cannot read {COST_MODEL_ENV}={src}: {exc}") from exc
     if not isinstance(raw, dict):
-        raise CostModelError(f"{src}: cost model must be a JSON object {{\"C1\": [tokens, usd], ...}}")
+        raise CostModelError(f'{src}: cost model must be a JSON object {{"C1": [tokens, usd], ...}}')
     model: dict[str, tuple[int, float]] = {}
     for band, val in raw.items():
         if band not in DEFAULT_COST_MODEL:
             raise CostModelError(f"{src}: unknown complexity band {band!r} (expected C1..C4)")
-        if (not isinstance(val, (list, tuple)) or len(val) != 2
-                or not all(isinstance(x, (int, float)) and not isinstance(x, bool) and x >= 0 for x in val)):
+        if (
+            not isinstance(val, (list, tuple))
+            or len(val) != 2
+            or not all(isinstance(x, (int, float)) and not isinstance(x, bool) and x >= 0 for x in val)
+        ):
             raise CostModelError(f"{src}: {band} must be [tokens, usd], both numbers >= 0")
         model[band] = (int(val[0]), float(val[1]))
     # Missing bands fall back to the defaults, so a partial override is allowed.
@@ -73,6 +76,7 @@ def _fmt_tokens(n: int) -> str:
 # --------------------------------------------------------------------------
 # load
 # --------------------------------------------------------------------------
+
 
 def render_load(plan: Plan) -> str:
     """Effort grouped by owner. Unsized items count as 0 and are flagged."""
@@ -103,6 +107,7 @@ def render_load(plan: Plan) -> str:
 # --------------------------------------------------------------------------
 # cost
 # --------------------------------------------------------------------------
+
 
 def render_cost(plan: Plan, model: dict[str, tuple[int, float]] | None = None) -> str:
     """Indicative token/USD from Complexity. `autonomy=human` costs the agent 0."""

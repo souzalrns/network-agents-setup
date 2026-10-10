@@ -174,12 +174,14 @@ def render_gantt(plan: Plan) -> str:
         return "\n".join([*header, "    section plano", "    (plano vazio) :done, empty, 0, 1d", "```"])
     if not graph.is_schedulable():
         # Um ciclo/dependência pendente não tem ordenação: não desenhar algo falso.
-        return "\n".join([
-            "```text",
-            "gantt indisponível: o plano tem ciclo ou dependência inexistente.",
-            "Corre `planwright validate` e corrige antes de desenhar o gantt.",
-            "```",
-        ])
+        return "\n".join(
+            [
+                "```text",
+                "gantt indisponível: o plano tem ciclo ou dependência inexistente.",
+                "Corre `planwright validate` e corrige antes de desenhar o gantt.",
+                "```",
+            ]
+        )
 
     node = _node_map(plan)
     crit = set(graph.critical_path().ids)
@@ -193,7 +195,7 @@ def render_gantt(plan: Plan) -> str:
     seen_tracks: dict[str, list[str]] = {}
     for item_id in ordered:
         it = plan.get(item_id)
-        track = (it.track if it and it.track else "plano")
+        track = it.track if it and it.track else "plano"
         if track not in seen_tracks:
             seen_tracks[track] = []
             sections.append((track, seen_tracks[track]))
@@ -224,7 +226,11 @@ def render_gantt(plan: Plan) -> str:
 
 def render_all(plan: Plan) -> str:
     return (
-        "### Dependencies\n\n" + render_deps(plan)
-        + "\n\n### Board\n\n" + render_board(plan)
-        + "\n\n### Gantt (relative effort)\n\n" + render_gantt(plan) + "\n"
+        "### Dependencies\n\n"
+        + render_deps(plan)
+        + "\n\n### Board\n\n"
+        + render_board(plan)
+        + "\n\n### Gantt (relative effort)\n\n"
+        + render_gantt(plan)
+        + "\n"
     )

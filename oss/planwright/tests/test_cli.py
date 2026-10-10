@@ -106,10 +106,12 @@ def test_cli_mermaid_view_gantt(tmp_path):
 
 def test_cli_cost_bad_override(tmp_path):
     import os
+
     p = write(tmp_path)
     bad = tmp_path / "bad.json"
     bad.write_text('{"C9": [1, 1]}', encoding="utf-8")
     env = {**os.environ, "PYTHONPATH": SRC, "PLANWRIGHT_COST_MODEL": str(bad)}
-    r = subprocess.run([sys.executable, "-m", "planwright.cli", "cost", p],
-                       cwd=tmp_path, capture_output=True, text=True, env=env)
+    r = subprocess.run(
+        [sys.executable, "-m", "planwright.cli", "cost", p], cwd=tmp_path, capture_output=True, text=True, env=env
+    )
     assert r.returncode == 2 and "planwright:" in r.stderr

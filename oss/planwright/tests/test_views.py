@@ -3,6 +3,7 @@
 They never measure — they draw effort bars, group effort by owner, and estimate
 token/USD from Complexity. Real usage is the runner's ledger.
 """
+
 import json
 import textwrap
 
@@ -31,6 +32,7 @@ PLAN = textwrap.dedent(
 
 
 # -- gantt -----------------------------------------------------------------
+
 
 def test_gantt_has_sections_ids_and_after():
     out = render_gantt(parse_text(PLAN))
@@ -68,6 +70,7 @@ def test_gantt_empty_and_unschedulable():
 
 # -- load ------------------------------------------------------------------
 
+
 def test_load_groups_by_owner_and_flags_unsized():
     out = render_load(parse_text(PLAN))
     assert "### ana" in out and "### boss" in out
@@ -80,6 +83,7 @@ def test_load_no_owner_bucket():
 
 
 # -- cost ------------------------------------------------------------------
+
 
 def test_cost_from_complexity_and_human_is_zero():
     out = render_cost(parse_text(PLAN))
@@ -100,8 +104,8 @@ def test_cost_override_file(tmp_path, monkeypatch):
     f.write_text(json.dumps({"C2": [1000, 0.01]}), encoding="utf-8")
     monkeypatch.setenv("PLANWRIGHT_COST_MODEL", str(f))
     model = load_cost_model()
-    assert model["C2"] == (1000, 0.01)        # overridden
-    assert model["C4"] == (100_000, 5.00)     # others keep defaults
+    assert model["C2"] == (1000, 0.01)  # overridden
+    assert model["C4"] == (100_000, 5.00)  # others keep defaults
 
 
 def test_cost_override_malformed_fails_loud(tmp_path, monkeypatch):
