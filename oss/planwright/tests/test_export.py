@@ -5,9 +5,14 @@ import textwrap
 from pathlib import Path
 
 from planwright.export import CONTRACT_SCHEMA, plan_to_contract
-from planwright.parse import parse_text
+from planwright.parse import parse_plan, parse_text
 
 SRC = str(Path(__file__).resolve().parent.parent / "src")
+
+# O plano do cenário canónico (docs/architecture/CANONICAL-SCENARIO.md). O runner
+# prova a execução em runner/tests/test_canonical_composition.py com uma cópia deste
+# contrato; este teste é a outra ponta: garante que o `export` emite mesmo isto.
+CANON_PLAN_MD = Path(__file__).resolve().parent.parent / "examples" / "composicao-canonica.PLAN.md"
 
 PLAN = textwrap.dedent(
     """
@@ -47,6 +52,20 @@ def test_optional_fields_are_null_when_absent():
     assert it["owner"] is None
     assert it["estimate_hours"] is None
     assert it["depends"] == []
+
+
+def test_canonical_plan_exports_the_expected_contract():
+    """O plano canónico exporta o backbone que o runner espera importar:
+    ids, dependências e `autonomy=human` só em `decide` (-> human_gate no runner)."""
+    c = plan_to_contract(parse_plan(str(CANON_PLAN_MD)))
+    assert c["schema"] == CONTRACT_SCHEMA
+    by_id = {i["id"]: i for i in c["items"]}
+    assert list(by_id) == ["research", "decide", "draft", "finalize"]
+    assert by_id["decide"]["depends"] == ["research"]
+    assert by_id["draft"]["depends"] == ["decide"]
+    assert by_id["finalize"]["depends"] == ["draft"]
+    assert [i["id"] for i in c["items"] if i["autonomy"] == "human"] == ["decide"]
+    assert by_id["decide"]["track"] == "governance"  # vira o `action` placeholder do esqueleto
 
 
 def test_cli_export_emits_valid_json(tmp_path):
