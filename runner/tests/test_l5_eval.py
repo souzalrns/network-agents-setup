@@ -205,3 +205,25 @@ def test_run_abaixo_do_limiar_sai_com_1_e_diz_a_metrica(monkeypatch, tmp_path, g
     assert code == 1 and not rep["gate"]["passed"]
     assert "REGRESSAO source_hit@4 = 0.0" in out and "gate P-19: FALHOU (1)" in out
     assert rep["gate"]["min_source_hit"] == 0.8 and rep["gate"]["min_provenance_ok"] == 1.0
+
+
+# RE1 = B (2026-10-10): o backend de recuperação é pluggable; `evaluate` corre com
+# QUALQUER retriever e sem tocar no MCP. Guarda explícita do contrato (não só efeito
+# lateral dos testes de métricas). Ver docs/initiatives/RE1-RAG-EVAL-DECISION.md.
+def test_backend_pluggavel_sem_mcp(golden, monkeypatch):
+    import sys
+
+    # garante que nem sequer é preciso o módulo do MCP em memória para avaliar
+    monkeypatch.delitem(sys.modules, "plan_runner.mcp_knowledge", raising=False)
+    monkeypatch.delenv("MCP_URL", raising=False)
+    monkeypatch.delenv("MCP_API_KEY", raising=False)
+    calls = []
+
+    def fake_retrieve(kb, query, k):
+        calls.append((kb, query, k))
+        return []  # um retriever próprio, sem MCP
+
+    rep = ev.evaluate(golden, fake_retrieve)
+    assert calls and calls[0][0] == golden["kb"]  # foi o nosso retriever que correu
+    assert "summary" in rep and "cases" in rep  # o motor mede na mesma
+    assert "plan_runner.mcp_knowledge" not in sys.modules  # nada importou o MCP
