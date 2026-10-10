@@ -119,3 +119,14 @@ python -m plan_runner resume ../pilots/run-worker-seo --max-tokens 40000
 - **Uma chamada sem `usageMetadata` também conta 0.** Fica registada como `missing_usage` e com aviso no log. Se a API deixar de devolver tokens, o tecto deixa de travar. A consulta de controlo está em `agent-network-mcp/docs/ops/TOKEN-LEDGER.md` (`missing_usage` em `router`/`agent` devia ser 0).
 - **Por run, não por dia nem por cliente.** Um tecto global (ex.: tokens por dia para todos os runs) precisaria do ledger central (Supabase) e fica fora daqui.
 - **`max_steps` continua separado:** é aplicado pelo motor e acaba em `aborted_budget`, que é terminal. Só o tecto de tokens é retomável.
+
+## Projecção (opt-in): parar ANTES da chamada (ADR-002)
+
+Por omissão o tecto é **reactivo** — pára depois de o ledger chegar ao limite. Com
+`PLAN_RUNNER_BUDGET_PROJECT=1` o worker fica **projectivo**: antes de cada chamada
+(caminho sem tools) estima-a pelo endpoint `:countTokens` do Gemini
+(`external_worker.count_tokens`, estimador verificado) e, se `gasto + (prompt +
+max_output) > tecto` (tokens ou custo), pára **antes** de gastar — mesma pausa
+`paused_budget`, retomável com um tecto maior. Falha fechada num modelo sem preço
+confirmado, como o cost cap. Desligada, nada muda. Detalhe e escopo (pausa, ainda
+não degradação automática de modelo) em `docs/architecture/adr/ADR-002-executor-selection.md`.
