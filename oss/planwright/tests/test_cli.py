@@ -75,3 +75,43 @@ def test_status(tmp_path):
 def test_missing_file(tmp_path):
     r = run(["graph", str(tmp_path / "nope.md")], tmp_path)
     assert r.returncode == 2
+
+
+def test_cli_load(tmp_path):
+    p = write(tmp_path)
+    r = run(["load", p], tmp_path)
+    assert r.returncode == 0
+    assert "Esforço por owner" in r.stdout
+
+
+def test_cli_cost(tmp_path):
+    p = write(tmp_path)
+    r = run(["cost", p], tmp_path)
+    assert r.returncode == 0
+    assert "não é o ledger" in r.stdout
+
+
+def test_cli_gantt(tmp_path):
+    p = write(tmp_path)
+    r = run(["gantt", p], tmp_path)
+    assert r.returncode == 0
+    assert "gantt" in r.stdout and "after" in r.stdout
+
+
+def test_cli_mermaid_view_gantt(tmp_path):
+    p = write(tmp_path)
+    r = run(["mermaid", p, "--view", "gantt"], tmp_path)
+    assert r.returncode == 0 and "gantt" in r.stdout
+
+
+def test_cli_cost_bad_override(tmp_path):
+    import os
+
+    p = write(tmp_path)
+    bad = tmp_path / "bad.json"
+    bad.write_text('{"C9": [1, 1]}', encoding="utf-8")
+    env = {**os.environ, "PYTHONPATH": SRC, "PLANWRIGHT_COST_MODEL": str(bad)}
+    r = subprocess.run(
+        [sys.executable, "-m", "planwright.cli", "cost", p], cwd=tmp_path, capture_output=True, text=True, env=env
+    )
+    assert r.returncode == 2 and "planwright:" in r.stderr

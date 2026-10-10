@@ -16,7 +16,7 @@ collide; labels still show the original id.
 from __future__ import annotations
 
 from .graph import Graph
-from .model import Plan, Status
+from .model import HOURS_PER_DAY, Plan, Status
 
 # Status → Mermaid classDef style. Colours chosen to read in light and dark.
 _CLASSDEFS = [
@@ -143,5 +143,94 @@ def _title(plan: Plan, item_id: str) -> str:
     return it.title if it else item_id
 
 
+def _gantt_duration(hours: float | None) -> str:
+    """Estimate hours → a Mermaid gantt duration. Unsized → a nominal 1d."""
+    if not hours or hours <= 0:
+        return "1d"  # nominal bar for an unsized item (see the view's note)
+    if hours >= HOURS_PER_DAY and hours % HOURS_PER_DAY == 0:
+        return f"{int(hours // HOURS_PER_DAY)}d"
+    if hours == int(hours):
+        return f"{int(hours)}h"
+    return f"{round(hours, 1)}h"
+
+
+def render_gantt(plan: Plan) -> str:
+    """A Mermaid gantt of **relative effort** (not a calendar).
+
+    The time axis is relative to t0 (plan day 0); bars are effort from `Est` and
+    are placed by dependency order (`after`), so it shows "effort and what waits on
+    what", never "delivered on Friday". Critical-path items are marked `crit`.
+    Unsized items get a nominal 1d bar. Sections are `Track`.
+    """
+    graph = Graph(plan)
+    header = [
+        "```mermaid",
+        "gantt",
+        "    title Plano — esforço relativo (não é calendário)",
+        "    dateFormat X",
+        "    axisFormat %s",
+    ]
+    if len(plan) == 0:
+        return "\n".join([*header, "    section plano", "    (plano vazio) :done, empty, 0, 1d", "```"])
+    if not graph.is_schedulable():
+        # Um ciclo/dependência pendente não tem ordenação: não desenhar algo falso.
+        return "\n".join(
+            [
+                "```text",
+                "gantt indisponível: o plano tem ciclo ou dependência inexistente.",
+                "Corre `planwright validate` e corrige antes de desenhar o gantt.",
+                "```",
+            ]
+        )
+
+    node = _node_map(plan)
+    crit = set(graph.critical_path().ids)
+    order = [i for layer in graph.parallel_layers() for i in layer]
+    # itens já concluídos não entram nas layers (são passado); mostra-os primeiro.
+    done_ids = [it.id for it in plan if it.status is Status.DONE]
+    ordered = done_ids + [i for i in order if i not in set(done_ids)]
+
+    # agrupa por track preservando a ordem topológica
+    sections: list[tuple[str, list[str]]] = []
+    seen_tracks: dict[str, list[str]] = {}
+    for item_id in ordered:
+        it = plan.get(item_id)
+        track = it.track if it and it.track else "plano"
+        if track not in seen_tracks:
+            seen_tracks[track] = []
+            sections.append((track, seen_tracks[track]))
+        seen_tracks[track].append(item_id)
+
+    lines = list(header)
+    for track, ids in sections:
+        lines.append(f"    section {track}")
+        for item_id in ids:
+            it = plan.get(item_id)
+            tags: list[str] = []
+            if item_id in crit:
+                tags.append("crit")
+            if it and it.status is Status.DONE:
+                tags.append("done")
+            elif it and it.status is Status.DOING:
+                tags.append("active")
+            deps = [node[d] for d in (it.depends if it else []) if plan.has(d)]
+            start = f"after {' '.join(deps)}" if deps else "0"
+            dur = _gantt_duration(it.estimate_hours if it else None)
+            meta = ", ".join([*tags, node[item_id], start, dur])
+            # Em gantt o `:` separa nome de metadados — o nome tem de ser colon-free.
+            label = _label(item_id, it.title if it else item_id).replace(":", " —")
+            lines.append(f"    {label} :{meta}")
+    lines.append("```")
+    return "\n".join(lines)
+
+
 def render_all(plan: Plan) -> str:
-    return "### Dependencies\n\n" + render_deps(plan) + "\n\n### Board\n\n" + render_board(plan) + "\n"
+    return (
+        "### Dependencies\n\n"
+        + render_deps(plan)
+        + "\n\n### Board\n\n"
+        + render_board(plan)
+        + "\n\n### Gantt (relative effort)\n\n"
+        + render_gantt(plan)
+        + "\n"
+    )

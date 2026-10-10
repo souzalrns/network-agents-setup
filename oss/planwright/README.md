@@ -66,15 +66,24 @@ that has `ID` and `Title` and ignores everything else.
 ```bash
 planwright graph    PLAN.md          # ready now · parallel layers · blocked · critical path
 planwright action   PLAN.md          # a manager's action plan: ranked ready, who-unblocks-what, critical
-planwright mermaid  PLAN.md          # Mermaid diagrams (deps + Kanban board) — render in GitHub/Markdown
+planwright mermaid  PLAN.md          # Mermaid diagrams (deps + Kanban board + gantt) — render in GitHub/Markdown
+planwright gantt    PLAN.md          # Mermaid gantt of relative effort (not a calendar)
+planwright load     PLAN.md          # effort grouped by owner (estimate, not a calendar)
+planwright cost     PLAN.md          # indicative token/USD from Complexity (not the ledger)
 planwright next     PLAN.md          # just the ids ready to start now (one per line)
 planwright export   PLAN.md          # emit the stable JSON contract for an execution runner
 planwright validate PLAN.md [--strict]  # check the plan is sound (and disciplined)
 planwright status   PLAN.md          # one-line status counts
 ```
 
-`graph`/`next`/`status` take `--json`; `mermaid` takes `--view deps|board|all`.
+`graph`/`next`/`status` take `--json`; `mermaid` takes `--view deps|board|gantt|all`.
 The path defaults to `PLAN.md` (override with `$PLANWRIGHT_PLAN`).
+
+`gantt` / `load` / `cost` are **views**: relative effort bars, effort by owner, and
+indicative token/USD from `Complexity`. They are **not** a calendar scheduler and
+**not** the billing ledger — real dates and real usage belong to the execution
+runtime. `cost` reads an optional override table from `$PLANWRIGHT_COST_MODEL`
+(stdlib JSON); absent, it uses built-in indicative defaults.
 
 ### See it, don't read it
 

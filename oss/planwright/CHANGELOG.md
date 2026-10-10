@@ -4,6 +4,26 @@ All notable changes to planwright are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project aims
 for [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-10-10
+
+### Added
+
+- **Three derived views, all zero-dependency and honest (estimate ≠ measurement):**
+  - **`planwright gantt`** (also `mermaid --view gantt`) — a Mermaid gantt of
+    **relative effort**, not a calendar: bars from `Est`, placed by dependency
+    order (`after`), critical path marked `crit`, sections by `Track`. Unsized
+    items get a nominal 1d bar; a cyclic/dangling plan is refused with a note.
+  - **`planwright load`** — effort grouped by `Owner` (a pure group-by; flags
+    unsized items). Effort, not a calendar.
+  - **`planwright cost`** — an **indicative** token/USD estimate from
+    `Complexity` (C1..C4); `autonomy=human` costs the agent 0. Overridable via a
+    JSON file (`$PLANWRIGHT_COST_MODEL`, stdlib only), fails loud if malformed.
+    It is **not** the billing ledger — real usage is the execution runtime's.
+- Still **zero runtime dependencies**; core untouched (no HTML/JS/solver). New
+  `views.py` + `mermaid.render_gantt`; `mermaid --view` gains `gantt`.
+- 15 new tests (gantt shape/crit/colon-safety/empty/cycle; load grouping; cost
+  bands/human/override/malformed; CLI). ruff + build + `twine --strict` green.
+
 ## [0.3.0] — 2026-10-09
 
 ### Added
