@@ -20,8 +20,22 @@ skill-scout install anthropics/skills@pdf
 ```
 
 > Status: 0.1.0, alpha. Incubated in
-> [`souzalrns/network-agents-setup`](https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-scout);
-> not yet on PyPI.
+> [`souzalrns/network-agents-setup`](https://github.com/souzalrns/network-agents-setup/tree/main/oss/skill-scout).
+> The PyPI release is wired (Trusted Publishing, no tokens — see the monorepo's
+> `docs/initiatives/XP1-PYPI-PLAYBOOK.md`); the name `skill-scout` is reserved and
+> `skill_scout-0.1.0` builds + `twine check` cleanly, pending the first tag.
+
+## Install
+
+```bash
+pip install skill-scout          # once the first tag is published (see the XP1 playbook)
+```
+
+Or straight from the checkout:
+
+```bash
+pip install -e oss/skill-scout   # from the monorepo root
+```
 
 ## Why another tool
 

@@ -166,6 +166,24 @@ print(g.parallel_layers())            # [[...], [...]]
 print(g.critical_path().hours)        # float (hours)
 ```
 
+## Part of a proven composition (the accountability layer)
+
+planwright **describes and prioritizes**; it does not execute. Paired with an
+execution runner it becomes an **accountability layer** for agent work: a plan
+that cannot silently rot, handed to a runner that gates, budgets and verifies.
+The hand-off is a thin, versioned contract — and the whole path is proven by
+tests, not asserted:
+
+- the **contract** (`planwright export` → a runner imports it):
+  monorepo `docs/architecture/PLAN-CONTRACT.md`;
+- the **canonical scenario** — one run with a human gate, a budget cap and
+  completion checked by evidence: `docs/architecture/CANONICAL-SCENARIO.md`;
+- **where it fits vs. frameworks and persona collections**:
+  `docs/initiatives/COMPETITIVE-ANALYSIS.md`.
+
+The signals planwright exports (`Autonomy`/`Complexity`) travel as *planning
+intent*, never as runtime policy — the runner stays the authority at runtime.
+
 ## License
 
 MIT. No third-party runtime dependencies. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
