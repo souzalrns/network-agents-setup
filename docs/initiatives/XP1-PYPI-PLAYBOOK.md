@@ -43,21 +43,18 @@ Opcional mas recomendado: em **Settings → Environments → `pypi`** do repo, p
 uma *required reviewer* (o maestro) — assim cada publish fica à espera de um
 clique, além da tag.
 
-## 2. Fixar o SHA da ação de publish (convenção do repo)
+## 2. Ação de publish fixada por SHA (convenção do repo)
 
-O repo fixa todas as ações por SHA; neste ambiente a resolução do SHA de
-`pypa/gh-action-pypi-publish` não era acessível, por isso o workflow usa a ref
-oficial `release/v1`. **Antes do 1.º publish**, fixar por SHA:
+Já fixada: `pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33`
+(**v1.14.2**, tip de `release/v1`). O semgrep do SEC-2 **bloqueia** refs mutáveis,
+por isso o SHA é obrigatório. Para subir de versão no futuro, resolver o SHA novo
+e trocar a linha `uses:` (mantendo o comentário `# vX.Y.Z`):
 
 ```bash
-# resolve o SHA da última release e troca a ref no workflow
-TAG=$(curl -s https://api.github.com/repos/pypa/gh-action-pypi-publish/releases/latest | python3 -c "import sys,json;print(json.load(sys.stdin)['tag_name'])")
-SHA=$(curl -s https://api.github.com/repos/pypa/gh-action-pypi-publish/git/refs/tags/$TAG | python3 -c "import sys,json;print(json.load(sys.stdin)['object']['sha'])")
-echo "pypa/gh-action-pypi-publish@$SHA # $TAG"
-# editar a linha `uses: pypa/gh-action-pypi-publish@release/v1` com esse SHA + comentário da versão
+git clone --filter=blob:none https://github.com/pypa/gh-action-pypi-publish.git /tmp/ghapp
+git -C /tmp/ghapp tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1   # última versão
+git -C /tmp/ghapp rev-list -n1 <tag>                                                        # o SHA
 ```
-
-(zizmor no CI é informativo — não bloqueia — mas SHA é o padrão do repo.)
 
 ## 3. Lançar uma versão (por pacote)
 

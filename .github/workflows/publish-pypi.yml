@@ -10,6 +10,8 @@ name: Publish to PyPI
 # Sem esses dois passos, nada é publicado -- o workflow só corre quando há tag.
 #
 # Public repository: Actions minutes are free. Actions pinned by SHA (convenção do repo).
+# Valores de contexto (inputs/outputs) entram no shell SÓ via `env:` (nunca `${{ }}`
+# direto no `run:`) -- evita o run-shell-injection que o semgrep (SEC-2) apanha.
 
 on:
   push:
@@ -44,10 +46,12 @@ jobs:
 
       - name: Escolher o pacote (da tag ou do input)
         id: pick
+        env:
+          INPUT_PACKAGE: ${{ github.event.inputs.package }}
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            pkg="${{ github.event.inputs.package }}"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            pkg="$INPUT_PACKAGE"
           else
             # tag = "<pacote>-vX.Y.Z" -> pacote = tudo antes de "-v"
             pkg="${GITHUB_REF_NAME%-v*}"
@@ -61,28 +65,27 @@ jobs:
 
       - name: Versão da tag == versão do pyproject (quando é tag)
         if: github.event_name == 'push'
+        env:
+          DIR: ${{ steps.pick.outputs.dir }}
         run: |
           set -euo pipefail
-          dir="${{ steps.pick.outputs.dir }}"
           tag_ver="${GITHUB_REF_NAME#*-v}"
-          proj_ver="$(python -c "import tomllib,sys; print(tomllib.load(open(sys.argv[1],'rb'))['project']['version'])" "$dir/pyproject.toml")"
+          proj_ver="$(python -c "import tomllib,sys; print(tomllib.load(open(sys.argv[1],'rb'))['project']['version'])" "$DIR/pyproject.toml")"
           echo "tag=$tag_ver  pyproject=$proj_ver"
-          [ "$tag_ver" = "$proj_ver" ] || { echo "::error::tag ($tag_ver) != pyproject ($proj_ver) em $dir"; exit 1; }
+          [ "$tag_ver" = "$proj_ver" ] || { echo "::error::tag ($tag_ver) != pyproject ($proj_ver) em $DIR"; exit 1; }
 
       - name: Build + twine check
+        env:
+          DIR: ${{ steps.pick.outputs.dir }}
         run: |
           set -euo pipefail
-          dir="${{ steps.pick.outputs.dir }}"
           python -m pip install --upgrade pip build twine
-          rm -rf "$dir/dist"
-          python -m build "$dir" --outdir "$dir/dist"
-          python -m twine check --strict "$dir"/dist/*
+          rm -rf "$DIR/dist"
+          python -m build "$DIR" --outdir "$DIR/dist"
+          python -m twine check --strict "$DIR"/dist/*
 
       - name: Publish (Trusted Publishing, OIDC)
-        # Convenção do repo é fixar por SHA; neste ambiente a resolução do SHA não
-        # é acessível, por isso fica a ref oficial recomendada pela PyPA. O playbook
-        # (XP1) exige fixar por SHA no passo de setup do PyPI, antes do 1.º publish.
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           packages-dir: ${{ steps.pick.outputs.dir }}/dist
           print-hash: true
