@@ -36,6 +36,12 @@ MIN_PROVENANCE_OK = 1.0
 MIN_SOURCE_HIT = 0.8
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# Backend de recuperação PLUGGABLE por este seam (RE1 = B, 2026-10-10): uma função
+# `(kb, query, k) -> hits`. `evaluate()` nunca fala com um MCP — recebe um `Retrieve`
+# qualquer, por isso corre offline com qualquer retriever (ver os testes com
+# retrievers falsos). `mcp_retrieve()` e so o default (o MCP do L5); outro retriever
+# (outro indice, um stub) encaixa sem tocar no motor. Decisao e porque:
+# docs/initiatives/RE1-RAG-EVAL-DECISION.md.
 Retrieve = Callable[[str, str, int], list[dict[str, Any]]]
 
 

@@ -79,5 +79,22 @@ pedir avaliação standalone).
   desacoplamento + empacotamento/CI/PyPI (padrão `auditron`/`skill-scout`).
 - **Se decidir C:** nada agora; o item fica ABERTO.
 
-> Decisão: __________ (maestro). Enquanto não houver decisão, o `l5_eval` fica
-> como está e o RE1 permanece em aberto.
+## Decisão (2026-10-10): **B** — no-go como produto
+
+Decidida sob a regra "padrão ouro, superar onde for viável" (autonomia delegada):
+entrar no mercado de RAG-eval **não é terreno onde se supere** (ragas/deepeval/
+promptfoo maduros; nome ocupado) — logo não se luta lá. O `l5_eval` fica no runner,
+onde é diferenciado (métricas ligadas ao pipeline governado). **A** só se houver
+procura concreta (um utilizador a pedir avaliação standalone).
+
+**Correcção honesta ao dossier:** o desacoplamento que a opção B exigia **já estava
+feito** — o motor `evaluate(golden, retrieve)` recebe um `Retrieve` (`(kb,query,k)
+-> hits`) e nunca fala com um MCP; o acoplamento ao `McpKnowledge` existe só no
+*default* `mcp_retrieve()`, já injectável, e os testes já corriam com retrievers
+falsos. O critério **E5 (backend pluggable) está satisfeito**, não ausente como a
+matriz dizia. Este PR apenas (1) **documenta** o seam `Retrieve` como ponto de
+extensão de 1.ª classe e (2) acrescenta uma **guarda explícita**
+(`test_backend_pluggavel_sem_mcp`) que prova que `evaluate` corre sem o MCP sequer
+em memória. Zero reescrita — a decisão não precisava dela.
+
+**Estado:** RE1 **FECHADO** (decisão B). Revisitar A só com evidência de procura.

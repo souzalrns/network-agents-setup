@@ -25,7 +25,7 @@ Status legend: **proven** (code + passing test) · **partial** · **absent** · 
 | planwright | planning kernel | ✅ zero-dep | 48 | ✅ | ❌ 404 | kernel candidate (see its own matrix) |
 | **skill-scout** | skill supply-chain security | ✅ (1 dep) | ~169 | ✅ `skill-scout.yml` | ❌ 404 | **strong** — Fase 1 done; gap: runtime sandbox + PyPI |
 | **auditron** | defensive security gate (SCA+SAST+workflow) | ✅ (3 engine deps) | 25 | ✅ `auditron.yml` | ❌ 404 | **strong** — thin orchestrator; gap: +engines/MCP + PyPI |
-| **rag-eval** | RAG/retrieval evaluation | ❌ **not extracted** | (l5_eval) | via runner CI | ❌ n/a | **candidate only** — decide go/no-go (RE1) + decouple first |
+| **rag-eval** | RAG/retrieval evaluation | ❌ not extracted (by decision) | (l5_eval) | via runner CI | taken | **RE1 = B (no-go as product)** — stays in the runner; backend already pluggable (`Retrieve` seam, E5 ✅); `rag-eval` name taken on PyPI; revisit A only with demand |
 
 Transversal criteria (apply to all): **A** single purpose · **B** standalone &
 installable · **C** low lock-in · **D** tested + CI · **E** licensed + packaged ·
