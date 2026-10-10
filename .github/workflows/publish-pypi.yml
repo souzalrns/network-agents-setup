@@ -1,0 +1,91 @@
+name: Publish to PyPI
+
+# XP1 (docs/initiatives/XP1-PYPI-PLAYBOOK.md): publica um dos pacotes oss/ no PyPI
+# por **Trusted Publishing** (OIDC) -- sem tokens nem secrets no repo.
+#
+# Dispara numa tag por-pacote (`<pacote>-vX.Y.Z`, ex.: `planwright-v0.3.0`) ou à mão
+# (workflow_dispatch, escolhendo o pacote). FICA INERTE até o maestro:
+#   1. criar o "pending publisher" de cada projeto no PyPI (ver o playbook), e
+#   2. empurrar a primeira tag `<pacote>-v*`.
+# Sem esses dois passos, nada é publicado -- o workflow só corre quando há tag.
+#
+# Public repository: Actions minutes are free. Actions pinned by SHA (convenção do repo).
+# Valores de contexto (inputs/outputs) entram no shell SÓ via `env:` (nunca `${{ }}`
+# direto no `run:`) -- evita o run-shell-injection que o semgrep (SEC-2) apanha.
+
+on:
+  push:
+    tags:
+      - 'planwright-v*'
+      - 'skill-scout-v*'
+      - 'auditron-v*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Pacote a publicar
+        required: true
+        type: choice
+        options: [planwright, skill-scout, auditron]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi  # o maestro pode pôr aqui uma regra de proteção (quem/aprovação)
+    permissions:
+      id-token: write  # OIDC: o único poder preciso para o Trusted Publishing
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Escolher o pacote (da tag ou do input)
+        id: pick
+        env:
+          INPUT_PACKAGE: ${{ github.event.inputs.package }}
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            pkg="$INPUT_PACKAGE"
+          else
+            # tag = "<pacote>-vX.Y.Z" -> pacote = tudo antes de "-v"
+            pkg="${GITHUB_REF_NAME%-v*}"
+          fi
+          case "$pkg" in
+            planwright|skill-scout|auditron) ;;
+            *) echo "::error::pacote desconhecido na tag/input: '$pkg'"; exit 1 ;;
+          esac
+          echo "pkg=$pkg" >> "$GITHUB_OUTPUT"
+          echo "dir=oss/$pkg" >> "$GITHUB_OUTPUT"
+
+      - name: Versão da tag == versão do pyproject (quando é tag)
+        if: github.event_name == 'push'
+        env:
+          DIR: ${{ steps.pick.outputs.dir }}
+        run: |
+          set -euo pipefail
+          tag_ver="${GITHUB_REF_NAME#*-v}"
+          proj_ver="$(python -c "import tomllib,sys; print(tomllib.load(open(sys.argv[1],'rb'))['project']['version'])" "$DIR/pyproject.toml")"
+          echo "tag=$tag_ver  pyproject=$proj_ver"
+          [ "$tag_ver" = "$proj_ver" ] || { echo "::error::tag ($tag_ver) != pyproject ($proj_ver) em $DIR"; exit 1; }
+
+      - name: Build + twine check
+        env:
+          DIR: ${{ steps.pick.outputs.dir }}
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip build twine
+          rm -rf "$DIR/dist"
+          python -m build "$DIR" --outdir "$DIR/dist"
+          python -m twine check --strict "$DIR"/dist/*
+
+      - name: Publish (Trusted Publishing, OIDC)
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: ${{ steps.pick.outputs.dir }}/dist
+          print-hash: true
