@@ -184,3 +184,59 @@ def test_config_com_complexidade_invalida_e_recusada(tmp_path):
     p.write_text(json.dumps({"complexity": {"C9": "x"}}), encoding="utf-8")
     with pytest.raises(mt.ModelTierError, match="desconhecido"):
         mt.load_complexity(p)
+
+
+# --------------------------------------------------------------------------
+# Disponibilidade (A, ADR-002): o modelo de SINAL degrada para o default se não
+# estiver em `available`; o `model_tier` explícito não é filtrado.
+# --------------------------------------------------------------------------
+
+def test_config_real_de_disponibilidade_vazia():
+    """`available` existe, carrega e está vazia: sem restrição (comportamento de antes)."""
+    assert mt.load_available() == []
+
+
+def test_sinal_indisponivel_degrada_para_default(tmp_path, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({
+        "complexity": {"C1": "flash", "C4": "pro-caro"},
+        "available": ["flash"],  # o DEV só confirmou o flash
+    }), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    assert mt.resolve_model({}, "default", complexity="C1") == ("flash", None)      # disponível
+    assert mt.resolve_model({}, "default", complexity="C4") == ("default", None)    # indisponível -> default
+
+
+def test_available_vazia_nao_restringe(tmp_path, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"complexity": {"C4": "pro-caro"}, "available": []}), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    assert mt.resolve_model({}, "default", complexity="C4") == ("pro-caro", None)
+
+
+def test_disponibilidade_nao_filtra_o_model_tier_explicito(tmp_path, monkeypatch):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({
+        "tiers": {"planner": "pro-caro"}, "available": ["flash"],
+    }), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    # papel é autoridade do DEV: não é filtrado pela disponibilidade
+    assert mt.resolve_model({"model_tier": "planner"}, "default") == ("pro-caro", "planner")
+
+
+def test_available_invalida_e_recusada(tmp_path):
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"available": [1, 2]}), encoding="utf-8")
+    with pytest.raises(mt.ModelTierError, match="available"):
+        mt.load_available(p)
+
+
+def test_run_degrada_modelo_de_sinal_indisponivel(tmp_path, tmp_run_dir, fake, monkeypatch):
+    """End-to-end: um C4 que mapeia para um modelo fora de `available` corre no default."""
+    p = tmp_path / "mt.yaml"
+    p.write_text(json.dumps({"complexity": {"C4": "pro-indisponivel"}, "available": ["so-este"]}), encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", p)
+    plan = _plan_com_sinais(tmp_path, {"research": "C4", "copy": "C4"})
+    status = run_plan(plan, mode="external", out_dir=tmp_run_dir, worker="gemini")
+    assert status["state"] == "done"
+    assert _models(fake) == [ew.DEFAULT_MODEL, ew.DEFAULT_MODEL]  # degradou para o default

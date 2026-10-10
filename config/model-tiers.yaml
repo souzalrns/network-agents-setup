@@ -21,3 +21,10 @@ complexity:
   C2: null
   C3: null
   C4: null
+
+# Disponibilidade (A, ADR-002): modelos que o DEV confirma utilizáveis com a chave
+# actual. VAZIO = sem restrição (comportamento de antes). Quando a lista não está
+# vazia e um modelo escolhido pelo SINAL `complexity` não está nela, a selecção
+# degrada para o modelo default (o sinal informa, nunca força, nunca parte o run).
+# NÃO toca no `model_tier` explícito — esse é a escolha deliberada do DEV.
+available: []
