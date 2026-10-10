@@ -50,6 +50,24 @@ def load_complexity(path: Path | None = None) -> dict[str, str | None]:
     return _load_map("complexity", COMPLEXITY, path)
 
 
+def load_available(path: Path | None = None) -> list[str]:
+    """Modelos utilizaveis (config/model-tiers.yaml, `available`). Vazio = sem restricao."""
+    path = path or TIERS_PATH
+    if not path.is_file():
+        return []
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    raw = data.get("available") or []
+    if not isinstance(raw, list) or any(not isinstance(m, str) or not m.strip() for m in raw):
+        raise ModelTierError(f"{path.name}: `available` tem de ser uma lista de nomes de modelo")
+    return [m.strip() for m in raw]
+
+
+def _is_available(model: str, path: Path | None = None) -> bool:
+    """True se `available` esta vazia (sem restricao) ou contem o modelo."""
+    avail = load_available(path)
+    return not avail or model in avail
+
+
 def resolve_model(
     step: dict[str, Any] | None,
     default: str,
@@ -61,8 +79,10 @@ def resolve_model(
 
     O `model_tier` manda sempre: com ele, a complexidade e ignorada (papel e autoridade).
     Sem `model_tier`, um sinal `complexity` (C1..C4) que a config mapeie escolhe o modelo
-    (cheap->expensive); um sinal desconhecido ou sem mapa cai no default -- nunca parte o run,
-    porque a complexidade informa, nao decide sozinha. Devolve tier=None quando nao ha papel.
+    (cheap->expensive); um sinal desconhecido, sem mapa, ou que escolha um modelo fora da
+    lista `available` (A) cai no default -- nunca parte o run, porque a complexidade informa,
+    nao decide sozinha. A disponibilidade so filtra o modelo de sinal; o `model_tier`
+    explicito (papel) e a escolha do DEV e nao e filtrado. Devolve tier=None quando nao ha papel.
     """
     tier = (step or {}).get("model_tier")
     if tier is not None:
@@ -71,6 +91,8 @@ def resolve_model(
         return load_tiers(path).get(tier) or default, tier
     if complexity is not None:
         model = load_complexity(path).get(str(complexity))
-        if model:
+        # Disponibilidade (A): um modelo de sinal que o DEV nao confirmou utilizavel
+        # degrada para o default -- o sinal informa, nunca forca um modelo indisponivel.
+        if model and _is_available(model, path):
             return model, None
     return default, None
