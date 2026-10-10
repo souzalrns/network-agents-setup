@@ -67,9 +67,17 @@ plan — planwright does not know the runner's actions.
 - autonomy → human_gate; empty/foreign contract rejected.
 - zero `import plan_runner` inside the published planwright package.
 
+## Proven end-to-end
+
+The canonical scenario (`CANONICAL-SCENARIO.md`) takes this contract the whole
+way: a planwright plan → export → import → a completed executable plan that the
+runner runs with a human gate, a budget cap and `done_when` by evidence — all in
+one run, proven by `runner/tests/test_canonical_composition.py` and
+`oss/planwright/tests/test_export.py`. The composition is no longer an assertion;
+it is a test.
+
 ## Next (beyond this contract)
 
 The runner's executor selection consuming `complexity`/`autonomy` from the export
-(the "integrate" row of the matrix), and the canonical end-to-end scenario
-(1 HITL + budget cap + done_when by evidence) that turns a *viable* composition
-into a *proven* one.
+(the "integrate" row of the matrix) — the signals travel today, but nothing reads
+them yet to pick an `action`/`model_tier` automatically.

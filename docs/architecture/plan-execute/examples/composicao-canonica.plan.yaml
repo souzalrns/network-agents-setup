@@ -1,0 +1,53 @@
+# Cenário canónico da composição planwright -> plan_runner.
+#
+# NAO foi escrito à mão de raiz: é a COMPLETAÇÃO do esqueleto que sai de
+#   planwright export oss/planwright/examples/composicao-canonica.PLAN.md \
+#     | python -m plan_runner.plan_import - --id composicao-canonica
+# O esqueleto traz id, action (do track), task, depends_on e o human_gate (do
+# autonomy=human em `decide`). O que um humano/router ACRESCENTA está marcado
+# com [+] abaixo. Caminho completo e delta: docs/architecture/CANONICAL-SCENARIO.md.
+#
+# Prova, num único run, as três garantias de governação do runner:
+#   - porta humana (HITL)      -> `decide` pausa o run até uma decisão;
+#   - tecto de orçamento       -> budget.max_tokens: 1500 pausa antes de `finalize`;
+#   - done_when por evidência  -> ficheiros + o evento human_gate_resolved.
+
+id: composicao-canonica
+version: 1
+objective: "Provar a composição planwright->plan_runner com governação real."  # [+]
+
+budget:
+  max_tokens: 1500            # [+] tecto curto de propósito: o run pausa antes de `finalize`
+
+steps:
+  - id: research
+    action: research          # [+] era `discovery` (o track); o humano/router escolhe a action real
+    task: "Levantar requisitos e contexto."
+    output_artifact: artifacts/01-research.md   # [+]
+
+  - id: decide
+    action: plan_approve      # [+] era `governance`
+    task: "Aprovar o rumo antes de investir em execução."
+    depends_on: [research]
+    human_gate:               # [+] o contrato trouxe `human_gate: true`; aqui expande-se para o objecto
+      level: step
+      kind: confirmation
+      allow: [approve, reject]
+    output_artifact: artifacts/02-decision.json  # [+]
+
+  - id: draft
+    action: research          # [+] era `build`
+    task: "Redigir a proposta."
+    depends_on: [decide]
+    output_artifact: artifacts/03-draft.md       # [+]
+
+  - id: finalize
+    action: research          # [+] era `build`
+    task: "Consolidar e publicar o resultado."
+    depends_on: [draft]
+    output_artifact: artifacts/04-final.md       # [+]
+
+done_when:                    # [+] evidência verificável, não texto livre
+  - artifacts/02-decision.json exists
+  - artifacts/04-final.md exists
+  - human_gate_resolved on decide
