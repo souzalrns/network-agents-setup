@@ -39,27 +39,32 @@ Prova: `test_sinal_indisponivel_degrada_para_default`,
   (`external_worker.check_budget` + `cost.py`; `test_custo_sem_preco_confirmado`).
   Isto já é uma forma de budget-awareness: o runner recusa gastar às cegas.
 
-## 4. O que fica adiado — e porquê (honesto)
+## 4. Budget-aware *por estimativa* — DESBLOQUEADO (2026-10-10)
 
-**Budget-aware *por estimativa*** (escolher um modelo mais barato porque a
-*próxima* chamada não caberia no que resta do tecto) fica **deliberadamente
-adiado**. Razão concreta, não esquecimento: exige uma **estimativa de tokens
-pré-chamada fiável**, e a única que existe no repo —
-`runner/plan_runner/token_projection.py` — está marcada no próprio ficheiro como
-*"NÃO VERIFICADA. NÃO USAR PARA DECISÕES"*. Construir uma degradação de orçamento
-sobre um número não verificado violaria o padrão de evidência do projecto.
+O pré-requisito ficou resolvido: o estimador de tokens é agora **verificado** —
+`external_worker.count_tokens()` chama o endpoint `:countTokens` da API Gemini, por
+isso o número vem da própria API, não da heurística local (o
+`token_projection.py`, ainda marcado "não usar para decisões", não é usado aqui).
 
-**Pré-requisito para desbloquear:** um estimador de tokens verificado — o
-endpoint `countTokens` da API Gemini, ou `usageMetadata` real calibrado — a
-seguir ao qual a regra "se o custo projectado da chamada exceder o que resta do
-`max_cost_usd`, degrada para o tier/modelo mais barato" passa a assentar em algo
-sólido e testável. Até lá, o cost cap fail-closed (§3) é a protecção honesta.
+Com isso, a **guarda projectiva** `check_budget_projected(out, model, prompt_tokens,
+max_output_tokens)` estima a próxima chamada (`prompt + max_output`) e pára **antes**
+dela se `gasto + projecção > tecto` (tokens ou custo) — ao contrário do `check_budget`
+reactivo, que só pára depois de gastar. É **opt-in** (`PLAN_RUNNER_BUDGET_PROJECT=1`;
+por omissão desligada, comportamento inalterado), aplica-se ao caminho sem tools, e
+falha fechada num modelo sem preço confirmado (como o cost cap). Prova:
+`runner/tests/test_counttokens.py` (unidade + end-to-end com transporte falso).
+
+**Nota de escopo:** a versão implementada **pára** o run (pausa `paused_budget`,
+retomável com um tecto maior) em vez de **degradar** automaticamente para um modelo
+mais barato. A degradação automática fica como passo seguinte (combina esta guarda
+com a selecção por `complexity`/`available` da §2) — mas a base agora assenta num
+estimador verificado, não num número duvidoso.
 
 ## 5. Consequências
 
-- Critério 5 passa a **proven (signal + availability-aware)**; a parte
-  budget-por-estimativa fica **documentada como adiada com pré-requisito**, não
-  como lacuna silenciosa.
+- Critério 5 passa a **proven (signal + availability-aware + budget-por-estimativa
+  opt-in)**; falta só a *degradação automática* de modelo (passo seguinte), não a
+  medição.
 - Fronteira mantida: a complexidade escolhe o *modelo*, nunca o *papel*
   (`model_tier`); a disponibilidade só filtra o modelo de sinal; nada disto é
   política de runtime imposta à planwright.

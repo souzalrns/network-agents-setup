@@ -57,6 +57,7 @@ from .skills import _frontmatter, repo_root_from_out
 
 DEFAULT_MODEL = "gemini-flash-lite-latest"
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+COUNT_TOKENS_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:countTokens"
 DEFAULT_MAX_OUTPUT_TOKENS = 4096
 INPUT_MAX_CHARS = 20000  # por ficheiro de input/contexto
 LEDGER_FILE = "token_usage.jsonl"
@@ -382,6 +383,75 @@ def check_budget(out_root: Path, model: str | None = None) -> None:
         raise CostBudgetExceeded(spent_usd, usd_cap)
 
 
+def count_tokens(
+    system: str,
+    user: str,
+    *,
+    model: str,
+    api_key: str | None = None,
+    timeout: float = 30.0,
+    transport: Transport | None = None,
+    contents: list[dict[str, Any]] | None = None,
+) -> int:
+    """Tokens de ENTRADA do prompt, pelo endpoint `:countTokens` do Gemini.
+
+    É o estimador **verificado** (ADR-002): o número vem da própria API, não de uma
+    heurística local. Partilha o formato de corpo e o `transport` injectável do
+    `gemini_generate`, por isso os testes correm sem rede. Devolve `totalTokens`.
+    """
+    body: dict[str, Any] = {
+        "contents": contents if contents is not None else [{"role": "user", "parts": [{"text": user}]}],
+    }
+    if system:
+        body["systemInstruction"] = {"parts": [{"text": system}]}
+    send = transport or httpx_transport
+    try:
+        code, response = send(COUNT_TOKENS_URL.format(model=model), {"x-goog-api-key": gemini_api_key(api_key)}, body, timeout)
+    except httpx.HTTPError as e:
+        raise WorkerError(f"countTokens: erro de rede: {type(e).__name__}") from e
+    if code != 200:
+        msg = ((response.get("error") or {}).get("message") or "")[:300]
+        raise WorkerError(f"countTokens HTTP {code}: {msg}")
+    total = response.get("totalTokens")
+    if not isinstance(total, int) or isinstance(total, bool) or total < 0:
+        raise WorkerError(f"countTokens: resposta sem `totalTokens` válido ({total!r})")
+    return total
+
+
+def check_budget_projected(out_root: Path, model: str, prompt_tokens: int, max_output_tokens: int) -> None:
+    """Guarda PROJECTIVA: lança BudgetExceeded se a PRÓXIMA chamada estourasse o tecto.
+
+    Ao contrário do `check_budget` (reactivo: pára depois de gastar), estima o custo
+    da chamada a seguir — `prompt_tokens` (de countTokens) + `max_output_tokens` como
+    tecto da saída — e pára ANTES de a fazer, se `gasto + projecção > tecto`. Opt-in
+    (o worker só a chama com a flag), por isso o comportamento por omissão não muda.
+    """
+    projected = int(prompt_tokens) + int(max_output_tokens)
+    cap = token_cap(out_root)
+    if cap is not None and ledger_spent(out_root) + projected > cap:
+        raise BudgetExceeded(ledger_spent(out_root) + projected, cap)
+    usd_cap = cost_cap(out_root)
+    if usd_cap is None:
+        return
+    prices = cost.load_prices()
+    if model not in prices:
+        raise WorkerError(
+            f"budget.max_cost_usd definido, mas o modelo {model!r} nao tem preco confirmado "
+            "em config/model-prices.yaml (docs/ops/BUDGET.md, D6)"
+        )
+    p = prices[model]
+    projected_usd = (prompt_tokens * p["in"] + max_output_tokens * p["out"]) / 1_000_000
+    try:
+        spent_usd = cost.ledger_cost_usd(out_root / LEDGER_FILE, prices)
+    except cost.CostUnknown as e:
+        raise WorkerError(
+            f"budget.max_cost_usd definido, mas o modelo {e} nao tem preco confirmado "
+            "em config/model-prices.yaml (docs/ops/BUDGET.md, D6)"
+        ) from e
+    if spent_usd + projected_usd > usd_cap:
+        raise CostBudgetExceeded(spent_usd + projected_usd, usd_cap)
+
+
 def check_hitl(out_root: Path, step_id: str) -> None:
     """Lanca HumanGateBlocked se o passo tem gate ou o run espera decisao humana."""
     status_path = out_root / "status.json"
@@ -651,6 +721,7 @@ class GeminiWorker:
         memory: mw.MemoryStore | None | bool = True,
         tools: bool | None = None,
         knowledge_backend: Callable[[], Any] | None = None,
+        project_budget: bool | None = None,
     ):
         self.model = model or os.environ.get("AGENT_MODEL") or DEFAULT_MODEL
         # L4 (D3): True = DATABASE_URL do ambiente (se houver); so e usada por planos com `memory:`.
@@ -665,6 +736,13 @@ class GeminiWorker:
         # AU-20 (P-37 = B): executor de tools, desligado por omissao (PLAN_RUNNER_TOOLS=1 liga).
         self.tools = te.tools_enabled_from_env(dict(os.environ)) if tools is None else bool(tools)
         self.knowledge_backend = knowledge_backend
+        # Budget-by-estimate (ADR-002): guarda projectiva antes da chamada, por
+        # countTokens. Opt-in (PLAN_RUNNER_BUDGET_PROJECT=1); por omissao desligada,
+        # por isso o comportamento normal nao muda.
+        if project_budget is None:
+            self.project_budget = os.environ.get("PLAN_RUNNER_BUDGET_PROJECT", "").strip().lower() in ("1", "true", "yes", "on")
+        else:
+            self.project_budget = bool(project_budget)
 
     def process(self, out_root: Path, step_id: str, *, run_id: str | None = None) -> dict[str, Any]:
         """Executa o passo. Devolve o result.json escrito; lanca WorkerError/HumanGateBlocked."""
@@ -695,6 +773,8 @@ class GeminiWorker:
                              complexity=complexity if tier is None else None)
         except ToolApprovalPending:
             raise  # pausa a espera de um humano, nao e um erro do passo
+        except BudgetExceeded:
+            raise  # pausa de orcamento (reactiva ou projectiva), nao e erro: sem worker_error.json
         except WorkerError as e:
             (pending / ERROR_FILE).write_text(
                 json.dumps({"at": _now(), "model": model, "error": str(e)}, indent=2, ensure_ascii=False) + "\n",
@@ -745,6 +825,14 @@ class GeminiWorker:
                 plan=tool_plan, step_raw=step_raw, warnings=kb_warnings,
             )
         else:
+            # Budget-by-estimate (ADR-002, opt-in): estima a chamada por countTokens e
+            # pára ANTES, se estourasse o tecto. Só com a flag e com um tecto definido.
+            if self.project_budget and (token_cap(out_root) is not None or cost_cap(out_root) is not None):
+                prompt_tokens = count_tokens(
+                    system, user, model=model, api_key=self._api_key,
+                    timeout=self.timeout, transport=self.transport,
+                )
+                check_budget_projected(out_root, model, prompt_tokens, self.max_output_tokens)
             response = gemini_generate(
                 system,
                 user,
