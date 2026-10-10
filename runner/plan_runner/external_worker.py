@@ -297,6 +297,18 @@ def _plan_step(plan_raw: dict[str, Any], step_id: str) -> dict[str, Any] | None:
     return None
 
 
+def _step_signal(plan_raw: dict[str, Any], step_id: str, key: str) -> Any:
+    """Um sinal de planeamento do passo (router.signals[step_id][key]), se existir.
+
+    `complexity`/`autonomy` viajam aqui (metadados de topo), nunca como campos do
+    passo -- e o que `plan_import --signals` escreve a partir do export da planwright.
+    """
+    router = plan_raw.get("router")
+    signals = router.get("signals") if isinstance(router, dict) else None
+    entry = signals.get(step_id) if isinstance(signals, dict) else None
+    return entry.get(key) if isinstance(entry, dict) else None
+
+
 def ledger_spent(out_root: Path) -> int:
     """Tokens ja gastos pelo run: soma do tokens_total do ledger local (linhas sem tokens contam 0)."""
     path = out_root / LEDGER_FILE
@@ -661,9 +673,12 @@ class GeminiWorker:
         if result_path.exists():
             return _read_json(result_path)  # idempotente: o passo ja tem resultado
         check_hitl(out_root, step_id)
-        # D5: `model_tier` do passo -> modelo (config/model-tiers.yaml); sem tier, o modelo do worker.
+        # D5 + sinais: `model_tier` do passo (papel) manda; sem ele, o sinal `complexity`
+        # (router.signals, da planwright) escolhe o modelo. Config: config/model-tiers.yaml.
+        plan_raw = _load_plan_raw(out_root)
+        complexity = _step_signal(plan_raw, step_id, "complexity")
         try:
-            model, tier = mt.resolve_model(_plan_step(_load_plan_raw(out_root), step_id), self.model)
+            model, tier = mt.resolve_model(_plan_step(plan_raw, step_id), self.model, complexity=complexity)
         except mt.ModelTierError as e:
             raise WorkerError(f"model_tier: {e}") from e
         check_budget(out_root, model)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
@@ -676,7 +691,8 @@ class GeminiWorker:
             run_id = _read_json(status_path).get("run_id") if status_path.is_file() else None
 
         try:
-            return self._run(out_root, pending, request, step_id, run_id, model=model, tier=tier)
+            return self._run(out_root, pending, request, step_id, run_id, model=model, tier=tier,
+                             complexity=complexity if tier is None else None)
         except ToolApprovalPending:
             raise  # pausa a espera de um humano, nao e um erro do passo
         except WorkerError as e:
@@ -688,7 +704,7 @@ class GeminiWorker:
 
     def _run(
         self, out_root: Path, pending: Path, request: dict, step_id: str, run_id: str | None,
-        *, model: str | None = None, tier: str | None = None,
+        *, model: str | None = None, tier: str | None = None, complexity: str | None = None,
     ) -> dict[str, Any]:
         model = model or self.model
         built = build_prompt_ctx(out_root, pending, request, context=self.context)
@@ -796,6 +812,9 @@ class GeminiWorker:
         }
         if tier is not None:
             result["meta"]["model_tier"] = tier
+        if complexity is not None:
+            # o sinal escolheu o modelo (nao havia model_tier); fica registado para auditoria
+            result["meta"]["complexity"] = complexity
         if tools_meta is not None:
             result["meta"]["tools"] = tools_meta
         if summary:

@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from plan_runner import external_worker as ew
+from plan_runner import model_tiers as mt
 from plan_runner.engine import load_plan, resume_run, run_plan
 from plan_runner.plan_import import import_contract
 from plan_runner.plan_schema import plan_errors
@@ -156,6 +157,35 @@ def test_run_canonico_hitl_depois_orcamento_depois_done(tmp_run_dir, fake):
     assert ("file_exists", "artifacts/04-final.md") in passed
     assert ("gate_resolved", "decide") in passed
     assert done_checked[-1]["payload"]["failed"] == []
+
+
+def test_sinais_da_planwright_chegam_a_seleccao_do_runner(tmp_path, tmp_run_dir, fake, monkeypatch):
+    """A ponte final: complexity do contrato -> router.signals (import --signals) -> o
+    worker escolhe o modelo por complexidade quando o passo nao declara model_tier."""
+    # import com sinais: o contrato da planwright leva complexity/autonomy para router.signals
+    plan_dict = import_contract(CANON_CONTRACT, plan_id="composicao-canonica", with_signals=True)
+    sig = plan_dict["router"]["signals"]
+    assert sig["research"]["complexity"] == "C2"
+    assert sig["finalize"]["complexity"] == "C1"
+    assert sig["decide"]["autonomy"] == "human"  # o mesmo sinal que vira a porta humana
+
+    # com uma config de complexidade, o run escolhe modelos cheap->expensive a partir do sinal.
+    # (plano minimo, sem porta nem tecto: aqui o foco e so a seleccao de modelo pelo sinal)
+    mtcfg = tmp_path / "mt.yaml"
+    mtcfg.write_text('{"complexity": {"C1": "modelo-barato", "C2": "modelo-medio"}}', encoding="utf-8")
+    monkeypatch.setattr(mt, "TIERS_PATH", mtcfg)
+    plan_yaml = tmp_path / "plan.yaml"
+    plan_yaml.write_text(
+        '{"id": "sel", "objective": "x",'
+        ' "router": {"signals": {"a": {"complexity": "C2"}, "b": {"complexity": "C1"}}},'
+        ' "steps": [{"id": "a", "action": "research", "output_artifact": "artifacts/a.md"},'
+        '           {"id": "b", "action": "research", "depends_on": ["a"], "output_artifact": "artifacts/b.md"}]}',
+        encoding="utf-8",
+    )
+    status = run_plan(plan_yaml, mode="external", out_dir=tmp_run_dir, worker="gemini")
+    assert status["state"] == "done"
+    models = [c["url"].split("/models/")[1].split(":")[0] for c in fake.calls]
+    assert models == ["modelo-medio", "modelo-barato"]  # C2 -> medio, C1 -> barato
 
 
 def test_done_when_falha_sem_a_evidencia(tmp_run_dir, fake):
