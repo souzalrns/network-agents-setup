@@ -3,7 +3,15 @@
 Levar os três pacotes `oss/` ao PyPI, para qualquer pessoa fazer
 `pip install planwright`. Por **Trusted Publishing** (OIDC): **sem tokens nem
 secrets** no repo — o GitHub Actions prova a identidade ao PyPI com um id-token
-de curta duração. O workflow é `.github/workflows/publish-pypi.yml`.
+de curta duração. **Um workflow DEDICADO por pacote** (o pending publisher do PyPI
+é único por `owner + repo + workflow + environment`, por isso um só workflow não
+serve três projetos):
+
+| Pacote | Workflow |
+|--------|----------|
+| planwright | `.github/workflows/publish-planwright.yml` |
+| skill-scout | `.github/workflows/publish-skill-scout.yml` |
+| auditron | `.github/workflows/publish-auditron.yml` |
 
 > **Padrão ouro, decisão do maestro:** o 1.º publish de cada pacote é um passo
 > **deliberado** (precisa do setup no PyPI, abaixo). O workflow fica **inerte**
@@ -29,15 +37,20 @@ done   # 404 = livre
 
 Trusted Publishing para um projeto que **ainda não existe** usa um *pending
 publisher*. Em <https://pypi.org/manage/account/publishing/>, **Add a pending
-publisher** e preencher, por cada pacote:
+publisher** — **três vezes**, cada um com o **seu** Workflow name (é isto que os
+torna configs distintas; com o mesmo workflow o PyPI dá
+*"already registered for a different project name"*):
 
-| Campo | Valor |
-|-------|-------|
-| PyPI Project Name | `planwright` (e depois `skill-scout`, `auditron`) |
-| Owner | `souzalrns` |
-| Repository name | `network-agents-setup` |
-| Workflow name | `publish-pypi.yml` |
-| Environment name | `pypi` |
+| PyPI Project Name | Owner | Repository name | Workflow name | Environment |
+|-------------------|-------|-----------------|---------------|-------------|
+| `planwright` | `souzalrns` | `network-agents-setup` | `publish-planwright.yml` | `pypi` |
+| `skill-scout` | `souzalrns` | `network-agents-setup` | `publish-skill-scout.yml` | `pypi` |
+| `auditron` | `souzalrns` | `network-agents-setup` | `publish-auditron.yml` | `pypi` |
+
+> **Se já registaste o planwright contra `publish-pypi.yml`** (o workflow antigo,
+> agora removido): apaga esse pending publisher e volta a registar o planwright
+> com `publish-planwright.yml`. (O planwright ainda não foi publicado, por isso é
+> só apagar+re-adicionar o *pending*.)
 
 Opcional mas recomendado: em **Settings → Environments → `pypi`** do repo, pôr
 uma *required reviewer* (o maestro) — assim cada publish fica à espera de um
@@ -68,17 +81,17 @@ git -C /tmp/ghapp rev-list -n1 <tag>                                            
    git tag planwright-v0.3.0 && git push origin planwright-v0.3.0
    ```
 
-4. O workflow `publish-pypi.yml` corre: escolhe o pacote pela tag, valida a
-   versão, `build` + `twine check --strict`, e publica por OIDC. (Com a tag
-   `skill-scout-v0.1.0` publica o skill-scout; `auditron-v0.1.0`, o auditron.)
+4. O workflow do pacote corre (a tag `planwright-v*` dispara `publish-planwright.yml`;
+   `skill-scout-v*` → `publish-skill-scout.yml`; `auditron-v*` → `publish-auditron.yml`):
+   valida a versão, `build` + `twine check --strict`, e publica por OIDC.
 5. **Verificar**:
 
    ```bash
    pip install planwright==0.3.0 && python -c "import planwright; print('ok')"
    ```
 
-Publicar à mão (sem tag), depois do setup: **Actions → Publish to PyPI → Run
-workflow**, escolher o pacote.
+Publicar à mão (sem tag), depois do setup: **Actions → Publish <pacote> to PyPI →
+Run workflow**.
 
 ## 4. Esquema de tags e versões
 

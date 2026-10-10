@@ -1,0 +1,59 @@
+name: Publish skill-scout to PyPI
+
+# XP1 (docs/initiatives/XP1-PYPI-PLAYBOOK.md): publica SÓ o skill-scout no PyPI por
+# **Trusted Publishing** (OIDC) -- sem tokens nem secrets.
+#
+# Workflow DEDICADO (nome único) de propósito: o pending publisher do PyPI é único
+# por (owner, repo, workflow, environment), por isso cada pacote precisa do seu
+# próprio ficheiro de workflow. Dispara na tag `skill-scout-v*` ou à mão. Inerte até
+# existir a tag E o pending publisher no PyPI.
+#
+# Public repository: Actions minutes are free. Actions pinned by SHA.
+
+on:
+  push:
+    tags:
+      - 'skill-scout-v*'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # OIDC: o único poder preciso para o Trusted Publishing
+    env:
+      DIR: oss/skill-scout
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Versão da tag == versão do pyproject (quando é tag)
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          tag_ver="${GITHUB_REF_NAME#*-v}"
+          proj_ver="$(python -c "import tomllib,sys; print(tomllib.load(open(sys.argv[1],'rb'))['project']['version'])" "$DIR/pyproject.toml")"
+          echo "tag=$tag_ver  pyproject=$proj_ver"
+          [ "$tag_ver" = "$proj_ver" ] || { echo "::error::tag ($tag_ver) != pyproject ($proj_ver) em $DIR"; exit 1; }
+
+      - name: Build + twine check
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip build twine
+          rm -rf "$DIR/dist"
+          python -m build "$DIR" --outdir "$DIR/dist"
+          python -m twine check --strict "$DIR"/dist/*
+
+      - name: Publish (Trusted Publishing, OIDC)
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: oss/skill-scout/dist
+          print-hash: true
