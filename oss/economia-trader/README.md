@@ -155,7 +155,9 @@ See `docs/initiatives/economia-trader/AGENTS-AND-MONITORS.md`.
 - `economia-trader dashboard [--refresh 60]`: one static HTML page (no server, light/dark,
   phone-friendly) built from `state.json`, `journal.jsonl` and `events.jsonl`. It shows positions,
   results per version, upcoming macro releases, analyst opinions, rejections, blocks and kills,
-  news, and the last decisions.
+  news, and the last decisions. `--openstock-url http://localhost:3000` links every ticker to its
+  page in an **OpenStock** instance (charts, heatmap, news), used as-is, side by side (AGPL-3.0:
+  linking by URL creates no obligation; do not copy its code here).
 - `economia-trader office --url http://127.0.0.1:19000 --join-key KEY`: the agents (monitor,
   screen, analyst, risk, executor) appear as characters in **Star-Office-UI** and move with the
   journal. Code MIT, art **non-commercial**: personal use only, unless you replace the art.

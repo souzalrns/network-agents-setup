@@ -680,6 +680,8 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-57 | economia-trader: real autónomo | **Rever a E8/G1.5: real autónomo só dentro de um *mandato* assinado pelo maestro (tecto por ordem e por dia, prazo, kill automático), e só depois de ≥ 2 semanas em paper sem violações** | Real sempre com aprovação ordem a ordem | — | **Decidida: A** (maestro, 2026-10-11). O mandato é a próxima fase de execução real (PROMPT-MESTRE §3.7) |
 | P-58 | economia-trader: Freqtrade como motor 24/7 para cripto | Sim: spike em dry-run com o nosso gate em `confirm_trade_entry` | **Não, por agora: o runner sobre o ccxt já cobre o loop; reavaliar se faltar algo concreto (stops na exchange, Telegram)** | — | **Decidida: B** (maestro, 2026-10-11). A recomendação mudou depois do #188 (o ccxt resolveu precisão e sandbox) |
 | P-59 | economia-trader: mais sinais depois do painel | **FinBERT (sentimento de notícias sem custo) + ai-hedge-fund (MIT, 2.ª opinião), sempre só a propor e medidos por versão** | Ficar só com o TradingAgents | — | **Decidida: A** (maestro, 2026-10-11) |
+| P-60 | economia-trader: OpenStock (AGPL-3.0, terminal de mercado) | **Usar ao lado do painel, sem modificar; o painel liga cada ativo à página dele no OpenStock (`--openstock-url`)** | Não usar | — | **Decidida: A** (maestro, 2026-10-12). Ligar por URL não cria obrigações AGPL; não se copia código |
+| P-61 | economia-trader: API de sentimento Adanos (Reddit, X, notícias, Polymarket) | **Avaliar só (custo, termos, fiabilidade) antes de integrar, ao lado do FinBERT** | Não avaliar | — | **Decidida: A** (maestro, 2026-10-12). Integração só depois do veredicto |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)

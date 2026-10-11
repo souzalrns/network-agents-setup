@@ -114,6 +114,16 @@ def test_dashboard_kill_switch_and_refresh(state_dir):
     assert '<meta http-equiv="refresh" content="60">' in page
 
 
+def test_dashboard_links_to_openstock(state_dir):
+    page = build_html(state_dir, now=T0, openstock_url="http://localhost:3000/")
+    assert 'href="http://localhost:3000/stocks/BETA"' in page and 'rel="noopener noreferrer"' in page
+    assert "/stocks/ACME" in page  # the vetoed one is linked too (opinions, news)
+    plain = build_html(state_dir, now=T0)
+    assert "/stocks/" not in plain
+    bad = build_html(state_dir, now=T0, openstock_url="javascript:alert(1)")
+    assert "javascript:" not in bad
+
+
 def test_dashboard_empty_dir(tmp_path):
     page = build_html(tmp_path, now=T0)
     assert "Sem posições abertas." in page and "Diário vazio." in page

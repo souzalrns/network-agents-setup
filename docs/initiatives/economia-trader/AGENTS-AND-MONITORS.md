@@ -90,3 +90,11 @@ economia-trader report
   não comercial**. Serve para uso pessoal; num produto é preciso trocar as imagens.
 - **Traces** (Langfuse, opcional): com `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` definidas, cada
   passo do TradingAgents fica no Langfuse (MIT, self-hostable). Sem as chaves não corre nada.
+- **OpenStock** (`Open-Dev-Society/OpenStock`, `d890d91`, **AGPL-3.0**): um terminal de mercado
+  (gráficos TradingView, heatmap, watchlist, alertas, sentimento) usado **ao lado** do painel,
+  sem modificações (instância própria ou a deles). `dashboard --openstock-url` liga cada ativo a
+  `<openstock>/stocks/<SYM>`. Ligar por URL não cria obrigações AGPL. **Não** se copia código dele
+  para o `economia-trader` (MIT). Não negoceia: só observa.
+- **Adanos** (a API de sentimento que o OpenStock usa: Reddit, X, notícias, Polymarket): está **em
+  avaliação** (custo, termos, fiabilidade) como fonte extra, ao lado do FinBERT (P-59). Só se
+  integra depois desse veredicto.

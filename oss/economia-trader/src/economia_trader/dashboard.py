@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from .report import report
 
@@ -30,11 +31,34 @@ def _e(v: Any) -> str:
     return html.escape("" if v is None else str(v))
 
 
+class Link:
+    """A table cell that links out (e.g. to the ticker's page in OpenStock). Only http(s)."""
+
+    def __init__(self, text: Any, href: str | None) -> None:
+        self.text, self.href = text, href
+
+    def html(self) -> str:
+        if not self.href or not self.href.startswith(("http://", "https://")):
+            return _e(self.text)
+        return f'<a href="{_e(self.href)}" target="_blank" rel="noopener noreferrer">{_e(self.text)}</a>'
+
+
+def _cell(c: Any) -> str:
+    return c.html() if isinstance(c, Link) else _e(c)
+
+
+def _ticker(sym: Any, base: str | None) -> Any:
+    """Ticker -> link to ``<openstock>/stocks/<SYM>`` (OpenStock used as-is, side by side)."""
+    if not base or not sym:
+        return sym
+    return Link(sym, f"{base.rstrip('/')}/stocks/{quote(str(sym).upper(), safe='')}")
+
+
 def _table(head: list[str], rows: list[list[Any]], empty: str) -> str:
     if not rows:
         return f'<p class="muted">{_e(empty)}</p>'
     th = "".join(f"<th>{_e(h)}</th>" for h in head)
-    body = "".join("<tr>" + "".join(f"<td>{_e(c)}</td>" for c in r) + "</tr>" for r in rows)
+    body = "".join("<tr>" + "".join(f"<td>{_cell(c)}</td>" for c in r) + "</tr>" for r in rows)
     return f"<table><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table>"
 
 
@@ -75,7 +99,13 @@ def _summary(entry: dict[str, Any]) -> str:
     return k
 
 
-def build_html(state_dir: str | Path, *, now: datetime | None = None, refresh_s: int | None = None) -> str:
+def build_html(
+    state_dir: str | Path,
+    *,
+    now: datetime | None = None,
+    refresh_s: int | None = None,
+    openstock_url: str | None = None,
+) -> str:
     sd = Path(state_dir)
     now = now or datetime.now(timezone.utc)
     state = json.loads((sd / "state.json").read_text()) if (sd / "state.json").exists() else {}
@@ -94,7 +124,7 @@ def build_html(state_dir: str | Path, *, now: datetime | None = None, refresh_s:
 
     pos_rows = [
         [
-            s,
+            _ticker(s, openstock_url),
             p["qty"],
             p["avg_price"],
             stops.get(s, "—"),
@@ -131,13 +161,17 @@ def build_html(state_dir: str | Path, *, now: datetime | None = None, refresh_s:
     ]
     news = sorted((e for e in events if e.get("kind") == "news"), key=lambda e: e["published_at"], reverse=True)[:10]
     news_rows = [
-        [e["published_at"][:16].replace("T", " "), e["payload"].get("symbols") or "", e["payload"].get("title")]
+        [
+            e["published_at"][:16].replace("T", " "),
+            _ticker((e["payload"].get("symbols") or "").split(",")[0].strip(), openstock_url),
+            Link(e["payload"].get("title"), e["payload"].get("url")),
+        ]
         for e in news
     ]
     ops = [e["payload"] for e in journal if e["kind"] == "opinion"][-10:]
     op_rows = [
         [
-            o.get("ticker"),
+            _ticker(o.get("ticker"), openstock_url),
             o.get("rating"),
             "confirma" if o.get("confirms") else "veta",
             ", ".join(f"{m}: {u.get('in', 0)}/{u.get('out', 0)}" for m, u in (o.get("usage") or {}).items()) or "—",
@@ -229,4 +263,5 @@ main{max-width:1100px;margin:0 auto}h1{font-size:20px;margin:0 0 4px}h2{font-siz
 table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px}
 th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
 th{color:var(--muted);font-weight:500}
+a{color:var(--accent)}
 """

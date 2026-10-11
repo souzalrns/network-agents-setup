@@ -138,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--state-dir", default=str(STATE_DIR))
     p.add_argument("--out", default=str(STATE_DIR / "dashboard.html"))
     p.add_argument("--refresh", type=int, help="auto-reload every N seconds")
+    p.add_argument("--openstock-url", help="link tickers to an OpenStock instance (e.g. http://localhost:3000)")
 
     p = sub.add_parser("office", help="Push agent states to a Star-Office-UI (pixel office)")
     p.add_argument("--url", required=True, help="Star-Office-UI base URL")
@@ -327,7 +328,9 @@ def _run(args: argparse.Namespace) -> int:
 
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(build_html(args.state_dir, refresh_s=args.refresh), encoding="utf-8")
+        out.write_text(
+            build_html(args.state_dir, refresh_s=args.refresh, openstock_url=args.openstock_url), encoding="utf-8"
+        )
         print(f"dashboard: {out}")
         return 0
 
