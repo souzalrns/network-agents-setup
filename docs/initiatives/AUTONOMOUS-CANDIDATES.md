@@ -45,18 +45,19 @@ não se extrai.
 | **2** | **fetchtron** (ex-safe-fetch) | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
 | **3** | **hitlwright** (ex-hitl-gate) | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
 | **4** | **tokenwright** (ex-token-budget) | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
-| **5** | **groundeval** | forte | — (RE1=B) | decidido **não** extrair como produto (mercado saturado); fica no runner. Ver nota |
+| **5** | **groundwright** (ex-groundeval) | forte | baixo-médio | porta determinística de proveniência/grounding (os outros julgam o answer por LLM); EXTRAÍDO |
 | 6 | model-tiers | médio | baixo | pequeno e limpo, mas categoria já ocupada (litellm router) |
 | 7 | chunker | médio | baixo-médio | útil, mas concorrência madura (langchain/llama-index splitters) |
 | 8 | provenance | médio | baixo-médio | diferencial de *accountability*, mas valor só com o grounding ao lado |
 | 9 | tool-executor | médio | alto | valor alto, mas acoplamento fundo ao worker — extrair tarde |
 | 10 | skill-activation | médio | alto | idem; depende do `agentic-skills-manager` e do SEC-1.3 |
 
-> Nota groundeval: está na lista dos **fortes** como *capacidade*, mas a decisão
-> RE1 (`RE1-RAG-EVAL-DECISION.md`) é **B = no-go como produto** — o mercado
-> (ragas/deepeval/promptfoo) está ganho e o nome `rag-eval` está ocupado. Fica no
-> runner, onde o diferencial (proveniência ligada ao pipeline governado) existe.
-> Revisitar só com procura concreta.
+> Nota groundwright (ex-groundeval): o RE1 (`RE1-RAG-EVAL-DECISION.md`) disse **B =
+> no-go como produto** para um `rag-eval` **genérico** (mercado ragas/deepeval ganho,
+> nome ocupado). O maestro reabriu ("avance com todos"); extraído como `groundwright`
+> **sem contradizer o RE1** — não é avaliador de RAG genérico, é a **porta
+> determinística de proveniência/grounding** (sem LLM), que é precisamente o terreno
+> onde o RE1 dizia estar o nosso diferencial.
 
 ---
 
@@ -179,18 +180,22 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
   - Verificar se alguém junta *allowlist + anti-SSRF + política em ficheiro* num
     só pacote pequeno (provável lacuna → diferencial).
 
-### 8. groundeval — *porta de proveniência / grounding* (RE1 = B)
+### 8. groundwright — *porta de proveniência / grounding* ✅ EXTRAÍDO (5ª volta do flywheel)
+- **Estado:** **extraído** para `oss/groundwright/` (ex-`groundeval`; coined `-wright`;
+  14 testes, CI `groundwright.yml` + publish, zero-dep, sem LLM). Falta a tag
+  `groundwright-v0.1.0` para o PyPI (passo do maestro). Devolver em `l5_eval.py`.
+  **Reabre o RE1=B**, mas com a nota honesta: NÃO é um avaliador de RAG genérico
+  (ragas/deepeval) — é a **porta determinística de proveniência/grounding** (o nosso
+  diferencial), que é a razão pela qual o RE1 dizia "não entrar no genérico".
 - **Frase:** avalia o retrieve de um run contra um golden set (provenance_ok,
-  source_hit@k, chunk_hit, MRR) e bloqueia regressões.
-- **Esforço:** **—** — decidido **não extrair como produto** (RE1 = B). Fica em
-  `l5_eval.py` (209 LOC), com o seam `Retrieve` já pluggable (E5 ✅).
-- **Diferencial:** `provenance_ok` ligado ao **pipeline governado** (L5 + runner)
-  — exactamente o que não viaja para um avaliador genérico.
-- **Concorrência a analisar (já feito no RE1):**
-  - `ragas`, `deepeval`, `promptfoo`, `trulens` — mercado maduro e saturado; nome
-    `rag-eval` ocupado no PyPI. Dossier: `RE1-RAG-EVAL-DECISION.md`.
-  - Revisitar **A** (extrair) só com evidência de procura (um utilizador a pedir
-    avaliação standalone).
+  source_hit@k, chunk_hit, MRR) e bloqueia regressões — determinístico, sem LLM.
+- **Esforço:** **baixo-médio** — `evaluate`+`regression_failures`+`load_golden`+
+  `anchor_errors` pelo seam `Retrieve`; limiares do gate parametrizados.
+- **Diferencial:** `provenance_ok`/`source_hit@k` como **gate determinístico de
+  retrieval** (os outros julgam o *answer* por LLM); sem custo por run.
+- **Concorrência (POSITIONING.md):** `ragas`, `deepeval`, `promptfoo` — todos
+  answer-quality/LLM-judge; `groundwright` fica na pergunta anterior (recuperou-se a
+  fonte certa, com prova?). Dossier original: `RE1-RAG-EVAL-DECISION.md`.
 
 ---
 
@@ -269,7 +274,7 @@ documentados aqui para fechar o inventário e evitar a tentação futura.
 ## Fecho
 
 - **19 itens**, todos com evidência (`file:line` / LOC em `main` `f72ec6c`).
-- **Prioridade:** doneproof ✅ → fetchtron ✅ → hitlwright ✅ → tokenwright ✅ → (groundeval
+- **Prioridade:** doneproof ✅ → fetchtron ✅ → hitlwright ✅ → tokenwright ✅ → groundwright ✅ (os 5 fortes extraídos)
   = RE1=B, fica) → depois os médios.
 - **Método:** o *flywheel* em `REPO-EVAL-PLAYBOOK.md`. Cada extração endurece o
   pacote **e** devolve a melhoria ao runner.

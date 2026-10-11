@@ -42,6 +42,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # retrievers falsos). `mcp_retrieve()` e so o default (o MCP do L5); outro retriever
 # (outro indice, um stub) encaixa sem tocar no motor. Decisao e porque:
 # docs/initiatives/RE1-RAG-EVAL-DECISION.md.
+#
+# DEVOLVER (flywheel, 5ª volta, docs/initiatives/REPO-EVAL-PLAYBOOK.md): o motor desta
+# porta de grounding (evaluate + regression_failures + load_golden + anchor_errors, pelo
+# seam `Retrieve`) foi extraído para o pacote standalone `oss/groundwright` (PyPI
+# `groundwright`), zero-dep e agnóstico de retriever. NÃO contradiz o RE1=B: o pacote NÃO
+# é um avaliador de RAG genérico (ragas/deepeval) — é a porta determinística de
+# proveniência/grounding (o nosso diferencial). Este módulo fica como a cola do runner
+# (default `mcp_retrieve()` + `_local_chunks` pelo chunking + os limiares da P-19/R-011);
+# quando valer, `from groundwright import evaluate, regression_failures`.
 Retrieve = Callable[[str, str, int], list[dict[str, Any]]]
 
 

@@ -1,0 +1,10 @@
+groundwright
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+groundwright has no third-party runtime dependencies. The golden set is a plain mapping, the
+retriever is a callable you pass in, and the engine is the Python standard library only (re).
+
+Extracted from the governed runner at github.com/souzalrns/network-agents-setup
+(runner/plan_runner/l5_eval.py). The runner keeps the MCP retriever default and the chunking
+used to validate a golden set offline; this package is the standalone, retriever-agnostic
+grounding-gate core (the `Retrieve` seam).
