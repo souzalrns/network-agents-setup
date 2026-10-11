@@ -1,4 +1,4 @@
-"""fetchguard: a safe HTTP GET with the guardrails most clients leave to you.
+"""egressguard: a safe HTTP GET with the guardrails most clients leave to you.
 
 One call fetches a URL and *contains* it: an allowlist that is **deny-by-default**,
 SSRF protection (private / loopback / link-local / reserved / metadata addresses are
@@ -6,7 +6,7 @@ refused), robots.txt (RFC 9309), and hard caps on size, time and redirects — w
 allowlist and SSRF checks **re-run on every redirect hop**, so a 302 cannot walk the
 request to an internal address or an off-list host.
 
-    from fetchguard import fetch, FetchError
+    from egressguard import fetch, FetchError
 
     try:
         got = fetch("https://example.org/doc", allowlist=["example.org"])
@@ -18,7 +18,7 @@ request to an internal address or an off-list host.
 
 The allowlist is **data you pass in** (a list of domains; a domain also covers its
 subdomains). Where the policy comes from — a config file, an area map, a per-tenant
-rule — is the caller's business; fetchguard only enforces it.
+rule — is the caller's business; egressguard only enforces it.
 
 Honest limit (see POSITIONING.md): the host is resolved for the SSRF check and then
 again by the HTTP client, so a DNS-rebinding window exists. Roadmap closes it by
@@ -54,7 +54,7 @@ DEFAULT_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_MAX_REDIRECTS = 5
 ROBOTS_MAX_BYTES = 512 * 1024  # RFC 9309 §2.5: a client must read at least 500 KiB
 REDIRECT_CODES = (301, 302, 303, 307, 308)
-DEFAULT_USER_AGENT = "fetchguard/0.1 (+https://pypi.org/project/fetchguard/)"
+DEFAULT_USER_AGENT = "egressguard/0.1 (+https://pypi.org/project/egressguard/)"
 
 ERROR_CODES = (
     "invalid_uri",

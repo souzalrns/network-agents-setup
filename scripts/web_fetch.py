@@ -35,11 +35,11 @@ Regras: `runner/plan_runner/web_allowlist.py`.
 DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md): o núcleo de *fetch seguro*
 deste ficheiro — allowlist deny-by-default (`host_allowed`), SSRF (`is_public_address`,
 `check_url`), robots (`robots_allows`) e os tectos, com re-verificação a cada redirect —
-foi extraído para o pacote standalone `oss/fetchguard` (PyPI `fetchguard`), agnóstico de
+foi extraído para o pacote standalone `oss/egressguard` (PyPI `egressguard`), agnóstico de
 content-type. Aqui fica a cola do runner: resolver a área→allowlist (`web_allowlist`) e a
 conversão HTML→Markdown do T6 (MarkItDown), que não pertencem ao pacote. Quando o
-`fetchguard` estiver no PyPI, trocar o miolo de `fetch()` (o laço de redirects + `check_url`
-+ `robots_allows`) por `from fetchguard import fetch as safe_get` e deixar aqui só a
+`egressguard` estiver no PyPI, trocar o miolo de `fetch()` (o laço de redirects + `check_url`
++ `robots_allows`) por `from egressguard import fetch as safe_get` e deixar aqui só a
 conversão e a proveniência do T6.
 """
 

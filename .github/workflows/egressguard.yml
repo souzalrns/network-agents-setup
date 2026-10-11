@@ -1,6 +1,6 @@
-name: fetchguard
+name: egressguard
 
-# oss/fetchguard: um GET HTTP seguro acoplável (allowlist deny-by-default + SSRF + robots + tectos).
+# oss/egressguard: um GET HTTP seguro acoplável (allowlist deny-by-default + SSRF + robots + tectos).
 # Auto-contido, para sair para o seu próprio repositório sem mudanças (como o skill-scout).
 #
 # - test: Python 3.10 e 3.13; ruff lint + format; pytest (o único dep de runtime é o httpx);
@@ -12,26 +12,26 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'oss/fetchguard/**'
-      - '.github/workflows/fetchguard.yml'
+      - 'oss/egressguard/**'
+      - '.github/workflows/egressguard.yml'
   push:
     branches: [main]
     paths:
-      - 'oss/fetchguard/**'
-      - '.github/workflows/fetchguard.yml'
+      - 'oss/egressguard/**'
+      - '.github/workflows/egressguard.yml'
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: fetchguard-${{ github.ref }}
+  group: egressguard-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash
-    working-directory: oss/fetchguard
+    working-directory: oss/egressguard
 
 jobs:
   test:
@@ -83,12 +83,12 @@ jobs:
         run: |
           python -m venv /tmp/fg
           /tmp/fg/bin/pip install dist/*.whl
-          /tmp/fg/bin/fetchguard --version
+          /tmp/fg/bin/egressguard --version
           # sem --allow => recusa (exit 2); host fora da allowlist => recusa (exit 1)
-          /tmp/fg/bin/fetchguard get https://x.test/ && { echo "::error::should require --allow"; exit 1; } || true
-          /tmp/fg/bin/fetchguard get https://x.test/ --allow other.test && { echo "::error::should block"; exit 1; } || true
+          /tmp/fg/bin/egressguard get https://x.test/ && { echo "::error::should require --allow"; exit 1; } || true
+          /tmp/fg/bin/egressguard get https://x.test/ --allow other.test && { echo "::error::should block"; exit 1; } || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: fetchguard-dist
-          path: oss/fetchguard/dist/
+          name: egressguard-dist
+          path: oss/egressguard/dist/
           retention-days: 7
