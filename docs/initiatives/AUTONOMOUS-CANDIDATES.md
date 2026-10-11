@@ -44,7 +44,7 @@ não se extrai.
 | **1** | **doneproof** | forte | baixo | diferencial puro (aceitação por **evidência**), 83 LOC, quase zero acoplamento — o melhor rácio valor/esforço |
 | **2** | **fetchtron** (ex-safe-fetch) | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
 | **3** | **hitlwright** (ex-hitl-gate) | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
-| **4** | **token-budget** | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
+| **4** | **tokenwright** (ex-token-budget) | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
 | **5** | **groundeval** | forte | — (RE1=B) | decidido **não** extrair como produto (mercado saturado); fica no runner. Ver nota |
 | 6 | model-tiers | médio | baixo | pequeno e limpo, mas categoria já ocupada (litellm router) |
 | 7 | chunker | médio | baixo-médio | útil, mas concorrência madura (langchain/llama-index splitters) |
@@ -122,12 +122,16 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
     como *primitiva de aceitação de tarefa de agente* reutilizável (provável nicho
     vazio → o nosso diferencial).
 
-### 5. token-budget — *orçamento e ledger de tokens com guarda projectiva*
-- **Frase:** ledger de tokens → custo USD por `config/model-prices.yaml`, com um
-  tecto que **pausa o run ANTES** de uma chamada que o ultrapassaria.
-- **Esforço:** **médio** — `cost.py` (77 LOC) + `token_projection.py` (223 LOC) +
-  o `check_budget_projected()` do `external_worker` (countTokens verificado,
-  ADR-002).
+### 5. tokenwright — *orçamento e ledger de tokens com guarda projectiva* ✅ EXTRAÍDO (4ª volta do flywheel)
+- **Estado:** **extraído** para `oss/tokenwright/` (ex-`token-budget`; coined `-wright`
+  como o planwright; 19 testes, CI `tokenwright.yml` + publish, zero-dep). Falta a tag
+  `tokenwright-v0.1.0` para o PyPI (passo do maestro). Devolver documentado em
+  `runner/plan_runner/cost.py`. Só o ledger+cap saiu; o `token_projection.py`
+  (experimental, "NÃO VERIFICADA", acoplado ao worker/context_policy) **fica no runner**.
+- **Frase:** ledger de tokens → custo USD, com um tecto que **recusa ANTES** uma
+  chamada que o ultrapassaria, e falha fechada em preço desconhecido.
+- **Esforço:** **médio** — `cost.py` (77 LOC) é o núcleo extraído; a guarda projectiva
+  virou `guard_next_call()`.
 - **Diferencial:** a concorrência mede custo **depois** (observabilidade); nós
   **impedimos** o estouro com projecção via `:countTokens` real antes de gastar.
 - **Concorrência a analisar:**
@@ -265,7 +269,7 @@ documentados aqui para fechar o inventário e evitar a tentação futura.
 ## Fecho
 
 - **19 itens**, todos com evidência (`file:line` / LOC em `main` `f72ec6c`).
-- **Prioridade:** doneproof ✅ → fetchtron ✅ → hitlwright ✅ → token-budget → (groundeval
+- **Prioridade:** doneproof ✅ → fetchtron ✅ → hitlwright ✅ → tokenwright ✅ → (groundeval
   = RE1=B, fica) → depois os médios.
 - **Método:** o *flywheel* em `REPO-EVAL-PLAYBOOK.md`. Cada extração endurece o
   pacote **e** devolve a melhoria ao runner.

@@ -9,6 +9,15 @@ Saida = tokens_total - tokens_in quando o total existe: inclui os tokens de
 raciocinio, que o Gemini cobra como saida e que nao vem em tokens_out.
 Linhas sem tokens (ex.: missing_usage, embeddings) contam 0, como no tecto de
 tokens.
+
+DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md): este ledger de custo
++ a guarda projectiva (recusar ANTES de gastar, falha fechada em preço desconhecido)
+foram extraídos para o pacote standalone `oss/tokenwright` (PyPI `tokenwright`),
+zero-dep (os preços passam a um mapping qualquer, sem YAML). Este módulo fica como a
+cola do runner (lê o `config/model-prices.yaml` em YAML e é chamado pelo
+`external_worker`); o `token_projection.py` NÃO foi extraído (é exploratório e
+acoplado). Quando valer a dependência: `from tokenwright import row_cost_usd,
+ledger_cost_usd, guard_next_call, CostUnknown` e passar `prices_from_mapping(yaml)`.
 """
 from __future__ import annotations
 

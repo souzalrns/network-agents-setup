@@ -1,0 +1,95 @@
+name: tokenwright
+
+# oss/tokenwright: ledger de custo de tokens + tecto projectivo (acoplável, zero-dep).
+# Auto-contido, para sair para o seu próprio repositório sem mudanças (como o skill-scout).
+#
+# - test: Python 3.10 e 3.13; ruff lint + format; pytest (jsonschema valida o schema, test-dep);
+# - package: sdist + wheel, `twine check --strict`, instalar o wheel num venv limpo e correr.
+#
+# Repositório público: minutos de Actions grátis. Actions fixadas por SHA.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oss/tokenwright/**'
+      - '.github/workflows/tokenwright.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oss/tokenwright/**'
+      - '.github/workflows/tokenwright.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tokenwright-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: oss/tokenwright
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install -e '.[test]' ruff==0.16.9
+      - name: Lint and format
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+      - name: Tests (nada é saltado)
+        run: |
+          python -m pytest tests -q -rs | tee pytest.log
+          ! grep -q "SKIPPED" pytest.log
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build==1.6.1 twine==7.0.0
+          python -m build --outdir dist .
+          twine check --strict dist/*
+      - name: Wheel contents (licenças dentro, testes fora)
+        run: |
+          python -m zipfile -l dist/*.whl | tee wheel.txt
+          grep -q "licenses/LICENSE" wheel.txt && grep -q "licenses/NOTICE" wheel.txt
+          ! grep -q "tests/" wheel.txt
+      - name: Install the wheel in a clean venv and run it (cost + projective cap)
+        run: |
+          python -m venv /tmp/tw
+          /tmp/tw/bin/pip install dist/*.whl
+          /tmp/tw/bin/tokenwright --version
+          echo '{"m1":{"usd_per_1m_input":1.0,"usd_per_1m_output":2.0}}' > /tmp/tw-prices.json
+          printf '%s\n' '{"model":"m1","tokens_in":1000000,"tokens_out":0}' > /tmp/tw-l.jsonl
+          test "$(/tmp/tw/bin/tokenwright cost /tmp/tw-l.jsonl --prices /tmp/tw-prices.json)" = "1.000000"
+          /tmp/tw/bin/tokenwright check --spent 1.5 --in 1000000 --out 0 --model m1 --prices /tmp/tw-prices.json --cap 2 && { echo "::error::should block"; exit 1; } || true
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: tokenwright-dist
+          path: oss/tokenwright/dist/
+          retention-days: 7
