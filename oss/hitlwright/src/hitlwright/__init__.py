@@ -28,8 +28,7 @@ append-only IO. Nothing is interpreted by an LLM.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
-from importlib import resources
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -61,11 +60,11 @@ _VALID_PRIORITIES = frozenset({"low", "medium", "high", "critical"})
 
 def schema_path() -> Path:
     """Filesystem path to the shipped ``hitl-request-v1`` JSON Schema."""
-    return Path(str(resources.files("hitlwright") / "hitl-request-v1.json"))
+    return Path(__file__).with_name("hitl-request-v1.json")
 
 
 def _now() -> str:
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
