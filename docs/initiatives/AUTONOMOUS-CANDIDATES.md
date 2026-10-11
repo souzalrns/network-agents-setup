@@ -42,7 +42,7 @@ não se extrai.
 | Ordem | Candidato | Grupo | Esforço | Porquê esta posição |
 |-------|-----------|-------|---------|----------------------|
 | **1** | **doneproof** | forte | baixo | diferencial puro (aceitação por **evidência**), 83 LOC, quase zero acoplamento — o melhor rácio valor/esforço |
-| **2** | **safe-fetch** | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
+| **2** | **fetchguard** (ex-safe-fetch) | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
 | **3** | **hitl-gate** | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
 | **4** | **token-budget** | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
 | **5** | **groundeval** | forte | — (RE1=B) | decidido **não** extrair como produto (mercado saturado); fica no runner. Ver nota |
@@ -150,10 +150,16 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
     livre? É auditável e resumível após reinício? Há contrato versionado?
   - `Humanlayer` é o mais próximo: comparar o nosso contrato v1 com a API deles.
 
-### 7. safe-fetch — *fetch HTTP seguro (allowlist por área, deny-by-default)*
-- **Frase:** busca HTTP onde cada área só alcança os domínios que a política
-  (`config/web-allowlist.yaml`) permite; lista vazia = não busca nada.
-- **Esforço:** **baixo-médio** — `web_allowlist.py` (152 LOC), política em config.
+### 7. fetchguard — *fetch HTTP seguro (allowlist deny-by-default + SSRF)* ✅ EXTRAÍDO (2ª volta do flywheel)
+- **Estado:** **extraído** para `oss/fetchguard/` (pacote `fetchguard`, nome escolhido
+  pelo maestro 2026-10-11; ex-`safe-fetch`; 19 testes, CI `fetchguard.yml` + publish
+  `publish-fetchguard.yml`, 1 dep `httpx`). Falta a tag `fetchguard-v0.1.0` para o PyPI
+  (passo do maestro). Devolver documentado em `scripts/web_fetch.py` (a área/config e a
+  conversão MarkItDown ficam no runner; o GET seguro é o pacote).
+- **Frase:** GET HTTP que *contém* o pedido — allowlist deny-by-default (domínio +
+  subdomínios) + SSRF (privados/loopback/link-local/metadata) + robots + tectos,
+  re-verificados a cada redirect. Agnóstico de content-type.
+- **Esforço:** **baixo-médio** — `web_allowlist.py` (152 LOC) + o miolo de `web_fetch.py`.
 - **Diferencial:** **deny-by-default por área** (política = decisão do maestro),
   pensado contra SSRF num contexto de agente. Raro ter isto como primitiva.
 - **Concorrência a analisar:**
@@ -253,7 +259,7 @@ documentados aqui para fechar o inventário e evitar a tentação futura.
 ## Fecho
 
 - **19 itens**, todos com evidência (`file:line` / LOC em `main` `f72ec6c`).
-- **Prioridade:** doneproof → safe-fetch → hitl-gate → token-budget → (groundeval
+- **Prioridade:** doneproof ✅ → fetchguard ✅ → hitl-gate → token-budget → (groundeval
   = RE1=B, fica) → depois os médios.
 - **Método:** o *flywheel* em `REPO-EVAL-PLAYBOOK.md`. Cada extração endurece o
   pacote **e** devolve a melhoria ao runner.

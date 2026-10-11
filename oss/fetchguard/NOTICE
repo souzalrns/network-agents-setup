@@ -1,0 +1,14 @@
+fetchguard
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+fetchguard depends on one third-party runtime library; the guards (allowlist, SSRF, robots)
+are the Python standard library only (ipaddress, socket, urllib.robotparser, hashlib).
+
+- httpx (https://github.com/encode/httpx), BSD-3-Clause, Copyright the httpx authors. The HTTP
+  client; fetchguard uses it with follow_redirects disabled so it can re-run the allowlist and
+  SSRF checks on every redirect hop, and streams the body to enforce the byte cap. None of its
+  code is copied into this package; it is installed as a dependency.
+
+Extracted from the governed runner at github.com/souzalrns/network-agents-setup
+(scripts/web_fetch.py). The runner keeps the HTML→Markdown conversion and the per-area policy
+(config/web-allowlist.yaml); this package is the standalone, content-agnostic safe-GET core.
