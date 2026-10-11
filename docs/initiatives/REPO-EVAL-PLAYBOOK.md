@@ -126,6 +126,57 @@ Choose the one the **evidence** supports, not the one we already started:
 
 ---
 
+## The flywheel — extrair um módulo torna o todo mais forte
+
+O inventário dos candidatos a repo autónomo está em
+`docs/initiatives/AUTONOMOUS-CANDIDATES.md` (19 itens, com evidência). Este é o
+**método** de os extrair, e a premissa que o governa:
+
+> **Extrair não é perder tempo — é investigar o concorrente, endurecer o módulo
+> com o que se aprende, e devolver essa melhoria ao `plan_runner`.** O ganho não é
+> só um pacote novo no portfólio; é o runner ficar mais robusto em cada volta.
+
+Daí "flywheel" (volante de inércia): cada volta acelera a seguinte. As 5 fases:
+
+1. **Extrair** — tirar o módulo do `plan_runner` para um pacote standalone
+   (`oss/<nome>/`), com fronteira limpa: zero imports do monorepo, um `pyproject`,
+   licença MIT. Passa o **teste de autonomia** (dá para apagar o runner e o pacote
+   continua a correr e a passar os testes).
+
+2. **Analisar a concorrência** — para a categoria do módulo, listar os rivais e
+   medi-los com **evidência, não README** (Prime directive, Step 1–2). A pergunta
+   padrão ouro: *o que os outros têm que não temos, e o que nos falta para ser a
+   escolha recomendada?* O campo "Concorrência a analisar" de cada candidato em
+   `AUTONOMOUS-CANDIDATES.md` já diz quem comparar e o que verificar.
+
+3. **Tornar robusto (com o que se aprendeu)** — fechar as lacunas que a análise
+   revelou e endurecer: testes, CI próprio, tratamento de erros, segurança
+   (correr o auditron sobre o próprio pacote), documentação da fronteira. Aqui é
+   onde "superar no que for viável" (regra do maestro) se concretiza — não copiar
+   o rival, mas ganhar-lhe no diferencial que já temos.
+
+4. **Publicar** — empacotar e publicar no PyPI pelo padrão XP1
+   (`XP1-PYPI-PLAYBOOK.md`): Trusted Publishing (OIDC, sem segredos), um workflow
+   por pacote, action pinada por SHA. O pacote passa a ser instalável e citável no
+   portfólio.
+
+5. **Devolver ao `plan_runner`** — fazer o runner **consumir** o pacote publicado
+   (ou a sua interface) em vez da cópia interna, e trazer de volta as melhorias da
+   fase 3. O runner fica mais fino e mais forte; o módulo deixa de ser uma cópia
+   acoplada e passa a ser uma dependência com contrato. Fecha a volta.
+
+**O que o flywheel NÃO é:** não é extrair tudo. O grupo "Não extrair" do
+inventário (o núcleo — engine, worker, executor, council, memory, areas) fica no
+runner por decisão: esvaziá-lo falharia o teste de autonomia e não teria valor de
+produto. E a decisão de *quais* extrair e *quando* é do maestro — este método diz
+*como*, não *se*.
+
+**Ordem recomendada:** os 5 fortes primeiro (melhor rácio valor/esforço), pela
+prioridade em `AUTONOMOUS-CANDIDATES.md`. Começar por `done-when` (baixo esforço,
+diferencial puro) dá a primeira volta do flywheel com o menor risco.
+
+---
+
 ## Red flags that end an evaluation early
 
 - README describes capabilities the code/tests do not back up.
