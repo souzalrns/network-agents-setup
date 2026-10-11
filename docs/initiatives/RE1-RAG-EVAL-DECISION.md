@@ -98,3 +98,13 @@ extensão de 1.ª classe e (2) acrescenta uma **guarda explícita**
 em memória. Zero reescrita — a decisão não precisava dela.
 
 **Estado:** RE1 **FECHADO** (decisão B). Revisitar A só com evidência de procura.
+
+## Adenda (2026-10-11): extraído como `groundwright`, sem contradizer o B
+
+O maestro reabriu a extracção ("avance com todos"). A decisão B continua correcta no que
+afirmava: **não entrar no mercado de `rag-eval` genérico** (ragas/deepeval/promptfoo
+maduros; nome ocupado). A 5ª volta do flywheel extraiu o `l5_eval` como **`groundwright`**
+(PyPI), mas enquadrado no diferencial que o próprio B identificava: uma **porta
+determinística de proveniência/grounding de retrieval** (provenance_ok, source_hit@k,
+chunk da âncora, gate de regressão), **sem LLM** — a pergunta *anterior* à qualidade da
+resposta. Não é um avaliador de RAG genérico. PR #184; `oss/groundwright/POSITIONING.md`.
