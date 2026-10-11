@@ -7,6 +7,7 @@ A strategy that only wins on paper because fills were free is caught here, not i
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from .contracts import Fill, OrderIntent, dec
 from .risk import PortfolioState, Position
@@ -74,3 +75,23 @@ class PaperBroker:
     def new_day(self) -> None:
         """Reset the daily realized P&L (the daily loss cap is per day)."""
         self.state.realized_today = Decimal(0)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialisable state, so a scheduled run (cron, systemd timer) survives restarts."""
+        return {
+            "cash": str(self.cash),
+            "fee_rate": str(self.fee_rate),
+            "slippage": str(self.slippage),
+            "realized_today": str(self.state.realized_today),
+            "positions": {
+                s: {"qty": str(p.qty), "avg_price": str(p.avg_price)} for s, p in self.state.positions.items()
+            },
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> PaperBroker:
+        broker = cls(d["cash"], fee_rate=d["fee_rate"], slippage_bps=dec(d["slippage"]) * 10_000)
+        broker.state.realized_today = dec(d.get("realized_today", "0"))
+        for s, p in (d.get("positions") or {}).items():
+            broker.state.positions[s] = Position(dec(p["qty"]), dec(p["avg_price"]))
+        return broker

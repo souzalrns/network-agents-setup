@@ -1,0 +1,22 @@
+{
+  "screen": {
+    "min_market_cap": "1000000000",
+    "max_market_cap": "10000000000",
+    "min_premium": "30000",
+    "min_iv_rank": "80",
+    "min_bullish_pct": "0.70",
+    "vol_oi_max": "0.5",
+    "vol_oi_min": null,
+    "min_dte": 15,
+    "max_dte": 60,
+    "block_earnings_days": 7,
+    "max_candidates": 3,
+    "note": "v1 = r/Trading post defaults + earnings blocked"
+  },
+  "stop_pct": "0.08",
+  "take_profit_pct": "0.16",
+  "max_hold_days": 15,
+  "max_new_per_run": 1,
+  "max_drawdown_pct": "0.15",
+  "max_errors_in_row": 3
+}

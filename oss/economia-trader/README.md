@@ -112,6 +112,26 @@ route every agent-originated order through economia-trader. Alpaca market data n
 for paper, so the paper rung reads the same `ALPACA_API_KEY`/`ALPACA_SECRET_KEY` (the env names
 the official MCP uses).
 
+## Autonomous loop: the whale screen (institutional options flow)
+
+`economia-trader run` is one tick of the autonomous loop: exits first (stop, take-profit,
+time), then a deterministic screen over institutional options flow, then at most N new entries
+on the **stock** (never the option), each through risk, gate and journal. State lives in
+`<state-dir>/state.json`, so a cron/systemd timer can run `--once` every morning; `--every-min`
+loops in-process. Auto-kill engages the kill switch on a drawdown from peak or on repeated
+exchange errors. The same evidence (flow print ids) is never traded twice.
+
+```bash
+economia-trader screen --flow-file flow.json --config examples/run.example.json   # candidates + why others dropped
+economia-trader run --exchange alpaca --mode paper --flow-file flow.json \
+  --limits examples/limits.stocks.example.json --config examples/run.example.json --once
+economia-trader report        # results per strategy version (config hash), from the journal
+```
+
+Every config has a `version` (hash of filters + exits) stamped on each proposal, so tuning is
+measured per version instead of remembered. `flow.json` is vendor-neutral
+(`examples/flow.example.json`); `available_at` keeps the screen from seeing the future.
+
 ## What v0.1 does not do (yet)
 
 - Reconcile positions with the exchange's own fills (testnet/live book acknowledged orders

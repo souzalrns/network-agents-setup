@@ -14,3 +14,9 @@
 - Paper broker (fees + slippage), offline backtest with no look-ahead, SMA baseline.
 - Hash-chained JSONL journal + `verify-journal`.
 - CLI: ticker, backtest, trade, check-key, gate, kill/unkill, verify-journal.
+- Whale screen: `FlowPrint` contract + vendor-neutral JSON source; deterministic `ScreenConfig`
+  (versioned) with drop reasons; earnings blocked by default; Vol/OI testable both ways.
+- Autonomous loop `Runner` (`run --once | --every-min`): exits (stop / take-profit / time), entries
+  on the stock, persisted state, no re-entry on the same evidence, auto-kill on drawdown or
+  repeated exchange errors. `report`: results per strategy version from the journal.
+- `allowed_symbols: ["*"]` explicit opt-in for a screened universe.
