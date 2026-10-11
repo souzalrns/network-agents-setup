@@ -7,6 +7,8 @@ fetchtron-style egress allowlist) without touching an adapter.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import urllib.error
@@ -54,18 +56,22 @@ def urllib_transport(timeout_s: float = 10.0) -> Transport:
 class Credentials:
     """API key + secret, read from the environment only. Never printed, never serialised."""
 
-    api_key: str
-    api_secret: str
+    key_id: str  # the exchange's "API key" (public half, sent in a header)
+    signing_key: str  # the exchange's "API secret" (HMAC key / auth header, never logged)
 
     def __repr__(self) -> str:
-        return f"Credentials(api_key={self.api_key[:4]}…, api_secret=***)"
+        return f"Credentials(key_id={self.key_id[:4]}…, signing_key=***)"
 
     @classmethod
-    def from_env(cls, prefix: str, env: Mapping[str, str] | None = None) -> Credentials:
+    def from_env(
+        cls, prefix: str, env: Mapping[str, str] | None = None, *, var_names: tuple[str, str] | None = None
+    ) -> Credentials:
+        """Read ``<PREFIX>_API_KEY``/``<PREFIX>_API_SECRET`` (or the two ``var_names`` given)."""
         env = os.environ if env is None else env
-        key, secret = env.get(f"{prefix}_API_KEY", ""), env.get(f"{prefix}_API_SECRET", "")
+        key_var, secret_var = var_names or (f"{prefix}_API_KEY", f"{prefix}_API_SECRET")
+        key, secret = env.get(key_var, ""), env.get(secret_var, "")
         if not key or not secret:
-            raise ExchangeError(f"{prefix}_API_KEY and {prefix}_API_SECRET must be set in the environment")
+            raise ExchangeError(f"{key_var} and {secret_var} must be set in the environment")
         return cls(key, secret)
 
 
@@ -112,6 +118,12 @@ class Exchange(Protocol):
     def check_key(self) -> KeyCheck: ...
 
     def place_order(self, intent: OrderIntent) -> dict[str, Any]: ...
+
+
+def hmac_sha256_hex(signing_key: str, message: str) -> str:
+    """Request signature used by Bybit V5 and MEXC V3 (HMAC-SHA256, hex). This is message
+    authentication mandated by the exchange protocol, not storage hashing of a secret."""
+    return hmac.new(signing_key.encode(), message.encode(), hashlib.sha256).hexdigest()
 
 
 def check_interval(interval: str) -> None:

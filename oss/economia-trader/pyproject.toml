@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "economia-trader"
 version = "0.1.0"
-description = "An auditable trading core for AI agents: agents propose, a deterministic risk engine and an execution gate decide (paper by default; Bybit testnet; real orders behind a kill switch, a no-withdraw key check and per-order human approval), and every step lands in a hash-chained journal. Zero dependencies."
+description = "An auditable trading core for AI agents: agents propose, a deterministic risk engine and an execution gate decide (paper by default; Bybit testnet / Alpaca paper account; real orders behind a kill switch, a no-withdraw key check and per-order human approval), and every step lands in a hash-chained journal. Zero dependencies."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10"
 authors = [{ name = "LRNSdigital" }]
-keywords = ["trading", "agents", "risk", "paper-trading", "bybit", "mexc", "kill-switch", "audit", "llm", "crypto"]
+keywords = ["trading", "agents", "risk", "paper-trading", "bybit", "mexc", "alpaca", "stocks", "kill-switch", "audit", "llm", "crypto"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",

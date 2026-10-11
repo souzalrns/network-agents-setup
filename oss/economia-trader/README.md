@@ -1,8 +1,9 @@
 # economia-trader
 
 An auditable trading core for AI agents. **Agents propose; a deterministic risk engine and an
-execution gate decide; every step lands in a hash-chained journal.** Paper by default, Bybit
-testnet when you flip one switch, and real orders only behind a kill switch, a key that
+execution gate decide; every step lands in a hash-chained journal.** Crypto (Bybit, MEXC) and
+US stocks/ETFs (Alpaca). Paper by default, Bybit testnet or the Alpaca paper account when you
+flip one switch, and real orders only behind a kill switch, a key that
 provably cannot withdraw, and a human approval *per order*.
 
 It is not "another trading bot" and it ships no alpha. It is the part every LLM trading agent
@@ -16,7 +17,7 @@ EconomicEvent ──► analyst (rule / human / LLM) ──► TradeProposal
                                                        │
                        safety.authorize ◄──────────────┘   kill switch · mode locks · HITL
                                                        │
-                PaperBroker │ Bybit testnet │ Bybit/MEXC live
+     PaperBroker │ Bybit testnet · Alpaca paper acct │ Bybit · MEXC · Alpaca live
                                                        │
                               Journal (SHA-256 chain) ◄┘   why, on what, when
 ```
@@ -35,8 +36,8 @@ pip install -e 'oss/economia-trader[hitl]'    # + hitlwright for per-order live 
 | Rung | What happens | What unlocks it |
 |---|---|---|
 | **paper** | Simulated fills against real public prices (fees + slippage, conservative) | default |
-| **testnet** | Bybit testnet orders (test funds). MEXC has no testnet: `/api/v3/order/test` validates only | `ECONOMIA_TRADER_ALLOW_TESTNET=1` + `BYBIT_API_KEY`/`BYBIT_API_SECRET` (testnet key) |
-| **live** | Real orders on Bybit mainnet / MEXC spot | `ECONOMIA_TRADER_LIVE=I_ACCEPT_REAL_LOSSES` **and** `check-key` passes (trade yes, withdraw **no**) **and** a human approves *that* order |
+| **testnet** | Bybit testnet orders (test funds); Alpaca **paper account** (broker-side simulation). MEXC has no testnet: `/api/v3/order/test` validates only | `ECONOMIA_TRADER_ALLOW_TESTNET=1` + `BYBIT_API_KEY`/`BYBIT_API_SECRET` (testnet key) or `ALPACA_API_KEY`/`ALPACA_SECRET_KEY` (paper keys) |
+| **live** | Real orders on Bybit mainnet / MEXC spot / Alpaca | `ECONOMIA_TRADER_LIVE=I_ACCEPT_REAL_LOSSES` **and** `check-key` passes (trade yes, withdraw **no**) **and** a human approves *that* order |
 
 Every rung is stopped by the kill switch (`economia-trader kill`, or `ECONOMIA_TRADER_KILL=1`)
 and by any risk rule that fails.
@@ -102,12 +103,22 @@ is the *autonomous* path. Use both, for different jobs:
 - **economia-trader for any order an agent originates**, so it passes the risk engine, the
   gate and the journal. Never give the MCP a trade-enabled mainnet key in an autonomous loop.
 
+## With Alpaca's official MCP (stocks)
+
+[alpacahq/alpaca-mcp-server](https://github.com/alpacahq/alpaca-mcp-server) (MIT) defaults to
+the paper account (`ALPACA_PAPER_TRADE=true`) and filters tools with `ALPACA_TOOLSETS`. Same
+split as Bybit: give the MCP `ALPACA_TOOLSETS=stock-data,news,assets,account` for research, and
+route every agent-originated order through economia-trader. Alpaca market data needs a key even
+for paper, so the paper rung reads the same `ALPACA_API_KEY`/`ALPACA_SECRET_KEY` (the env names
+the official MCP uses).
+
 ## What v0.1 does not do (yet)
 
 - Reconcile positions with the exchange's own fills (testnet/live book acknowledged orders
   locally, at the assessed price); exchange-side stop orders (stops are client-side).
 - Lot-size/precision rounding per instrument (the exchange rejects a bad qty; paper does not).
-- Futures, margin, leverage, shorting. MEXC futures order API is not available to retail keys.
+- Futures, margin, leverage, shorting, options. MEXC futures order API is not available to retail keys.
+- US-market rules on stocks: use a **cash** account (no pattern-day-trader rule) and mind settlement.
 
 Not financial advice. Trading can lose all the capital you put in.
 

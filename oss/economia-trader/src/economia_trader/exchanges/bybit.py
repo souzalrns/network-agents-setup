@@ -1,7 +1,7 @@
 """Bybit V5 REST adapter (spot). Public market data needs no key; orders are HMAC-signed.
 
 Endpoints: GET /v5/market/tickers, GET /v5/market/kline, GET /v5/user/query-api,
-POST /v5/order/create. Signature (V5): HMAC_SHA256(secret, ts + api_key + recv_window + payload)
+POST /v5/order/create. Signature (V5): HMAC_SHA256(signing_key, ts + key_id + recv_window + payload)
 where payload is the query string (GET) or the raw JSON body (POST).
 
 Mainnet orders are refused by the adapter itself unless it was built with
@@ -11,8 +11,6 @@ in LIVE mode. Defence in depth: the gate *and* the adapter must agree.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import time
 import urllib.parse
@@ -20,7 +18,17 @@ from decimal import Decimal
 from typing import Any, Literal
 
 from ..contracts import OrderIntent, dec
-from .base import Credentials, ExchangeError, KeyCheck, Kline, Ticker, Transport, check_interval, urllib_transport
+from .base import (
+    Credentials,
+    ExchangeError,
+    KeyCheck,
+    Kline,
+    Ticker,
+    Transport,
+    check_interval,
+    hmac_sha256_hex,
+    urllib_transport,
+)
 
 BASE_URLS = {"mainnet": "https://api.bybit.com", "testnet": "https://api-testnet.bybit.com"}
 _INTERVALS = {"1m": "1", "5m": "5", "15m": "15", "1h": "60", "4h": "240", "1d": "D"}
@@ -31,8 +39,8 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
-def sign(secret: str, timestamp: str, api_key: str, recv_window: str, payload: str) -> str:
-    return hmac.new(secret.encode(), f"{timestamp}{api_key}{recv_window}{payload}".encode(), hashlib.sha256).hexdigest()
+def sign(signing_key: str, timestamp: str, key_id: str, recv_window: str, payload: str) -> str:
+    return hmac_sha256_hex(signing_key, timestamp + key_id + recv_window + payload)
 
 
 def _num(d: Decimal) -> str:
@@ -85,10 +93,10 @@ class Bybit:
             payload = json.dumps(params, separators=(",", ":"))
             url, body = f"{self.base}{path}", payload.encode()
         headers = {
-            "X-BAPI-API-KEY": self.credentials.api_key,
+            "X-BAPI-API-KEY": self.credentials.key_id,
             "X-BAPI-TIMESTAMP": ts,
             "X-BAPI-RECV-WINDOW": RECV_WINDOW,
-            "X-BAPI-SIGN": sign(self.credentials.api_secret, ts, self.credentials.api_key, RECV_WINDOW, payload),
+            "X-BAPI-SIGN": sign(self.credentials.signing_key, ts, self.credentials.key_id, RECV_WINDOW, payload),
             "Content-Type": "application/json",
         }
         status, data = self._send(method, url, headers, body)

@@ -75,6 +75,36 @@ oficial onde ele é bom (dados, inspecção) e não reinventamos a API.
 | B | MCP de terceiros | Não oficial; recebe as credenciais |
 | C | Futuros via SDK de engenharia reversa | Rejeitada: tokens de browser, risco de conta |
 
+## 3b. Ações: Alpaca vs Interactive Brokers (pedido de seguimento, 2026-10-11)
+
+Uma 2.ª IA sugeriu brokers de ações com MCP. Verifiquei os dois que propôs como escolha:
+
+- **Alpaca**: `alpacahq/alpaca-mcp-server`, auditado no commit `a82ad1c` (2026-09-25), **MIT**.
+  - O paper é o default: `ALPACA_PAPER_TRADE` vale `true` (`README.md:245`).
+  - Filtra tools com `ALPACA_TOOLSETS` (`README.md:265`).
+  - **Não tem** aprovação por chamada (não há `approval`/`elicit` em `src/`): com uma chave live, o agente executa directo.
+  - A conta paper é gratuita e é simulação do lado do broker.
+- **IBKR**: o comunicado oficial de 2026-07-28 diz que a IA **só redige instruções**. O cliente
+  revê cada uma e submete-a numa plataforma IBKR. Logo, o MCP oficial **não executa** e não serve
+  um loop autónomo. Para isso seria preciso a Client Portal/TWS API, com um gateway sempre a
+  correr: mais pesado e fora da v0.1.
+- **Não verificado por mim:** tastytrade, E*TRADE e os outros da lista (ficam como "a auditar se
+  vierem a contar"). Também não verifiquei se a Alpaca aceita residentes do teu país: confirma ao
+  abrir a conta. Para $100, usa uma **conta cash** e não margin, para não cair na regra de pattern
+  day trader dos EUA. A liquidação T+1 limita a recompra com dinheiro ainda não liquidado.
+
+### Decisão D4: broker de ações
+
+| | Opção | Nota |
+|---|---|---|
+| **A (RECOMENDADA)** | **Alpaca como 3.º adapter**: a conta paper (simulação do broker) é o degrau "testnet"; o MCP oficial só para pesquisa, com `ALPACA_TOOLSETS` restrito | **Já implementado neste PR**: `exchanges/alpaca.py`, testes em `test_alpaca.py`, incluindo o Trader a enviar para `paper-api` |
+| B | IBKR | O MCP oficial é óptimo para *analisar* com humano no loop, mas não executa. A execução autónoma exige o gateway TWS/Client Portal |
+| C | Ficar só em cripto | Perde o paper do broker (gratuito e fiel) e o mercado regulado |
+
+**Porquê A:** é o único com paper do lado do broker, gratuito, com a mesma API do live e uma
+licença MIT auditável. O degrau seguinte da escada passa a ser um broker real a simular, e não a
+nossa simulação. Encaixa nos $100: `max_order_notional` de 50, com ações fraccionadas.
+
 ## 4. Decisão D3: parâmetros iniciais de perda e de valor máximo (o maestro decide)
 
 O pacote **não tem valores de dinheiro por omissão**: `RiskLimits.from_mapping` recusa uma config
@@ -98,11 +128,11 @@ trade e stop obrigatório o sistema ainda faz trades reais com significado. A co
 - Motor de risco determinístico, que falha fechado (`risk.py`).
 - Gate em escada paper → testnet → live, com kill switch, `check-key` sem levantamento e
   `HitlApprover` sobre o contrato hitlwright (`safety.py`). Corresponde à T7 do plano.
-- Adapters Bybit V5 (mainnet e testnet) e MEXC Spot V3, com transporte injectável; o mainnet é
+- Adapters Bybit V5 (mainnet e testnet), MEXC Spot V3 e **Alpaca** (ações/ETFs, conta paper + live), com transporte injectável; o mainnet é
   recusado pelo próprio adapter salvo em LIVE.
 - Paper broker, backtest sem look-ahead (decide no fecho, executa na abertura seguinte) e a baseline SMA.
 - Diário JSONL com cadeia SHA-256 e `verify-journal`.
-- CLI, 54 testes (3.10 e 3.13), CI `economia-trader.yml`, sem workflow de publicação.
+- CLI, 61 testes (3.10 e 3.13), CI `economia-trader.yml`, sem workflow de publicação.
 
 **Limites honestos da v0.1:** não reconcilia com os fills da exchange; os stops são do lado do
 cliente; não arredonda lot-size; spot long-only.

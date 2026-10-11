@@ -15,14 +15,22 @@ only spot is supported here.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import time
 import urllib.parse
 from typing import Any
 
 from ..contracts import OrderIntent, dec
-from .base import Credentials, ExchangeError, KeyCheck, Kline, Ticker, Transport, check_interval, urllib_transport
+from .base import (
+    Credentials,
+    ExchangeError,
+    KeyCheck,
+    Kline,
+    Ticker,
+    Transport,
+    check_interval,
+    hmac_sha256_hex,
+    urllib_transport,
+)
 
 BASE_URL = "https://api.mexc.com"
 _INTERVALS = {"1m": "1m", "5m": "5m", "15m": "15m", "1h": "60m", "4h": "4h", "1d": "1d"}
@@ -33,8 +41,8 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
-def sign(secret: str, query: str) -> str:
-    return hmac.new(secret.encode(), query.encode(), hashlib.sha256).hexdigest()
+def sign(signing_key: str, query: str) -> str:
+    return hmac_sha256_hex(signing_key, query)
 
 
 class Mexc:
@@ -71,8 +79,8 @@ class Mexc:
         if self.credentials is None:
             raise ExchangeError("mexc: this call needs credentials (MEXC_API_KEY / MEXC_API_SECRET)")
         q = urllib.parse.urlencode({**params, "recvWindow": RECV_WINDOW, "timestamp": self._clock_ms()})
-        url = f"{self.base}{path}?{q}&signature={sign(self.credentials.api_secret, q)}"
-        headers = {"X-MEXC-APIKEY": self.credentials.api_key, "Content-Type": "application/json"}
+        url = f"{self.base}{path}?{q}&signature={sign(self.credentials.signing_key, q)}"
+        headers = {"X-MEXC-APIKEY": self.credentials.key_id, "Content-Type": "application/json"}
         status, data = self._send(method, url, headers, None)
         return self._check(status, data, path)
 
