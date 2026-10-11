@@ -16,22 +16,32 @@ interpretavel: gera o evento `done_when_unverifiable` e NAO falha o run
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from .events import EventLog
 
+# Extraido para o pacote standalone oss/done-when (PyPI `done-when`): o motor de
+# classificacao (passed/failed/unverifiable por evidencia) e o mesmo, com o seam
+# `gate_resolved` (uma funcao `(step) -> bool`) em vez de falar com o EventLog
+# directamente. `_evaluate` abaixo e o espelho de `done_when.evaluate` do pacote; a
+# unica diferenca sao as `reason` em PT, que fazem parte do contrato de eventos do
+# runner (asseridas nos testes). `evaluate()` mantem a assinatura do runner e liga o
+# seam ao events.jsonl. DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md):
+# quando o `done-when` estiver no PyPI, trocar `_evaluate` por
+# `from done_when import evaluate` e remover esta copia.
+GateResolved = Callable[[str], bool]
+
 _EXISTS = re.compile(r"^(?P<path>\S+)\s+exists$")
 _GATE = re.compile(r"^human_gate_resolved\s+on\s+(?P<step>\S+)$")
 
 
-def evaluate(out: Path, conditions: list[str], log: EventLog, run_id: str) -> dict[str, list[Any]]:
-    """Classifica cada condicao em passed, failed ou unverifiable.
+def _evaluate(out: Path, conditions: list[str], gate_resolved: GateResolved) -> dict[str, list[Any]]:
+    """Espelho de `done_when.evaluate` (oss/done-when): classifica por evidencia.
 
-    passed: [{kind, target}] (kind = file_exists | gate_resolved); failed: o mesmo
-    mais {condition, reason}; unverifiable: o texto original. As que passam vao
-    estruturadas, sem o texto original, para nao se confundirem com o evento
-    `human_gate_resolved` em quem procura no events.jsonl por texto.
+    `gate_resolved(step) -> bool` responde a `human_gate_resolved on <step>` sem que
+    este motor conheca o EventLog. `reason` em PT (contrato de eventos do runner).
     """
     result: dict[str, list[Any]] = {"passed": [], "failed": [], "unverifiable": []}
     root = Path(out).resolve()
@@ -51,13 +61,29 @@ def evaluate(out: Path, conditions: list[str], log: EventLog, run_id: str) -> di
         m = _GATE.match(cond)
         if m:
             item = {"kind": "gate_resolved", "target": m.group("step")}
-            if log.has_event("human_gate_resolved", run_id, step_id=m.group("step")):
+            if gate_resolved(m.group("step")):
                 result["passed"].append(item)
             else:
                 result["failed"].append({**item, "condition": cond, "reason": "gate nao resolvido"})
             continue
         result["unverifiable"].append(cond)
     return result
+
+
+def evaluate(out: Path, conditions: list[str], log: EventLog, run_id: str) -> dict[str, list[Any]]:
+    """Classifica cada condicao em passed, failed ou unverifiable.
+
+    passed: [{kind, target}] (kind = file_exists | gate_resolved); failed: o mesmo
+    mais {condition, reason}; unverifiable: o texto original. As que passam vao
+    estruturadas, sem o texto original, para nao se confundirem com o evento
+    `human_gate_resolved` em quem procura no events.jsonl por texto. Liga o seam
+    `gate_resolved` do motor (`_evaluate`) ao events.jsonl deste run.
+    """
+    return _evaluate(
+        out,
+        conditions,
+        lambda step: log.has_event("human_gate_resolved", run_id, step_id=step),
+    )
 
 
 def check(out: Path, done_when: list[str], log: EventLog, run_id: str, status: dict[str, Any]) -> bool:
