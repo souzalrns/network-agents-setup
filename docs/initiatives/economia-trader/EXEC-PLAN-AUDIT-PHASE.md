@@ -226,6 +226,8 @@ coerente com os ficheiros persistidos; recomendação com A/B/C + RECOMENDADA.
 
 ## 7. Próximo passo (único)
 
+> **Actualização 2026-10-11:** a pedido do maestro ("sem enrolação"), T6 (contratos) e T7 (autonomia/kill switch) avançaram como código em `oss/economia-trader/` (paper por defeito; Bybit testnet; real atrás de 3 travas). Auditoria Bybit/MEXC e decisões P-51..P-53: `EXCHANGES-AUDIT.md`. A §0 continua aberta.
+
 Decisão do maestro sobre a **§0** (onde vive): **A** (incubar aqui; recomendada) ou **B**
 (cria `souzalrns/economia-trader` e dá o URL). Assim que decidires, a 1ª tarefa executável
 é **T0 em Haiku** (esqueletos), seguida de **T1/T2 em Sonnet** — tudo autónomo até ao

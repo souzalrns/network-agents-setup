@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "bybit-testnet": {
+      "command": "npx",
+      "args": ["-y", "bybit-official-trading-server@2.1.23"],
+      "env": {
+        "BYBIT_API_KEY": "${BYBIT_TESTNET_API_KEY}",
+        "BYBIT_API_SECRET": "${BYBIT_TESTNET_API_SECRET}",
+        "BYBIT_TESTNET": "true"
+      }
+    }
+  }
+}

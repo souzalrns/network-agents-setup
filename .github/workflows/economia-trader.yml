@@ -1,0 +1,101 @@
+name: economia-trader
+
+# oss/economia-trader: núcleo de trading auditável (paper por defeito; testnet/live atrás de travas).
+# Incubado aqui (EXEC-PLAN §0 = A). Sem publish workflow: publicar no PyPI é decisão do maestro.
+#
+# - test: Python 3.10 e 3.13; ruff lint + format; pytest (hitlwright local para o HitlApprover);
+# - package: sdist + wheel, `twine check --strict`, wheel num venv limpo + backtest offline.
+#
+# Nenhum job tem credenciais nem toca em exchanges: os adapters correm contra transporte falso.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oss/economia-trader/**'
+      - 'oss/hitlwright/**'
+      - '.github/workflows/economia-trader.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oss/economia-trader/**'
+      - 'oss/hitlwright/**'
+      - '.github/workflows/economia-trader.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: economia-trader-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: oss/economia-trader
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install -e '.[test]' -e ../hitlwright ruff==0.16.9
+      - name: Lint and format
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+      - name: Tests (nada é saltado)
+        run: |
+          python -m pytest tests -q -rs | tee pytest.log
+          ! grep -q "SKIPPED" pytest.log
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build==1.6.1 twine==7.0.0
+          python -m build --outdir dist .
+          twine check --strict dist/*
+      - name: Wheel contents (licenças dentro, testes fora)
+        run: |
+          python -m zipfile -l dist/*.whl | tee wheel.txt
+          grep -q "licenses/LICENSE" wheel.txt && grep -q "licenses/NOTICE" wheel.txt
+          ! grep -q "tests/" wheel.txt
+      - name: Install the wheel in a clean venv and run it offline (gate + kill + backtest)
+        run: |
+          python -m venv /tmp/et
+          /tmp/et/bin/pip install dist/*.whl
+          /tmp/et/bin/economia-trader --version
+          cd "$(mktemp -d)"
+          /tmp/et/bin/economia-trader gate --mode live | grep -q '"live_acknowledged": false'
+          /tmp/et/bin/economia-trader kill --reason ci && /tmp/et/bin/economia-trader gate | grep -q '"kill_switch": true'
+          /tmp/et/bin/economia-trader unkill
+          /tmp/et/bin/python - <<'PY'
+          import json
+          bars = [[i * 3600000, 100, 101, 99, 100 + (i % 40) - (i % 7), 10] for i in range(200)]
+          json.dump(bars, open("k.json", "w"))
+          json.dump({"max_order_notional": "100", "max_loss_per_trade": "5", "max_daily_loss": "10",
+                     "allowed_symbols": ["BTCUSDT"]}, open("l.json", "w"))
+          PY
+          /tmp/et/bin/economia-trader backtest --symbol BTCUSDT --limits l.json --klines-file k.json | tee bt.json
+          grep -q '"bars": 200' bt.json
