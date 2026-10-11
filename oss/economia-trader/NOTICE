@@ -1,0 +1,9 @@
+economia-trader
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+economia-trader has no third-party runtime dependencies (Python standard library only:
+urllib, hmac, hashlib, json, decimal). The optional `hitl` extra installs hitlwright
+(MIT, same author) for per-order human approval of live orders.
+
+It talks to the public REST APIs of Bybit (V5) and MEXC (Spot V3). It does not include, wrap
+or redistribute any exchange SDK. Not financial advice; trading can lose all invested capital.
