@@ -1,0 +1,10 @@
+{
+  "llm_provider": "anthropic",
+  "quick_think_provider": "google",
+  "quick_think_llm": "gemini-3.5-flash-lite",
+  "deep_think_provider": "anthropic",
+  "deep_think_llm": "claude-sonnet-5",
+  "max_debate_rounds": 1,
+  "max_risk_discuss_rounds": 1,
+  "output_language": "English"
+}

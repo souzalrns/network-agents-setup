@@ -30,7 +30,9 @@ Zero-dependency core. Exchanges come from mature libraries as extras: **ccxt** (
 ```bash
 pip install -e 'oss/economia-trader[crypto]'   # Bybit / MEXC via ccxt
 pip install -e 'oss/economia-trader[stocks]'   # Alpaca via alpaca-py (official SDK)
+pip install -e 'oss/economia-trader[data]'     # news + macro calendar via OpenBB (lean)
 pip install -e 'oss/economia-trader[hitl]'     # + hitlwright for per-order live approvals
+pip install 'git+https://github.com/TauricResearch/TradingAgents@1394a3f'   # LLM analysts (optional)
 ```
 
 ## The ladder (each rung needs the one before)
@@ -133,6 +135,20 @@ economia-trader report        # results per strategy version (config hash), from
 Every config has a `version` (hash of filters + exits) stamped on each proposal, so tuning is
 measured per version instead of remembered. `flow.json` is vendor-neutral
 (`examples/flow.example.json`); `available_at` keeps the screen from seeing the future.
+
+## News, macro and LLM analysts (reused, not rebuilt)
+
+- `economia-trader monitor`: company news and the BLS release calendar through **OpenBB**
+  (`[data]` extra, lean: core + news + bls), plus a hand-kept file for FOMC days. Everything
+  becomes `EconomicEvent`s in `events.jsonl`.
+- **Macro block:** with a high-impact release (CPI, jobs, FOMC, ...) within `macro_block_hours`,
+  a tick opens nothing new (exits still run).
+- **LLM second opinion:** with `"confirm_with": "tradingagents"`, each screened candidate goes
+  through **TradingAgents** (analysts, bull/bear debate, risk discussion). Only Buy/Overweight lets
+  it reach the risk engine; the analyst never orders. Runs per day are capped, tokens per model are
+  journaled, and the reports are kept as evidence.
+
+See `docs/initiatives/economia-trader/AGENTS-AND-MONITORS.md`.
 
 ## What v0.1 does not do (yet)
 

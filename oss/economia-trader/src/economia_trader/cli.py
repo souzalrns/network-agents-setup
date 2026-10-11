@@ -12,6 +12,7 @@
     economia-trader run    --exchange alpaca --mode paper --flow-file flow.json --limits limits.json \
                            [--config run.json] [--cash 100] [--every-min 240 | --once]
     economia-trader report [--journal .economia-trader/journal.jsonl]
+    economia-trader monitor [--news AAPL,MSFT] [--macro] [--calendar-file fomc.json] [--days 14]
 
 Paper is the default everywhere. Testnet and live need the environment locks in ``safety``.
 """
@@ -118,9 +119,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cash", default="100", help="paper starting cash (first run only)")
     p.add_argument("--state-dir", default=str(STATE_DIR))
     p.add_argument("--approvals", default=str(STATE_DIR / "approvals"))
+    p.add_argument("--events", help="events.jsonl from `monitor` (default: <state-dir>/events.jsonl if present)")
+    p.add_argument("--ta-config", help="TradingAgents config overrides JSON (when config.confirm_with=tradingagents)")
     g = p.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
     g.add_argument("--every-min", type=float, help="loop forever, one tick every N minutes")
+
+    p = sub.add_parser("monitor", help="Fetch news and macro releases (OpenBB) into events.jsonl")
+    p.add_argument("--news", help="comma-separated tickers")
+    p.add_argument("--macro", action="store_true", help="BLS release calendar (CPI, jobs, PPI, ...)")
+    p.add_argument("--calendar-file", help="hand-kept releases JSON (e.g. FOMC days)")
+    p.add_argument("--days", type=int, default=14, help="macro calendar window ahead")
+    p.add_argument("--events", default=str(STATE_DIR / "events.jsonl"))
 
     p = sub.add_parser("report", help="Results per strategy version, from the journal")
     p.add_argument("--journal", default=str(STATE_DIR / "journal.jsonl"))
@@ -240,18 +250,54 @@ def _run(args: argparse.Namespace) -> int:
         )
         return 0
 
+    if args.cmd == "monitor":
+        from datetime import datetime, timedelta, timezone
+
+        from .monitors import (
+            EventStore,
+            load_calendar_file,
+            macro_events,
+            news_events,
+            openbb_company_news,
+            openbb_macro_calendar,
+        )
+
+        store, added = EventStore(args.events), {}
+        if args.news:
+            added["news"] = store.add(news_events(openbb_company_news([t.strip() for t in args.news.split(",")])))
+        if args.macro:
+            today = datetime.now(timezone.utc).date()
+            rows = openbb_macro_calendar(today.isoformat(), (today + timedelta(days=args.days)).isoformat())
+            added["macro"] = store.add(macro_events(rows))
+        if args.calendar_file:
+            added["calendar_file"] = store.add(macro_events(load_calendar_file(args.calendar_file), source="manual"))
+        _print({"events_file": args.events, "added": added})
+        return 0
+
     if args.cmd == "run":
+        from .monitors import EventStore
+
         mode = Mode(args.mode)
+        cfg = _run_config(args.config)
+        events_path = Path(args.events) if args.events else Path(args.state_dir) / "events.jsonl"
+        analyst = None
+        if cfg.confirm_with == "tradingagents":
+            from .analysts import TradingAgentsAnalyst
+
+            ta_cfg = json.loads(Path(args.ta_config).read_text(encoding="utf-8")) if args.ta_config else {}
+            analyst = TradingAgentsAnalyst(config=ta_cfg, evidence_dir=Path(args.state_dir) / "evidence")
         runner = Runner(
             make_exchange(args.exchange, mode),
             JsonFileFlowSource(args.flow_file),
             mode=mode,
             limits=_limits(args.limits),
-            config=_run_config(args.config),
+            config=cfg,
             state_dir=args.state_dir,
             cash=args.cash,
             kill_switch=KillSwitch(Path(args.state_dir) / "KILL"),
             approver=HitlApprover(args.approvals) if mode is Mode.LIVE else deny_all,
+            events=EventStore(events_path) if (args.events or events_path.exists()) else None,
+            analyst=analyst,
         )
         if mode is not Mode.PAPER:
             runner.trader.verify_key()
