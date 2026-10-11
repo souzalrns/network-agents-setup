@@ -1,0 +1,14 @@
+[
+  {"id": "f1", "ticker": "ACME", "sentiment": "bullish", "premium": "120000", "volume": 300, "open_interest": 1500,
+   "dte": 30, "iv_rank": "86", "market_cap": "3200000000", "observed_at": "2026-10-09T20:00:00+00:00",
+   "available_at": "2026-10-10T11:00:00+00:00", "earnings_date": "2026-11-05", "source": "example"},
+  {"id": "f2", "ticker": "ACME", "sentiment": "bullish", "premium": "45000", "volume": 120, "open_interest": 900,
+   "dte": 44, "iv_rank": "86", "market_cap": "3200000000", "observed_at": "2026-10-09T19:30:00+00:00",
+   "available_at": "2026-10-10T11:00:00+00:00", "earnings_date": "2026-11-05", "source": "example"},
+  {"id": "f3", "ticker": "BETA", "sentiment": "bullish", "premium": "80000", "volume": 500, "open_interest": 2000,
+   "dte": 21, "iv_rank": "91", "market_cap": "5000000000", "observed_at": "2026-10-09T18:00:00+00:00",
+   "available_at": "2026-10-10T11:00:00+00:00", "earnings_date": "2026-10-14", "source": "example"},
+  {"id": "f4", "ticker": "MEGA", "sentiment": "bullish", "premium": "900000", "volume": 100, "open_interest": 5000,
+   "dte": 30, "iv_rank": "85", "market_cap": "900000000000", "observed_at": "2026-10-09T18:00:00+00:00",
+   "available_at": "2026-10-10T11:00:00+00:00", "source": "example"}
+]

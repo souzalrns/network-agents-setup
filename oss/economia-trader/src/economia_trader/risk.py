@@ -25,7 +25,7 @@ class RiskLimits:
     max_order_notional: Decimal
     max_loss_per_trade: Decimal
     max_daily_loss: Decimal
-    allowed_symbols: frozenset[str]
+    allowed_symbols: frozenset[str]  # ["*"] = any symbol (explicit opt-in, e.g. a screened universe)
     max_open_positions: int = 1
     max_total_exposure: Decimal | None = None  # default: max_order_notional * max_open_positions
     fee_rate: Decimal = Decimal("0.001")  # per side, used to price the loss at stop
@@ -104,7 +104,7 @@ def assess(
         reasons.append("no valid mark price")
     if qty <= 0:
         reasons.append("qty must be > 0")
-    if symbol not in limits.allowed_symbols:
+    if symbol not in limits.allowed_symbols and "*" not in limits.allowed_symbols:
         reasons.append(f"{symbol} is not in allowed_symbols")
     if proposal.entry_price is not None and mark > 0:
         deviation = abs(proposal.entry_price - mark) / mark

@@ -8,6 +8,10 @@
     economia-trader gate     --mode live                               # what would block an order now
     economia-trader kill [--reason ...] | unkill                       # the kill switch
     economia-trader verify-journal .economia-trader/journal.jsonl
+    economia-trader screen --flow-file flow.json [--config run.json] [--as-of ISO]
+    economia-trader run    --exchange alpaca --mode paper --flow-file flow.json --limits limits.json \
+                           [--config run.json] [--cash 100] [--every-min 240 | --once]
+    economia-trader report [--journal .economia-trader/journal.jsonl]
 
 Paper is the default everywhere. Testnet and live need the environment locks in ``safety``.
 """
@@ -26,10 +30,14 @@ from .backtest import run_backtest, sma_cross
 from .contracts import TradeProposal, dec
 from .exchanges import EXCHANGES, make_exchange
 from .exchanges.base import INTERVALS, ExchangeError, Kline
+from .flow import JsonFileFlowSource
 from .journal import Journal, verify
 from .paper import PaperBroker
+from .report import report
 from .risk import RiskLimits
+from .runner import RunConfig, Runner
 from .safety import ExecutionBlocked, HitlApprover, KillSwitch, Mode, deny_all, gate_report
+from .screen import screen
 from .trader import Trader
 
 STATE_DIR = Path(".economia-trader")
@@ -37,6 +45,10 @@ STATE_DIR = Path(".economia-trader")
 
 def _limits(path: str) -> RiskLimits:
     return RiskLimits.from_mapping(json.loads(Path(path).read_text(encoding="utf-8")))
+
+
+def _run_config(path: str | None) -> RunConfig:
+    return RunConfig.from_mapping(json.loads(Path(path).read_text(encoding="utf-8"))) if path else RunConfig()
 
 
 def _print(obj: Any) -> None:
@@ -92,6 +104,26 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("verify-journal", help="Check the journal's hash chain")
     p.add_argument("path")
+
+    p = sub.add_parser("screen", help="Run the whale screen over a flow file and show candidates + drops")
+    p.add_argument("--flow-file", required=True)
+    p.add_argument("--config", help="run config JSON (see examples/run.example.json)")
+    p.add_argument("--as-of", help="ISO time (default: now, UTC)")
+
+    p = sub.add_parser("run", help="The autonomous loop: exits, screen, entries, auto-kill")
+    ex_args(p, mode=True)
+    p.add_argument("--flow-file", required=True, help="flow export, refreshed by your data job")
+    p.add_argument("--limits", required=True)
+    p.add_argument("--config")
+    p.add_argument("--cash", default="100", help="paper starting cash (first run only)")
+    p.add_argument("--state-dir", default=str(STATE_DIR))
+    p.add_argument("--approvals", default=str(STATE_DIR / "approvals"))
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
+    g.add_argument("--every-min", type=float, help="loop forever, one tick every N minutes")
+
+    p = sub.add_parser("report", help="Results per strategy version, from the journal")
+    p.add_argument("--journal", default=str(STATE_DIR / "journal.jsonl"))
 
     args = ap.parse_args(argv)
     try:
@@ -188,6 +220,49 @@ def _run(args: argparse.Namespace) -> int:
     if args.cmd == "unkill":
         KillSwitch().release()
         print("kill switch released")
+        return 0
+
+    if args.cmd == "screen":
+        from datetime import datetime, timezone
+
+        cfg = _run_config(args.config)
+        as_of = args.as_of or datetime.now(timezone.utc).isoformat(timespec="seconds")
+        res = screen(JsonFileFlowSource(args.flow_file).prints(as_of), cfg.screen, as_of)
+        _print(
+            {
+                "as_of": as_of,
+                "version": cfg.version,
+                "prints_seen": res.prints_seen,
+                "prints_kept": res.prints_kept,
+                "candidates": [c.__dict__ for c in res.candidates],
+                "dropped": res.dropped,
+            }
+        )
+        return 0
+
+    if args.cmd == "run":
+        mode = Mode(args.mode)
+        runner = Runner(
+            make_exchange(args.exchange, mode),
+            JsonFileFlowSource(args.flow_file),
+            mode=mode,
+            limits=_limits(args.limits),
+            config=_run_config(args.config),
+            state_dir=args.state_dir,
+            cash=args.cash,
+            kill_switch=KillSwitch(Path(args.state_dir) / "KILL"),
+            approver=HitlApprover(args.approvals) if mode is Mode.LIVE else deny_all,
+        )
+        if mode is not Mode.PAPER:
+            runner.trader.verify_key()
+        if args.every_min:
+            runner.run_forever(args.every_min * 60)
+        else:
+            _print(runner.run_once())
+        return 0
+
+    if args.cmd == "report":
+        _print(report(args.journal))
         return 0
 
     if args.cmd == "verify-journal":
