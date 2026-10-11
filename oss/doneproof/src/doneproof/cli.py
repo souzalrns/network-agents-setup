@@ -1,6 +1,6 @@
-"""done-when CLI: check acceptance conditions by evidence, exit 0/1.
+"""doneproof CLI: check acceptance conditions by evidence, exit 0/1.
 
-    done-when check <root> [CONDITION ...] [--resolved STEP ...] [--json]
+    doneproof check <root> [CONDITION ...] [--resolved STEP ...] [--json]
 
 Exit 0 when nothing failed (unverifiable conditions do not fail), 1 otherwise.
 ``--resolved STEP`` marks a human gate as resolved (repeatable); without it,
@@ -18,12 +18,12 @@ from . import __version__, evaluate, is_satisfied
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="done-when", description=__doc__.splitlines()[0])
-    ap.add_argument("--version", action="version", version=f"done-when {__version__}")
+    ap = argparse.ArgumentParser(prog="doneproof", description=__doc__.splitlines()[0])
+    ap.add_argument("--version", action="version", version=f"doneproof {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("check", help="Check conditions against evidence under <root>")
     c.add_argument("root", help="The run directory that `<path> exists` resolves against")
-    c.add_argument("conditions", nargs="*", help="done_when conditions, e.g. 'artifacts/r.md exists'")
+    c.add_argument("conditions", nargs="*", help="doneproof conditions, e.g. 'artifacts/r.md exists'")
     c.add_argument(
         "--resolved", action="append", default=[], metavar="STEP", help="Mark a human gate as resolved (repeatable)"
     )
@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
         for cond in result["unverifiable"]:
             print(f"?    unverifiable: {cond}")
         print(
-            f"done_when: {'satisfied' if is_satisfied(result) else 'FAILED'} "
+            f"doneproof: {'satisfied' if is_satisfied(result) else 'FAILED'} "
             f"({len(result['failed'])} failed, {len(result['unverifiable'])} unverifiable)"
         )
     return 0 if is_satisfied(result) else 1

@@ -1,6 +1,6 @@
-name: done-when
+name: doneproof
 
-# oss/done-when: aceitação de tarefa por evidência (acoplável, zero dependências).
+# oss/doneproof: aceitação de tarefa por evidência (acoplável, zero dependências).
 # Auto-contido, para sair para o seu próprio repositório sem mudanças (como o skill-scout).
 #
 # - test: Python 3.10 e 3.13; ruff lint + format; pytest;
@@ -12,26 +12,26 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'oss/done-when/**'
-      - '.github/workflows/done-when.yml'
+      - 'oss/doneproof/**'
+      - '.github/workflows/doneproof.yml'
   push:
     branches: [main]
     paths:
-      - 'oss/done-when/**'
-      - '.github/workflows/done-when.yml'
+      - 'oss/doneproof/**'
+      - '.github/workflows/doneproof.yml'
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: done-when-${{ github.ref }}
+  group: doneproof-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash
-    working-directory: oss/done-when
+    working-directory: oss/doneproof
 
 jobs:
   test:
@@ -83,12 +83,12 @@ jobs:
         run: |
           python -m venv /tmp/dw
           /tmp/dw/bin/pip install dist/*.whl
-          /tmp/dw/bin/done-when --version
+          /tmp/dw/bin/doneproof --version
           mkdir -p /tmp/dwrun && touch /tmp/dwrun/a.md
-          /tmp/dw/bin/done-when check /tmp/dwrun "a.md exists"
-          /tmp/dw/bin/done-when check /tmp/dwrun "missing.md exists" && { echo "::error::should have failed"; exit 1; } || true
+          /tmp/dw/bin/doneproof check /tmp/dwrun "a.md exists"
+          /tmp/dw/bin/doneproof check /tmp/dwrun "missing.md exists" && { echo "::error::should have failed"; exit 1; } || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: done-when-dist
-          path: oss/done-when/dist/
+          name: doneproof-dist
+          path: oss/doneproof/dist/
           retention-days: 7

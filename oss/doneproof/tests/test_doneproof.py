@@ -1,4 +1,4 @@
-"""done-when: acceptance by evidence (the two verifiable forms + unverifiable)."""
+"""doneproof: acceptance by evidence (the two verifiable forms + unverifiable)."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from done_when import evaluate, is_satisfied
-from done_when.cli import main
+from doneproof import evaluate, is_satisfied
+from doneproof.cli import main
 
 # ---- form 1: "<path> exists"
 
@@ -132,4 +132,4 @@ def test_cli_version(capsys):
     with pytest.raises(SystemExit) as e:
         main(["--version"])
     assert e.value.code == 0
-    assert "done-when" in capsys.readouterr().out
+    assert "doneproof" in capsys.readouterr().out

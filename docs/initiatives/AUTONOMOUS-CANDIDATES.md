@@ -41,7 +41,7 @@ não se extrai.
 
 | Ordem | Candidato | Grupo | Esforço | Porquê esta posição |
 |-------|-----------|-------|---------|----------------------|
-| **1** | **done-when** | forte | baixo | diferencial puro (aceitação por **evidência**), 83 LOC, quase zero acoplamento — o melhor rácio valor/esforço |
+| **1** | **doneproof** | forte | baixo | diferencial puro (aceitação por **evidência**), 83 LOC, quase zero acoplamento — o melhor rácio valor/esforço |
 | **2** | **safe-fetch** | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
 | **3** | **hitl-gate** | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
 | **4** | **token-budget** | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
@@ -100,11 +100,13 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
 
 ## Fortes (5) — a prioridade
 
-### 4. done-when — *aceitação por evidência* ✅ EXTRAÍDO (1ª volta do flywheel)
-- **Estado:** **extraído** para `oss/done-when/` (pacote `done-when`, 16 testes,
-  CI `done-when.yml`, publish `publish-done-when.yml`). Falta a tag `done-when-v0.1.0`
-  para o PyPI (passo do maestro). O runner devolve-lhe o seam (`gate_resolved`): ver
-  `runner/plan_runner/done_when.py` (`_evaluate`).
+### 4. doneproof — *aceitação por evidência* ✅ EXTRAÍDO (1ª volta do flywheel)
+- **Estado:** **extraído** para `oss/doneproof/` (pacote `doneproof`, nome escolhido
+  pelo maestro 2026-10-11; ex-`done-when`; 16 testes, CI `doneproof.yml`, publish
+  `publish-doneproof.yml`). Falta a tag `doneproof-v0.1.0` para o PyPI (passo do
+  maestro). O runner devolve-lhe o seam (`gate_resolved`): ver
+  `runner/plan_runner/done_when.py` (`_evaluate`); o módulo do runner mantém o nome
+  `done_when` (o campo `done_when:` do plano), só o pacote se chama `doneproof`.
 - **Frase:** confirma que um passo acabou verificando **evidência objectiva**
   (um ficheiro existe / um gate humano foi resolvido), não "o agente disse que acabou".
 - **Esforço:** **baixo** — `done_when.py` (83 LOC), reconhece só 2 formas
@@ -251,7 +253,7 @@ documentados aqui para fechar o inventário e evitar a tentação futura.
 ## Fecho
 
 - **19 itens**, todos com evidência (`file:line` / LOC em `main` `f72ec6c`).
-- **Prioridade:** done-when → safe-fetch → hitl-gate → token-budget → (groundeval
+- **Prioridade:** doneproof → safe-fetch → hitl-gate → token-budget → (groundeval
   = RE1=B, fica) → depois os médios.
 - **Método:** o *flywheel* em `REPO-EVAL-PLAYBOOK.md`. Cada extração endurece o
   pacote **e** devolve a melhoria ao runner.

@@ -172,7 +172,7 @@ produto. E a decisão de *quais* extrair e *quando* é do maestro — este méto
 *como*, não *se*.
 
 **Ordem recomendada:** os 5 fortes primeiro (melhor rácio valor/esforço), pela
-prioridade em `AUTONOMOUS-CANDIDATES.md`. Começar por `done-when` (baixo esforço,
+prioridade em `AUTONOMOUS-CANDIDATES.md`. Começar por `doneproof` (baixo esforço,
 diferencial puro) dá a primeira volta do flywheel com o menor risco.
 
 ---

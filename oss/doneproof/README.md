@@ -1,14 +1,14 @@
-# done-when
+# doneproof
 
 **Accept a task only when its done-ness is proven by evidence — never the agent's own word.**
 
-An agent (or a plan) declares *done_when* conditions as plain strings. `done-when`
+An agent (or a plan) declares *doneproof* conditions as plain strings. `doneproof`
 checks each one against real evidence and reports **passed**, **failed** or
 **unverifiable**. Zero dependencies, pure stdlib, pluggable into any runner or agent.
 
 ```python
 from pathlib import Path
-from done_when import evaluate, is_satisfied
+from doneproof import evaluate, is_satisfied
 
 result = evaluate(Path("runs/42"), [
     "artifacts/report.md exists",
@@ -22,16 +22,16 @@ if not is_satisfied(result):
 Or from the shell:
 
 ```console
-$ done-when check runs/42 "artifacts/report.md exists" "human_gate_resolved on publish" --resolved publish
+$ doneproof check runs/42 "artifacts/report.md exists" "human_gate_resolved on publish" --resolved publish
 ok   file_exists: artifacts/report.md
 ok   gate_resolved: publish
-done_when: satisfied (0 failed, 0 unverifiable)
+doneproof: satisfied (0 failed, 0 unverifiable)
 ```
 
 ## Why it exists
 
 Most agent frameworks accept `status: done` because the agent *said* it was done.
-That is the failure mode `done-when` refuses. A task is accepted only when its
+That is the failure mode `doneproof` refuses. A task is accepted only when its
 completion is **verifiable**:
 
 | Condition | Evidence checked |
@@ -46,7 +46,7 @@ or ignore it).
 
 ## The gate seam (store-agnostic)
 
-`done-when` never talks to an event store, queue or database. "Was the gate on
+`doneproof` never talks to an event store, queue or database. "Was the gate on
 `<step>` resolved?" is answered by a predicate you pass in:
 
 ```python
@@ -67,14 +67,14 @@ is why the same engine runs inside a governed runner and standalone in a test.
 
 ## How it compares
 
-`done-when` is an **acceptance primitive** for agent/task runs, not a test runner
+`doneproof` is an **acceptance primitive** for agent/task runs, not a test runner
 or a BDD framework. See `POSITIONING.md` for the evidence-based comparison with
 pytest, BDD (Gherkin) and shell CI gates, and for what it deliberately does not do.
 
 ## Install
 
 ```console
-pip install done-when
+pip install doneproof
 ```
 
 MIT licensed. Part of the [network-agents-setup](https://github.com/souzalrns/network-agents-setup)
