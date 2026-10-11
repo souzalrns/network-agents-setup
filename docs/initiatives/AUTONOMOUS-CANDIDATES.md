@@ -100,9 +100,13 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
 
 ## Fortes (5) — a prioridade
 
-### 4. done-when — *aceitação por evidência*
+### 4. done-when — *aceitação por evidência* ✅ EXTRAÍDO (1ª volta do flywheel)
+- **Estado:** **extraído** para `oss/done-when/` (pacote `done-when`, 16 testes,
+  CI `done-when.yml`, publish `publish-done-when.yml`). Falta a tag `done-when-v0.1.0`
+  para o PyPI (passo do maestro). O runner devolve-lhe o seam (`gate_resolved`): ver
+  `runner/plan_runner/done_when.py` (`_evaluate`).
 - **Frase:** confirma que um passo acabou verificando **evidência objectiva**
-  (um ficheiro existe / um comando sai 0), não "o agente disse que acabou".
+  (um ficheiro existe / um gate humano foi resolvido), não "o agente disse que acabou".
 - **Esforço:** **baixo** — `done_when.py` (83 LOC), reconhece só 2 formas
   verificáveis sem interpretar texto livre; acoplamento quase nulo.
 - **Diferencial:** a maioria dos frameworks aceita a auto-declaração do agente
