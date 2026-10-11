@@ -43,7 +43,7 @@ não se extrai.
 |-------|-----------|-------|---------|----------------------|
 | **1** | **doneproof** | forte | baixo | diferencial puro (aceitação por **evidência**), 83 LOC, quase zero acoplamento — o melhor rácio valor/esforço |
 | **2** | **fetchtron** (ex-safe-fetch) | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
-| **3** | **hitl-gate** | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
+| **3** | **hitlwright** (ex-hitl-gate) | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
 | **4** | **token-budget** | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
 | **5** | **groundeval** | forte | — (RE1=B) | decidido **não** extrair como produto (mercado saturado); fica no runner. Ver nota |
 | 6 | model-tiers | médio | baixo | pequeno e limpo, mas categoria já ocupada (litellm router) |
@@ -137,11 +137,15 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
   - Verificar se a projecção deles usa o `countTokens` oficial do provider ou um
     estimador não-verificado (o nosso risco antigo, hoje fechado no #173).
 
-### 6. hitl-gate — *aprovações humanas tipadas*
+### 6. hitlwright — *aprovações humanas tipadas* ✅ EXTRAÍDO (3ª volta do flywheel)
+- **Estado:** **extraído** para `oss/hitlwright/` (ex-`hitl-gate`; coined, sufixo
+  `-wright` como o planwright; 16 testes, CI `hitlwright.yml` + publish, zero-dep,
+  schema `hitl-request-v1.json` incluído). Falta a tag `hitlwright-v0.1.0` para o PyPI
+  (passo do maestro). Devolver documentado em `runner/plan_runner/hitl.py`.
 - **Frase:** pede uma decisão humana num contrato tipado e versionado, pausa o
-  run, e retoma com a decisão registada e auditável.
-- **Esforço:** **médio** — `hitl.py` (273 LOC) + o contrato já existe
-  (`docs/architecture/hitl/hitl-request-v1.json`), o que facilita a extração.
+  run, e retoma com a decisão registada e auditável (JSONL append-only).
+- **Esforço:** **médio** — `hitl.py` (273 LOC) + o contrato já existia
+  (`docs/architecture/hitl/hitl-request-v1.json`), o que facilitou a extração.
 - **Diferencial:** aprovação **tipada** (schema do pedido e da decisão) com
   retoma — a maioria oferece "interrupt" genérico sem contrato nem auditoria.
 - **Concorrência a analisar:**
@@ -261,7 +265,7 @@ documentados aqui para fechar o inventário e evitar a tentação futura.
 ## Fecho
 
 - **19 itens**, todos com evidência (`file:line` / LOC em `main` `f72ec6c`).
-- **Prioridade:** doneproof ✅ → fetchtron ✅ → hitl-gate → token-budget → (groundeval
+- **Prioridade:** doneproof ✅ → fetchtron ✅ → hitlwright ✅ → token-budget → (groundeval
   = RE1=B, fica) → depois os médios.
 - **Método:** o *flywheel* em `REPO-EVAL-PLAYBOOK.md`. Cada extração endurece o
   pacote **e** devolve a melhoria ao runner.

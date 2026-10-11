@@ -1,0 +1,11 @@
+hitlwright
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+hitlwright has no third-party runtime dependencies. The contract is JSON lines and the engine
+is the Python standard library only (json, datetime, uuid, pathlib, importlib.resources). The
+shipped JSON Schema (hitl-request-v1.json) is validated in the test suite with jsonschema (a
+test-only dependency), not at runtime.
+
+Extracted from the governed runner at github.com/souzalrns/network-agents-setup
+(runner/plan_runner/hitl.py). The runner keeps the glue that wires this contract into its
+engine and events; this package is the standalone, store-light core and its versioned schema.

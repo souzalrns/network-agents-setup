@@ -23,6 +23,15 @@ Design notes:
   priority="medium" and category=None. See README "What stays
   Python-specific".
 - Fields follow the schema exactly; additionalProperties is false.
+
+DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md): este contrato HITL
+tipado foi extraído para o pacote standalone `oss/hitlwright` (PyPI `hitlwright`),
+agnóstico de framework (o `source` passa a string livre; o `build_request` recebe
+campos explícitos em vez de um objecto `step` do runner). Este módulo fica como a
+cola do runner (muitos consumidores: engine, langgraph_engine, council_session,
+external_worker, cli, memory_l4, com acesso a internos como `_read_jsonl`/
+`_append_jsonl`/`REQUESTS_FILE`); quando valer a dependência, migra-se gradualmente
+para `from hitlwright import ...`.
 """
 from __future__ import annotations
 

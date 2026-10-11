@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pypi.org/project/hitlwright/hitl-request-v1.json",
+  "title": "HITL Request v1",
+  "description": "A typed human-in-the-loop approval request/decision. Any producer writes this shape when a run pauses for a human; any responder writes it back with a decision. Stored as append-only JSONL.",
+  "type": "object",
+  "required": ["schema", "id", "source", "status", "title", "requested_at"],
+  "properties": {
+    "schema": { "type": "string", "const": "hitl-request-v1" },
+    "id": { "type": "string", "description": "Unique id. Format: 'hitl_<uuid>'.", "pattern": "^hitl_[a-f0-9-]+$" },
+    "source": { "type": "string", "description": "Which side/system created this request (free string)." },
+    "run_id": { "type": ["string", "null"], "description": "Caller run id. Null when not applicable." },
+    "plan_id": { "type": ["string", "null"], "description": "Plan/workflow id." },
+    "step_id": { "type": ["string", "null"], "description": "Step id where the run paused." },
+    "agent_id": { "type": ["string", "null"], "description": "Agent or client id. Used for filtering." },
+    "domain": { "type": ["string", "null"], "description": "Business domain (e.g. 'legal', 'marketing')." },
+    "category": {
+      "type": ["string", "null"],
+      "enum": ["financial", "legal", "medical", "architectural", "contractual", "strategic", "security", "approval", null],
+      "description": "Category of the decision. Optional; null if unknown."
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "default": "medium",
+      "description": "Priority. Defaults to 'medium'."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "approved", "rejected", "expired", "cancelled"],
+      "description": "Current status. 'pending' when paused; becomes 'approved'/'rejected' on resume. 'edit' is a decision (see 'response'), not a status."
+    },
+    "title": { "type": "string", "description": "Short human-readable title." },
+    "description": { "type": ["string", "null"], "description": "Longer explanation for the reviewer." },
+    "proposed_action": { "type": ["string", "null"], "description": "What the run wants to do next." },
+    "allow": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["approve", "reject", "edit"] },
+      "default": ["approve", "reject"],
+      "description": "Which decisions the reviewer may give."
+    },
+    "context": { "type": "object", "default": {}, "description": "Free-form context (e.g. paused_at_step, completed, mode)." },
+    "alternatives": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Alternative actions considered." },
+    "risks": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Known risks." },
+    "impacts": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Known impacts." },
+    "requested_at": { "type": "string", "format": "date-time", "description": "ISO 8601 timestamp of creation." },
+    "expires_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO 8601. Null means no expiry." },
+    "responded_at": { "type": ["string", "null"], "format": "date-time", "description": "ISO 8601 of the decision. Null while pending." },
+    "response": {
+      "type": ["string", "null"],
+      "enum": ["approve", "reject", "edit", null],
+      "description": "The decision. 'edit' is only valid when 'allow' includes it."
+    },
+    "response_comment": { "type": ["string", "null"], "description": "Optional free-text comment from the reviewer." },
+    "responder_id": { "type": ["string", "null"], "description": "Who responded (e.g. 'cli', 'user:ana')." },
+    "metadata": { "type": "object", "default": {}, "description": "Source-specific extras. Not interpreted by the other side." }
+  },
+  "additionalProperties": false
+}
