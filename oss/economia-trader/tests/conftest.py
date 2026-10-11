@@ -1,41 +1,69 @@
 from __future__ import annotations
 
-import json
-import urllib.parse
 from decimal import Decimal
 
 import pytest
 
 from economia_trader import RiskLimits
 
+MARKETS = {
+    "bybit": [
+        {
+            "id": "BTCUSDT",
+            "symbol": "BTC/USDT",
+            "base": "BTC",
+            "quote": "USDT",
+            "spot": True,
+            "type": "spot",
+            "active": True,
+            "precision": {"amount": 0.000001, "price": 0.01},
+            "limits": {"amount": {"min": 0.000048}, "cost": {"min": 1}},
+        },
+        {
+            "id": "ETHUSDT",
+            "symbol": "ETH/USDT",
+            "base": "ETH",
+            "quote": "USDT",
+            "spot": True,
+            "type": "spot",
+            "active": True,
+            "precision": {"amount": 0.00001, "price": 0.01},
+            "limits": {"amount": {"min": 0.0001}, "cost": {"min": 1}},
+        },
+    ],
+}
+MARKETS["mexc"] = MARKETS["bybit"]
 
-class FakeTransport:
-    """Records every request; answers from a {path: (status, json)} table."""
 
-    def __init__(self, routes):
-        self.routes = routes
-        self.calls = []
+def offline_ccxt(name, prices=None, *, perms=None, account=None, fail=None):
+    """A REAL ccxt client (real symbols, precision, sandbox URLs) with markets loaded offline and
+    every network call replaced by a recorder. Nothing here can reach an exchange."""
+    import ccxt
 
-    def __call__(self, method, url, headers, body):
-        parsed = urllib.parse.urlsplit(url)
-        self.calls.append(
-            {
-                "method": method,
-                "url": url,
-                "path": parsed.path,
-                "query": dict(urllib.parse.parse_qsl(parsed.query)),
-                "headers": dict(headers),
-                "body": json.loads(body) if body else None,
-                "raw_body": body,
-            }
-        )
-        if parsed.path not in self.routes:
-            return 404, {"retCode": 404, "retMsg": "no route", "code": 404, "msg": "no route"}
-        return self.routes[parsed.path]
+    client = getattr(ccxt, name)({"options": {"defaultType": "spot"}})
+    client.set_markets(MARKETS[name])
+    client.calls = []
+    prices = {"BTC/USDT": 50000, "ETH/USDT": 3000, **(prices or {})}
 
+    def rec(method, result):
+        def f(*args, **kwargs):
+            client.calls.append((method, args, kwargs))
+            if fail:
+                raise fail
+            return result(*args) if callable(result) else result
 
-def bybit_ok(result):
-    return 200, {"retCode": 0, "retMsg": "OK", "result": result}
+        return f
+
+    client.fetch_ticker = rec("fetch_ticker", lambda s: {"last": prices[s], "bid": None, "ask": None})
+    client.fetch_ohlcv = rec("fetch_ohlcv", [[1000, 1, 2, 0.5, 1.5, 5], [2000, 1.5, 3, 1, 2.5, 9]])
+    client.create_order = rec("create_order", {"id": "o-9"})
+    client.privateGetV5UserQueryApi = rec(
+        "query_api", {"retCode": 0, "result": {"readOnly": 0, "permissions": perms or {"Spot": ["SpotTrade"]}}}
+    )
+    client.spotPrivateGetAccount = rec(
+        "account", account or {"canTrade": True, "canWithdraw": False, "canDeposit": True}
+    )
+    return client
 
 
 @pytest.fixture

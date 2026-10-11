@@ -20,3 +20,6 @@
   on the stock, persisted state, no re-entry on the same evidence, auto-kill on drawdown or
   repeated exchange errors. `report`: results per strategy version from the journal.
 - `allowed_symbols: ["*"]` explicit opt-in for a screened universe.
+- **Adapters now sit on mature libraries** (decision A, `REUSE-AUDIT.md`): `CcxtSpot` (ccxt: Bybit,
+  MEXC; precision/lot size, sandbox, MEXC test orders) and `AlpacaPy` (alpaca-py). The hand-written
+  HTTP adapters (`bybit.py`, `mexc.py`, `alpaca.py`) are gone. Extras: `[crypto]`, `[stocks]`.

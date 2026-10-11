@@ -22,13 +22,15 @@ EconomicEvent ──► analyst (rule / human / LLM) ──► TradeProposal
                               Journal (SHA-256 chain) ◄┘   why, on what, when
 ```
 
-Zero runtime dependencies (stdlib HTTP + HMAC). Python ≥ 3.10.
+Zero-dependency core. Exchanges come from mature libraries as extras: **ccxt** (crypto) and
+**alpaca-py** (stocks). Python ≥ 3.10.
 
 ## Install
 
 ```bash
-pip install -e oss/economia-trader            # incubating in this repo; not on PyPI yet
-pip install -e 'oss/economia-trader[hitl]'    # + hitlwright for per-order live approvals
+pip install -e 'oss/economia-trader[crypto]'   # Bybit / MEXC via ccxt
+pip install -e 'oss/economia-trader[stocks]'   # Alpaca via alpaca-py (official SDK)
+pip install -e 'oss/economia-trader[hitl]'     # + hitlwright for per-order live approvals
 ```
 
 ## The ladder (each rung needs the one before)
@@ -136,7 +138,6 @@ measured per version instead of remembered. `flow.json` is vendor-neutral
 
 - Reconcile positions with the exchange's own fills (testnet/live book acknowledged orders
   locally, at the assessed price); exchange-side stop orders (stops are client-side).
-- Lot-size/precision rounding per instrument (the exchange rejects a bad qty; paper does not).
 - Futures, margin, leverage, shorting, options. MEXC futures order API is not available to retail keys.
 - US-market rules on stocks: use a **cash** account (no pattern-day-trader rule) and mind settlement.
 

@@ -97,15 +97,14 @@ def test_cli_kill_gate_and_journal(tmp_path, monkeypatch, capsys):
 
 
 def test_cli_trade_paper(tmp_path, monkeypatch, capsys):
-    from conftest import FakeTransport, bybit_ok
+    from conftest import offline_ccxt
 
     from economia_trader import cli
-    from economia_trader.exchanges import Bybit
+    from economia_trader.exchanges import CcxtSpot
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("ECONOMIA_TRADER_KILL", raising=False)
-    tick = {"/v5/market/tickers": bybit_ok({"list": [{"symbol": "BTCUSDT", "lastPrice": "50000"}]})}
-    monkeypatch.setattr(cli, "make_exchange", lambda name, mode: Bybit(transport=FakeTransport(tick)))
+    monkeypatch.setattr(cli, "make_exchange", lambda name, mode: CcxtSpot("bybit", client=offline_ccxt("bybit")))
     lfile = tmp_path / "l.json"
     lfile.write_text(
         json.dumps(
