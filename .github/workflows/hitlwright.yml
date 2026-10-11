@@ -1,0 +1,96 @@
+name: hitlwright
+
+# oss/hitlwright: contrato HITL tipado e acoplável (request/decision em JSONL, schema v1).
+# Auto-contido, para sair para o seu próprio repositório sem mudanças (como o skill-scout).
+#
+# - test: Python 3.10 e 3.13; ruff lint + format; pytest (jsonschema valida o schema, test-dep);
+# - package: sdist + wheel, `twine check --strict`, instalar o wheel num venv limpo e correr.
+#
+# Repositório público: minutos de Actions grátis. Actions fixadas por SHA.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oss/hitlwright/**'
+      - '.github/workflows/hitlwright.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oss/hitlwright/**'
+      - '.github/workflows/hitlwright.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hitlwright-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: oss/hitlwright
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.13']
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install
+        run: python -m pip install -e '.[test]' ruff==0.16.9
+      - name: Lint and format
+        run: |
+          ruff check src tests
+          ruff format --check src tests
+      - name: Tests (nada é saltado)
+        run: |
+          python -m pytest tests -q -rs | tee pytest.log
+          ! grep -q "SKIPPED" pytest.log
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install build==1.6.1 twine==7.0.0
+          python -m build --outdir dist .
+          twine check --strict dist/*
+      - name: Wheel contents (licenças + schema dentro, testes fora)
+        run: |
+          python -m zipfile -l dist/*.whl | tee wheel.txt
+          grep -q "licenses/LICENSE" wheel.txt && grep -q "licenses/NOTICE" wheel.txt
+          grep -q "hitl-request-v1.json" wheel.txt
+          ! grep -q "tests/" wheel.txt
+      - name: Install the wheel in a clean venv and run it (request -> decide -> read)
+        run: |
+          python -m venv /tmp/hw
+          /tmp/hw/bin/pip install dist/*.whl
+          /tmp/hw/bin/hitlwright --version
+          mkdir -p /tmp/hwrun
+          rid=$(/tmp/hw/bin/hitlwright request /tmp/hwrun --step publish --action publish)
+          /tmp/hw/bin/hitlwright decide /tmp/hwrun "$rid" --response approve --by user:ana
+          /tmp/hw/bin/hitlwright decision /tmp/hwrun | grep -q approve
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: hitlwright-dist
+          path: oss/hitlwright/dist/
+          retention-days: 7
