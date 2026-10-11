@@ -25,12 +25,15 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Office/Business :: Financial :: Investment",
 ]
-# Zero runtime dependencies: stdlib HTTP, HMAC and JSON. hitlwright is optional (live approvals).
+# Zero core dependencies. Exchanges come from mature libraries as extras: [crypto] ccxt, [stocks] alpaca-py.
 dependencies = []
 
 [project.optional-dependencies]
 hitl = ["hitlwright>=0.1"]
-test = ["pytest>=8"]
+# Mature libraries for the exchange adapters (the core stays zero-dependency).
+crypto = ["ccxt>=4.5.85"]  # ccxt pins multidict==6.7.1 (CVE-2026-104874, server-side only): REUSE-AUDIT.md
+stocks = ["alpaca-py>=0.44"]
+test = ["pytest>=8", "ccxt>=4.5.85", "alpaca-py>=0.44"]
 
 [project.scripts]
 economia-trader = "economia_trader.cli:main"

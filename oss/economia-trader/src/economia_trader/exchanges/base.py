@@ -1,55 +1,22 @@
-"""What every exchange adapter provides, and the HTTP seam it talks through.
-
-The transport is a plain function, so tests (and CI) run the adapters against canned
-responses with no network, and a deployment can swap in its own client (proxy, retries,
-fetchtron-style egress allowlist) without touching an adapter.
+"""What every exchange adapter provides. The adapters themselves sit on mature libraries
+(ccxt for crypto, alpaca-py for stocks); this module only holds the shared types.
 """
 
 from __future__ import annotations
 
-import hashlib
-import hmac
-import json
 import os
-import urllib.error
-import urllib.request
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Protocol
 
 from ..contracts import OrderIntent
 
-# (method, url, headers, body) -> (http_status, parsed_json)
-Transport = Callable[[str, str, Mapping[str, str], bytes | None], tuple[int, Any]]
-
 INTERVALS = ("1m", "5m", "15m", "1h", "4h", "1d")
 
 
 class ExchangeError(RuntimeError):
     """The exchange answered with an error (or not at all)."""
-
-
-def urllib_transport(timeout_s: float = 10.0) -> Transport:
-    """Default transport: stdlib only, HTTPS only, JSON in/out."""
-
-    def _send(method: str, url: str, headers: Mapping[str, str], body: bytes | None) -> tuple[int, Any]:
-        if not url.startswith("https://"):
-            raise ExchangeError(f"refusing non-HTTPS URL: {url}")
-        req = urllib.request.Request(url, data=body, method=method, headers=dict(headers))  # noqa: S310
-        try:
-            with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # nosemgrep  # noqa: S310 (https-only above)
-                return resp.status, json.loads(resp.read().decode("utf-8") or "null")
-        except urllib.error.HTTPError as exc:
-            raw = exc.read().decode("utf-8", "replace")
-            try:
-                return exc.code, json.loads(raw)
-            except json.JSONDecodeError:
-                return exc.code, {"raw": raw[:500]}
-        except (urllib.error.URLError, TimeoutError) as exc:
-            raise ExchangeError(f"{method} {url.split('?')[0]}: {exc}") from exc
-
-    return _send
 
 
 @dataclass(frozen=True)
@@ -118,12 +85,6 @@ class Exchange(Protocol):
     def check_key(self) -> KeyCheck: ...
 
     def place_order(self, intent: OrderIntent) -> dict[str, Any]: ...
-
-
-def hmac_sha256_hex(signing_key: str, message: str) -> str:
-    """Request signature used by Bybit V5 and MEXC V3 (HMAC-SHA256, hex). This is message
-    authentication mandated by the exchange protocol, not storage hashing of a secret."""
-    return hmac.new(signing_key.encode(), message.encode(), hashlib.sha256).hexdigest()
 
 
 def check_interval(interval: str) -> None:
