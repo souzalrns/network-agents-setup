@@ -76,3 +76,17 @@ economia-trader run --exchange alpaca --mode paper --flow-file flow.json \
   --ta-config oss/economia-trader/examples/tradingagents.example.json --once
 economia-trader report
 ```
+
+## 5. Ver o que os agentes fazem (painel, escritório, traces)
+
+- **Painel** (`economia-trader dashboard`): uma página HTML estática gerada a partir dos ficheiros
+  que o trader já escreve. Mostra posições, resultados por versão, releases macro, opiniões do
+  analista com tokens, rejeições, bloqueios, auto-kills, notícias e as últimas decisões. Funciona
+  claro e escuro, no telemóvel e no computador. Exemplo: `dashboard-example.png`.
+- **Escritório pixel** (`economia-trader office`): os 5 agentes (monitor, triagem, analista,
+  risco, executor) aparecem como personagens no **Star-Office-UI**
+  (`ringhyacinth/Star-Office-UI`, `f29c107`). Usa o protocolo do backend dele: `/join-agent`
+  uma vez e depois `/agent-push`. **Licença:** o código é MIT, mas as **imagens são só para uso
+  não comercial**. Serve para uso pessoal; num produto é preciso trocar as imagens.
+- **Traces** (Langfuse, opcional): com `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` definidas, cada
+  passo do TradingAgents fica no Langfuse (MIT, self-hostable). Sem as chaves não corre nada.

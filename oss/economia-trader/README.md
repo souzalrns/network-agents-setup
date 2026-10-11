@@ -150,6 +150,19 @@ measured per version instead of remembered. `flow.json` is vendor-neutral
 
 See `docs/initiatives/economia-trader/AGENTS-AND-MONITORS.md`.
 
+## See it: dashboard, pixel office, traces
+
+- `economia-trader dashboard [--refresh 60]`: one static HTML page (no server, light/dark,
+  phone-friendly) built from `state.json`, `journal.jsonl` and `events.jsonl`. It shows positions,
+  results per version, upcoming macro releases, analyst opinions, rejections, blocks and kills,
+  news, and the last decisions.
+- `economia-trader office --url http://127.0.0.1:19000 --join-key KEY`: the agents (monitor,
+  screen, analyst, risk, executor) appear as characters in **Star-Office-UI** and move with the
+  journal. Code MIT, art **non-commercial**: personal use only, unless you replace the art.
+  It runs as a separate process, so the trader never waits on the visual layer.
+- **Langfuse** (optional, `[tracing]` extra): set `LANGFUSE_PUBLIC_KEY`/`LANGFUSE_SECRET_KEY` and
+  every TradingAgents step is traced (prompts, tools, tokens, latency).
+
 ## What v0.1 does not do (yet)
 
 - Reconcile positions with the exchange's own fills (testnet/live book acknowledged orders

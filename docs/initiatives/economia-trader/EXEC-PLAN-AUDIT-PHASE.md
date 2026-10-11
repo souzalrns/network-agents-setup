@@ -12,6 +12,8 @@
 
 ## 0. Decisão operacional — onde vivem estes documentos
 
+> **Decidida: A** (maestro, 2026-10-11): incubar em `oss/economia-trader`, extrair quando maduro.
+
 O maestro perguntou: repositório novo `economia-trader` ou `network-agents-setup`?
 
 **Recomendação (A/B/C):**

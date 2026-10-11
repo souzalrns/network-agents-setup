@@ -35,6 +35,7 @@ crypto = ["ccxt>=4.5.85"]  # ccxt pins multidict==6.7.1 (CVE-2026-104874, server
 stocks = ["alpaca-py>=0.44"]
 # News + macro calendar on OpenBB, lean (core + news + bls: ~71 packages, no openbb-federal-reserve/diskcache).
 data = ["openbb-core>=2.0.1", "openbb-news>=2.0", "openbb-bls>=2.0"]
+tracing = ["langfuse>=3"]  # optional: agent traces in Langfuse (env-gated, see analysts.langfuse_handler)
 # LLM analysts: TradingAgents is not on PyPI; install the audited commit (see analysts.py):
 #   pip install 'git+https://github.com/TauricResearch/TradingAgents@1394a3f'
 

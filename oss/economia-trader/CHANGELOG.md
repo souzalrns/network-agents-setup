@@ -28,3 +28,6 @@
   CPI/NFP/FOMC; `macro_block_hours`).
 - **TradingAgents** analyst as a confirm/veto gate (`confirm_with`), daily run cap, token usage per
   model journaled, reports kept as evidence. The analyst never orders.
+- `dashboard`: static HTML (light/dark, mobile) from state/journal/events. `office`: journal →
+  Star-Office-UI pixel office (join once, push states; separate process). Optional Langfuse tracing
+  of the analyst (`[tracing]`, env-gated).
