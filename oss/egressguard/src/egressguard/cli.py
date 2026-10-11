@@ -1,6 +1,6 @@
-"""fetchguard CLI: safely GET a URL, print its provenance, exit 0/non-zero.
+"""egressguard CLI: safely GET a URL, print its provenance, exit 0/non-zero.
 
-    fetchguard get <url> --allow DOMAIN [--allow DOMAIN ...] [--max-bytes N]
+    egressguard get <url> --allow DOMAIN [--allow DOMAIN ...] [--max-bytes N]
                          [--timeout-s S] [--content-type PREFIX ...] [--body] [--json]
 
 Deny-by-default: at least one ``--allow`` is required. On a ``FetchError`` the code
@@ -18,8 +18,8 @@ from . import DEFAULT_MAX_BYTES, DEFAULT_TIMEOUT_S, FetchError, __version__, fet
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="fetchguard", description=__doc__.splitlines()[0])
-    ap.add_argument("--version", action="version", version=f"fetchguard {__version__}")
+    ap = argparse.ArgumentParser(prog="egressguard", description=__doc__.splitlines()[0])
+    ap.add_argument("--version", action="version", version=f"egressguard {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=True)
     g = sub.add_parser("get", help="Safely GET a URL from an allowlisted domain")
     g.add_argument("url")

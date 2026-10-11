@@ -42,7 +42,7 @@ não se extrai.
 | Ordem | Candidato | Grupo | Esforço | Porquê esta posição |
 |-------|-----------|-------|---------|----------------------|
 | **1** | **doneproof** | forte | baixo | diferencial puro (aceitação por **evidência**), 83 LOC, quase zero acoplamento — o melhor rácio valor/esforço |
-| **2** | **fetchguard** (ex-safe-fetch) | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
+| **2** | **egressguard** (ex-safe-fetch) | forte | baixo-médio | segurança (SSRF + deny-by-default), categoria com procura, política em config |
 | **3** | **hitl-gate** | forte | médio | já tem contrato versionado (`hitl-request-v1.json`); aprovações **tipadas** é raro |
 | **4** | **token-budget** | forte | médio | guarda **projectiva** (pausa ANTES da chamada) — a concorrência mede *depois* |
 | **5** | **groundeval** | forte | — (RE1=B) | decidido **não** extrair como produto (mercado saturado); fica no runner. Ver nota |
@@ -150,12 +150,14 @@ apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI"
     livre? É auditável e resumível após reinício? Há contrato versionado?
   - `Humanlayer` é o mais próximo: comparar o nosso contrato v1 com a API deles.
 
-### 7. fetchguard — *fetch HTTP seguro (allowlist deny-by-default + SSRF)* ✅ EXTRAÍDO (2ª volta do flywheel)
-- **Estado:** **extraído** para `oss/fetchguard/` (pacote `fetchguard`, nome escolhido
-  pelo maestro 2026-10-11; ex-`safe-fetch`; 19 testes, CI `fetchguard.yml` + publish
-  `publish-fetchguard.yml`, 1 dep `httpx`). Falta a tag `fetchguard-v0.1.0` para o PyPI
-  (passo do maestro). Devolver documentado em `scripts/web_fetch.py` (a área/config e a
-  conversão MarkItDown ficam no runner; o GET seguro é o pacote).
+### 7. egressguard — *fetch HTTP seguro (allowlist deny-by-default + SSRF)* ✅ EXTRAÍDO (2ª volta do flywheel)
+- **Estado:** **extraído** para `oss/egressguard/` (pacote `egressguard`; ex-`safe-fetch`;
+  o nome `fetchguard`, escolhido à cabeça, foi recusado pelo PyPI no registo por
+  semelhança — anti-typosquatting — e renomeado para `egressguard`, 'egress' = controlo
+  de tráfego de saída, o domínio do SSRF; 2026-10-11; 19 testes, CI `egressguard.yml` +
+  publish `publish-egressguard.yml`, 1 dep `httpx`). Falta a tag `egressguard-v0.1.0`
+  para o PyPI (passo do maestro). Devolver documentado em `scripts/web_fetch.py` (a
+  área/config e a conversão MarkItDown ficam no runner; o GET seguro é o pacote).
 - **Frase:** GET HTTP que *contém* o pedido — allowlist deny-by-default (domínio +
   subdomínios) + SSRF (privados/loopback/link-local/metadata) + robots + tectos,
   re-verificados a cada redirect. Agnóstico de content-type.
@@ -259,7 +261,7 @@ documentados aqui para fechar o inventário e evitar a tentação futura.
 ## Fecho
 
 - **19 itens**, todos com evidência (`file:line` / LOC em `main` `f72ec6c`).
-- **Prioridade:** doneproof ✅ → fetchguard ✅ → hitl-gate → token-budget → (groundeval
+- **Prioridade:** doneproof ✅ → egressguard ✅ → hitl-gate → token-budget → (groundeval
   = RE1=B, fica) → depois os médios.
 - **Método:** o *flywheel* em `REPO-EVAL-PLAYBOOK.md`. Cada extração endurece o
   pacote **e** devolve a melhoria ao runner.

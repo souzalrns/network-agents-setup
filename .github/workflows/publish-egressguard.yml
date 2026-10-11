@@ -1,11 +1,11 @@
-name: Publish fetchguard to PyPI
+name: Publish egressguard to PyPI
 
-# XP1 (docs/initiatives/XP1-PYPI-PLAYBOOK.md): publica SÓ o fetchguard no PyPI por
+# XP1 (docs/initiatives/XP1-PYPI-PLAYBOOK.md): publica SÓ o egressguard no PyPI por
 # **Trusted Publishing** (OIDC) -- sem tokens nem secrets.
 #
 # Workflow DEDICADO (nome único) de propósito: o pending publisher do PyPI é único
 # por (owner, repo, workflow, environment), por isso cada pacote precisa do seu
-# próprio ficheiro de workflow. Dispara na tag `fetchguard-v*` ou à mão. Inerte até
+# próprio ficheiro de workflow. Dispara na tag `egressguard-v*` ou à mão. Inerte até
 # existir a tag E o pending publisher no PyPI.
 #
 # Public repository: Actions minutes are free. Actions pinned by SHA.
@@ -13,7 +13,7 @@ name: Publish fetchguard to PyPI
 on:
   push:
     tags:
-      - 'fetchguard-v*'
+      - 'egressguard-v*'
   workflow_dispatch: {}
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
     permissions:
       id-token: write  # OIDC: o único poder preciso para o Trusted Publishing
     env:
-      DIR: oss/fetchguard
+      DIR: oss/egressguard
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
@@ -55,5 +55,5 @@ jobs:
       - name: Publish (Trusted Publishing, OIDC)
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
-          packages-dir: oss/fetchguard/dist
+          packages-dir: oss/egressguard/dist
           print-hash: true
