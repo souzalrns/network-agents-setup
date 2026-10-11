@@ -13,6 +13,8 @@
                            [--config run.json] [--cash 100] [--every-min 240 | --once]
     economia-trader report [--journal .economia-trader/journal.jsonl]
     economia-trader monitor [--news AAPL,MSFT] [--macro] [--calendar-file fomc.json] [--days 14]
+    economia-trader dashboard [--state-dir .economia-trader] [--out dashboard.html] [--refresh 60]
+    economia-trader office --url http://127.0.0.1:19000 --join-key KEY [--every-s 10 | --once]
 
 Paper is the default everywhere. Testnet and live need the environment locks in ``safety``.
 """
@@ -131,6 +133,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--calendar-file", help="hand-kept releases JSON (e.g. FOMC days)")
     p.add_argument("--days", type=int, default=14, help="macro calendar window ahead")
     p.add_argument("--events", default=str(STATE_DIR / "events.jsonl"))
+
+    p = sub.add_parser("dashboard", help="Static HTML page with positions, results, events, opinions")
+    p.add_argument("--state-dir", default=str(STATE_DIR))
+    p.add_argument("--out", default=str(STATE_DIR / "dashboard.html"))
+    p.add_argument("--refresh", type=int, help="auto-reload every N seconds")
+    p.add_argument("--openstock-url", help="link tickers to an OpenStock instance (e.g. http://localhost:3000)")
+
+    p = sub.add_parser("office", help="Push agent states to a Star-Office-UI (pixel office)")
+    p.add_argument("--url", required=True, help="Star-Office-UI base URL")
+    p.add_argument("--join-key", required=True)
+    p.add_argument("--state-dir", default=str(STATE_DIR))
+    og = p.add_mutually_exclusive_group()
+    og.add_argument("--once", action="store_true")
+    og.add_argument("--every-s", type=float, default=10.0)
 
     p = sub.add_parser("report", help="Results per strategy version, from the journal")
     p.add_argument("--journal", default=str(STATE_DIR / "journal.jsonl"))
@@ -306,6 +322,31 @@ def _run(args: argparse.Namespace) -> int:
         else:
             _print(runner.run_once())
         return 0
+
+    if args.cmd == "dashboard":
+        from .dashboard import build_html
+
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            build_html(args.state_dir, refresh_s=args.refresh, openstock_url=args.openstock_url), encoding="utf-8"
+        )
+        print(f"dashboard: {out}")
+        return 0
+
+    if args.cmd == "office":
+        import time
+
+        from .office import OfficeBridge
+
+        sd = Path(args.state_dir)
+        bridge = OfficeBridge(args.url, args.join_key, sd / "office.json")
+        while True:
+            sent = bridge.sync(sd / "journal.jsonl", sd / "events.jsonl")
+            if args.once:
+                print(f"office: {sent} updates")
+                return 0
+            time.sleep(args.every_s)
 
     if args.cmd == "report":
         _print(report(args.journal))

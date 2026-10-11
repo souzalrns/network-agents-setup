@@ -75,6 +75,22 @@ class TokenUsage:
         row["calls"] += 1
 
 
+def langfuse_handler(env: Any = None) -> Any:
+    """Optional tracing of every agent step (prompts, tool calls, tokens, latency) in **Langfuse**
+    (MIT core, self-hostable). On only when LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY are set
+    (LANGFUSE_HOST for self-hosting) and ``pip install 'economia-trader[tracing]'``."""
+    import os
+
+    env = os.environ if env is None else env
+    if not (env.get("LANGFUSE_PUBLIC_KEY") and env.get("LANGFUSE_SECRET_KEY")):
+        return None
+    try:
+        from langfuse.langchain import CallbackHandler
+    except ImportError:
+        return None
+    return CallbackHandler()
+
+
 # (ticker, trade_date) -> (final_state, rating)
 Propagate = Callable[[str, str], tuple[dict[str, Any], str]]
 
@@ -104,7 +120,11 @@ class TradingAgentsAnalyst:
             raise RuntimeError(
                 "TradingAgents is not installed: pip install 'git+https://github.com/TauricResearch/TradingAgents@1394a3f'"
             ) from exc
-        graph = TradingAgentsGraph(config={**DEFAULT_CONFIG, **overrides}, callbacks=[self.usage.as_handler()])
+        callbacks = [self.usage.as_handler()]
+        tracer = langfuse_handler()
+        if tracer is not None:
+            callbacks.append(tracer)
+        graph = TradingAgentsGraph(config={**DEFAULT_CONFIG, **overrides}, callbacks=callbacks)
         return lambda ticker, day: graph.propagate(ticker, day)
 
     def opinion(self, ticker: str, trade_date: str) -> Opinion:
