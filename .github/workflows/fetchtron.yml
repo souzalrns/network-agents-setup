@@ -1,6 +1,6 @@
-name: egressguard
+name: fetchtron
 
-# oss/egressguard: um GET HTTP seguro acoplável (allowlist deny-by-default + SSRF + robots + tectos).
+# oss/fetchtron: um GET HTTP seguro acoplável (allowlist deny-by-default + SSRF + robots + tectos).
 # Auto-contido, para sair para o seu próprio repositório sem mudanças (como o skill-scout).
 #
 # - test: Python 3.10 e 3.13; ruff lint + format; pytest (o único dep de runtime é o httpx);
@@ -12,26 +12,26 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'oss/egressguard/**'
-      - '.github/workflows/egressguard.yml'
+      - 'oss/fetchtron/**'
+      - '.github/workflows/fetchtron.yml'
   push:
     branches: [main]
     paths:
-      - 'oss/egressguard/**'
-      - '.github/workflows/egressguard.yml'
+      - 'oss/fetchtron/**'
+      - '.github/workflows/fetchtron.yml'
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: egressguard-${{ github.ref }}
+  group: fetchtron-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash
-    working-directory: oss/egressguard
+    working-directory: oss/fetchtron
 
 jobs:
   test:
@@ -83,12 +83,12 @@ jobs:
         run: |
           python -m venv /tmp/fg
           /tmp/fg/bin/pip install dist/*.whl
-          /tmp/fg/bin/egressguard --version
+          /tmp/fg/bin/fetchtron --version
           # sem --allow => recusa (exit 2); host fora da allowlist => recusa (exit 1)
-          /tmp/fg/bin/egressguard get https://x.test/ && { echo "::error::should require --allow"; exit 1; } || true
-          /tmp/fg/bin/egressguard get https://x.test/ --allow other.test && { echo "::error::should block"; exit 1; } || true
+          /tmp/fg/bin/fetchtron get https://x.test/ && { echo "::error::should require --allow"; exit 1; } || true
+          /tmp/fg/bin/fetchtron get https://x.test/ --allow other.test && { echo "::error::should block"; exit 1; } || true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          name: egressguard-dist
-          path: oss/egressguard/dist/
+          name: fetchtron-dist
+          path: oss/fetchtron/dist/
           retention-days: 7

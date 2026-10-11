@@ -1,4 +1,4 @@
-"""egressguard: the guardrails of a safe GET (allowlist, SSRF, robots, caps)."""
+"""fetchtron: the guardrails of a safe GET (allowlist, SSRF, robots, caps)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from typing import ClassVar
 
 import pytest
 
-from egressguard import FetchError, clean_uri, fetch, host_allowed, is_public_address
-from egressguard.cli import main
+from fetchtron import FetchError, clean_uri, fetch, host_allowed, is_public_address
+from fetchtron.cli import main
 
 # ---- pure guards (no network) ----
 
@@ -213,4 +213,4 @@ def test_cli_version(capsys):
     with pytest.raises(SystemExit) as e:
         main(["--version"])
     assert e.value.code == 0
-    assert "egressguard" in capsys.readouterr().out
+    assert "fetchtron" in capsys.readouterr().out

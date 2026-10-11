@@ -1,11 +1,11 @@
-egressguard
+fetchtron
 Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
 
-egressguard depends on one third-party runtime library; the guards (allowlist, SSRF, robots)
+fetchtron depends on one third-party runtime library; the guards (allowlist, SSRF, robots)
 are the Python standard library only (ipaddress, socket, urllib.robotparser, hashlib).
 
 - httpx (https://github.com/encode/httpx), BSD-3-Clause, Copyright the httpx authors. The HTTP
-  client; egressguard uses it with follow_redirects disabled so it can re-run the allowlist and
+  client; fetchtron uses it with follow_redirects disabled so it can re-run the allowlist and
   SSRF checks on every redirect hop, and streams the body to enforce the byte cap. None of its
   code is copied into this package; it is installed as a dependency.
 
