@@ -23,3 +23,8 @@
 - **Adapters now sit on mature libraries** (decision A, `REUSE-AUDIT.md`): `CcxtSpot` (ccxt: Bybit,
   MEXC; precision/lot size, sandbox, MEXC test orders) and `AlpacaPy` (alpaca-py). The hand-written
   HTTP adapters (`bybit.py`, `mexc.py`, `alpaca.py`) are gone. Extras: `[crypto]`, `[stocks]`.
+- Monitors on **OpenBB** (`[data]`): company news + BLS calendar (+ FOMC file) → `EconomicEvent`s
+  in a de-duplicated `events.jsonl`; `monitor` CLI. Runner **macro block** (no new entries near
+  CPI/NFP/FOMC; `macro_block_hours`).
+- **TradingAgents** analyst as a confirm/veto gate (`confirm_with`), daily run cap, token usage per
+  model journaled, reports kept as evidence. The analyst never orders.

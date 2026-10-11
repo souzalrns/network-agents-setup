@@ -26,13 +26,14 @@ from .contracts import TradeProposal, dec
 from .exchanges.base import Exchange, ExchangeError
 from .flow import FlowSource
 from .journal import Journal
+from .monitors import EventStore
 from .paper import PaperBroker
 from .risk import Position, RiskLimits
 from .safety import Approver, KillSwitch, Mode, deny_all
 from .screen import Candidate, ScreenConfig, screen
 from .trader import Trader
 
-_EXIT_FIELDS = ("stop_pct", "take_profit_pct", "max_hold_days", "max_new_per_run")
+_EXIT_FIELDS = ("stop_pct", "take_profit_pct", "max_hold_days", "max_new_per_run", "macro_block_hours", "confirm_with")
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,8 @@ class RunConfig:
     max_new_per_run: int = 1
     max_drawdown_pct: Decimal = Decimal("0.15")
     max_errors_in_row: int = 3
+    macro_block_hours: Decimal | None = Decimal("24")  # no new entries this close to CPI/NFP/FOMC...; None = off
+    confirm_with: str | None = None  # "tradingagents": an LLM analyst must confirm each entry
 
     @property
     def version(self) -> str:
@@ -60,7 +63,12 @@ class RunConfig:
         if unknown:
             raise ValueError(f"unknown run config keys: {sorted(unknown)}")
         for k, v in d.items():
-            kw[k] = dec(v) if k in ("stop_pct", "take_profit_pct", "max_drawdown_pct") else int(v)
+            if k == "confirm_with":
+                kw[k] = v
+            elif k == "macro_block_hours":
+                kw[k] = dec(v) if v is not None else None
+            else:
+                kw[k] = dec(v) if k in ("stop_pct", "take_profit_pct", "max_drawdown_pct") else int(v)
         return cls(**kw)
 
 
@@ -68,7 +76,9 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def propose(candidate: Candidate, price: Decimal, *, config: RunConfig, limits: RiskLimits) -> TradeProposal | None:
+def propose(
+    candidate: Candidate, price: Decimal, *, config: RunConfig, limits: RiskLimits, extra_evidence: tuple[str, ...] = ()
+) -> TradeProposal | None:
     """Turn a screened ticker into a proposal on the *stock* (never the option)."""
     stop = (price * (1 - config.stop_pct)).quantize(Decimal("0.01"))
     qty = size_for_risk(price, stop, limits)
@@ -86,7 +96,7 @@ def propose(candidate: Candidate, price: Decimal, *, config: RunConfig, limits: 
         stop_loss=stop,
         take_profit=(price * (1 + config.take_profit_pct)).quantize(Decimal("0.01")),
         rationale=rationale,
-        evidence_ids=candidate.print_ids,
+        evidence_ids=candidate.print_ids + extra_evidence,
         proposer=f"whale-screen@{config.version}",
     )
 
@@ -106,11 +116,17 @@ class Runner:
         approver: Approver = deny_all,
         env: Mapping[str, str] | None = None,
         clock: Callable[[], datetime] = _now,
+        events: EventStore | None = None,
+        analyst: Any = None,
     ) -> None:
         self.exchange, self.source, self.mode, self.limits, self.config = exchange, source, mode, limits, config
         self.state_dir = Path(state_dir)
         self.state_path = self.state_dir / "state.json"
         self.clock = clock
+        self.events = events
+        self.analyst = analyst
+        if config.confirm_with and analyst is None:
+            raise ValueError(f"config.confirm_with={config.confirm_with!r} needs an analyst")
         self.kill_switch = kill_switch or KillSwitch(self.state_dir / "KILL", env=env)
         self.journal = Journal(self.state_dir / "journal.jsonl")
         st = self._load(cash)
@@ -208,7 +224,16 @@ class Runner:
             "dropped": len(result.dropped),
             "prints": result.prints_kept,
         }
-        entries = []
+        entries: list[dict[str, Any]] = []
+        if self.events is not None and self.config.macro_block_hours is not None:
+            near = self.events.high_impact_within(as_of, float(self.config.macro_block_hours))
+            if near:
+                summary["macro_block"] = sorted({e["payload"]["name"] for e in near})
+                summary["entries"] = []
+                self.journal.append("macro_block", {"as_of": as_of, "releases": summary["macro_block"]})
+                self.journal.append("run", summary)
+                self._save()
+                return summary
         for cand in result.candidates:
             if len(entries) >= self.config.max_new_per_run:
                 break
@@ -221,7 +246,25 @@ class Runner:
             except ExchangeError as exc:
                 self.journal.append("error", {"ticker": cand.ticker, "error": str(exc)})
                 continue
-            proposal = propose(cand, price, config=self.config, limits=self.limits)
+            extra: tuple[str, ...] = ()
+            if self.analyst is not None and self.config.confirm_with:
+                op = self.analyst.opinion(cand.ticker, today)
+                self.journal.append(
+                    "opinion",
+                    {
+                        "ticker": cand.ticker,
+                        "rating": op.rating,
+                        "confirms": op.confirms,
+                        "evidence": op.evidence_path,
+                        "usage": op.usage,
+                        "by": self.config.confirm_with,
+                    },
+                )
+                if not op.confirms:
+                    entries.append({"ticker": cand.ticker, "status": "vetoed", "reasons": [f"analyst: {op.rating}"]})
+                    continue
+                extra = (f"opinion:{op.evidence_path}",)
+            proposal = propose(cand, price, config=self.config, limits=self.limits, extra_evidence=extra)
             if proposal is None:
                 continue
             out = self.trader.submit(proposal, price)
