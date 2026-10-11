@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `egressguard` are documented here. The format follows
+All notable changes to `fetchtron` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
@@ -15,7 +15,7 @@ All notable changes to `egressguard` are documented here. The format follows
   (`host_allowed`), SSRF (`is_public_address` — blocks private/loopback/link-local/
   metadata/reserved), robots.txt (RFC 9309, fail-closed), and caps on size (streamed),
   total time and redirects. Optional `content_types` filter.
-- `egressguard` CLI: `egressguard get <url> --allow DOMAIN [...]`.
+- `fetchtron` CLI: `fetchtron get <url> --allow DOMAIN [...]`.
 - One runtime dependency (`httpx`); the guards are pure stdlib. Ships its own types.
 
 ### Known limitations
