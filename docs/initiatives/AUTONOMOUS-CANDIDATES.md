@@ -28,7 +28,7 @@ concorrente, endurecer o módulo com o que se aprende, e devolver essa melhoria 
 - **Diferencial** — o que o nosso tem que a concorrência tende a não ter.
 - **Concorrência** — quem comparar e **o que** verificar com evidência (não README).
 
-Grupos: **Já feitos (3)** · **Fortes (5, prioridade)** · **Médios (5)** · **Não
+Grupos: **Publicados (3)** · **Fortes (5, prioridade)** · **Médios (5)** · **Não
 extrair (6, o núcleo)**.
 
 ---
@@ -36,7 +36,7 @@ extrair (6, o núcleo)**.
 ## Prioridade (a ordem de ataque)
 
 Os 5 **fortes** primeiro (maior valor de portfólio / menor esforço / diferencial
-claro), depois os médios. Os já feitos só esperam PyPI (o teu passo XP1). O núcleo
+claro), depois os médios. Os 3 já **publicados** (no PyPI) só evoluem. O núcleo
 não se extrai.
 
 | Ordem | Candidato | Grupo | Esforço | Porquê esta posição |
@@ -60,14 +60,19 @@ não se extrai.
 
 ---
 
-## Já feitos (3) — extraídos, só falta PyPI
+## Publicados (3) — extraídos e no PyPI
 
-Detalhe e scorecard em `CAPABILITY-MATRIX-AUTONOMOUS.md`. Resumo:
+Detalhe e scorecard em `CAPABILITY-MATRIX-AUTONOMOUS.md`. Estado no PyPI verificado
+com `pip index versions` (2026-10-11): **planwright 0.3.0**, **skill-scout 0.1.0**,
+**auditron 0.1.0**. Nota: o `oss/planwright/pyproject.toml:7` já está em `0.4.0`
+(views `gantt`/`load`/`cost` do #172) — falta a tag `planwright-v0.4.0` para o PyPI
+apanhar essa versão; os pacotes **estão publicados**, não "à espera de PyPI".
 
 ### 1. planwright — *motor determinístico de planeamento*
 - **Frase:** plano como dados (tabela Markdown) → ready/parallel/critical-path,
   validação, export/import; zero dependências.
-- **Esforço:** feito (`oss/planwright/`, 48 testes, CI).
+- **Esforço:** feito (`oss/planwright/`, 48 testes, CI). **PyPI: 0.3.0 publicado**
+  (local em 0.4.0; falta a tag).
 - **Diferencial:** zero-dep + contrato `planwright-plan/v1` que o `plan_runner`
   importa; separa *descrever o plano* de *executá-lo*.
 - **Concorrência:** ver `CAPABILITY-MATRIX-PLANWRIGHT.md` (os 10 critérios).
@@ -75,7 +80,8 @@ Detalhe e scorecard em `CAPABILITY-MATRIX-AUTONOMOUS.md`. Resumo:
 ### 2. skill-scout — *gestão segura de skills (pre-trust + ciclo de vida)*
 - **Frase:** vetta skills de terceiros antes de um agente confiar nelas (scan +
   SARIF + aprovação presa ao hash + lockfile).
-- **Esforço:** feito (`oss/skill-scout/`, ~169 testes, CI próprio).
+- **Esforço:** feito (`oss/skill-scout/`, ~169 testes, CI próprio). **PyPI: 0.1.0
+  publicado.**
 - **Diferencial:** aprovação recusada a agentes de IA (só humano), pin sha256,
   ~80 alvos de agente.
 - **Concorrência:** `CAPABILITY-MATRIX-AUTONOMOUS.md` §1. Gap real: sandbox de
@@ -84,7 +90,8 @@ Detalhe e scorecard em `CAPABILITY-MATRIX-AUTONOMOUS.md`. Resumo:
 ### 3. auditron — *gate defensivo de segurança (SCA + SAST + workflow)*
 - **Frase:** um só gate que orquestra `pip-audit` + `bandit` + `zizmor` num
   modelo e SARIF comuns, com uma política e um exit code.
-- **Esforço:** feito (`oss/auditron/`, 25 testes, CI próprio).
+- **Esforço:** feito (`oss/auditron/`, 25 testes, CI próprio). **PyPI: 0.1.0
+  publicado.**
 - **Diferencial:** orquestrador honesto (não reinventa engines); pluggable em
   qualquer repo sem alterações.
 - **Concorrência:** `CAPABILITY-MATRIX-AUTONOMOUS.md` §2.
