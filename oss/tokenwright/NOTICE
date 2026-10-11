@@ -1,0 +1,10 @@
+tokenwright
+Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
+
+tokenwright has no third-party runtime dependencies. Prices are a plain Python mapping and
+the engine is the Python standard library only (json, pathlib). Load prices from JSON, YAML
+or a database yourself and pass the mapping in.
+
+Extracted from the governed runner at github.com/souzalrns/network-agents-setup
+(runner/plan_runner/cost.py). The runner keeps its YAML price config and the worker wiring;
+this package is the standalone, dependency-free cost-ledger and budget-cap core.
