@@ -22,15 +22,16 @@ from typing import Any
 
 from .events import EventLog
 
-# Extraido para o pacote standalone oss/done-when (PyPI `done-when`): o motor de
+# Extraido para o pacote standalone oss/doneproof (PyPI `doneproof`): o motor de
 # classificacao (passed/failed/unverifiable por evidencia) e o mesmo, com o seam
 # `gate_resolved` (uma funcao `(step) -> bool`) em vez de falar com o EventLog
-# directamente. `_evaluate` abaixo e o espelho de `done_when.evaluate` do pacote; a
+# directamente. `_evaluate` abaixo e o espelho de `doneproof.evaluate` do pacote; a
 # unica diferenca sao as `reason` em PT, que fazem parte do contrato de eventos do
-# runner (asseridas nos testes). `evaluate()` mantem a assinatura do runner e liga o
-# seam ao events.jsonl. DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md):
-# quando o `done-when` estiver no PyPI, trocar `_evaluate` por
-# `from done_when import evaluate` e remover esta copia.
+# runner (asseridas nos testes). Este modulo mantem o nome `done_when` (o campo
+# `done_when:` do plano); so o pacote extraido se chama `doneproof`. `evaluate()`
+# mantem a assinatura do runner e liga o seam ao events.jsonl. DEVOLVER (flywheel,
+# docs/initiatives/REPO-EVAL-PLAYBOOK.md): quando o `doneproof` estiver no PyPI,
+# trocar `_evaluate` por `from doneproof import evaluate` e remover esta copia.
 GateResolved = Callable[[str], bool]
 
 _EXISTS = re.compile(r"^(?P<path>\S+)\s+exists$")

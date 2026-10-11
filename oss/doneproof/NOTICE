@@ -1,7 +1,7 @@
-done-when
+doneproof
 Copyright (c) 2026 LRNSdigital (souzalrns). Licensed under the MIT License (see LICENSE).
 
-done-when has no third-party runtime dependencies. The conditions are plain strings and the
+doneproof has no third-party runtime dependencies. The conditions are plain strings and the
 engine is the Python standard library only (re, pathlib). Nothing is bundled or vendored.
 
 Extracted from the governed runner at github.com/souzalrns/network-agents-setup

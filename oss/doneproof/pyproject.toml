@@ -3,7 +3,7 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "done-when"
+name = "doneproof"
 version = "0.1.0"
 description = "Accept a task only when its done-ness is proven by evidence (a file exists, a human gate was resolved) — never the agent's own word. Plain data, zero dependencies, pluggable into any runner or agent."
 readme = "README.md"
@@ -35,17 +35,17 @@ dependencies = []
 test = ["pytest>=8"]
 
 [project.scripts]
-done-when = "done_when.cli:main"
+doneproof = "doneproof.cli:main"
 
 [project.urls]
-Repository = "https://github.com/souzalrns/network-agents-setup/tree/main/oss/done-when"
+Repository = "https://github.com/souzalrns/network-agents-setup/tree/main/oss/doneproof"
 Issues = "https://github.com/souzalrns/network-agents-setup/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
-done_when = ["py.typed"]  # PEP 561: ships its own types
+doneproof = ["py.typed"]  # PEP 561: ships its own types
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

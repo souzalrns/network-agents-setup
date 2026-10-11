@@ -1,13 +1,13 @@
-# done-when — positioning & competitive analysis
+# doneproof — positioning & competitive analysis
 
 > Evidence-based, per the repo playbook (`docs/initiatives/REPO-EVAL-PLAYBOOK.md`):
 > a claim counts only with a pointer to code/behaviour. The honest question —
-> *what do the others have that we don't, and what would make done-when the
+> *what do the others have that we don't, and what would make doneproof the
 > recommended choice in its lane?*
 
 ## The lane
 
-`done-when` answers one question: **did this task actually finish, by evidence?**
+`doneproof` answers one question: **did this task actually finish, by evidence?**
 It is an *acceptance primitive* for an agent or plan run — the thing that decides
 whether a step is `done` or `failed`. It is **not** a test runner, **not** a BDD
 framework, **not** an assertion library. Comparing it to those is the Step-0
@@ -24,9 +24,9 @@ category check: same job?
   a developer**, not plain strings a plan or an agent emits as data. You cannot
   hand pytest a run directory and a list of declarative conditions from a YAML plan
   and get a structured pass/fail/unverifiable record back without writing and
-  importing test code. pytest proves *code behaves*; `done-when` proves *a task's
+  importing test code. pytest proves *code behaves*; `doneproof` proves *a task's
   declared outcome exists*.
-- **What done-when must keep to stay the choice here:** conditions as **data**
+- **What doneproof must keep to stay the choice here:** conditions as **data**
   (strings in a plan), a **serializable** result (drops into an event log), and the
   **unverifiable** bucket (pytest has no "I can't check this, don't fail it" state —
   everything is pass or fail).
@@ -37,12 +37,12 @@ category check: same job?
 - **What it has that we don't:** human-readable scenarios, living documentation, a
   mature tooling story, business-stakeholder buy-in.
 - **Why it is close but heavier:** `Then a file "report.md" should exist` is exactly
-  a `done-when` `exists` check — but Gherkin needs a feature file, a step-definition
+  a `doneproof` `exists` check — but Gherkin needs a feature file, a step-definition
   registry, and a BDD runner to get there. For an agent emitting acceptance
   conditions at runtime, that is a framework where a one-line predicate suffices.
-  BDD verifies **scenarios authored up front**; `done-when` verifies **conditions a
+  BDD verifies **scenarios authored up front**; `doneproof` verifies **conditions a
   plan carries as data**, with no glue code.
-- **What done-when must keep:** zero glue (no step registry), zero dependencies, and
+- **What doneproof must keep:** zero glue (no step registry), zero dependencies, and
   the store-agnostic gate seam (BDD has no native notion of "a human approved this
   step" — you'd build it).
 
@@ -51,11 +51,11 @@ category check: same job?
 - **What it has:** ubiquity, nothing to install.
 - **Why it is not enough:** no structure (just an exit code), no audit record, no
   path-traversal guard, no notion of a resolved human gate, no "unverifiable"
-  distinction. `done-when` is the structured, auditable, safe version of that reflex.
+  distinction. `doneproof` is the structured, auditable, safe version of that reflex.
 
-## Where done-when wins (and the evidence)
+## Where doneproof wins (and the evidence)
 
-| Property | done-when | pytest | BDD | shell |
+| Property | doneproof | pytest | BDD | shell |
 |----------|-----------|--------|-----|-------|
 | Conditions as **plain-string data** (not code) | ✅ (`__init__.py` regex forms) | ❌ | ⚠️ feature files | ✅ |
 | **No glue code** / step registry | ✅ | ❌ | ❌ | ✅ |
@@ -70,7 +70,7 @@ human-gate seam**: neither pytest nor BDD models "a human approved this step" as
 first-class, pluggable acceptance condition, and neither has a third state for
 "I can't check this by evidence, so I won't fail it — you decide."
 
-## What done-when deliberately does NOT do (honest limits)
+## What doneproof deliberately does NOT do (honest limits)
 
 - It does **not** evaluate *answer quality* (that is RAG/LLM-eval territory —
   `ragas`/`deepeval`; see the repo's RE1 decision). It checks *existence of the

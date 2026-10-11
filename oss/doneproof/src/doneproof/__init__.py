@@ -1,6 +1,6 @@
-"""done-when: accept a task only when its done-ness is proven by evidence.
+"""doneproof: accept a task only when its done-ness is proven by evidence.
 
-An agent (or a plan) declares *done_when* conditions in plain strings. This
+An agent (or a plan) declares *doneproof* conditions in plain strings. This
 package classifies each one as **passed**, **failed** or **unverifiable** by
 checking real evidence — never the agent's own word that it finished.
 
@@ -19,7 +19,7 @@ A condition in any other shape is **not failed** — it is reported as
 check by evidence is as important as refusing to pass on an agent's say-so.
 
     from pathlib import Path
-    from done_when import evaluate, is_satisfied
+    from doneproof import evaluate, is_satisfied
 
     result = evaluate(Path("runs/42"), ["artifacts/report.md exists"])
     assert is_satisfied(result)

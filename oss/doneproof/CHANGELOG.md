@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `done-when` are documented here. The format follows
+All notable changes to `doneproof` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
@@ -15,5 +15,5 @@ All notable changes to `done-when` are documented here. The format follows
 - Two verifiable forms: `<path> exists` (with path-traversal guard) and
   `human_gate_resolved on <step>` (via the pluggable `gate_resolved` predicate).
 - `is_satisfied(result)` — true iff nothing failed (unverifiable does not fail).
-- `done-when` CLI: `done-when check <root> [conditions...] [--resolved STEP] [--json]`.
+- `doneproof` CLI: `doneproof check <root> [conditions...] [--resolved STEP] [--json]`.
 - Zero runtime dependencies (pure stdlib); ships its own types (PEP 561).
