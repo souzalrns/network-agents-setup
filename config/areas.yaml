@@ -84,6 +84,46 @@ areas:
       - marketing.influencer
       - marketing.media_buyer
       - marketing.ugc
+      # marketingskills (MIT), gerados por scripts/vendor_marketingskills.py
+      - marketing.ab_testing
+      - marketing.analytics
+      - marketing.aso
+      - marketing.attribution
+      - marketing.churn_prevention
+      - marketing.co_marketing
+      - marketing.cold_email
+      - marketing.community_marketing
+      - marketing.competitor_profiling
+      - marketing.competitors
+      - marketing.cro
+      - marketing.directory_submissions
+      - marketing.emails
+      - marketing.events
+      - marketing.free_tools
+      - marketing.image
+      - marketing.launch
+      - marketing.lead_magnets
+      - marketing.marketing_council
+      - marketing.marketing_ideas
+      - marketing.marketing_loops
+      - marketing.marketing_plan
+      - marketing.marketing_psychology
+      - marketing.offers
+      - marketing.onboarding
+      - marketing.paywalls
+      - marketing.popups
+      - marketing.pricing
+      - marketing.product_marketing
+      - marketing.programmatic_seo
+      - marketing.prospecting
+      - marketing.public_relations
+      - marketing.referrals
+      - marketing.revops
+      - marketing.sales_enablement
+      - marketing.schema
+      - marketing.signup
+      - marketing.site_architecture
+      - marketing.sms
       - design.identidade-visual
     horizontals: [meta.planejador, meta.using_agent_skills]
     budget: {max_tokens: 80000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
