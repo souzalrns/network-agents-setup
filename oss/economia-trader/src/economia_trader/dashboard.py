@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
+from .predictions import latest_odds
 from .report import report
 
 
@@ -99,6 +100,8 @@ def _summary(entry: dict[str, Any]) -> str:
         return f"ordem {p.get('side')} {p.get('qty')} {p.get('symbol')} ({p.get('network')})"
     if k == "intent":
         return f"ordem preparada {p.get('side')} {p.get('qty')} {p.get('symbol')} ({p.get('mode')})"
+    if k == "odds_block":
+        return "pausa por probabilidades: " + "; ".join(p.get("reasons", []))
     if k == "macro_block":
         return "pausa macro: " + ", ".join(p.get("releases", []))
     if k == "auto_kill":
@@ -167,6 +170,15 @@ def build_html(
             "ALTO" if e["payload"].get("high_impact") else "—",
         ]
         for e in upcoming
+    ]
+    odds_rows = [
+        [
+            Link(e["payload"]["question"], e["payload"].get("url")),
+            f"{e['payload']['yes_prob']:.0%}",
+            _money(e["payload"].get("volume")),
+            (e["payload"].get("end_date") or "—")[:10],
+        ]
+        for e in latest_odds(events, iso_now)[:8]
     ]
     news = sorted((e for e in events if e.get("kind") == "news"), key=lambda e: e["published_at"], reverse=True)[:10]
     news_rows = [
@@ -263,6 +275,12 @@ def build_html(
             ["Quando (UTC)", "Release", "Impacto"],
             macro_rows,
             "Sem calendário (corre economia-trader monitor --macro).",
+        ),
+        (
+            "Probabilidades macro (Polymarket, só leitura)",
+            ["Mercado", "Sim", "Volume", "Fecha"],
+            odds_rows,
+            "Sem dados (corre economia-trader monitor --polymarket).",
         ),
         (
             "Opiniões do analista",

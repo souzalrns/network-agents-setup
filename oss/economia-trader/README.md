@@ -185,6 +185,14 @@ economia-trader backtest --symbol BTCUSDT --interval 1d --limit 1000 --limits li
 
 See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
 
+## Prediction-market odds (Polymarket, read-only) and research exports
+
+`monitor --polymarket` stores the odds of macro markets (Fed, rates, recession, CPI) from Polymarket's public
+Gamma API: no account, no key, never a bet. They show on the dashboard, and `"odds_block": {"recession": "0.5"}`
+holds new entries while the latest known odds are at or above the threshold (fresh snapshots only; no data, no
+block). `export-klines --format finrl` writes our klines for **FinRL** research in its own environment; nothing it
+trains touches the loop. See `docs/initiatives/economia-trader/POLYMARKET-FINRL.md`.
+
 ## See it: dashboard, pixel office, traces
 
 - `economia-trader dashboard [--refresh 60]`: one static HTML page (no server, light/dark,

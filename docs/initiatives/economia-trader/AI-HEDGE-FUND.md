@@ -1,7 +1,7 @@
 # economia-trader: ai-hedge-fund como 2.ª opinião (P-59)
 
 > **P-59 = A** (maestro, 2026-10-11): FinBERT + ai-hedge-fund, sempre só a propor e medidos por versão. O FinBERT
-> entrou no #191. Este documento fecha a parte do ai-hedge-fund. Em aberto fica **P-70** (fonte de dados paga), §10.
+> entrou no #191. Este documento fecha a parte do ai-hedge-fund. **P-70 = B** (maestro, 2026-10-12): não se assina nada; o código fica pronto e desligado.
 
 ## O que é
 
