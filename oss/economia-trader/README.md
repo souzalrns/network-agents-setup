@@ -159,6 +159,15 @@ sentiment (**Adanos**, optional key). With `sentiment_veto`, mostly-negative new
 bullishness skips an entry. Every source is credited separately in `report`. See
 `docs/initiatives/economia-trader/SIGNALS-OSINT.md`.
 
+## Investor personas (ai-hedge-fund)
+
+`"confirm_with": "ai-hedge-fund"` (or `"tradingagents+ai-hedge-fund"`: each must confirm) adds the personas of
+[virattt/ai-hedge-fund](https://github.com/virattt/ai-hedge-fund) (MIT, `aihf==2.5.0`) as a fundamentals second
+opinion. It runs in **its own venv** (`pipx install aihf==2.5.0`; its LangChain 0.3 pins cannot share an env with
+TradingAgents) through `--aihf-python`, gets only its data/LLM keys (never exchange keys), and vetoes on any
+failure. Needs `FINANCIAL_DATASETS_API_KEY` (paid data) and an LLM key (`gemini-3.8-flash` by default). See
+`docs/initiatives/economia-trader/AI-HEDGE-FUND.md`.
+
 ## Forecast confirm (Kronos)
 
 With `"forecast_confirm": true`, every entry must also be confirmed by **Kronos**

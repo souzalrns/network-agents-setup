@@ -74,6 +74,12 @@ def _money(v: Any) -> str:
         return "—" if v in (None, "") else str(v)
 
 
+def _usage(model: str, u: dict[str, Any]) -> str:
+    if "in" in u:
+        return f"{model}: {u.get('in', 0)}/{u.get('out', 0)} tokens"
+    return f"{model}: {u.get('calls', 0)} chamadas, {u.get('cached', 0)} em cache"
+
+
 def _summary(entry: dict[str, Any]) -> str:
     k, p = entry["kind"], entry.get("payload") or {}
     if k == "proposal":
@@ -81,7 +87,8 @@ def _summary(entry: dict[str, Any]) -> str:
     if k == "assessment":
         return "risco: aprovado" if p.get("approved") else "risco: rejeitado — " + "; ".join(p.get("reasons", []))
     if k == "opinion":
-        return f"analista {p.get('ticker')}: {p.get('rating')} ({'confirma' if p.get('confirms') else 'veta'})"
+        effect = "confirma" if p.get("confirms") else "veta"
+        return f"analista {p.get('by') or '?'} {p.get('ticker')}: {p.get('rating')} ({effect})"
     if k == "forecast":
         return f"previsão {p.get('ticker')}: {p.get('rating')} ({'confirma' if p.get('confirms') else 'veta'})"
     if k == "blocked":
@@ -205,9 +212,10 @@ def build_html(
     op_rows = [
         [
             _ticker(o.get("ticker"), openstock_url),
+            o.get("by") or "—",
             o.get("rating"),
             "confirma" if o.get("confirms") else "veta",
-            ", ".join(f"{m}: {u.get('in', 0)}/{u.get('out', 0)}" for m, u in (o.get("usage") or {}).items()) or "—",
+            ", ".join(_usage(m, u) for m, u in (o.get("usage") or {}).items()) or "—",
         ]
         for o in reversed(ops)
     ]
@@ -258,7 +266,7 @@ def build_html(
         ),
         (
             "Opiniões do analista",
-            ["Ativo", "Rating", "Efeito", "Tokens acumulados (in/out)"],
+            ["Ativo", "Analista", "Rating", "Efeito", "Uso acumulado"],
             op_rows,
             "Sem opiniões (confirm_with desligado).",
         ),

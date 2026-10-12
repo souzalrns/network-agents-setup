@@ -1,0 +1,7 @@
+{
+  "personas": ["buffett", "lynch", "druckenmiller"],
+  "model": "gemini-3.8-flash",
+  "min_conviction": 0.2,
+  "min_bullish_share": 0.5,
+  "max_runs_per_day": 5
+}
