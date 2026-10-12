@@ -100,6 +100,10 @@ def _summary(entry: dict[str, Any]) -> str:
         return f"ordem {p.get('side')} {p.get('qty')} {p.get('symbol')} ({p.get('network')})"
     if k == "intent":
         return f"ordem preparada {p.get('side')} {p.get('qty')} {p.get('symbol')} ({p.get('mode')})"
+    if k == "grid_refused":
+        return "grid recusado: " + "; ".join(p.get("problems", []))
+    if k == "grid_anchor":
+        return f"grid ancorado em {p.get('price')} ({p.get('symbol')})"
     if k == "odds_block":
         return "pausa por probabilidades: " + "; ".join(p.get("reasons", []))
     if k == "macro_block":
@@ -170,6 +174,12 @@ def build_html(
             "ALTO" if e["payload"].get("high_impact") else "—",
         ]
         for e in upcoming
+    ]
+    grid = state.get("grid") or {}
+    lots = grid.get("lots") or {}
+    grid_rows = [
+        [str(i), _money(price), _money(grid["levels"][i + 1]), lots.get(str(i), "—")]
+        for i, price in list(enumerate(grid.get("levels") or []))[:-1][::-1]
     ]
     odds_rows = [
         [
@@ -277,6 +287,12 @@ def build_html(
             "Sem calendário (corre economia-trader monitor --macro).",
         ),
         (
+            f"Grid {grid.get('symbol', '')} (stop {_money(grid.get('stop'))})",
+            ["Nível", "Compra a ≤", "Vende a", "Lote em carteira"],
+            grid_rows,
+            "Sem grid (economia-trader grid --config grid.json).",
+        ),
+        (
             "Probabilidades macro (Polymarket, só leitura)",
             ["Mercado", "Sim", "Volume", "Fecha"],
             odds_rows,
@@ -325,6 +341,7 @@ def build_html(
     blocks = "".join(
         f'<section><h2>{_e(t)}</h2><div class="scroll">{_table(h, r, empty)}</div></section>'
         for t, h, r, empty in sections
+        if grid or not t.startswith("Grid ")  # the grid block only for a grid state dir
     )
     return (
         '<!doctype html><html lang="pt"><head><meta charset="utf-8">'

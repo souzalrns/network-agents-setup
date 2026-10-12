@@ -185,6 +185,17 @@ economia-trader backtest --symbol BTCUSDT --interval 1d --limit 1000 --limits li
 
 See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
 
+## Bounded spot grid (crypto)
+
+`economia-trader grid --config grid.json` is the crypto side's autonomous loop:
+- it buys only, inside a price range, one lot per level, and sells each lot at the next level;
+- the number of lots is capped, and one stop below the range covers them all;
+- before trading, the grid is checked against the risk limits at its worst (each lot's loss at the stop, a full
+  stop-out in one day, the exposure cap, fees per step). If it does not fit, it never trades.
+
+Prove it first with `backtest --strategy grid --grid-config grid.json` (grid vs `sma_cross` vs buy-and-hold), then
+paper. See `docs/initiatives/economia-trader/GRID.md`.
+
 ## Prediction-market odds (Polymarket, read-only) and research exports
 
 `monitor --polymarket` stores the odds of macro markets (Fed, rates, recession, CPI) from Polymarket's public
