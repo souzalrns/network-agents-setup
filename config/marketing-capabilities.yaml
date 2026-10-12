@@ -153,7 +153,314 @@ capabilities:
   - id: performance_analysis
     description: Leitura de resultados de campanha (KPIs, atribuição) para o próximo ciclo.
     levels: [read]
-    action: null
-    agent: null
-    skill: null
-    status: planned  # há pack de conhecimento (docs/knowledge/performance-analyst.md); falta agente e skill
+    action: attribution
+    agent: marketing.attribution
+    skill: skills/marketing/attribution/SKILL.md
+    status: partial  # skill `attribution` do marketingskills (scripts/vendor_marketingskills.py); knowledge em docs/knowledge/performance-analyst.md
+
+  # BEGIN marketingskills (gerado por scripts/vendor_marketingskills.py; não editar à mão)
+  - id: ab_testing
+    description: "Desenha testes A/B e programas de experimentação: hipótese, métrica, tamanho de amostra e leitura do resultado."
+    levels: [prepare]
+    action: ab_testing
+    agent: marketing.ab_testing
+    skill: skills/marketing/ab_testing/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: analytics_tracking
+    description: "Plano de medição e tracking (eventos, UTMs, GA4/GTM, dashboards); prepara a especificação, não mexe nas contas."
+    levels: [prepare]
+    action: analytics
+    agent: marketing.analytics
+    skill: skills/marketing/analytics/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: app_store_optimization
+    description: "Auditoria e optimização de fichas na App Store e Google Play (título, keywords, screenshots, reviews)."
+    levels: [prepare]
+    action: aso
+    agent: marketing.aso
+    skill: skills/marketing/aso/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: churn_prevention
+    description: "Reduz churn: fluxos de cancelamento, ofertas de retenção, recuperação de pagamentos falhados."
+    levels: [prepare]
+    action: churn_prevention
+    agent: marketing.churn_prevention
+    skill: skills/marketing/churn_prevention/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: co_marketing
+    description: "Encontra parceiros de co-marketing e planeia campanhas conjuntas."
+    levels: [prepare]
+    action: co_marketing
+    agent: marketing.co_marketing
+    skill: skills/marketing/co_marketing/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: cold_outbound
+    description: "Rascunhos de outbound B2B (emails frios e follow-ups) dentro do RGPD/LGPD; nunca envia."
+    levels: [prepare]
+    action: cold_email
+    agent: marketing.cold_email
+    skill: skills/marketing/cold_email/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: community_marketing
+    description: "Estratégia de comunidade (fóruns, Discord, grupos) para crescimento e lealdade."
+    levels: [prepare]
+    action: community_marketing
+    agent: marketing.community_marketing
+    skill: skills/marketing/community_marketing/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: competitor_profiling
+    description: "Perfis de concorrentes a partir dos sites deles: posicionamento, preços, mensagens, lacunas."
+    levels: [read]
+    action: competitor_profiling
+    agent: marketing.competitor_profiling
+    skill: skills/marketing/competitor_profiling/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: comparison_pages
+    description: "Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra."
+    levels: [prepare]
+    action: competitors
+    agent: marketing.competitors
+    skill: skills/marketing/competitors/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: conversion_optimization
+    description: "Optimização de conversão de páginas e formulários: diagnóstico, hipóteses e alterações priorizadas."
+    levels: [prepare]
+    action: cro
+    agent: marketing.cro
+    skill: skills/marketing/cro/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: directory_submissions
+    description: "Lista e textos para submeter o produto em directórios e sites de reviews; o envio é humano."
+    levels: [prepare]
+    action: directory_submissions
+    agent: marketing.directory_submissions
+    skill: skills/marketing/directory_submissions/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: email_sequences
+    description: "Sequências de email (boas-vindas, nurture, lifecycle, reactivação) com copy e calendário."
+    levels: [prepare]
+    action: emails
+    agent: marketing.emails
+    skill: skills/marketing/emails/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: events_marketing
+    description: "Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline."
+    levels: [prepare]
+    action: events
+    agent: marketing.events
+    skill: skills/marketing/events/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: free_tools
+    description: "Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO."
+    levels: [prepare]
+    action: free_tools
+    agent: marketing.free_tools
+    skill: skills/marketing/free_tools/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: marketing_images
+    description: "Briefs e prompts de imagens de marketing (heróis de blog, gráficos sociais, OG) e a sua optimização."
+    levels: [prepare]
+    action: image
+    agent: marketing.image
+    skill: skills/marketing/image/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: launch_plan
+    description: "Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist."
+    levels: [prepare]
+    action: launch
+    agent: marketing.launch
+    skill: skills/marketing/launch/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: lead_magnets
+    description: "Cria e optimiza lead magnets (guias, templates, checklists) para captar emails."
+    levels: [prepare]
+    action: lead_magnets
+    agent: marketing.lead_magnets
+    skill: skills/marketing/lead_magnets/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: marketing_council
+    description: "Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação."
+    levels: [prepare]
+    action: marketing_council
+    agent: marketing.marketing_council
+    skill: skills/marketing/marketing_council/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: marketing_ideas
+    description: "Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio."
+    levels: [prepare]
+    action: marketing_ideas
+    agent: marketing.marketing_ideas
+    skill: skills/marketing/marketing_ideas/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: marketing_loops
+    description: "Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano."
+    levels: [prepare]
+    action: marketing_loops
+    agent: marketing.marketing_loops
+    skill: skills/marketing/marketing_loops/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: marketing_plan
+    description: "Plano de marketing completo (objectivos, públicos, canais, orçamento, calendário, métricas)."
+    levels: [prepare]
+    action: marketing_plan
+    agent: marketing.marketing_plan
+    skill: skills/marketing/marketing_plan/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: marketing_psychology
+    description: "Aplica princípios de psicologia e economia comportamental à mensagem, oferta e página, sem manipulação."
+    levels: [prepare]
+    action: marketing_psychology
+    agent: marketing.marketing_psychology
+    skill: skills/marketing/marketing_psychology/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: offer_design
+    description: "Desenha ou melhora a oferta (o que se vende): valor, bónus, garantias, escassez honesta."
+    levels: [prepare]
+    action: offers
+    agent: marketing.offers
+    skill: skills/marketing/offers/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: onboarding_activation
+    description: "Onboarding e activação pós-registo: primeiro uso, tempo até ao valor, emails e checklists."
+    levels: [prepare]
+    action: onboarding
+    agent: marketing.onboarding
+    skill: skills/marketing/onboarding/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: paywalls_upgrades
+    description: "Paywalls, ecrãs de upgrade e feature gates dentro do produto."
+    levels: [prepare]
+    action: paywalls
+    agent: marketing.paywalls
+    skill: skills/marketing/paywalls/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: popups_overlays
+    description: "Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência."
+    levels: [prepare]
+    action: popups
+    agent: marketing.popups
+    skill: skills/marketing/popups/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: pricing_strategy
+    description: "Decisões de preço, planos e monetização, com hipóteses a validar."
+    levels: [prepare]
+    action: pricing
+    agent: marketing.pricing
+    skill: skills/marketing/pricing/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: product_marketing_context
+    description: "Documento de contexto de product marketing (produto, público, posicionamento) que as outras skills leem primeiro."
+    levels: [prepare]
+    action: product_marketing
+    agent: marketing.product_marketing
+    skill: skills/marketing/product_marketing/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: programmatic_seo
+    description: "Páginas SEO em escala a partir de templates e dados, com controlo de qualidade e de canibalização."
+    levels: [prepare]
+    action: programmatic_seo
+    agent: marketing.programmatic_seo
+    skill: skills/marketing/programmatic_seo/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: prospecting_lists
+    description: "Define e qualifica listas de prospects B2B (empresas e cargos) dentro do RGPD/LGPD; sem identificação de pessoas."
+    levels: [prepare]
+    action: prospecting
+    agent: marketing.prospecting
+    skill: skills/marketing/prospecting/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: public_relations
+    description: "Relações públicas: ângulos, comunicados, pitch a jornalistas e comunicação de crise."
+    levels: [prepare]
+    action: public_relations
+    agent: marketing.public_relations
+    skill: skills/marketing/public_relations/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: referral_programs
+    description: "Programas de referência e afiliados: incentivo, mecânica, regras e medição."
+    levels: [prepare]
+    action: referrals
+    agent: marketing.referrals
+    skill: skills/marketing/referrals/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: revenue_operations
+    description: "RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas."
+    levels: [prepare]
+    action: revops
+    agent: marketing.revops
+    skill: skills/marketing/revops/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: sales_enablement
+    description: "Material de vendas: one-pagers, decks, objecções e guiões de demo."
+    levels: [prepare]
+    action: sales_enablement
+    agent: marketing.sales_enablement
+    skill: skills/marketing/sales_enablement/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: schema_markup
+    description: "Schema markup e dados estruturados (JSON-LD) para páginas e rich results."
+    levels: [prepare]
+    action: schema
+    agent: marketing.schema
+    skill: skills/marketing/schema/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: signup_flow
+    description: "Optimiza registo, criação de conta e activação do trial."
+    levels: [prepare]
+    action: signup
+    agent: marketing.signup
+    skill: skills/marketing/signup/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: site_architecture
+    description: "Arquitectura do site: hierarquia de páginas, navegação, URLs e linkagem interna."
+    levels: [prepare]
+    action: site_architecture
+    agent: marketing.site_architecture
+    skill: skills/marketing/site_architecture/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: sms_whatsapp
+    description: "Marketing por SMS e WhatsApp com opt-in explícito (RGPD/LGPD): fluxos, copy e frequência."
+    levels: [prepare]
+    action: sms
+    agent: marketing.sms
+    skill: skills/marketing/sms/SKILL.md
+    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  # END marketingskills

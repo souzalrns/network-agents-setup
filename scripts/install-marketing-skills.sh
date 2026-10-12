@@ -1,0 +1,67 @@
+#!/bin/sh
+# Instala as 50 skills de marketing (vendor/marketingskills, limpas) no Claude Code do agent-network-mcp.
+# Gerado por scripts/vendor_marketingskills.py; não editar à mão.
+# Origem: coreyhaines31/marketingskills@1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff (MIT), sem parceiros pagos nem chamadas a APIs.
+#
+# Corre TU, no teu terminal: o skill-scout recusa aprovações vindas de um agente de IA.
+# Ao correr isto aprovas o conteúdo pelos hashes abaixo (scan `safe` nas 50: ver PROVENANCE.md).
+#   pip install -e oss/skill-scout            # uma vez
+#   sh scripts/install-marketing-skills.sh ../agent-network-mcp
+# Depois, no agent-network-mcp: commit de .claude/skills/, skill-scout.lock.json e skill-scout.audit.jsonl.
+set -eu
+NAS="$(cd "$(dirname "$0")/.." && pwd)"
+ANM="${1:?uso: sh scripts/install-marketing-skills.sh <caminho do agent-network-mcp>}"
+cd "$ANM"
+one() { skill-scout install "$NAS/vendor/marketingskills/skills/$1" --dest .claude/skills --approve-sha256 "$2"; }
+one ab-testing 23254a8bddc7a9a5a24c73270b1d59dd9bb24082986bd069058f762178025af7
+one ad-creative db763c1162f6131ddb536b71d41942c6fa757683eaa4977a9e5afcf00b6ad9d0
+one ads 645a97642f726ef1ee342f135d867be961a2d26cd02532c4b50b741c6f32ee8e
+one ai-seo 5e06fc975b9968211551576791b713b84176851944c43c2782953debf7db8242
+one analytics 03f1d6f3eb49bec80f0841e1583164154af48e005afbe7dfbb908b4b95d1ed3c
+one aso 0971f11fda4d82b3aab7a880b0345e36f29016458962d322dbe148b8c0eec3f8
+one attribution 01efbec883e8637c8bd6c06e799654bd00e74a93bd35d3b18caf9235ebd8fed8
+one churn-prevention 176ea70f692ec52288f4122dea1bd2abb9a4ddd55190a827379010112b545162
+one co-marketing cea66d0f08ddb40c3e87062b2c879879a3bb1f7b83d8971e7af7ba6ec2e6eb1f
+one cold-email 56c69c687ce01be94e50d921b23f533864a60828fac1ada54df7dfb4a9c29493
+one community-marketing 8d0ab0ddcf7fa74f6e483be1a2500493b0ccf3f30c72a875186792a3ad086544
+one competitor-profiling 3fc07a3abc30ba65fcddd1fbd66a5fc920c1b36928a910c757d7e8235c052daa
+one competitors bd250b6fb6e70343ee0e145c63402a7a154cf4a77546ea325918e05d2baa14fa
+one content-strategy 1056c6e7925c105a113840f06a14c52a6fbf1fb5ad942ae10b622e625a227fd4
+one copy-editing b77f2eda537483ac340f2f861668b1788af927e3b4e613816584e7a47b9388df
+one copywriting cab5ceacb920bb866c75721aa6524b69068ca1d116feaf533201981d13992db2
+one cro 09f524eb7e9709ec5cad0e9e94340cec4f1173b6e020bc1283e696f75f99801b
+one customer-research 653bfeca81202f02c04dc6dc5215c8ff599fa453481e2aa930aea3ba753c1865
+one directory-submissions c7fc51741c3dff127896ea0ba42d43331ab65272c6054f521b7addc4e9de6e16
+one emails d0d704fba060e0218e68dff6f095dbbda9db304a50547d9936588c97aaec04a9
+one events 39d2baddd79bdfe2f4ad12477feda8c9dd930991f662038684046ed33b5fe116
+one free-tools d39457d7da3257eb9c74f78674d38349443670d7c5d19caee9f38615065c1396
+one image 7787634e11903c2c55b4aae999c07550afd02c8fb2c7a6b582f7694423fa7128
+one influencer-marketing f50f28922636cb07ef6d5c2a1bb78f7ec1d5378dd262686bd9aaebbefd4fcfd0
+one launch 2d85c8eeb650059bc6a6b4998b23eb418c4b826d9824f9e320194c99f3721a48
+one lead-magnets 953096ca8d7d9c2039b23616cdd13fe3ed97e6230908d2e6ab636c578d593da7
+one marketing-council 02e25008ea13b5d272a373af53aebb5f5200e5eaa7bed6c7e52159636db7f94b
+one marketing-ideas 83e5f546350a009bc7597b635387a5a6ab4d11ba15df815e34cd0a23c679d596
+one marketing-loops edcfca02f15c30da37065ae95f5b327e22c5021072e2d4335db3a43732e949e7
+one marketing-plan 439e62b3f4eb0fd28f3947c3bc10e4d7a5349097e0e2c70e36895e1b928aafac
+one marketing-psychology d1cfbb1bd488ec9be40609c9eb0c60eafc29a33c55d063e0f09185aa4f543fb5
+one offers b798a3984fef1d8d39d021438d377da4376fa57158563806218c2bdd4046a29e
+one onboarding 4efdcfe77e40d69f2b3184feb33aab77f0ed4fc13e06c17c19d1ec0693678bf6
+one paywalls 89f5a71d6802f537847862d8772b5dd93c1dc3a266b2a380ceeb066f4bbd80c0
+one popups a472fd140426d53075676df9f7a9cf191c92a07b1775e501b0a7e73ee6e615a0
+one pricing 98c0dc08f78e27b0bed0e879293e90dd3dfb052298f3be2898d5e86564988c40
+one product-marketing df6776ffe6fc369b75bc6fcfa9c4d35728856b0e4b37a444c33ea871a7eece11
+one programmatic-seo ab179bed96242bcd772f3d195d53773b672bb5a3b419cb9579981b82f4c730b0
+one prospecting d0fd3707a1e714e3282db79f5b37fac039be354e7faae5b336a8828a566d3311
+one public-relations 967cda2958db0ded9c8ffcb8247783b781fc5161f9899bd52ff3a02e8b7fc74c
+one referrals 7d4ef0b121f44318ac200e05820a75000d3cdce5c167f41c22e9b5848fad3e07
+one revops ad03f4876b25b82a7a952e1dbb45fd02134e0a29a2ac1a7bcd7c311905e59045
+one sales-enablement 2f7ff4beeef9b2760aaec8cd817e72c5ff118a66fc9a14457228d07163393bda
+one schema bd33b6528e3f0920870061bebcf7d52463d260d085b60baee6586919cd97f418
+one seo-audit 5265b9d392eaa7593758b646a62aa6b50abe0b159097c6035fd2f0b2f51cf256
+one signup c9c2d5410549622a3a34288c50d5518e5f58aa1f9e21ff7e50b11515e8c0798c
+one site-architecture fd5d5362a65108901f83962dabe4061f78bda97d37bb16d0bd952d59bf4bb6f2
+one sms aa0e6e202b2eefc4ce6a6de864ab63d9fd8ab4d23f3bbcc7fd827ab2b77cdf95
+one social 4b5d98febda293036751c3bfc7251f402e22c85e35faf252623b6aca9b118c6b
+one video 3d5fc74a63b1c185bd3316b8e47b0c3868ee521976ee2e5bf8ab45b087e96b0f
+skill-scout verify
+echo "ok: 50 skills de marketing instaladas em $ANM/.claude/skills"
