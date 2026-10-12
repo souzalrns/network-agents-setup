@@ -30,4 +30,9 @@
   model journaled, reports kept as evidence. The analyst never orders.
 - `dashboard`: static HTML (light/dark, mobile) from state/journal/events. `office`: journal →
   Star-Office-UI pixel office (join once, push states; separate process). Optional Langfuse tracing
-  of the analyst (`[tracing]`, env-gated).
+  of the analyst (`[tracing]`, env-gated). `--openstock-url` links tickers to an OpenStock instance.
+- More evidence (`signals.py`): SEC Form 4 insider trades via **edgartools** (`[sec]`) and a
+  deterministic insider-cluster screen; **FinBERT** news sentiment (`[nlp]`); **Adanos** social
+  sentiment (`[sentiment]`, optional). The runner merges ideas from several sources (flow, insiders),
+  credits each to its source and version, and can veto on sentiment. Dashboard shows insiders,
+  social sentiment and vetoes.

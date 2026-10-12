@@ -132,6 +132,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--macro", action="store_true", help="BLS release calendar (CPI, jobs, PPI, ...)")
     p.add_argument("--calendar-file", help="hand-kept releases JSON (e.g. FOMC days)")
     p.add_argument("--days", type=int, default=14, help="macro calendar window ahead")
+    p.add_argument("--insiders", action="store_true", help="SEC Form 4 open-market trades (edgartools)")
+    p.add_argument("--insider-days", type=int, default=3, help="Form 4 filings from the last N days")
+    p.add_argument("--sec-identity", help='SEC contact, "Name email" (required by EDGAR for --insiders)')
+    p.add_argument("--finbert", action="store_true", help="score stored news with FinBERT ([nlp] extra)")
+    p.add_argument("--adanos", help="comma-separated tickers; needs ADANOS_API_KEY (Reddit/X/news/Polymarket)")
     p.add_argument("--events", default=str(STATE_DIR / "events.jsonl"))
 
     p = sub.add_parser("dashboard", help="Static HTML page with positions, results, events, opinions")
@@ -287,6 +292,33 @@ def _run(args: argparse.Namespace) -> int:
             added["macro"] = store.add(macro_events(rows))
         if args.calendar_file:
             added["calendar_file"] = store.add(macro_events(load_calendar_file(args.calendar_file), source="manual"))
+        if args.insiders:
+            from .signals import edgar_insider_trades, insider_events
+
+            if not args.sec_identity:
+                print('error: --insiders needs --sec-identity "Name email" (SEC rule)', file=sys.stderr)
+                return 2
+            today = datetime.now(timezone.utc).date()
+            start = (today - timedelta(days=args.insider_days)).isoformat()
+            rows = edgar_insider_trades(start, today.isoformat(), identity=args.sec_identity)
+            added["insiders"] = store.add(insider_events(rows))
+        if args.finbert:
+            from .signals import finbert_scorer, news_sentiment_events
+
+            scored = {e["payload"].get("news_id") for e in store.all() if e.get("kind") == "news_sentiment"}
+            todo = [e for e in store.all() if e.get("kind") == "news" and e["id"] not in scored]
+            added["news_sentiment"] = store.add(news_sentiment_events(todo, finbert_scorer()))
+        if args.adanos:
+            import os
+
+            from .signals import adanos_compare, social_sentiment_events
+
+            key = os.environ.get("ADANOS_API_KEY")
+            if not key:
+                print("error: --adanos needs ADANOS_API_KEY in the environment", file=sys.stderr)
+                return 2
+            rows = adanos_compare([t.strip().upper() for t in args.adanos.split(",")], api_key=key)
+            added["social_sentiment"] = store.add(social_sentiment_events(rows))
         _print({"events_file": args.events, "added": added})
         return 0
 

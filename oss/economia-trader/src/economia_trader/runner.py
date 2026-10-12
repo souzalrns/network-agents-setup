@@ -31,9 +31,36 @@ from .paper import PaperBroker
 from .risk import Position, RiskLimits
 from .safety import Approver, KillSwitch, Mode, deny_all
 from .screen import Candidate, ScreenConfig, screen
+from .signals import Idea, insider_clusters, sentiment_veto
 from .trader import Trader
 
-_EXIT_FIELDS = ("stop_pct", "take_profit_pct", "max_hold_days", "max_new_per_run", "macro_block_hours", "confirm_with")
+_EXIT_FIELDS = (
+    "stop_pct",
+    "take_profit_pct",
+    "max_hold_days",
+    "max_new_per_run",
+    "macro_block_hours",
+    "confirm_with",
+    "use_flow",
+    "insider_signal",
+    "insider_window_days",
+    "insider_min_count",
+    "insider_min_value",
+    "sentiment_veto",
+    "sentiment_lookback_hours",
+    "max_negative_news_share",
+    "min_social_bullish_pct",
+)
+_DEC = (
+    "stop_pct",
+    "take_profit_pct",
+    "max_drawdown_pct",
+    "insider_min_value",
+    "sentiment_lookback_hours",
+    "max_negative_news_share",
+    "min_social_bullish_pct",
+)
+_BOOL = ("use_flow", "insider_signal", "sentiment_veto")
 
 
 @dataclass(frozen=True)
@@ -47,6 +74,15 @@ class RunConfig:
     max_errors_in_row: int = 3
     macro_block_hours: Decimal | None = Decimal("24")  # no new entries this close to CPI/NFP/FOMC...; None = off
     confirm_with: str | None = None  # "tradingagents": an LLM analyst must confirm each entry
+    use_flow: bool = True  # ideas from the whale screen (options flow)
+    insider_signal: bool = False  # ideas from SEC Form 4 insider-buying clusters (events store)
+    insider_window_days: int = 10
+    insider_min_count: int = 2
+    insider_min_value: Decimal = Decimal("100000")
+    sentiment_veto: bool = False  # skip entries with mostly negative news / weak social sentiment
+    sentiment_lookback_hours: Decimal = Decimal("48")
+    max_negative_news_share: Decimal = Decimal("0.6")
+    min_social_bullish_pct: Decimal = Decimal("30")
 
     @property
     def version(self) -> str:
@@ -67,8 +103,10 @@ class RunConfig:
                 kw[k] = v
             elif k == "macro_block_hours":
                 kw[k] = dec(v) if v is not None else None
+            elif k in _BOOL:
+                kw[k] = bool(v)
             else:
-                kw[k] = dec(v) if k in ("stop_pct", "take_profit_pct", "max_drawdown_pct") else int(v)
+                kw[k] = dec(v) if k in _DEC else int(v)
         return cls(**kw)
 
 
@@ -76,28 +114,49 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def idea_from_flow(c: Candidate) -> Idea:
+    rationale = (
+        f"whale flow: {c.bullish_pct:.0%} bullish (${c.bullish_premium:,.0f} vs ${c.bearish_premium:,.0f}), "
+        f"IVR {c.iv_rank}, vol/oi {c.vol_oi}, largest ${c.largest_order:,.0f}"
+    )
+    return Idea(c.ticker, "flow", c.print_ids, rationale, c.bullish_premium)
+
+
+def merge_ideas(ideas: list[Idea]) -> list[Idea]:
+    """One idea per ticker; when several screens agree, evidence and rationale are combined."""
+    out: dict[str, Idea] = {}
+    for i in ideas:
+        if i.ticker in out:
+            o = out[i.ticker]
+            out[i.ticker] = Idea(
+                i.ticker,
+                f"{o.source}+{i.source}",
+                tuple(sorted(set(o.evidence_ids + i.evidence_ids))),
+                f"{o.rationale} | {i.rationale}",
+                o.score + i.score,
+            )
+        else:
+            out[i.ticker] = i
+    return sorted(out.values(), key=lambda x: ("+" in x.source, x.score), reverse=True)
+
+
 def propose(
-    candidate: Candidate, price: Decimal, *, config: RunConfig, limits: RiskLimits, extra_evidence: tuple[str, ...] = ()
+    idea: Idea, price: Decimal, *, config: RunConfig, limits: RiskLimits, extra_evidence: tuple[str, ...] = ()
 ) -> TradeProposal | None:
-    """Turn a screened ticker into a proposal on the *stock* (never the option)."""
+    """Turn an idea into a proposal on the *stock* (never the option)."""
     stop = (price * (1 - config.stop_pct)).quantize(Decimal("0.01"))
     qty = size_for_risk(price, stop, limits)
     if qty <= 0:
         return None
-    rationale = (
-        f"whale flow: {candidate.bullish_pct:.0%} bullish (${candidate.bullish_premium:,.0f} vs "
-        f"${candidate.bearish_premium:,.0f}), IVR {candidate.iv_rank}, vol/oi {candidate.vol_oi}, "
-        f"largest ${candidate.largest_order:,.0f}"
-    )
     return TradeProposal(
-        candidate.ticker,
+        idea.ticker,
         "buy",
         qty,
         stop_loss=stop,
         take_profit=(price * (1 + config.take_profit_pct)).quantize(Decimal("0.01")),
-        rationale=rationale,
-        evidence_ids=candidate.print_ids + extra_evidence,
-        proposer=f"whale-screen@{config.version}",
+        rationale=idea.rationale,
+        evidence_ids=idea.evidence_ids + extra_evidence,
+        proposer=f"{'whale-screen' if idea.source == 'flow' else idea.source}@{config.version}",
     )
 
 
@@ -224,6 +283,19 @@ class Runner:
             "dropped": len(result.dropped),
             "prints": result.prints_kept,
         }
+        ideas = [idea_from_flow(c) for c in result.candidates] if self.config.use_flow else []
+        all_events = self.events.all() if self.events is not None else []
+        if self.config.insider_signal:
+            clusters = insider_clusters(
+                all_events,
+                as_of,
+                window_days=self.config.insider_window_days,
+                min_insiders=self.config.insider_min_count,
+                min_value=self.config.insider_min_value,
+            )
+            summary["insiders"] = [i.ticker for i in clusters]
+            ideas += clusters
+        ideas = merge_ideas(ideas)
         entries: list[dict[str, Any]] = []
         if self.events is not None and self.config.macro_block_hours is not None:
             near = self.events.high_impact_within(as_of, float(self.config.macro_block_hours))
@@ -234,13 +306,26 @@ class Runner:
                 self.journal.append("run", summary)
                 self._save()
                 return summary
-        for cand in result.candidates:
+        for cand in ideas:
             if len(entries) >= self.config.max_new_per_run:
                 break
             if cand.ticker in self.trader.state.positions:
                 continue
-            if set(cand.print_ids) <= self.used_prints:
-                continue  # same evidence already traded: wait for new flow
+            if set(cand.evidence_ids) <= self.used_prints:
+                continue  # same evidence already traded: wait for new evidence
+            if self.config.sentiment_veto:
+                veto = sentiment_veto(
+                    all_events,
+                    cand.ticker,
+                    as_of,
+                    lookback_hours=float(self.config.sentiment_lookback_hours),
+                    max_negative_share=float(self.config.max_negative_news_share),
+                    min_bullish_pct=float(self.config.min_social_bullish_pct),
+                )
+                if veto:
+                    self.journal.append("sentiment_veto", {"ticker": cand.ticker, "reasons": veto})
+                    entries.append({"ticker": cand.ticker, "status": "vetoed", "reasons": veto})
+                    continue
             try:
                 price = self.exchange.ticker(cand.ticker).last
             except ExchangeError as exc:
@@ -269,11 +354,12 @@ class Runner:
                 continue
             out = self.trader.submit(proposal, price)
             if out.status in ("filled", "sent"):
-                self.used_prints.update(cand.print_ids)
+                self.used_prints.update(cand.evidence_ids)
                 self.meta[cand.ticker] = {
                     "entry_at": as_of,
                     "take_profit": str(proposal.take_profit),
                     "version": self.config.version,
+                    "source": cand.source,
                 }
             entries.append({"ticker": cand.ticker, "status": out.status, "reasons": out.reasons})
         summary["entries"] = entries

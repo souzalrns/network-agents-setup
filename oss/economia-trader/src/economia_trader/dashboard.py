@@ -168,6 +168,37 @@ def build_html(
         ]
         for e in news
     ]
+    sentiment = {
+        e["payload"].get("news_id"): e["payload"].get("label") for e in events if e.get("kind") == "news_sentiment"
+    }
+    for row, e in zip(news_rows, news, strict=True):
+        row.insert(2, sentiment.get(e["id"], "—"))
+    insiders = sorted(
+        (e for e in events if e.get("kind") == "insider_trade"), key=lambda e: e["event_at"], reverse=True
+    )[:12]
+    insider_rows = [
+        [
+            e["event_at"][:10],
+            _ticker(e["payload"].get("ticker"), openstock_url),
+            e["payload"].get("insider"),
+            e["payload"].get("role"),
+            "compra" if e["payload"].get("side") == "buy" else "venda",
+            _money(e["payload"].get("value")),
+        ]
+        for e in insiders
+    ]
+    social = [e for e in events if e.get("kind") == "social_sentiment"][-12:]
+    social_rows = [
+        [
+            _ticker(e["payload"].get("ticker"), openstock_url),
+            e["payload"].get("source"),
+            e["payload"].get("bullish_pct"),
+            e["payload"].get("buzz"),
+            e["payload"].get("trend"),
+        ]
+        for e in reversed(social)
+    ]
+    vetoes = [e["payload"] for e in journal if e["kind"] == "sentiment_veto"][-8:]
     ops = [e["payload"] for e in journal if e["kind"] == "opinion"][-10:]
     op_rows = [
         [
@@ -221,8 +252,26 @@ def build_html(
         ("Rejeições do risco", ["Motivo", "Vezes"], [list(r) for r in rej], "Nenhuma."),
         ("Bloqueios e auto-kills", ["Tipo", "Detalhe"], gate_rows, "Nenhum."),
         (
+            "Insiders (SEC Form 4)",
+            ["Data", "Ativo", "Insider", "Cargo", "Lado", "Valor"],
+            insider_rows,
+            "Sem dados (economia-trader monitor --insiders --sec-identity ...).",
+        ),
+        (
+            "Sentimento social (Adanos)",
+            ["Ativo", "Fonte", "Bullish %", "Buzz", "Tendência"],
+            social_rows,
+            "Sem dados (monitor --adanos TICKERS, com ADANOS_API_KEY).",
+        ),
+        (
+            "Vetos por sentimento",
+            ["Ativo", "Motivos"],
+            [[_ticker(v.get("ticker"), openstock_url), "; ".join(v.get("reasons", []))] for v in reversed(vetoes)],
+            "Nenhum.",
+        ),
+        (
             "Notícias recentes",
-            ["Publicada (UTC)", "Ativos", "Título"],
+            ["Publicada (UTC)", "Ativos", "FinBERT", "Título"],
             news_rows,
             "Sem notícias (corre economia-trader monitor --news ...).",
         ),
@@ -256,7 +305,8 @@ main{max-width:1100px;margin:0 auto}h1{font-size:20px;margin:0 0 4px}h2{font-siz
 .card.alert{border-color:var(--alert)}.card.alert .v{color:var(--alert)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 16px}
 .grid>section{min-width:0}
-.grid section:nth-child(1),.grid section:nth-child(2),.grid section:nth-child(7),.grid section:nth-child(8)
+.grid section:nth-child(1),.grid section:nth-child(2),.grid section:nth-child(7),.grid section:nth-child(10),
+.grid section:nth-child(11)
 {grid-column:1/-1}
 @media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
 .scroll{overflow-x:auto}
