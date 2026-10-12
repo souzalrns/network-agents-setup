@@ -70,6 +70,7 @@ _DEC = (
 )
 _BOOL = ("use_flow", "insider_signal", "sentiment_veto", "forecast_confirm")
 _STR = ("confirm_with", "forecast_interval")
+ANALYSTS = ("tradingagents", "ai-hedge-fund")
 
 
 @dataclass(frozen=True)
@@ -100,6 +101,10 @@ class RunConfig:
     forecast_min_up_share: Decimal = Decimal("0.6")
 
     @property
+    def analysts(self) -> tuple[str, ...]:
+        return tuple(self.confirm_with.split("+")) if self.confirm_with else ()
+
+    @property
     def version(self) -> str:
         """Strategy version = screen + exits. Stamped on every proposal for per-version results."""
         exits = {k: str(getattr(self, k)) for k in _EXIT_FIELDS}
@@ -123,6 +128,9 @@ class RunConfig:
             else:
                 kw[k] = dec(v) if k in _DEC else int(v)
         cfg = cls(**kw)
+        bad = sorted(set(cfg.analysts) - set(ANALYSTS))
+        if bad:
+            raise ValueError(f"confirm_with: unknown analysts {bad}; use {ANALYSTS} joined by '+'")
         if cfg.forecast_interval not in INTERVALS:
             raise ValueError(f"forecast_interval must be one of {INTERVALS}")
         return cfg
@@ -202,9 +210,10 @@ class Runner:
         self.state_path = self.state_dir / "state.json"
         self.clock = clock
         self.events = events
-        self.analyst = analyst
+        # One analyst or several ("tradingagents+ai-hedge-fund"): each must confirm, in order.
+        self.analysts: list[Any] = list(analyst) if isinstance(analyst, (list, tuple)) else [analyst] * bool(analyst)
         self.forecaster = forecaster  # a forecast.ForecastConfirmer
-        if config.confirm_with and analyst is None:
+        if config.confirm_with and not self.analysts:
             raise ValueError(f"config.confirm_with={config.confirm_with!r} needs an analyst")
         if config.forecast_confirm and forecaster is None:
             raise ValueError("config.forecast_confirm needs a forecaster (forecast.ForecastConfirmer)")
@@ -359,23 +368,11 @@ class Runner:
                 if veto:
                     entries.append({"ticker": cand.ticker, "status": "vetoed", "reasons": [veto]})
                     continue
-            if self.analyst is not None and self.config.confirm_with:
-                op = self.analyst.opinion(cand.ticker, today)
-                self.journal.append(
-                    "opinion",
-                    {
-                        "ticker": cand.ticker,
-                        "rating": op.rating,
-                        "confirms": op.confirms,
-                        "evidence": op.evidence_path,
-                        "usage": op.usage,
-                        "by": self.config.confirm_with,
-                    },
-                )
-                if not op.confirms:
-                    entries.append({"ticker": cand.ticker, "status": "vetoed", "reasons": [f"analyst: {op.rating}"]})
+            if self.config.confirm_with:
+                veto, extra = self._second_opinions(cand.ticker, today)
+                if veto:
+                    entries.append({"ticker": cand.ticker, "status": "vetoed", "reasons": [veto]})
                     continue
-                extra = (f"opinion:{op.evidence_path}",)
             proposal = propose(cand, price, config=self.config, limits=self.limits, extra_evidence=extra)
             if proposal is None:
                 continue
@@ -393,6 +390,28 @@ class Runner:
         self.journal.append("run", summary)
         self._save()
         return summary
+
+    def _second_opinions(self, ticker: str, day: str) -> tuple[str | None, tuple[str, ...]]:
+        """Ask each analyst in turn; the first that does not confirm vetoes (the rest are not paid for)."""
+        evidence: list[str] = []
+        for an in self.analysts:
+            by = getattr(an, "name", self.config.confirm_with)
+            op = an.opinion(ticker, day)
+            self.journal.append(
+                "opinion",
+                {
+                    "ticker": ticker,
+                    "rating": op.rating,
+                    "confirms": op.confirms,
+                    "evidence": op.evidence_path,
+                    "usage": op.usage,
+                    "by": by,
+                },
+            )
+            if not op.confirms:
+                return f"analyst {by}: {op.rating}", ()
+            evidence.append(f"opinion:{op.evidence_path}")
+        return None, tuple(evidence)
 
     def _forecast_veto(self, ticker: str, day: str) -> str | None:
         """Ask the forecaster (Kronos) on recent bars; anything but a confirmed rise is a veto (fail-closed)."""

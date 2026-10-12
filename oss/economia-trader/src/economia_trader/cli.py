@@ -60,6 +60,26 @@ def _kronos(args: argparse.Namespace, cfg: RunConfig) -> Any:
     return confirmer_for(fc, cfg)
 
 
+def _analysts(args: argparse.Namespace, cfg: RunConfig) -> list[Any]:
+    """``confirm_with`` = "tradingagents", "ai-hedge-fund" or both joined by "+" (each must confirm)."""
+    from . import analysts as an
+
+    evidence = Path(args.state_dir) / "evidence"
+    out: list[Any] = []
+    for name in cfg.analysts:
+        if name == "tradingagents":
+            ta_cfg = json.loads(Path(args.ta_config).read_text(encoding="utf-8")) if args.ta_config else {}
+            out.append(an.TradingAgentsAnalyst(config=ta_cfg, evidence_dir=evidence))
+        else:
+            if not args.aihf_python:
+                raise SystemExit("error: ai-hedge-fund needs --aihf-python (the python of its venv, pipx install aihf)")
+            kw = json.loads(Path(args.aihf_config).read_text(encoding="utf-8")) if args.aihf_config else {}
+            out.append(
+                an.AiHedgeFundAnalyst(bridge=an.subprocess_bridge(args.aihf_python), evidence_dir=evidence, **kw)
+            )
+    return out
+
+
 def _run_config(path: str | None) -> RunConfig:
     return RunConfig.from_mapping(json.loads(Path(path).read_text(encoding="utf-8"))) if path else RunConfig()
 
@@ -141,6 +161,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--approvals", default=str(STATE_DIR / "approvals"))
     p.add_argument("--events", help="events.jsonl from `monitor` (default: <state-dir>/events.jsonl if present)")
     p.add_argument("--ta-config", help="TradingAgents config overrides JSON (when config.confirm_with=tradingagents)")
+    p.add_argument("--aihf-python", help="python of ai-hedge-fund's own venv (confirm_with includes ai-hedge-fund)")
+    p.add_argument("--aihf-config", help="ai-hedge-fund analyst options JSON (personas, model, thresholds)")
     kronos_args(p)
     g = p.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
@@ -355,12 +377,7 @@ def _run(args: argparse.Namespace) -> int:
         mode = Mode(args.mode)
         cfg = _run_config(args.config)
         events_path = Path(args.events) if args.events else Path(args.state_dir) / "events.jsonl"
-        analyst = None
-        if cfg.confirm_with == "tradingagents":
-            from .analysts import TradingAgentsAnalyst
-
-            ta_cfg = json.loads(Path(args.ta_config).read_text(encoding="utf-8")) if args.ta_config else {}
-            analyst = TradingAgentsAnalyst(config=ta_cfg, evidence_dir=Path(args.state_dir) / "evidence")
+        analyst = _analysts(args, cfg)
         forecaster = _kronos(args, cfg) if cfg.forecast_confirm else None
         runner = Runner(
             make_exchange(args.exchange, mode),
