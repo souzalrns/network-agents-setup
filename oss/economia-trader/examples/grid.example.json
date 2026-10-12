@@ -1,0 +1,10 @@
+{
+  "symbol": "BTCUSDT",
+  "range_pct": "0.12",
+  "levels": 6,
+  "order_notional": "8",
+  "max_lots": 4,
+  "stop_pct": "0.03",
+  "spacing": "geometric",
+  "max_drawdown_pct": "0.15"
+}

@@ -3,6 +3,9 @@
     economia-trader ticker   --exchange bybit --symbol BTCUSDT
     economia-trader backtest --exchange bybit --symbol BTCUSDT --interval 1h --limits limits.json \\
                              [--forecast kronos --kronos-repo PATH]       # A/B with vs without the forecast
+    economia-trader backtest --exchange bybit --symbol BTCUSDT --interval 1h --limits limits.json \\
+                             --strategy grid --grid-config grid.json   # grid vs sma_cross vs buy-and-hold
+    economia-trader grid     --exchange bybit --config grid.json --limits limits.json --once   # paper
     economia-trader check-key --exchange bybit --mode testnet          # needs <EX>_API_KEY/SECRET
     economia-trader trade    --exchange bybit --mode paper --symbol BTCUSDT --side buy --qty 0.001 \\
                              --stop 60000 --limits limits.json
@@ -120,7 +123,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--klines-file", help="Use saved klines JSON instead of fetching")
     p.add_argument("--forecast", choices=["kronos"], help="A/B: same strategy with vs without the forecast confirm")
     p.add_argument("--config", help="run config JSON: forecast_horizon / thresholds for --forecast")
+    p.add_argument("--strategy", choices=["sma", "grid"], default="sma")
+    p.add_argument("--grid-config", help="grid config JSON (see examples/grid.example.json) for --strategy grid")
     kronos_args(p)
+
+    p = sub.add_parser("grid", help="The bounded spot grid loop (crypto): paper by default")
+    ex_args(p, mode=True)
+    p.add_argument("--config", required=True, help="grid config JSON (see examples/grid.example.json)")
+    p.add_argument("--limits", required=True)
+    p.add_argument("--cash", default="100", help="paper starting cash (first run only)")
+    p.add_argument("--state-dir", default=str(STATE_DIR / "grid"))
+    p.add_argument("--approvals", default=str(STATE_DIR / "approvals"))
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
+    g.add_argument("--every-min", type=float, help="loop forever, one tick every N minutes")
 
     p = sub.add_parser("check-key", help="Verify the API key: read+trade, never withdraw")
     ex_args(p, mode=True)
@@ -237,6 +253,37 @@ def _run(args: argparse.Namespace) -> int:
             )
             return run.summary()
 
+        if args.strategy == "grid":
+            from .grid import GridConfig, buy_and_hold, grid_strategy
+
+            if not args.grid_config:
+                print("error: --strategy grid needs --grid-config", file=sys.stderr)
+                return 2
+            gcfg = GridConfig.from_mapping(json.loads(Path(args.grid_config).read_text(encoding="utf-8")))
+            anchored = gcfg.anchor(bars[0].close)  # a relative grid anchors on the first bar (no look-ahead)
+            problems = anchored.problems(limits)
+            if problems:
+                _print({"refused": problems, "levels": [str(p) for p in anchored.prices()], "stop": str(anchored.stop)})
+                return 2
+            grid = bt(grid_strategy(anchored, limits))
+            sma = bt(sma_cross(args.fast, args.slow))
+            hold = buy_and_hold(bars, args.cash, limits.fee_rate)
+            _print(
+                {
+                    "bars": len(bars),
+                    "levels": [str(p) for p in anchored.prices()],
+                    "stop": str(anchored.stop),
+                    "grid": grid,
+                    "sma_cross": sma,
+                    "buy_and_hold": hold,
+                    "comparacao": {
+                        k: {"grid": grid.get(k), "sma_cross": sma.get(k), "buy_and_hold": hold.get(k)}
+                        for k in ("return_pct", "max_drawdown_pct", "trades_closed")
+                    },
+                }
+            )
+            return 0
+
         base = bt(sma_cross(args.fast, args.slow))
         if not args.forecast:
             _print({"bars": len(bars), **base})
@@ -247,6 +294,29 @@ def _run(args: argparse.Namespace) -> int:
         test = bt(with_forecast_confirm(sma_cross(args.fast, args.slow), _kronos(args, cfg)))
         cmp = compare_summaries(base, test)
         _print({"bars": len(bars), "sem_previsao": base, "com_previsao": test, "comparacao": cmp})
+        return 0
+
+    if args.cmd == "grid":
+        from .grid import GridBot, GridConfig
+
+        mode = Mode(args.mode)
+        gcfg = GridConfig.from_mapping(json.loads(Path(args.config).read_text(encoding="utf-8")))
+        bot = GridBot(
+            make_exchange(args.exchange, mode),
+            mode=mode,
+            limits=_limits(args.limits),
+            config=gcfg,
+            state_dir=args.state_dir,
+            cash=args.cash,
+            kill_switch=KillSwitch(Path(args.state_dir) / "KILL"),
+            approver=HitlApprover(args.approvals) if mode is Mode.LIVE else deny_all,
+        )
+        if mode is not Mode.PAPER:
+            bot.trader.verify_key()
+        if args.every_min:
+            bot.run_forever(args.every_min * 60)
+        else:
+            _print(bot.run_once())
         return 0
 
     if args.cmd == "check-key":
