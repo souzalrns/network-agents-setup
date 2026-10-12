@@ -63,6 +63,8 @@ def map_entry(entry: dict[str, Any]) -> tuple[str, str, str] | None:
         return "risk", "error", "; ".join(p.get("reasons", []))[:120]
     if kind == "blocked":
         return "risk", "error", f"bloqueado: {p.get('code')}"
+    if kind == "odds_block":
+        return "risk", "syncing", "pausa por probabilidades: " + "; ".join(p.get("reasons", []))[:100]
     if kind == "macro_block":
         return "risk", "syncing", "pausa macro: " + ", ".join(p.get("releases", []))[:100]
     if kind == "auto_kill":

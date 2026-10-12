@@ -28,6 +28,7 @@ from .flow import FlowSource
 from .journal import Journal
 from .monitors import EventStore
 from .paper import PaperBroker
+from .predictions import odds_block
 from .risk import Position, RiskLimits
 from .safety import Approver, KillSwitch, Mode, deny_all
 from .screen import Candidate, ScreenConfig, screen
@@ -56,6 +57,7 @@ _EXIT_FIELDS = (
     "forecast_horizon",
     "forecast_min_expected_return",
     "forecast_min_up_share",
+    "odds_block",
 )
 _DEC = (
     "stop_pct",
@@ -99,6 +101,9 @@ class RunConfig:
     forecast_horizon: int = 5  # bars ahead
     forecast_min_expected_return: Decimal = Decimal("0.01")
     forecast_min_up_share: Decimal = Decimal("0.6")
+    # Polymarket odds (read-only): no new entries while a matching market is at/above the threshold,
+    # e.g. {"recession": "0.5"}; empty = off. Stored sorted, so the version hash is stable.
+    odds_block: tuple[tuple[str, Decimal], ...] = ()
 
     @property
     def analysts(self) -> tuple[str, ...]:
@@ -121,6 +126,8 @@ class RunConfig:
         for k, v in d.items():
             if k in _STR:
                 kw[k] = v
+            elif k == "odds_block":
+                kw[k] = tuple(sorted((str(pat), dec(p)) for pat, p in dict(v).items()))
             elif k == "macro_block_hours":
                 kw[k] = dec(v) if v is not None else None
             elif k in _BOOL:
@@ -131,6 +138,8 @@ class RunConfig:
         bad = sorted(set(cfg.analysts) - set(ANALYSTS))
         if bad:
             raise ValueError(f"confirm_with: unknown analysts {bad}; use {ANALYSTS} joined by '+'")
+        if any(not (0 < p <= 1) for _, p in cfg.odds_block):
+            raise ValueError("odds_block probabilities must be in (0, 1]")
         if cfg.forecast_interval not in INTERVALS:
             raise ValueError(f"forecast_interval must be one of {INTERVALS}")
         return cfg
@@ -334,6 +343,15 @@ class Runner:
                 summary["macro_block"] = sorted({e["payload"]["name"] for e in near})
                 summary["entries"] = []
                 self.journal.append("macro_block", {"as_of": as_of, "releases": summary["macro_block"]})
+                self.journal.append("run", summary)
+                self._save()
+                return summary
+        if self.events is not None and self.config.odds_block:
+            odds = odds_block(all_events, as_of, self.config.odds_block)
+            if odds:
+                summary["odds_block"] = odds
+                summary["entries"] = []
+                self.journal.append("odds_block", {"as_of": as_of, "reasons": odds})
                 self.journal.append("run", summary)
                 self._save()
                 return summary

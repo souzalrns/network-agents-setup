@@ -13,7 +13,8 @@
     economia-trader run    --exchange alpaca --mode paper --flow-file flow.json --limits limits.json \
                            [--config run.json] [--cash 100] [--every-min 240 | --once]
     economia-trader report [--journal .economia-trader/journal.jsonl]
-    economia-trader monitor [--news AAPL,MSFT] [--macro] [--calendar-file fomc.json] [--days 14]
+    economia-trader monitor [--news AAPL,MSFT] [--macro] [--calendar-file fomc.json] [--days 14] [--polymarket]
+    economia-trader export-klines --exchange alpaca --symbols SPY,QQQ --interval 1d --out data.csv   # FinRL
     economia-trader dashboard [--state-dir .economia-trader] [--out dashboard.html] [--refresh 60]
     economia-trader office --url http://127.0.0.1:19000 --join-key KEY [--every-s 10 | --once]
 
@@ -178,7 +179,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--sec-identity", help='SEC contact, "Name email" (required by EDGAR for --insiders)')
     p.add_argument("--finbert", action="store_true", help="score stored news with FinBERT ([nlp] extra)")
     p.add_argument("--adanos", help="comma-separated tickers; needs ADANOS_API_KEY (Reddit/X/news/Polymarket)")
+    p.add_argument("--polymarket", action="store_true", help="macro odds from Polymarket (read-only, no key)")
+    p.add_argument("--pm-keywords", help="comma-separated question keywords (default: fed, rates, recession, cpi...)")
+    p.add_argument("--pm-min-volume", type=float, default=50_000, help="ignore markets below this volume (USD)")
     p.add_argument("--events", default=str(STATE_DIR / "events.jsonl"))
+
+    p = sub.add_parser("export-klines", help="Klines as CSV for research tools (FinRL); nothing is traded")
+    ex_args(p)
+    p.add_argument("--symbols", required=True, help="comma-separated symbols")
+    p.add_argument("--interval", choices=INTERVALS, default="1d")
+    p.add_argument("--limit", type=int, default=1000)
+    p.add_argument("--format", choices=["finrl"], default="finrl")
+    p.add_argument("--out", required=True)
 
     p = sub.add_parser("dashboard", help="Static HTML page with positions, results, events, opinions")
     p.add_argument("--state-dir", default=str(STATE_DIR))
@@ -368,7 +380,24 @@ def _run(args: argparse.Namespace) -> int:
                 return 2
             rows = adanos_compare([t.strip().upper() for t in args.adanos.split(",")], api_key=key)
             added["social_sentiment"] = store.add(social_sentiment_events(rows))
+        if args.polymarket:
+            from .predictions import DEFAULT_KEYWORDS, gamma_markets, prediction_events
+
+            kws = [k.strip() for k in args.pm_keywords.split(",")] if args.pm_keywords else DEFAULT_KEYWORDS
+            evs = prediction_events(gamma_markets(), keywords=kws, min_volume=args.pm_min_volume)
+            added["prediction_market"] = store.add(evs)
         _print({"events_file": args.events, "added": added})
+        return 0
+
+    if args.cmd == "export-klines":
+        from .research import finrl_rows, write_csv
+
+        ex = make_exchange(args.exchange, Mode.PAPER)
+        series = {
+            s.strip().upper(): ex.klines(s.strip().upper(), args.interval, args.limit) for s in args.symbols.split(",")
+        }
+        n = write_csv(args.out, finrl_rows(series))
+        _print({"out": args.out, "rows": n, "symbols": sorted(series), "format": args.format})
         return 0
 
     if args.cmd == "run":
