@@ -687,6 +687,8 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-63 | economia-trader: Adanos (sentimento social) | **Integrar como monitor opcional (chave grátis), medido por versão** | Ficar só com o FinBERT | — | **Decidida: A** (maestro, 2026-10-12) |
 | P-64 | OSINT de infraestrutura (theHarvester, recon-ng) na área security | Avaliar já, em lab, só domínios próprios | **Não por agora; candidato registado da área security** | — | **Decidida: B** (maestro, 2026-10-12) |
 | P-65 | Ferramentas de busca de pessoas (Sherlock, Maigret) | **Ficam de fora (privacidade, GOV-IMPACT; sem uso no trading)** | Avaliar para um uso específico | — | **Decidida: A** (maestro, 2026-10-12) |
+| P-66 | Plugins oficiais `anthropics/financial-services` (equity research) | **Instalar no Claude Code do maestro (equity-research, market-researcher, earnings-reviewer) para pesquisa fundamental, fora do loop autónomo** | Não instalar | — | **Decidida: A** (maestro, 2026-10-12). `RESEARCH-PLUGINS.md` |
+| P-67 | Projetos "Osiris" (OSINT, memória, CS2) e "Vector Osiris" | **Ficam todos de fora** (OSINT = P-64; memória já existe; CS2 é um cheat; "Vector Osiris" não existe, é o TradingAgents) | Avaliar um para um uso específico | — | **Decidida: A** (maestro, 2026-10-12) |
 
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
