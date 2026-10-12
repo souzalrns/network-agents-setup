@@ -150,6 +150,15 @@ measured per version instead of remembered. `flow.json` is vendor-neutral
 
 See `docs/initiatives/economia-trader/AGENTS-AND-MONITORS.md`.
 
+## More evidence: insiders (SEC), FinBERT, Adanos
+
+`monitor --insiders --sec-identity "Name email"` pulls SEC Form 4 open-market trades
+(**edgartools**); `insider_signal` turns clusters of insider buying into ideas next to the options
+flow. `monitor --finbert` scores headlines locally (**FinBERT**); `monitor --adanos` adds social
+sentiment (**Adanos**, optional key). With `sentiment_veto`, mostly-negative news or weak social
+bullishness skips an entry. Every source is credited separately in `report`. See
+`docs/initiatives/economia-trader/SIGNALS-OSINT.md`.
+
 ## See it: dashboard, pixel office, traces
 
 - `economia-trader dashboard [--refresh 60]`: one static HTML page (no server, light/dark,
