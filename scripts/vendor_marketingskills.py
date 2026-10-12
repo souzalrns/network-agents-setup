@@ -109,7 +109,7 @@ COMPLIANCE = {
 PATCHES: list[tuple[str, str, str]] = [
     ("launch/references/site-launch-qa.md",
      "; Ploy ◆ promotes a previous deploy from its Deploys screen (its CLI always publishes to production, with no "
-     "staging target, so preview before publishing).",
+     + "staging target, so preview before publishing).",
      "."),
     ("prospecting/references/saas-prospecting.md",
      "via `node tools/clis/github-prospects.js stargazers <owner/repo> --enrich --with-company --format csv`",
@@ -122,9 +122,9 @@ PATCHES: list[tuple[str, str, str]] = [
     ("programmatic-seo/references/implementation-platforms.md", "(Ploy ◆ PloyDB, and similar)", "(database-backed builders)"),
     ("ai-seo/references/agent-readiness.md",
      " Ploy ◆, for example, has a Ploybook that inspects the site, defines tool contracts, implements them against "
-     "existing form logic, and validates them. It's a guided workflow, not a hosted MCP server. ◆ marks a "
-     "[Verified Partner](https://github.com/coreyhaines31/marketingskills/blob/main/tools/REGISTRY.md#verified-partners) "
-     "of this repository (disclosure, not endorsement); name an alternative alongside it when you mention it.",
+     + "existing form logic, and validates them. It's a guided workflow, not a hosted MCP server. ◆ marks a "
+     + "[Verified Partner](https://github.com/coreyhaines31/marketingskills/blob/main/tools/REGISTRY.md#verified-partners) "
+     + "of this repository (disclosure, not endorsement); name an alternative alongside it when you mention it.",
      ""),
 ]
 # Linhas/parágrafos inteiros a remover quando contêm estes marcadores (parceiros pagos).
@@ -269,8 +269,8 @@ def runner_files(commit: str) -> None:
             "Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.",
             "O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).",
             "Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o "
-            "`product_marketing_context`, se existir). As referências citadas estão em "
-            f"`vendor/marketingskills/skills/{name}/references/`.",
+            + "`product_marketing_context`, se existir). As referências citadas estão em "
+            + f"`vendor/marketingskills/skills/{name}/references/`.",
         ]
         if name in COMPLIANCE:
             notes.append(COMPLIANCE[name])
