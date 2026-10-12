@@ -159,6 +159,23 @@ sentiment (**Adanos**, optional key). With `sentiment_veto`, mostly-negative new
 bullishness skips an entry. Every source is credited separately in `report`. See
 `docs/initiatives/economia-trader/SIGNALS-OSINT.md`.
 
+## Forecast confirm (Kronos)
+
+With `"forecast_confirm": true`, every entry must also be confirmed by **Kronos**
+([shiyu-coder/Kronos](https://github.com/shiyu-coder/Kronos) @ `67b630e`, code MIT), a foundation model for
+candlesticks: seeded sample paths over the next `forecast_horizon` bars must show a mean rise of at least
+`forecast_min_expected_return` with at least `forecast_min_up_share` of the paths up. It only confirms or
+vetoes (never an idea source), fails closed, and is versioned. Prove it first with an A/B backtest:
+
+```bash
+git clone https://github.com/shiyu-coder/Kronos ~/ext/Kronos && git -C ~/ext/Kronos checkout 67b630e
+pip install -e 'oss/economia-trader[forecast]'
+economia-trader backtest --symbol BTCUSDT --interval 1d --limit 1000 --limits limits.json \
+  --forecast kronos --kronos-repo ~/ext/Kronos      # sem_previsao vs com_previsao
+```
+
+See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
+
 ## See it: dashboard, pixel office, traces
 
 - `economia-trader dashboard [--refresh 60]`: one static HTML page (no server, light/dark,

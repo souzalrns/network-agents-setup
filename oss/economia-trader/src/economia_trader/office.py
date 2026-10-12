@@ -8,7 +8,7 @@ agents is doing, by tailing the journal:
 
     monitor   (news/macro)   researching when events arrive
     screen    (whale screen) executing on a proposal
-    analyst   (TradingAgents) writing an opinion; error on a veto
+    analyst   (TradingAgents / Kronos) writing an opinion or forecast; error on a veto
     risk      (risk + gate)  executing on approval; error on reject/block/auto-kill; syncing on macro block
     executor  (orders)       executing on intent/fill/order
 
@@ -53,9 +53,10 @@ def map_entry(entry: dict[str, Any]) -> tuple[str, str, str] | None:
     kind, p = entry.get("kind"), entry.get("payload") or {}
     if kind == "proposal":
         return "screen", "executing", f"{p.get('side')} {p.get('symbol')} ({p.get('proposer')})"
-    if kind == "opinion":
+    if kind in ("opinion", "forecast"):
         state = "writing" if p.get("confirms") else "error"
-        return "analyst", state, f"{p.get('ticker')}: {p.get('rating')}"
+        suffix = " (kronos)" if kind == "forecast" else ""
+        return "analyst", state, f"{p.get('ticker')}: {p.get('rating')}{suffix}"
     if kind == "assessment":
         if p.get("approved"):
             return "risk", "executing", f"aprovado {p.get('proposal_id')}"

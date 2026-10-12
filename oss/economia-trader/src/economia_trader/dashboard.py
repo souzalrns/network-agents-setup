@@ -3,7 +3,7 @@ writes (``state.json``, ``journal.jsonl``, ``events.jsonl``). No server, no JS d
 it in a browser, or regenerate it from cron after each tick (``--refresh`` adds an auto-reload).
 
 Shows: mode, version, kill switch, cash and positions (with stop / take-profit); results per
-strategy version; upcoming high-impact releases; latest news; analyst opinions; risk rejections
+strategy version; upcoming high-impact releases; latest news; analyst opinions; forecasts; risk rejections
 and gate blocks; auto-kills; the last decisions in order.
 """
 
@@ -82,6 +82,8 @@ def _summary(entry: dict[str, Any]) -> str:
         return "risco: aprovado" if p.get("approved") else "risco: rejeitado — " + "; ".join(p.get("reasons", []))
     if k == "opinion":
         return f"analista {p.get('ticker')}: {p.get('rating')} ({'confirma' if p.get('confirms') else 'veta'})"
+    if k == "forecast":
+        return f"previsão {p.get('ticker')}: {p.get('rating')} ({'confirma' if p.get('confirms') else 'veta'})"
     if k == "blocked":
         return f"bloqueado: {p.get('code')}"
     if k == "fill":
@@ -209,6 +211,17 @@ def build_html(
         ]
         for o in reversed(ops)
     ]
+    fcs = [e["payload"] for e in journal if e["kind"] == "forecast"][-10:]
+    fc_rows = [
+        [
+            _ticker(f.get("ticker"), openstock_url),
+            f.get("rating"),
+            "confirma" if f.get("confirms") else "veta",
+            f"{f['expected_return']:+.2%}" if f.get("expected_return") is not None else "—",
+            f"{f['up_share']:.0%}" if f.get("up_share") is not None else "—",
+        ]
+        for f in reversed(fcs)
+    ]
     timeline = [[e["ts"][:19].replace("T", " "), e["kind"], _summary(e)] for e in journal[-25:]][::-1]
     rej = Counter(rep["rejected_by_risk"]).most_common(6)
 
@@ -248,6 +261,12 @@ def build_html(
             ["Ativo", "Rating", "Efeito", "Tokens acumulados (in/out)"],
             op_rows,
             "Sem opiniões (confirm_with desligado).",
+        ),
+        (
+            "Previsões (Kronos)",
+            ["Ativo", "Sinal", "Efeito", "Retorno esperado", "Caminhos em alta"],
+            fc_rows,
+            "Sem previsões (forecast_confirm desligado).",
         ),
         ("Rejeições do risco", ["Motivo", "Vezes"], [list(r) for r in rej], "Nenhuma."),
         ("Bloqueios e auto-kills", ["Tipo", "Detalhe"], gate_rows, "Nenhum."),
