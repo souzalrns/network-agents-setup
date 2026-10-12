@@ -39,7 +39,9 @@ tracing = ["langfuse>=3"]
 # More evidence (P-59/P-62/P-63): SEC Form 4 insiders, FinBERT news sentiment, Adanos social sentiment.
 sec = ["edgartools>=5.62"]
 nlp = ["transformers>=4.44", "torch>=2.4"]
-sentiment = ["adanos>=2.7"]  # optional: agent traces in Langfuse (env-gated, see analysts.langfuse_handler)
+sentiment = ["adanos>=2.7"]
+# Forecast confirm (P-68): Kronos is not on PyPI; clone shiyu-coder/Kronos @ 67b630e and pass --kronos-repo.
+forecast = ["torch>=2.4", "pandas>=2.2", "einops>=0.8", "huggingface_hub>=0.33", "safetensors>=0.6", "tqdm>=4.67"]  # optional: agent traces in Langfuse (env-gated, see analysts.langfuse_handler)
 # LLM analysts: TradingAgents is not on PyPI; install the audited commit (see analysts.py):
 #   pip install 'git+https://github.com/TauricResearch/TradingAgents@1394a3f'
 

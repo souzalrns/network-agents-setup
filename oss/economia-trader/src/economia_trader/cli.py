@@ -1,7 +1,8 @@
 """economia-trader CLI.
 
     economia-trader ticker   --exchange bybit --symbol BTCUSDT
-    economia-trader backtest --exchange bybit --symbol BTCUSDT --interval 1h --limits limits.json
+    economia-trader backtest --exchange bybit --symbol BTCUSDT --interval 1h --limits limits.json \\
+                             [--forecast kronos --kronos-repo PATH]       # A/B with vs without the forecast
     economia-trader check-key --exchange bybit --mode testnet          # needs <EX>_API_KEY/SECRET
     economia-trader trade    --exchange bybit --mode paper --symbol BTCUSDT --side buy --qty 0.001 \\
                              --stop 60000 --limits limits.json
@@ -50,6 +51,15 @@ def _limits(path: str) -> RiskLimits:
     return RiskLimits.from_mapping(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
+def _kronos(args: argparse.Namespace, cfg: RunConfig) -> Any:
+    from .forecast import confirmer_for, kronos_forecaster
+
+    if not args.kronos_repo:
+        raise SystemExit("error: the forecast confirm needs --kronos-repo (git clone shiyu-coder/Kronos)")
+    fc = kronos_forecaster(args.kronos_repo, model=args.kronos_model, device=args.kronos_device)
+    return confirmer_for(fc, cfg)
+
+
 def _run_config(path: str | None) -> RunConfig:
     return RunConfig.from_mapping(json.loads(Path(path).read_text(encoding="utf-8"))) if path else RunConfig()
 
@@ -68,6 +78,11 @@ def main(argv: list[str] | None = None) -> int:
         if mode:
             p.add_argument("--mode", choices=[m.value for m in Mode], default="paper")
 
+    def kronos_args(p: argparse.ArgumentParser) -> None:
+        p.add_argument("--kronos-repo", help="checkout of shiyu-coder/Kronos @ 67b630e (forecast confirm)")
+        p.add_argument("--kronos-model", default="NeoQuasar/Kronos-small")
+        p.add_argument("--kronos-device", default="cpu")
+
     p = sub.add_parser("ticker", help="Last/bid/ask from public market data (no key)")
     ex_args(p)
     p.add_argument("--symbol", required=True)
@@ -82,6 +97,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--fast", type=int, default=10)
     p.add_argument("--slow", type=int, default=30)
     p.add_argument("--klines-file", help="Use saved klines JSON instead of fetching")
+    p.add_argument("--forecast", choices=["kronos"], help="A/B: same strategy with vs without the forecast confirm")
+    p.add_argument("--config", help="run config JSON: forecast_horizon / thresholds for --forecast")
+    kronos_args(p)
 
     p = sub.add_parser("check-key", help="Verify the API key: read+trade, never withdraw")
     ex_args(p, mode=True)
@@ -123,6 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--approvals", default=str(STATE_DIR / "approvals"))
     p.add_argument("--events", help="events.jsonl from `monitor` (default: <state-dir>/events.jsonl if present)")
     p.add_argument("--ta-config", help="TradingAgents config overrides JSON (when config.confirm_with=tradingagents)")
+    kronos_args(p)
     g = p.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
     g.add_argument("--every-min", type=float, help="loop forever, one tick every N minutes")
@@ -177,15 +196,23 @@ def _run(args: argparse.Namespace) -> int:
             bars = [Kline(int(r[0]), dec(r[1]), dec(r[2]), dec(r[3]), dec(r[4]), dec(r[5])) for r in raw]
         else:
             bars = make_exchange(args.exchange, Mode.PAPER).klines(args.symbol, args.interval, args.limit)
-        run = run_backtest(
-            bars,
-            sma_cross(args.fast, args.slow),
-            symbol=args.symbol.upper(),
-            limits=limits,
-            cash=args.cash,
-            exchange_name=args.exchange,
-        )
-        _print({"bars": len(bars), **run.summary()})
+
+        def bt(strategy: Any) -> dict[str, Any]:
+            run = run_backtest(
+                bars, strategy, symbol=args.symbol.upper(), limits=limits, cash=args.cash, exchange_name=args.exchange
+            )
+            return run.summary()
+
+        base = bt(sma_cross(args.fast, args.slow))
+        if not args.forecast:
+            _print({"bars": len(bars), **base})
+            return 0
+        from .forecast import compare_summaries, with_forecast_confirm
+
+        cfg = _run_config(args.config)
+        test = bt(with_forecast_confirm(sma_cross(args.fast, args.slow), _kronos(args, cfg)))
+        cmp = compare_summaries(base, test)
+        _print({"bars": len(bars), "sem_previsao": base, "com_previsao": test, "comparacao": cmp})
         return 0
 
     if args.cmd == "check-key":
@@ -334,6 +361,7 @@ def _run(args: argparse.Namespace) -> int:
 
             ta_cfg = json.loads(Path(args.ta_config).read_text(encoding="utf-8")) if args.ta_config else {}
             analyst = TradingAgentsAnalyst(config=ta_cfg, evidence_dir=Path(args.state_dir) / "evidence")
+        forecaster = _kronos(args, cfg) if cfg.forecast_confirm else None
         runner = Runner(
             make_exchange(args.exchange, mode),
             JsonFileFlowSource(args.flow_file),
@@ -346,6 +374,7 @@ def _run(args: argparse.Namespace) -> int:
             approver=HitlApprover(args.approvals) if mode is Mode.LIVE else deny_all,
             events=EventStore(events_path) if (args.events or events_path.exists()) else None,
             analyst=analyst,
+            forecaster=forecaster,
         )
         if mode is not Mode.PAPER:
             runner.trader.verify_key()

@@ -23,7 +23,7 @@ from typing import Any
 
 from .backtest import size_for_risk
 from .contracts import TradeProposal, dec
-from .exchanges.base import Exchange, ExchangeError
+from .exchanges.base import INTERVALS, Exchange, ExchangeError
 from .flow import FlowSource
 from .journal import Journal
 from .monitors import EventStore
@@ -50,6 +50,12 @@ _EXIT_FIELDS = (
     "sentiment_lookback_hours",
     "max_negative_news_share",
     "min_social_bullish_pct",
+    "forecast_confirm",
+    "forecast_interval",
+    "forecast_lookback",
+    "forecast_horizon",
+    "forecast_min_expected_return",
+    "forecast_min_up_share",
 )
 _DEC = (
     "stop_pct",
@@ -59,8 +65,11 @@ _DEC = (
     "sentiment_lookback_hours",
     "max_negative_news_share",
     "min_social_bullish_pct",
+    "forecast_min_expected_return",
+    "forecast_min_up_share",
 )
-_BOOL = ("use_flow", "insider_signal", "sentiment_veto")
+_BOOL = ("use_flow", "insider_signal", "sentiment_veto", "forecast_confirm")
+_STR = ("confirm_with", "forecast_interval")
 
 
 @dataclass(frozen=True)
@@ -83,6 +92,12 @@ class RunConfig:
     sentiment_lookback_hours: Decimal = Decimal("48")
     max_negative_news_share: Decimal = Decimal("0.6")
     min_social_bullish_pct: Decimal = Decimal("30")
+    forecast_confirm: bool = False  # Kronos must forecast a rise before an entry (P-68; never an idea source, P-69)
+    forecast_interval: str = "1d"
+    forecast_lookback: int = 400  # bars sent to the model (Kronos-small reads at most 512)
+    forecast_horizon: int = 5  # bars ahead
+    forecast_min_expected_return: Decimal = Decimal("0.01")
+    forecast_min_up_share: Decimal = Decimal("0.6")
 
     @property
     def version(self) -> str:
@@ -99,7 +114,7 @@ class RunConfig:
         if unknown:
             raise ValueError(f"unknown run config keys: {sorted(unknown)}")
         for k, v in d.items():
-            if k == "confirm_with":
+            if k in _STR:
                 kw[k] = v
             elif k == "macro_block_hours":
                 kw[k] = dec(v) if v is not None else None
@@ -107,7 +122,10 @@ class RunConfig:
                 kw[k] = bool(v)
             else:
                 kw[k] = dec(v) if k in _DEC else int(v)
-        return cls(**kw)
+        cfg = cls(**kw)
+        if cfg.forecast_interval not in INTERVALS:
+            raise ValueError(f"forecast_interval must be one of {INTERVALS}")
+        return cfg
 
 
 def _now() -> datetime:
@@ -177,6 +195,7 @@ class Runner:
         clock: Callable[[], datetime] = _now,
         events: EventStore | None = None,
         analyst: Any = None,
+        forecaster: Any = None,
     ) -> None:
         self.exchange, self.source, self.mode, self.limits, self.config = exchange, source, mode, limits, config
         self.state_dir = Path(state_dir)
@@ -184,8 +203,11 @@ class Runner:
         self.clock = clock
         self.events = events
         self.analyst = analyst
+        self.forecaster = forecaster  # a forecast.ForecastConfirmer
         if config.confirm_with and analyst is None:
             raise ValueError(f"config.confirm_with={config.confirm_with!r} needs an analyst")
+        if config.forecast_confirm and forecaster is None:
+            raise ValueError("config.forecast_confirm needs a forecaster (forecast.ForecastConfirmer)")
         self.kill_switch = kill_switch or KillSwitch(self.state_dir / "KILL", env=env)
         self.journal = Journal(self.state_dir / "journal.jsonl")
         st = self._load(cash)
@@ -332,6 +354,11 @@ class Runner:
                 self.journal.append("error", {"ticker": cand.ticker, "error": str(exc)})
                 continue
             extra: tuple[str, ...] = ()
+            if self.config.forecast_confirm:
+                veto = self._forecast_veto(cand.ticker, today)
+                if veto:
+                    entries.append({"ticker": cand.ticker, "status": "vetoed", "reasons": [veto]})
+                    continue
             if self.analyst is not None and self.config.confirm_with:
                 op = self.analyst.opinion(cand.ticker, today)
                 self.journal.append(
@@ -366,6 +393,28 @@ class Runner:
         self.journal.append("run", summary)
         self._save()
         return summary
+
+    def _forecast_veto(self, ticker: str, day: str) -> str | None:
+        """Ask the forecaster (Kronos) on recent bars; anything but a confirmed rise is a veto (fail-closed)."""
+        try:
+            bars = self.exchange.klines(ticker, self.config.forecast_interval, self.config.forecast_lookback)
+            op = self.forecaster.opinion(ticker, bars, day)
+        except Exception as exc:  # a broken model must block the entry, not the tick
+            self.journal.append("forecast", {"ticker": ticker, "rating": "ERROR", "confirms": False, "error": str(exc)})
+            return f"forecast: ERROR ({type(exc).__name__})"
+        self.journal.append(
+            "forecast",
+            {
+                "ticker": ticker,
+                "rating": op.rating,
+                "confirms": op.confirms,
+                "expected_return": op.expected_return,
+                "up_share": op.up_share,
+                "detail": op.detail,
+                "by": getattr(self.forecaster, "name", "kronos"),
+            },
+        )
+        return None if op.confirms else f"forecast: {op.rating} ({op.detail})"
 
     def _exits(self, marks: dict[str, Decimal], now: datetime) -> list[dict[str, Any]]:
         out = [
