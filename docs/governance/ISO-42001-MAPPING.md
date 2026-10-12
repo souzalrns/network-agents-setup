@@ -54,7 +54,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | 8.2 | Avaliação de risco de IA (operação) | Falta | — | GOV-42001-1 |
 | 8.3 | Tratamento de risco de IA (operação) | Parcial | `runner/plan_runner/hitl.py::def write_request`; `config/skills.yaml::allow_scripts` | GOV-42001-1 |
 | 8.4 | Avaliação de impacto (operação) | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Quando se repete`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.2 Estado medido` | — |
-| 9.1 | Monitorização, medição, análise e avaliação | Parcial | `runner/plan_runner/l5_eval.py::provenance_v2_ok`; `runner/plan_runner/cost.py::def ledger_cost_usd` | GOV-42001-1 |
+| 9.1 | Monitorização, medição, análise e avaliação | Parcial | `oss/groundwright/src/groundwright/__init__.py::provenance_v2_ok` (motor do `l5_eval`, RAG-EVAL-1); `runner/plan_runner/cost.py::def ledger_cost_usd` | GOV-42001-1 |
 | 9.2 | Auditoria interna | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 10. Auditoria interna`; `docs/architecture/governance/audit/AUDIT-GOVERNANCE.md` | GOV-42001-1 |
 | 9.3 | Revisão pela gestão | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Revisão desta política` | GOV-42001-1 |
 | 10.1 | Melhoria contínua | Cumpre | `docs/initiatives/PENDENCIAS.md::## 7. Histórico` | — |

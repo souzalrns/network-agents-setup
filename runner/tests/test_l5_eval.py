@@ -55,12 +55,12 @@ def test_ancora_ambigua_ou_inexistente_e_erro(golden, chunks):
     bad = dict(golden, cases=[{"id": "x", "question": "q", "anchor": "security"},
                               {"id": "y", "question": "q", "anchor": "texto que nao existe no pack"}])
     errs = ev.anchor_errors(bad, chunks)
-    assert len(errs) == 2 and "x:" in errs[0] and "(esperado 1)" in errs[1]
+    assert len(errs) == 2 and "x:" in errs[0] and "(expected 1)" in errs[1]
 
 
 @pytest.mark.parametrize("patch,msg", [
     ({"kb": ""}, "`kb`"), ({"k": 0}, "`k`"), ({"cases": []}, "`cases`"),
-    ({"cases": [{"id": "a", "question": "q", "anchor": "x"}, {"id": "a", "question": "q", "anchor": "x"}]}, "repetido"),
+    ({"cases": [{"id": "a", "question": "q", "anchor": "x"}, {"id": "a", "question": "q", "anchor": "x"}]}, "repeated"),
     ({"cases": [{"id": "a", "question": "", "anchor": "x"}]}, "`question`"),
 ])
 def test_golden_invalido_e_recusado(tmp_path, golden, patch, msg):

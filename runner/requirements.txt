@@ -3,3 +3,4 @@ httpx>=0.28.1
 psycopg[binary]>=3.3.6
 mcp==1.30.0
 jsonschema>=4.26.0
+groundwright==0.1.0  # porta de grounding do L5 (RAG-EVAL-1, extraído de oss/groundwright)
