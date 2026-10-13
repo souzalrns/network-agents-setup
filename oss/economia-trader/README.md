@@ -209,6 +209,15 @@ Telegram, a webhook (Slack/Discord/ntfy) or SMTP e-mail, configured by environme
 also kept in `alerts.jsonl`, and a channel that is down never stops the trader. See
 `docs/initiatives/economia-trader/ALERTS.md`.
 
+## Tuning (walk-forward, nothing traded)
+
+`economia-trader tune --space examples/tune.grid.example.json ...` tries every combination of the search
+space on one segment of history and keeps the best only if it also beats the current config, by more than
+`--min-edge`, on the *next* segment it never saw (fold by fold), with drawdown and minimum-trades checks.
+Candidates outside the risk limits are never scored. `--out` is written only when the result is accepted;
+every result goes to `tune.jsonl` with a hash of the data. Then run both configs side by side in paper and
+compare with `report`. See `docs/initiatives/economia-trader/TUNE.md`.
+
 ## Bounded spot grid (crypto)
 
 `economia-trader grid --config grid.json` is the crypto side's autonomous loop:
