@@ -8,8 +8,8 @@
 | L0 — observar | Recolher dados públicos, notícias, macro e sinais read-only | Implementado por monitores opcionais | Limites de taxa, proveniência e disponibilidade dos dados |
 | L1 — propor | Gerar candidatos/propostas explicadas com evidências | Implementado | Contrato validado; evidência com timestamps; proposta não executa |
 | L2 — paper autónomo | Fazer entradas/saídas simuladas, aplicar limites, guardar estado e diário | Implementado pelo runner/grid, com paper como padrão | Testes determinísticos, backtest sem look-ahead, limites explícitos, kill switch |
-| L3 — testnet/paper da corretora | Enviar ordens de teste a ambiente de simulação da corretora | Gate/adapters presentes | Chaves dedicadas, ambiente explicitamente configurado, teste de integração e reconciliação |
-| L4 — live com aprovação humana por ordem | Enviar ordens reais só após risk gate e aprovação individual | Código de gate existe; **não considerar pronto para uso** enquanto #198/#199 não forem integrados e validados | Aprovação explícita por ordem, chave sem levantamento, stops/reconciliação/fills reais, alertas e critérios formais de lançamento |
+| L3 — testnet/paper da corretora | Enviar ordens de teste a ambiente de simulação da corretora | Código completo em `main` (2026-10-13: fills reais, stops na exchange, reconciliação e drawdown real do #199; alertas do #198). **Smoke testnet por fazer** (bloqueado por rede nesta sessão) | Chaves dedicadas sem levantamento, `ECONOMIA_TRADER_ALLOW_TESTNET=1`, smoke de `SMOKE-TESTNET.md` com 7/7, lacunas G1/G2 fechadas antes de L3 prolongado |
+| L4 — live com aprovação humana por ordem | Enviar ordens reais só após risk gate e aprovação individual | **BLOQUEADO** (decisão do maestro, 2026-10-13). #198/#199 integrados, mas falta a evidência de testnet | Smoke testnet aprovado e anexado à #201, paper prolongado avaliado, critérios quantitativos abaixo aprovados, aprovação explícita por ordem, chave sem levantamento |
 | L5 — live sem aprovação por ordem | Sistema decide e executa operações reais sem aprovação humana individual | Fora de âmbito | Não habilitar nesta fase; exigiria decisão de governança separada e análise de risco reforçada |
 
 ## Invariantes de segurança
@@ -45,6 +45,15 @@ Não existem valores universais seguros. O responsável deve definir e aprovar p
 - duração e amostra mínima de paper, separadas por mercado/estratégia;
 - condições de parar, recuperar e recomeçar após incidente.
 
-## Decisão atual
+## Decisão atual (actualizada 2026-10-13, depois dos merges #200, #198 e #199)
 
-Manter L0–L2 como âmbito de desenvolvimento e validação. L3 só após ensaio em ambientes de teste. L4 continua bloqueado para declaração de prontidão enquanto os PRs #198/#199 e os testes de integração estiverem pendentes. Não habilitar L5.
+- **Âmbito de desenvolvimento e validação: L0–L3.** L2 (paper) é o modo por defeito e não mudou
+  (suite verde em `main`). L3 tem o código completo em `main`, mas só se usa de forma prolongada depois
+  do smoke de `SMOKE-TESTNET.md` passar e do resultado ficar na #201.
+- **L4 = BLOQUEADO** até existir evidência de testnet (smoke 7/7 numa exchange real de teste) e decisão
+  explícita do maestro. Nada no código muda o defeito para live: continua a exigir
+  `ECONOMIA_TRADER_LIVE=I_ACCEPT_REAL_LOSSES`, `check-key` sem levantamentos e aprovação HITL por ordem.
+- **L5: fora de âmbito.** Não habilitar.
+
+Ordem dos portões L3: (1) smoke testnet 7/7 → (2) G1 alertas de divergência/stop → (3) G2 bloqueio de
+entradas em divergência → (4) L3 prolongado. Ver `VISUAL_AND_AUTONOMY_PLAN.md`.

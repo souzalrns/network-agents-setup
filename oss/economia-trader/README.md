@@ -199,7 +199,8 @@ See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
 - **Drawdown on real equity:** auto-kill also works in testnet/live, on the exchange's own equity (use a
   dedicated account or sub-account).
 
-See `docs/initiatives/economia-trader/RECONCILE.md`.
+See `docs/initiatives/economia-trader/RECONCILE.md`. Before any long testnet run, pass the smoke in
+`docs/initiatives/economia-trader/SMOKE-TESTNET.md` (`examples/smoke_testnet.py`).
 
 ## Alerts
 
