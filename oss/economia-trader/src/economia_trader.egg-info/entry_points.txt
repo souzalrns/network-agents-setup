@@ -1,2 +1,0 @@
-[console_scripts]
-economia-trader = economia_trader.cli:main

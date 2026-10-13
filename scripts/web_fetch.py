@@ -32,22 +32,21 @@ F2-ALLOW-1 (P-25 = A): `--area` é obrigatória e dá a allowlist da área
 (`config/web-allowlist.yaml`); um `--allow` só a estreita (tem de caber nela).
 Regras: `runner/plan_runner/web_allowlist.py`.
 
-DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md): o núcleo de *fetch seguro*
-deste ficheiro — allowlist deny-by-default (`host_allowed`), SSRF (`is_public_address`,
-`check_url`), robots (`robots_allows`) e os tectos, com re-verificação a cada redirect —
-foi extraído para o pacote standalone `oss/fetchtron` (PyPI `fetchtron`), agnóstico de
-content-type. Aqui fica a cola do runner: resolver a área→allowlist (`web_allowlist`) e a
-conversão HTML→Markdown do T6 (MarkItDown), que não pertencem ao pacote. Quando o
-`fetchtron` estiver no PyPI, trocar o miolo de `fetch()` (o laço de redirects + `check_url`
-+ `robots_allows`) por `from fetchtron import fetch as safe_get` e deixar aqui só a
-conversão e a proveniência do T6.
+Núcleo de *fetch seguro* devolvido em 2026-10-13 (flywheel,
+docs/initiatives/REPO-EVAL-PLAYBOOK.md): o laço de pedidos de `fetch()` — allowlist
+deny-by-default, SSRF e robots.txt re-verificados a cada redirect, tectos de tamanho, tempo
+e redirects — vem do pacote publicado `fetchtron` (PyPI, extraído de `oss/fetchtron`), tal
+como `clean_uri`, `host_allowed` e `is_public_address`. Aqui fica a cola do runner: a
+área→allowlist (`web_allowlist`), o contrato de erros em PT (`FetchError`, com os códigos
+do T6), a conversão HTML→Markdown do T6 (MarkItDown) e a proveniência. `check_url` e
+`robots_allows` ficam por serem a sonda do `scripts/check_web_allowlist.py` (que não lê o
+corpo da página).
 """
 
 from __future__ import annotations
 
 import argparse
 import importlib.util
-import ipaddress
 import json
 import socket
 import sys
@@ -59,7 +58,10 @@ from functools import partial
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
+
+import fetchtron
+from fetchtron import clean_uri, host_allowed, is_public_address
 
 ERROR_CODES = (
     # ADR §3, item 6 (fetch)
@@ -122,40 +124,6 @@ def _load_ingest_document():
 
 
 # --- URL, allowlist e endereços ----------------------------------------------------------
-
-
-def clean_uri(url: str) -> str:
-    """URL para a proveniência: sem credenciais (`user:pass@`) nem fragmento."""
-    parts = urlsplit(url)
-    host = parts.hostname or ""
-    netloc = f"{host}:{parts.port}" if parts.port else host
-    return urlunsplit((parts.scheme, netloc, parts.path or "/", parts.query, ""))
-
-
-def host_allowed(host: str, allowlist: list[str] | tuple[str, ...]) -> bool:
-    """O domínio da lista ou um subdomínio dele (`exemplo.org` aceita `www.exemplo.org`)."""
-    host = host.lower().rstrip(".")
-    for domain in allowlist:
-        domain = domain.lower().strip().rstrip(".")
-        if domain and (host == domain or host.endswith(f".{domain}")):
-            return True
-    return False
-
-
-# Propriedades do `ipaddress` que tornam um endereço não público (inclui 169.254.169.254).
-NON_PUBLIC_FLAGS = (
-    "is_private",
-    "is_loopback",
-    "is_link_local",
-    "is_multicast",
-    "is_reserved",
-    "is_unspecified",
-)
-
-
-def is_public_address(ip: str) -> bool:
-    addr = ipaddress.ip_address(ip)
-    return not any(getattr(addr, flag) for flag in NON_PUBLIC_FLAGS)
 
 
 def check_url(url: str, allowlist, *, allow_private: bool = False) -> None:
@@ -260,42 +228,28 @@ def fetch(
     `allow_private` e `robots=False` existem para os testes (servidor local); a CLI não os
     expõe.
     """
-    import httpx
-
     if not allowlist:
         raise FetchError("blocked_by_allowlist", "allowlist vazia: nada pode ser buscado")
     ing = _load_ingest_document()
-    deadline = time.monotonic() + timeout_s
-    warnings: list[str] = []
-    url = uri
-    headers = {"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml"}
-    with httpx.Client(follow_redirects=False, headers=headers, trust_env=trust_env) as client:
-        for _hop in range(max_redirects + 1):
-            check_url(url, allowlist, allow_private=allow_private)
-            if robots:
-                robots_allows(client, url, deadline)
-            response, body = _get(client, url, max_bytes, deadline, "página")
-            location = response.headers.get("location")
-            if response.status_code in REDIRECT_CODES and location:
-                url = urljoin(url, location)
-                continue
-            break
-        else:
-            raise FetchError("http_error", f"mais de {max_redirects} redirects")
-
-    if response.status_code >= 400:
-        raise FetchError("http_error", f"HTTP {response.status_code} em {clean_uri(url)}")
-    content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
-    if content_type not in HTML_TYPES:
-        raise FetchError(
-            "unsupported_content_type", f"{content_type or '(sem content-type)'} não é HTML"
-        )
-    encoding = response.encoding or "utf-8"
     try:
-        html = body.decode(encoding)
-    except (UnicodeDecodeError, LookupError):
-        html = body.decode("utf-8", errors="replace")
-        warnings.append("decode_errors_replaced")
+        got = fetchtron.fetch(
+            uri,
+            allowlist=allowlist,
+            timeout_s=timeout_s,
+            max_bytes=max_bytes,
+            max_redirects=max_redirects,
+            robots=robots,
+            allow_private=allow_private,
+            content_types=HTML_TYPES,
+            user_agent=USER_AGENT,
+            trust_env=trust_env,
+        )
+    except fetchtron.FetchError as exc:
+        raise FetchError(exc.code, exc.detail) from exc
+    url = got.final_url
+    html = got.text
+    redirected = "redirected" in got.warnings
+    warnings = [w for w in got.warnings if w != "redirected"]
 
     if converter is None:
         converter = partial(ing.isolated_converter, timeout_s=max(timeout_s, 30.0))
@@ -318,7 +272,7 @@ def fetch(
     if not title:
         title = urlsplit(url).hostname or "página"
         warnings.append("title_from_host")
-    if url != uri:
+    if redirected:
         warnings.append("redirected")
 
     source_meta = {
@@ -329,8 +283,8 @@ def fetch(
         "retrieved_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "content_hash": sha256(content.encode("utf-8")).hexdigest(),
         "status": "active",
-        "http_status": response.status_code,
-        "content_type": content_type,
+        "http_status": got.status,
+        "content_type": got.content_type,
     }
     return {"content": content, "source_meta": source_meta, "warnings": warnings}
 
