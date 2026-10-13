@@ -95,7 +95,12 @@ def _testnet(tmp_path, limits, env, mode=Mode.TESTNET, approver=None, perms=None
 
 
 def _orders(client):
-    return [c for c in client.calls if c[0] == "create_order"]
+    """Entry/exit orders (the stop orders resting on the exchange are listed by ``_stops``)."""
+    return [c for c in client.calls if c[0] == "create_order" and not c[1][5].get("triggerPrice")]
+
+
+def _stops(client):
+    return [c for c in client.calls if c[0] == "create_order" and c[1][5].get("triggerPrice")]
 
 
 def test_testnet_order_flow(tmp_path, limits):
@@ -107,7 +112,12 @@ def test_testnet_order_flow(tmp_path, limits):
     (_, args, _kw) = _orders(client)[-1]
     assert args[:5] == ("BTC/USDT", "market", "buy", 0.001, None)
     assert args[5]["clientOrderId"].startswith("et")
-    assert trader.state.positions["BTCUSDT"].qty == D("0.001")
+    # booked from the exchange's own fill (fetch_order), at the fill price, not at the assessed one
+    assert trader.state.positions["BTCUSDT"].qty == D("0.001") and trader.pending == {}
+    # and the stop now rests on the exchange (Bybit spot conditional order), for the whole position
+    (_, sargs, _kw) = _stops(client)[-1]
+    assert sargs[:4] == ("BTC/USDT", "market", "sell", 0.001) and sargs[5]["triggerPrice"] == 49000.0
+    assert trader.exchange_stops["BTCUSDT"]["qty"] == "0.001"
 
 
 def test_testnet_without_env_never_calls_order(tmp_path, limits):
@@ -137,6 +147,7 @@ def test_live_default_denies_then_human_approves(tmp_path, limits):
     trader2.verify_key()
     assert trader2.submit(TradeProposal("BTCUSDT", "buy", "0.001", stop_loss="49000")).status == "sent"
     assert "testnet" not in str(client2.urls["api"]) and len(_orders(client2)) == 1
+    assert len(_stops(client2)) == 1  # the approved stop, executed on the exchange (no second approval)
 
 
 def test_journal_tamper_detected(tmp_path, limits):

@@ -10,11 +10,20 @@ withdrawal endpoint, so ``can_withdraw`` is False by API design.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from typing import Any, Literal
 
 from ..contracts import OrderIntent, dec
-from .base import Credentials, ExchangeError, KeyCheck, Kline, Ticker, check_interval
+from .base import Credentials, ExchangeError, KeyCheck, Kline, OrderStatus, Ticker, check_interval
 
+_STATUS = {
+    "filled": "filled",
+    "partially_filled": "partially_filled",
+    "canceled": "canceled",
+    "expired": "canceled",
+    "rejected": "rejected",
+    "done_for_day": "canceled",
+}
 _MINUTES = {"1m": 1, "5m": 5, "15m": 15, "1h": 60, "4h": 240, "1d": 1440}
 
 
@@ -169,3 +178,60 @@ class AlpacaPy:
             "qty": format(intent.qty.normalize(), "f"),
             "client_order_id": intent.client_order_id,
         }
+
+    # ---- reconciliation (paper account / live) ----
+
+    def order_status(self, symbol: str, order_id: str) -> OrderStatus:
+        o = self._call("get_order", self.trading.get_order_by_id, order_id)
+        raw = str(getattr(o.status, "value", o.status)).lower()
+        filled = dec(o.filled_qty or 0)
+        status = _STATUS.get(raw, "open")
+        if status == "canceled" and filled > 0:
+            status = "filled"
+        avg = o.filled_avg_price
+        return OrderStatus(str(o.id), status, filled, dec(avg) if avg else None)
+
+    def place_stop(self, symbol: str, qty: Decimal, stop_price: Decimal, client_order_id: str) -> dict[str, Any]:
+        if self.network == "live" and not self.allow_live_orders:
+            raise ExchangeError("alpaca: live orders are disabled in this adapter instance")
+        from alpaca.trading.enums import OrderSide, TimeInForce
+        from alpaca.trading.requests import StopOrderRequest
+
+        whole = qty == qty.to_integral_value()
+        req = StopOrderRequest(
+            symbol=symbol.upper(),
+            qty=float(qty),
+            side=OrderSide.SELL,
+            # fractional orders must be DAY: the trader re-places the stop when the exchange drops it
+            time_in_force=TimeInForce.GTC if whole else TimeInForce.DAY,
+            stop_price=float(stop_price),
+            client_order_id=client_order_id,
+        )
+        o = self._call("submit_stop", self.trading.submit_order, req)
+        return {
+            "order_id": str(getattr(o, "id", "")),
+            "symbol": symbol.upper(),
+            "qty": str(qty),
+            "stop": str(stop_price),
+            "client_order_id": client_order_id,
+            "tif": "gtc" if whole else "day",
+        }
+
+    def cancel_order(self, symbol: str, order_id: str) -> None:
+        self._call("cancel_order", self.trading.cancel_order_by_id, order_id)
+
+    def position_qty(self, symbol: str) -> Decimal:
+        try:
+            from alpaca.common.exceptions import APIError
+        except ImportError:  # pragma: no cover
+            APIError = RuntimeError
+        try:
+            pos = self.trading.get_open_position(symbol.upper())
+        except APIError as exc:
+            if "position does not exist" in str(exc).lower() or getattr(exc, "status_code", None) == 404:
+                return Decimal(0)
+            raise ExchangeError(f"alpaca position: {exc}") from exc
+        return dec(pos.qty)
+
+    def account_equity(self, marks: dict[str, Decimal]) -> Decimal:
+        return dec(self._call("account", self.trading.get_account).equity)

@@ -56,7 +56,34 @@ def offline_ccxt(name, prices=None, *, perms=None, account=None, fail=None):
 
     client.fetch_ticker = rec("fetch_ticker", lambda s: {"last": prices[s], "bid": None, "ask": None})
     client.fetch_ohlcv = rec("fetch_ohlcv", [[1000, 1, 2, 0.5, 1.5, 5], [2000, 1.5, 3, 1, 2.5, 9]])
-    client.create_order = rec("create_order", {"id": "o-9"})
+    # orders the fake exchange "holds": market orders fill at once at the ticker price, stops rest open
+    client.book = {}
+    client.balance = {"USDT": 1000, "BTC": 0, "ETH": 0}
+
+    def create(symbol, otype, side, amount, price=None, params=None):
+        is_stop = bool((params or {}).get("triggerPrice"))
+        n = len(client.book)
+        oid = f"s-{n + 1}" if is_stop else ("o-9" if "o-9" not in client.book else f"o-{n + 9}")
+        last = prices[symbol]
+        client.book[oid] = {
+            "id": oid,
+            "symbol": symbol,
+            "side": side,
+            "amount": amount,
+            "status": "open" if is_stop else "closed",
+            "filled": 0 if is_stop else amount,
+            "average": None if is_stop else last,
+            "fee": {"cost": 0},
+        }
+        if not is_stop:
+            base = symbol.split("/")[0]
+            client.balance[base] = client.balance.get(base, 0) + (amount if side == "buy" else -amount)
+        return {"id": oid}
+
+    client.create_order = rec("create_order", create)
+    client.fetch_order = rec("fetch_order", lambda oid, symbol=None: dict(client.book[oid]))
+    client.cancel_order = rec("cancel_order", lambda oid, symbol=None: client.book[oid].update(status="canceled") or {})
+    client.fetch_balance = rec("fetch_balance", lambda: {"total": dict(client.balance)})
     client.privateGetV5UserQueryApi = rec(
         "query_api", {"retCode": 0, "result": {"readOnly": 0, "permissions": perms or {"Spot": ["SpotTrade"]}}}
     )

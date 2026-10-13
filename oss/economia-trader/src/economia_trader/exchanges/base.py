@@ -74,6 +74,21 @@ class KeyCheck:
         return self.can_trade and not self.can_withdraw
 
 
+@dataclass(frozen=True)
+class OrderStatus:
+    """What the exchange says about an order (the truth we book, not what we asked for)."""
+
+    order_id: str
+    status: str  # open | partially_filled | filled | canceled | rejected
+    filled_qty: Decimal
+    avg_price: Decimal | None
+    fee: Decimal = Decimal(0)
+
+    @property
+    def final(self) -> bool:
+        return self.status in ("filled", "canceled", "rejected")
+
+
 class Exchange(Protocol):
     name: str
     supports_testnet: bool
@@ -85,6 +100,24 @@ class Exchange(Protocol):
     def check_key(self) -> KeyCheck: ...
 
     def place_order(self, intent: OrderIntent) -> dict[str, Any]: ...
+
+
+class Reconciling(Protocol):
+    """What testnet/live need on top of ``Exchange`` (both adapters implement it).
+
+    ``place_stop`` raises ``ExchangeError`` where the venue has no exchange-side stop (MEXC spot):
+    the trader then keeps the client-side stop and says so in the journal.
+    """
+
+    def order_status(self, symbol: str, order_id: str) -> OrderStatus: ...
+
+    def place_stop(self, symbol: str, qty: Decimal, stop_price: Decimal, client_order_id: str) -> dict[str, Any]: ...
+
+    def cancel_order(self, symbol: str, order_id: str) -> None: ...
+
+    def position_qty(self, symbol: str) -> Decimal: ...
+
+    def account_equity(self, marks: dict[str, Decimal]) -> Decimal: ...
 
 
 def check_interval(interval: str) -> None:

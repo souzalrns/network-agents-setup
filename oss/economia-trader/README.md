@@ -185,6 +185,22 @@ economia-trader backtest --symbol BTCUSDT --interval 1d --limit 1000 --limits li
 
 See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
 
+## Testnet/live: the exchange is the source of truth
+
+- **Fills:** an order is booked only when the exchange reports it filled (`fetch_order` / Alpaca
+  `get_order_by_id`), at the exchange's average price, partial fills included. Validation-only orders (MEXC
+  testnet) still book locally because they never fill.
+- **Stops on the exchange:** after a fill, one stop order rests on the exchange for the whole position
+  (Bybit spot conditional order; Alpaca stop, GTC or DAY for fractional shares, re-placed when dropped). Its
+  fill closes the position at the next reconcile. The trader cancels it before selling on its own. MEXC spot
+  has no exchange stop, so the client-side stop stays there.
+- **Positions:** each tick compares the book with the exchange. It only adjusts *down*: holding more on the
+  exchange may be the owner's own coins, so it is never adopted. Both cases are journaled.
+- **Drawdown on real equity:** auto-kill also works in testnet/live, on the exchange's own equity (use a
+  dedicated account or sub-account).
+
+See `docs/initiatives/economia-trader/RECONCILE.md`.
+
 ## Alerts
 
 `economia-trader alerts` (or `--alerts` on `run`/`grid`) reads the journal and tells a human when the kill switch
@@ -229,8 +245,8 @@ trains touches the loop. See `docs/initiatives/economia-trader/POLYMARKET-FINRL.
 
 ## What v0.1 does not do (yet)
 
-- Reconcile positions with the exchange's own fills (testnet/live book acknowledged orders
-  locally, at the assessed price); exchange-side stop orders (stops are client-side).
+- Exchange-side stops on MEXC spot (the venue has none): there the stop stays client-side, and the journal
+  says so (`stop_client_side`). Bybit spot and Alpaca rest the stop on the exchange.
 - Futures, margin, leverage, shorting, options. MEXC futures order API is not available to retail keys.
 - US-market rules on stocks: use a **cash** account (no pattern-day-trader rule) and mind settlement.
 
