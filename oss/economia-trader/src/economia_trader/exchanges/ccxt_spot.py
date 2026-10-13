@@ -18,9 +18,18 @@ from decimal import Decimal
 from typing import Any, Literal
 
 from ..contracts import OrderIntent, dec
-from .base import Credentials, ExchangeError, KeyCheck, Kline, Ticker, check_interval
+from .base import Credentials, ExchangeError, KeyCheck, Kline, OrderStatus, Ticker, check_interval
 
 TESTNET_VIA_TEST_ORDERS = {"mexc"}  # venues with no sandbox: validate-only orders instead
+EXCHANGE_STOPS = {"bybit"}  # spot stop orders on the exchange (MEXC spot has none: client-side stop)
+_STATUS = {
+    "open": "open",
+    "closed": "filled",
+    "canceled": "canceled",
+    "cancelled": "canceled",
+    "expired": "canceled",
+    "rejected": "rejected",
+}
 
 
 def _ccxt_errors() -> tuple[type[BaseException], ...]:
@@ -170,3 +179,62 @@ class CcxtSpot:
             "price": str(price) if price is not None else None,
             "client_order_id": intent.client_order_id,
         }
+
+    # ---- reconciliation (testnet/live) ----
+
+    def order_status(self, symbol: str, order_id: str) -> OrderStatus:
+        m = self._market(symbol)
+        o = self._call("fetch_order", self.client.fetch_order, order_id, m["symbol"]) or {}
+        filled = dec(o.get("filled") or 0)
+        status = _STATUS.get(str(o.get("status")), "open")
+        if status == "open" and filled > 0:
+            status = "partially_filled"
+        if status == "canceled" and filled > 0:
+            status = "filled"  # cancelled after a partial fill: what filled is final
+        fee = dec(((o.get("fee") or {}).get("cost")) or 0)
+        avg = o.get("average") or o.get("price")
+        return OrderStatus(str(o.get("id") or order_id), status, filled, dec(avg) if avg else None, fee)
+
+    def place_stop(self, symbol: str, qty: Decimal, stop_price: Decimal, client_order_id: str) -> dict[str, Any]:
+        if self.name not in EXCHANGE_STOPS:
+            raise ExchangeError(f"{self.name}: no exchange-side stop on spot; the stop stays client-side")
+        if self.network == "mainnet" and not self.allow_mainnet_orders:
+            raise ExchangeError(f"{self.name}: mainnet orders are disabled in this adapter instance")
+        m = self._market(symbol)
+        amount = float(self._call("precision", self.client.amount_to_precision, m["symbol"], float(qty)))
+        trigger = float(self._call("precision", self.client.price_to_precision, m["symbol"], float(stop_price)))
+        o = self._call(
+            "create_order",
+            self.client.create_order,
+            m["symbol"],
+            "market",
+            "sell",
+            amount,
+            None,
+            {"triggerPrice": trigger, "clientOrderId": client_order_id},
+        )
+        return {
+            "order_id": (o or {}).get("id"),
+            "symbol": m["symbol"],
+            "qty": str(amount),
+            "stop": str(trigger),
+            "client_order_id": client_order_id,
+        }
+
+    def cancel_order(self, symbol: str, order_id: str) -> None:
+        m = self._market(symbol)
+        self._call("cancel_order", self.client.cancel_order, order_id, m["symbol"])
+
+    def position_qty(self, symbol: str) -> Decimal:
+        m = self._market(symbol)
+        bal = self._call("fetch_balance", self.client.fetch_balance) or {}
+        return dec(((bal.get("total") or {}).get(m["base"])) or 0)
+
+    def account_equity(self, marks: dict[str, Decimal]) -> Decimal:
+        """Quote balance plus every marked symbol's base balance at its mark (spot, no leverage)."""
+        bal = (self._call("fetch_balance", self.client.fetch_balance) or {}).get("total") or {}
+        quotes = {self._market(s)["quote"] for s in marks} or {"USDT"}
+        equity = sum((dec(bal.get(q) or 0) for q in quotes), Decimal(0))
+        for sym, mark in marks.items():
+            equity += dec(bal.get(self._market(sym)["base"]) or 0) * mark
+        return equity

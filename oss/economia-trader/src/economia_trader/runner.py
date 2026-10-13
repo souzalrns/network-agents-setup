@@ -243,6 +243,8 @@ class Runner:
             self.trader._state.positions.update(st["positions"])
             self.trader._state.realized_today = st["realized_today"]
         self.trader.stops.update(st["stops"])
+        self.trader.pending.update(st["pending"])
+        self.trader.exchange_stops.update(st["exchange_stops"])
         self.meta: dict[str, dict[str, Any]] = st["meta"]
         self.peak = st["peak"]
         self.day = st["day"]
@@ -268,6 +270,8 @@ class Runner:
             "day": raw.get("day"),
             "errors_in_row": int(raw.get("errors_in_row", 0)),
             "used_prints": set(raw.get("used_prints", [])),
+            "pending": raw.get("pending") or {},
+            "exchange_stops": raw.get("exchange_stops") or {},
         }
 
     def _save(self) -> None:
@@ -285,6 +289,8 @@ class Runner:
             "day": self.day,
             "errors_in_row": self.errors_in_row,
             "used_prints": sorted(self.used_prints),
+            "pending": self.trader.pending,
+            "exchange_stops": self.trader.exchange_stops,
         }
         self.state_dir.mkdir(parents=True, exist_ok=True)
         tmp = self.state_path.with_suffix(".tmp")
@@ -302,6 +308,11 @@ class Runner:
             self.trader.state.realized_today = Decimal(0)
             self.day = today
 
+        if self.trader.reconciles:  # testnet/live: book the exchange's fills, follow its stops
+            summary["reconciled"] = len(self.trader.reconcile())
+            mismatches = self.trader.sync_positions()
+            if mismatches:
+                summary["reconcile_mismatch"] = mismatches
         held = list(self.trader.state.positions)
         try:
             marks = {s: self.exchange.ticker(s).last for s in held}
@@ -475,9 +486,9 @@ class Runner:
         return out
 
     def _check_drawdown(self, marks: dict[str, Decimal]) -> str | None:
-        if self.trader.broker is None:
-            return None  # live equity needs reconciliation with the exchange (next step)
-        equity = self.trader.broker.equity(marks)
+        equity = self.trader.equity(marks)
+        if equity is None:
+            return None
         self.peak = max(self.peak or equity, equity)
         if self.peak > 0 and (self.peak - equity) / self.peak >= self.config.max_drawdown_pct:
             return self._auto_kill(f"drawdown {(self.peak - equity) / self.peak:.1%} from peak {self.peak:.2f}")

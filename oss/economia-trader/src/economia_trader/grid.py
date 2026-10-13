@@ -295,6 +295,8 @@ class GridBot:
             )
             self.trader._state.realized_today = dec(raw.get("realized_today", "0"))
         self.trader.stops.update({s: dec(v) for s, v in raw.get("stops", {}).items()})
+        self.trader.pending.update(raw.get("pending") or {})
+        self.trader.exchange_stops.update(raw.get("exchange_stops") or {})
         self.peak = dec(raw["peak"]) if raw.get("peak") else None
         self.day = raw.get("day")
 
@@ -311,6 +313,8 @@ class GridBot:
             "meta": {},
             "peak": str(self.peak) if self.peak is not None else None,
             "day": self.day,
+            "pending": self.trader.pending,
+            "exchange_stops": self.trader.exchange_stops,
             "grid": {
                 "symbol": self.config.symbol,
                 "lower": str(self.config.lower) if self.config.lower is not None else None,
@@ -356,11 +360,16 @@ class GridBot:
             self.journal.append("grid_refused", {"problems": problems})
             self._save()
             return {**summary, "refused": problems}
+        if self.trader.reconciles:  # testnet/live: the exchange's fills and resting stop come first
+            summary["reconciled"] = len(self.trader.reconcile())
+            mismatches = self.trader.sync_positions([sym])
+            if mismatches:
+                summary["reconcile_mismatch"] = mismatches
         summary["exits"] = [o.status for o in self.trader.check_stops({sym: price})]
         held = self.trader.state.positions.get(sym)
         self.book.reconcile(held.qty if held else Decimal(0))
-        if self.trader.broker is not None:
-            equity = self.trader.broker.equity({sym: price})
+        equity = self.trader.equity({sym: price})
+        if equity is not None:
             self.peak = max(self.peak or equity, equity)
             if self.peak > 0 and (self.peak - equity) / self.peak >= self.config.max_drawdown_pct:
                 if not self.kill_switch.engaged():
