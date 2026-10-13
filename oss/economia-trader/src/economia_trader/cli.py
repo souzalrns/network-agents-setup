@@ -19,6 +19,7 @@
     economia-trader monitor [--news AAPL,MSFT] [--macro] [--calendar-file fomc.json] [--days 14] [--polymarket]
     economia-trader export-klines --exchange alpaca --symbols SPY,QQQ --interval 1d --out data.csv   # FinRL
     economia-trader dashboard [--state-dir .economia-trader] [--out dashboard.html] [--refresh 60]
+    economia-trader alerts --state-dir .economia-trader [--once | --every-min 5 | --test]   # Telegram/webhook/email
     economia-trader office --url http://127.0.0.1:19000 --join-key KEY [--every-s 10 | --once]
 
 Paper is the default everywhere. Testnet and live need the environment locks in ``safety``.
@@ -29,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -84,6 +86,36 @@ def _analysts(args: argparse.Namespace, cfg: RunConfig) -> list[Any]:
     return out
 
 
+def _watcher(state_dir: str | Path, errors_after: int = 3) -> Any:
+    import os
+
+    from .alerts import AlertWatcher, senders_from_env
+
+    senders = senders_from_env(os.environ)
+    if not senders:
+        print(
+            "warning: no alert channel configured (ECONOMIA_TRADER_ALERT_*); alerts go to alerts.jsonl only",
+            file=sys.stderr,
+        )
+    return AlertWatcher(state_dir, senders, errors_after=errors_after, env=os.environ)
+
+
+def _tick(loop: Any, args: argparse.Namespace, watcher: Any) -> None:
+    """--once / --every-min for the run and grid loops, with alerts checked after every tick."""
+    if args.every_min:
+
+        def pause(seconds: float) -> None:
+            if watcher is not None:
+                watcher.check()
+            time.sleep(seconds)  # nosemgrep  (pacing between ticks)
+
+        loop.run_forever(args.every_min * 60, sleep=pause)
+        return
+    _print(loop.run_once())
+    if watcher is not None:
+        watcher.check()
+
+
 def _run_config(path: str | None) -> RunConfig:
     return RunConfig.from_mapping(json.loads(Path(path).read_text(encoding="utf-8"))) if path else RunConfig()
 
@@ -134,9 +166,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--cash", default="100", help="paper starting cash (first run only)")
     p.add_argument("--state-dir", default=str(STATE_DIR / "grid"))
     p.add_argument("--approvals", default=str(STATE_DIR / "approvals"))
+    p.add_argument("--alerts", action="store_true", help="after each tick, send new alerts (see `alerts`)")
     g = p.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
     g.add_argument("--every-min", type=float, help="loop forever, one tick every N minutes")
+
+    p = sub.add_parser("alerts", help="Send alerts (auto-kill, grid refused, errors in a row) from a state dir")
+    p.add_argument("--state-dir", default=str(STATE_DIR))
+    p.add_argument("--errors-after", type=int, default=3, help="alert after N errors with no good tick")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--once", action="store_true", help="scan once (cron)")
+    g.add_argument("--every-min", type=float, help="keep watching, every N minutes")
+    g.add_argument("--test", action="store_true", help="send one test alert to every configured channel")
 
     p = sub.add_parser("check-key", help="Verify the API key: read+trade, never withdraw")
     ex_args(p, mode=True)
@@ -180,6 +221,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--ta-config", help="TradingAgents config overrides JSON (when config.confirm_with=tradingagents)")
     p.add_argument("--aihf-python", help="python of ai-hedge-fund's own venv (confirm_with includes ai-hedge-fund)")
     p.add_argument("--aihf-config", help="ai-hedge-fund analyst options JSON (personas, model, thresholds)")
+    p.add_argument("--alerts", action="store_true", help="after each tick, send new alerts (see `alerts`)")
     kronos_args(p)
     g = p.add_mutually_exclusive_group()
     g.add_argument("--once", action="store_true", help="one tick (for cron / systemd timers)")
@@ -313,10 +355,19 @@ def _run(args: argparse.Namespace) -> int:
         )
         if mode is not Mode.PAPER:
             bot.trader.verify_key()
+        _tick(bot, args, _watcher(args.state_dir) if args.alerts else None)
+        return 0
+
+    if args.cmd == "alerts":
+        watcher = _watcher(args.state_dir, args.errors_after)
+        if args.test:
+            _print(watcher.test())
+            return 0
         if args.every_min:
-            bot.run_forever(args.every_min * 60)
-        else:
-            _print(bot.run_once())
+            while True:
+                watcher.check()
+                time.sleep(args.every_min * 60)
+        _print({"sent": watcher.check()})
         return 0
 
     if args.cmd == "check-key":
@@ -494,10 +545,7 @@ def _run(args: argparse.Namespace) -> int:
         )
         if mode is not Mode.PAPER:
             runner.trader.verify_key()
-        if args.every_min:
-            runner.run_forever(args.every_min * 60)
-        else:
-            _print(runner.run_once())
+        _tick(runner, args, _watcher(args.state_dir) if args.alerts else None)
         return 0
 
     if args.cmd == "dashboard":
@@ -512,8 +560,6 @@ def _run(args: argparse.Namespace) -> int:
         return 0
 
     if args.cmd == "office":
-        import time
-
         from .office import OfficeBridge
 
         sd = Path(args.state_dir)
