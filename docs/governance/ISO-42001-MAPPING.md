@@ -54,7 +54,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | 8.2 | Avaliação de risco de IA (operação) | Falta | — | GOV-42001-1 |
 | 8.3 | Tratamento de risco de IA (operação) | Parcial | `runner/plan_runner/hitl.py::def write_request`; `config/skills.yaml::allow_scripts` | GOV-42001-1 |
 | 8.4 | Avaliação de impacto (operação) | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Quando se repete`; `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.2 Estado medido` | — |
-| 9.1 | Monitorização, medição, análise e avaliação | Parcial | `oss/groundwright/src/groundwright/__init__.py::provenance_v2_ok` (motor do `l5_eval`, RAG-EVAL-1); `runner/plan_runner/cost.py::def ledger_cost_usd` | GOV-42001-1 |
+| 9.1 | Monitorização, medição, análise e avaliação | Parcial | `oss/groundwright/src/groundwright/__init__.py::provenance_v2_ok` (motor do `l5_eval`, RAG-EVAL-1); `oss/tokenwright/src/tokenwright/__init__.py::def ledger_cost_usd` (motor do custo do runner) | GOV-42001-1 |
 | 9.2 | Auditoria interna | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 10. Auditoria interna`; `docs/architecture/governance/audit/AUDIT-GOVERNANCE.md` | GOV-42001-1 |
 | 9.3 | Revisão pela gestão | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::Revisão desta política` | GOV-42001-1 |
 | 10.1 | Melhoria contínua | Cumpre | `docs/initiatives/PENDENCIAS.md::## 7. Histórico` | — |
@@ -72,7 +72,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.4.2 | Documentação de recursos | Sim | Cumpre | `docs/generated/AGENTS.md`; `docs/generated/SKILLS.md`; `config/model-tiers.yaml` | — |
 | A.4.3 | Recursos de dados | Sim | Cumpre | `scripts/ingest_delta.py::MANIFEST`; `scripts/ingest_delta.py::EXCLUDED`; `docs/ops/RAG-CANONICAL.md` | — |
 | A.4.4 | Recursos de ferramentas | Sim | Cumpre | `runner/plan_runner/tool_executor.py::LEVELS_ALLOWED`; `runner/plan_runner/tool_executor.py::def plan_tools`; `runner/plan_runner/tool_executor.py::def step_kbs`; `runner/plan_runner/skill_activation.py::def is_script_allowed`; `runner/tests/test_tool_executor.py` | — |
-| A.4.5 | Recursos de sistema e computação | Sim | Cumpre | `config/areas.yaml::max_tokens`; `config/model-prices.yaml`; `runner/plan_runner/cost.py::def ledger_cost_usd` | — |
+| A.4.5 | Recursos de sistema e computação | Sim | Cumpre | `config/areas.yaml::max_tokens`; `config/model-prices.yaml`; `oss/tokenwright/src/tokenwright/__init__.py::def ledger_cost_usd` (motor do custo do runner) | — |
 | A.4.6 | Recursos humanos | Sim | Parcial | `docs/governance/AI-MANAGEMENT-SYSTEM.md::## 3. Papéis` (competências humanas não documentadas) | GOV-42001-1 |
 | A.5.2 | Processo de avaliação de impacto | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.1 Processo (A.5.2)` | — |
 | A.5.3 | Documentação das avaliações de impacto | Sim | Cumpre | `docs/governance/AI-MANAGEMENT-SYSTEM.md::### 5.2 Estado medido`; `docs/governance/PRIVACY-POLICY.md` | — |

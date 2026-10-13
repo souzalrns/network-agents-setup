@@ -201,6 +201,14 @@ See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
 
 See `docs/initiatives/economia-trader/RECONCILE.md`.
 
+## Alerts
+
+`economia-trader alerts` (or `--alerts` on `run`/`grid`) reads the journal and tells a human when the kill switch
+engaged itself, a grid was refused by the risk limits, or errors keep coming with no good tick. The alerts go by
+Telegram, a webhook (Slack/Discord/ntfy) or SMTP e-mail, configured by environment variables only. Every alert is
+also kept in `alerts.jsonl`, and a channel that is down never stops the trader. See
+`docs/initiatives/economia-trader/ALERTS.md`.
+
 ## Bounded spot grid (crypto)
 
 `economia-trader grid --config grid.json` is the crypto side's autonomous loop:

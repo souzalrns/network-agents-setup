@@ -15,60 +15,27 @@ interpretavel: gera o evento `done_when_unverifiable` e NAO falha o run
 """
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from doneproof import evaluate as _evaluate
+
 from .events import EventLog
 
-# Extraido para o pacote standalone oss/doneproof (PyPI `doneproof`): o motor de
-# classificacao (passed/failed/unverifiable por evidencia) e o mesmo, com o seam
-# `gate_resolved` (uma funcao `(step) -> bool`) em vez de falar com o EventLog
-# directamente. `_evaluate` abaixo e o espelho de `doneproof.evaluate` do pacote; a
-# unica diferenca sao as `reason` em PT, que fazem parte do contrato de eventos do
-# runner (asseridas nos testes). Este modulo mantem o nome `done_when` (o campo
-# `done_when:` do plano); so o pacote extraido se chama `doneproof`. `evaluate()`
-# mantem a assinatura do runner e liga o seam ao events.jsonl. DEVOLVER (flywheel,
-# docs/initiatives/REPO-EVAL-PLAYBOOK.md): quando o `doneproof` estiver no PyPI,
-# trocar `_evaluate` por `from doneproof import evaluate` e remover esta copia.
+# O motor de classificacao (passed/failed/unverifiable por evidencia) vem do pacote
+# publicado `doneproof` (PyPI, extraido de oss/doneproof). Este modulo mantem o nome
+# `done_when` (o campo `done_when:` do plano), liga o seam `gate_resolved` ao
+# events.jsonl do run e traduz as `reason` para PT, que fazem parte do contrato de
+# eventos do runner (asseridas nos testes). Devolvido em 2026-10-13 (flywheel,
+# docs/initiatives/REPO-EVAL-PLAYBOOK.md).
 GateResolved = Callable[[str], bool]
 
-_EXISTS = re.compile(r"^(?P<path>\S+)\s+exists$")
-_GATE = re.compile(r"^human_gate_resolved\s+on\s+(?P<step>\S+)$")
-
-
-def _evaluate(out: Path, conditions: list[str], gate_resolved: GateResolved) -> dict[str, list[Any]]:
-    """Espelho de `done_when.evaluate` (oss/done-when): classifica por evidencia.
-
-    `gate_resolved(step) -> bool` responde a `human_gate_resolved on <step>` sem que
-    este motor conheca o EventLog. `reason` em PT (contrato de eventos do runner).
-    """
-    result: dict[str, list[Any]] = {"passed": [], "failed": [], "unverifiable": []}
-    root = Path(out).resolve()
-    for raw in conditions:
-        cond = str(raw).strip()
-        m = _EXISTS.match(cond)
-        if m:
-            item = {"kind": "file_exists", "target": m.group("path")}
-            target = (root / m.group("path")).resolve()
-            if not target.is_relative_to(root):
-                result["failed"].append({**item, "condition": cond, "reason": "caminho fora do directorio do run"})
-            elif target.is_file():
-                result["passed"].append(item)
-            else:
-                result["failed"].append({**item, "condition": cond, "reason": "ficheiro em falta"})
-            continue
-        m = _GATE.match(cond)
-        if m:
-            item = {"kind": "gate_resolved", "target": m.group("step")}
-            if gate_resolved(m.group("step")):
-                result["passed"].append(item)
-            else:
-                result["failed"].append({**item, "condition": cond, "reason": "gate nao resolvido"})
-            continue
-        result["unverifiable"].append(cond)
-    return result
+_REASON_PT = {
+    "path outside the run directory": "caminho fora do directorio do run",
+    "file missing": "ficheiro em falta",
+    "gate not resolved": "gate nao resolvido",
+}
 
 
 def evaluate(out: Path, conditions: list[str], log: EventLog, run_id: str) -> dict[str, list[Any]]:
@@ -78,13 +45,16 @@ def evaluate(out: Path, conditions: list[str], log: EventLog, run_id: str) -> di
     mais {condition, reason}; unverifiable: o texto original. As que passam vao
     estruturadas, sem o texto original, para nao se confundirem com o evento
     `human_gate_resolved` em quem procura no events.jsonl por texto. Liga o seam
-    `gate_resolved` do motor (`_evaluate`) ao events.jsonl deste run.
+    `gate_resolved` do `doneproof.evaluate` ao events.jsonl deste run.
     """
-    return _evaluate(
+    r = _evaluate(
         out,
         conditions,
         lambda step: log.has_event("human_gate_resolved", run_id, step_id=step),
     )
+    for item in r["failed"]:
+        item["reason"] = _REASON_PT.get(item["reason"], item["reason"])
+    return r
 
 
 def check(out: Path, done_when: list[str], log: EventLog, run_id: str, status: dict[str, Any]) -> bool:
