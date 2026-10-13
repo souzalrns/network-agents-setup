@@ -17,21 +17,20 @@ API (per README Phase A.2):
     read_decision(run_dir) -> dict | None
 
 Design notes:
-- No new dependency. The JSON Schema is validated in the test suite
+- O contrato (build/write/read de pedidos e decisoes) vem do pacote publicado
+  `hitlwright` (PyPI, extraido de oss/hitlwright; zero dependencias). Devolvido
+  em 2026-10-13 (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md). Este modulo
+  fica como a cola do runner: `build_request`/`write_request` recebem o objecto
+  `step` do plano e fixam `source="plan_runner"` (o enum do schema partilhado com
+  o Node); `_read_jsonl`/`_append_jsonl`/`_now`/`SOURCE` ficam aqui porque o
+  engine, langgraph_engine, council_session, external_worker, cli e memory_l4
+  os usam directamente.
+- The JSON Schema is validated in the test suite
   (runner/tests/test_hitl_contract.py), not at runtime.
 - Python never sets expires_at (always null) and always uses
   priority="medium" and category=None. See README "What stays
   Python-specific".
 - Fields follow the schema exactly; additionalProperties is false.
-
-DEVOLVER (flywheel, docs/initiatives/REPO-EVAL-PLAYBOOK.md): este contrato HITL
-tipado foi extraído para o pacote standalone `oss/hitlwright` (PyPI `hitlwright`),
-agnóstico de framework (o `source` passa a string livre; o `build_request` recebe
-campos explícitos em vez de um objecto `step` do runner). Este módulo fica como a
-cola do runner (muitos consumidores: engine, langgraph_engine, council_session,
-external_worker, cli, memory_l4, com acesso a internos como `_read_jsonl`/
-`_append_jsonl`/`REQUESTS_FILE`); quando valer a dependência, migra-se gradualmente
-para `from hitlwright import ...`.
 """
 from __future__ import annotations
 
@@ -39,27 +38,36 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
-REQUESTS_FILE = "hitl-requests.jsonl"
-DECISIONS_FILE = "hitl-decisions.jsonl"
+import hitlwright
+from hitlwright import (
+    DECISIONS_FILE,
+    REQUESTS_FILE,
+    SCHEMA_ID,
+    build_decision,
+    latest_request,
+    read_decision,
+    write_decision,
+)
 
-SCHEMA_ID = "hitl-request-v1"
+__all__ = [
+    "DECISIONS_FILE",
+    "REQUESTS_FILE",
+    "SCHEMA_ID",
+    "SOURCE",
+    "build_decision",
+    "build_request",
+    "latest_request",
+    "read_decision",
+    "write_decision",
+    "write_request",
+]
+
 SOURCE = "plan_runner"
-
-_VALID_DECISIONS = frozenset({"approve", "reject", "edit"})
 
 
 def _now() -> str:
     return datetime.now(UTC).isoformat()
-
-
-def _requests_path(run_dir: Path) -> Path:
-    return run_dir / REQUESTS_FILE
-
-
-def _decisions_path(run_dir: Path) -> Path:
-    return run_dir / DECISIONS_FILE
 
 
 def _ensure_file(path: Path) -> None:
@@ -109,66 +117,24 @@ def build_request(
     agent_id: str | None = None,
     domain: str | None = None,
 ) -> dict[str, Any]:
-    """Constroi o dict do pedido HITL conforme o contrato v1.
+    """Constroi o dict do pedido HITL conforme o contrato v1 (`hitlwright.build_request`).
 
-    Nao escreve nada. Separado de write_request para ser testavel
-    isoladamente (validar o shape antes de tocar no disco).
+    Nao escreve nada. Le `id`, `action` e `human_gate.allow` do objecto `step`
+    do plano; `allow` invalido ou vazio cai para ["approve", "reject"].
     """
-    step_id = getattr(step, "id", None)
-    action = getattr(step, "action", None)
     gate = getattr(step, "human_gate", None)
-
-    allow = list(getattr(gate, "allow", None) or ["approve", "reject"])
-    # 'edit' so e valido se o plano o permitir (schema: allow enum).
-    allow = [a for a in allow if a in _VALID_DECISIONS]
-    if not allow:
-        allow = ["approve", "reject"]
-
-    context: dict[str, Any] = {
-        "paused_at_step": step_id,
-        "completed": sorted(completed or []),
-    }
-    if mode is not None:
-        context["mode"] = mode
-
-    record: dict[str, Any] = {
-        "schema": SCHEMA_ID,
-        "id": f"hitl_{uuid4()}",
-        "source": SOURCE,
-        "run_id": run_id,
-        "plan_id": plan_id,
-        "step_id": step_id,
-        "agent_id": agent_id,
-        "domain": domain,
-        "category": None,
-        "priority": "medium",
-        "status": "pending",
-        "title": _title(step_id, action),
-        "description": None,
-        "proposed_action": action,
-        "allow": allow,
-        "context": context,
-        "alternatives": [],
-        "risks": [],
-        "impacts": [],
-        "requested_at": _now(),
-        "expires_at": None,
-        "responded_at": None,
-        "response": None,
-        "response_comment": None,
-        "responder_id": None,
-        "metadata": {},
-    }
-    return record
-
-
-def _title(step_id: str | None, action: str | None) -> str:
-    """Titulo humano curto, sem depender de LLM."""
-    if step_id and action:
-        return f"Approve step '{step_id}' ({action})"
-    if step_id:
-        return f"Approve step '{step_id}'"
-    return "Approve HITL gate"
+    return hitlwright.build_request(
+        step_id=getattr(step, "id", None),
+        action=getattr(step, "action", None),
+        run_id=run_id,
+        plan_id=plan_id,
+        completed=completed,
+        allow=list(getattr(gate, "allow", None) or []),
+        source=SOURCE,
+        agent_id=agent_id,
+        domain=domain,
+        mode=mode,
+    )
 
 
 def write_request(
@@ -197,86 +163,5 @@ def write_request(
         agent_id=agent_id,
         domain=domain,
     )
-    _append_jsonl(_requests_path(run_dir), record)
+    _append_jsonl(run_dir / REQUESTS_FILE, record)
     return record["id"]
-
-
-def read_decision(run_dir: Path) -> dict[str, Any] | None:
-    """Le a decisao mais recente de hitl-decisions.jsonl.
-
-    Devolve None se o ficheiro nao existir ou nao tiver decisoes.
-    Devolve o ultimo registo valido (ha varios, o ultimo manda).
-
-    Um registo de decisao tem, no minimo:
-        {"id": "hitl_...", "response": "approve|reject|edit", ...}
-
-    O contrato completo e o mesmo do pedido, com status/response/
-    responded_at/responder_id preenchidos. Aceitamos qualquer dict que
-    tenha 'response' valido -- o schema completo e validado no teste.
-    """
-    records = _read_jsonl(_decisions_path(run_dir))
-    for record in reversed(records):
-        response = record.get("response")
-        if response in _VALID_DECISIONS:
-            return record
-    return None
-
-
-def build_decision(
-    request_id: str,
-    *,
-    response: str,
-    responder_id: str = "cli",
-    comment: str | None = None,
-) -> dict[str, Any]:
-    """Constroi o dict da decisao conforme o contrato v1.
-
-    Espelha build_request: nao escreve, so constroi. Usado pelo lado
-    Python (CLI/engine) para escrever uma decisao que o Node le, e
-    pelos testes para validar o shape.
-    """
-    if response not in _VALID_DECISIONS:
-        raise ValueError(
-            f"response must be one of {sorted(_VALID_DECISIONS)}, got {response!r}"
-        )
-    return {
-        "id": request_id,
-        "response": response,
-        "responded_at": _now(),
-        "responder_id": responder_id,
-        "response_comment": comment,
-    }
-
-
-def write_decision(
-    run_dir: Path,
-    request_id: str,
-    *,
-    response: str,
-    responder_id: str = "cli",
-    comment: str | None = None,
-) -> dict[str, Any]:
-    """Append de uma decisao a hitl-decisions.jsonl. Devolve o registo.
-
-    Usado pelo lado Python quando o CLI resolve um gate (S6b liga isto
-    ao cli.py). Nesta fase (S6a) e usado pelos testes para simular o
-    lado Node a responder.
-    """
-    record = build_decision(
-        request_id,
-        response=response,
-        responder_id=responder_id,
-        comment=comment,
-    )
-    _append_jsonl(_decisions_path(run_dir), record)
-    return record
-
-
-def latest_request(run_dir: Path) -> dict[str, Any] | None:
-    """Devolve o pedido HITL mais recente, ou None.
-
-    Util para o engine saber se ja escreveu um pedido para a pausa atual
-    (idempotencia) e para o Node API listar o pedido pendente.
-    """
-    records = _read_jsonl(_requests_path(run_dir))
-    return records[-1] if records else None
