@@ -6,6 +6,8 @@ updates:
     directory: "/runner"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
@@ -24,6 +26,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
@@ -37,6 +41,8 @@ updates:
     directory: "/oss/economia-trader/terminal"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
@@ -50,6 +56,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     ignore:
       - dependency-name: "*"
