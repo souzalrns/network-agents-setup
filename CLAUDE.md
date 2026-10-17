@@ -56,6 +56,19 @@ pnpm --filter @network-agents/scripts validate:consistency
 - `docs/generated/*` — **não editar à mão**; regenerar com os scripts.
 - Template de STATUS para outros repos: `docs/templates/STATUS.repo.md`.
 
+## Graphify
+
+Grafo de código local em `graphify-out/` (**gitignored**: gerar na máquina, não commitar artefactos). Mesma regra
+do `agent-network-mcp` (decisão do maestro, 2026-10-17).
+
+- Instalar uma vez: `uv tool install graphifyy` (com dois "y" no PyPI) e gerar com `graphify update .`. É só AST
+  (tree-sitter), sem rede e sem custo de API; neste repo leva ~30 s.
+- Perguntas sobre o código: preferir `graphify query "..."`, `graphify path "A" "B"` e `graphify explain "..."`
+  quando `graphify-out/graph.json` existir; `GRAPH_REPORT.md` só para visão ampla de arquitectura.
+- Após mudanças relevantes de código: `graphify update .`.
+- **Não** usar a extracção semântica com chave de LLM, nem ligar o Graphify a GitHub Actions: custo zero,
+  actualização local/manual.
+
 ## Regras de trabalho
 
 - Preferir alterações mínimas e verificáveis.
