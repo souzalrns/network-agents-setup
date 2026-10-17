@@ -206,6 +206,7 @@ class AlertWatcher:
                 record["channels"][name] = "ok"
             except Exception as exc:  # a channel down must never stop the trader or the other channels
                 record["channels"][name] = _redact(f"failed: {type(exc).__name__}: {exc}", self.env)[:300]
+        self.state_dir.mkdir(parents=True, exist_ok=True)  # `alerts --test` may run before the trader ever did
         with self.log.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
         return record
