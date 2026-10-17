@@ -6,6 +6,8 @@
     economia-trader backtest --exchange bybit --symbol BTCUSDT --interval 1h --limits limits.json \\
                              --strategy grid --grid-config grid.json   # grid vs sma_cross vs buy-and-hold
     economia-trader grid     --exchange bybit --config grid.json --limits limits.json --once   # paper
+    economia-trader tune     --exchange bybit --symbol BTCUSDT --interval 1h --limit 1000 --limits limits.json \\
+                             --space tune.grid.json --out grid.tuned.json   # walk-forward, nothing traded
     economia-trader check-key --exchange bybit --mode testnet          # needs <EX>_API_KEY/SECRET
     economia-trader trade    --exchange bybit --mode paper --symbol BTCUSDT --side buy --qty 0.001 \\
                              --stop 60000 --limits limits.json
@@ -158,6 +160,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--strategy", choices=["sma", "grid"], default="sma")
     p.add_argument("--grid-config", help="grid config JSON (see examples/grid.example.json) for --strategy grid")
     kronos_args(p)
+
+    p = sub.add_parser("tune", help="Walk-forward parameter search on history (paper); nothing is traded")
+    ex_args(p)
+    p.add_argument("--symbol", required=True)
+    p.add_argument("--interval", choices=INTERVALS, default="1h")
+    p.add_argument("--limit", type=int, default=1000)
+    p.add_argument("--klines-file", help="Use saved klines JSON instead of fetching (reproducible)")
+    p.add_argument("--save-klines", help="Save the fetched klines JSON here (to re-run on the same data)")
+    p.add_argument("--limits", required=True)
+    p.add_argument("--cash", default="1000")
+    p.add_argument("--space", required=True, help="JSON {strategy, base, search} (see examples/tune.grid.example.json)")
+    p.add_argument("--folds", type=int, default=4)
+    p.add_argument("--dd-weight", default="0.5", help="score = return%% - dd_weight * max drawdown%%")
+    p.add_argument("--min-trades", type=int, default=3, help="out-of-sample trades needed to accept")
+    p.add_argument("--min-edge", default="0.1", help="score points the pick must win by, out of sample")
+    p.add_argument("--out", help="write the chosen config here, only if it is accepted")
+    p.add_argument("--log", default=str(STATE_DIR / "tune.jsonl"), help="append the full result here")
 
     p = sub.add_parser("grid", help="The bounded spot grid loop (crypto): paper by default")
     ex_args(p, mode=True)
@@ -347,6 +366,58 @@ def _run(args: argparse.Namespace) -> int:
         cmp = compare_summaries(base, test)
         _print({"bars": len(bars), "sem_previsao": base, "com_previsao": test, "comparacao": cmp})
         return 0
+
+    if args.cmd == "tune":
+        from .tune import walk_forward
+
+        space = json.loads(Path(args.space).read_text(encoding="utf-8"))
+        if args.klines_file:
+            raw = json.loads(Path(args.klines_file).read_text(encoding="utf-8"))
+            bars = [Kline(int(r[0]), dec(r[1]), dec(r[2]), dec(r[3]), dec(r[4]), dec(r[5])) for r in raw]
+        else:
+            bars = make_exchange(args.exchange, Mode.PAPER).klines(args.symbol, args.interval, args.limit)
+            if args.save_klines:
+                rows = [
+                    [b.open_time_ms, str(b.open), str(b.high), str(b.low), str(b.close), str(b.volume)] for b in bars
+                ]
+                Path(args.save_klines).write_text(json.dumps(rows), encoding="utf-8")
+        result = walk_forward(
+            bars,
+            kind=space.get("strategy", "grid"),
+            base=space["base"],
+            search=space.get("search") or {},
+            limits=_limits(args.limits),
+            symbol=args.symbol.upper(),
+            cash=args.cash,
+            folds=args.folds,
+            dd_weight=args.dd_weight,
+            min_trades=args.min_trades,
+            min_edge=args.min_edge,
+            exchange=args.exchange,
+        )
+        record = {"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "interval": args.interval, **result}
+        Path(args.log).parent.mkdir(parents=True, exist_ok=True)
+        with Path(args.log).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+        if result["accepted"] and args.out:
+            Path(args.out).write_text(json.dumps(result["verdict"]["params"], indent=2) + "\n", encoding="utf-8")
+        _print(
+            {
+                "accepted": result["accepted"],
+                "reasons": result["reasons"],
+                "chosen": (result["verdict"] or {}).get("params"),
+                "config_hash": result.get("config_hash"),
+                "out_of_sample": (result["verdict"] or {}).get("oos"),
+                "current_config_out_of_sample": (result["verdict"] or {}).get("baseline_oos"),
+                "overfit_gap": (result["verdict"] or {}).get("overfit_gap"),
+                "notes": (result["verdict"] or {}).get("notes"),
+                "bars": result["bars"],
+                "bars_hash": result["bars_hash"],
+                "written": args.out if result["accepted"] and args.out else None,
+                "log": args.log,
+            }
+        )
+        return 0 if result["accepted"] else 1
 
     if args.cmd == "grid":
         from .grid import GridBot, GridConfig

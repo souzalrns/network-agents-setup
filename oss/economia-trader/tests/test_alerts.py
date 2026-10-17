@@ -213,3 +213,11 @@ def test_cli_alerts_once_and_test(tmp_path, monkeypatch, capsys):
     assert json.loads(capsys.readouterr().out)["sent"][0]["channels"] == {"webhook": "ok"}
     assert main(["alerts", "--state-dir", str(tmp_path), "--test"]) == 0
     assert json.loads(capsys.readouterr().out)["rule"] == "test" and len(calls) == 2
+
+
+def test_test_alert_on_a_fresh_state_dir(tmp_path):
+    """`alerts --test` before the trader ever ran: the state dir does not exist yet."""
+    w = AlertWatcher(tmp_path / "nova" / "state", [], env={})
+    rec = w.test()
+    assert rec["rule"] == "test"
+    assert (tmp_path / "nova" / "state" / "alerts.jsonl").is_file()

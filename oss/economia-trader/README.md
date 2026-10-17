@@ -199,7 +199,8 @@ See `docs/initiatives/economia-trader/FORECAST-KRONOS.md`.
 - **Drawdown on real equity:** auto-kill also works in testnet/live, on the exchange's own equity (use a
   dedicated account or sub-account).
 
-See `docs/initiatives/economia-trader/RECONCILE.md`.
+See `docs/initiatives/economia-trader/RECONCILE.md`. Before any long testnet run, pass the smoke in
+`docs/initiatives/economia-trader/SMOKE-TESTNET.md` (`examples/smoke_testnet.py`).
 
 ## Alerts
 
@@ -217,6 +218,15 @@ that reads this package's state dir (read-only: book, stops, decisions, alerts, 
 orders, and its market data (public but unofficial endpoints) never feeds a decision. `dashboard --openterminal-url`
 links every ticker to it; `monitor --econ-calendar` takes the same economic calendar (Forex Factory) into
 `macro_block`, only to pause entries. See `terminal/README.md` and `docs/initiatives/economia-trader/OPENTERMINAL.md`.
+
+## Tuning (walk-forward, nothing traded)
+
+`economia-trader tune --space examples/tune.grid.example.json ...` tries every combination of the search
+space on one segment of history and keeps the best only if it also beats the current config, by more than
+`--min-edge`, on the *next* segment it never saw (fold by fold), with drawdown and minimum-trades checks.
+Candidates outside the risk limits are never scored. `--out` is written only when the result is accepted;
+every result goes to `tune.jsonl` with a hash of the data. Then run both configs side by side in paper and
+compare with `report`. See `docs/initiatives/economia-trader/TUNE.md`.
 
 ## Bounded spot grid (crypto)
 
