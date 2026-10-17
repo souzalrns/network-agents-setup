@@ -1,0 +1,9 @@
+{
+  "llm_provider": "google",
+  "quick_think_llm": "gemini-3.5-flash-lite",
+  "deep_think_provider": "openrouter",
+  "deep_think_llm": "x-ai/grok-4-fast:free",
+  "max_debate_rounds": 1,
+  "max_risk_discuss_rounds": 1,
+  "output_language": "English"
+}

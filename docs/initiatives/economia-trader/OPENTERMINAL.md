@@ -69,20 +69,20 @@ vir da própria exchange.
 6. **CI próprio:** `.github/workflows/economia-trader-terminal.yml` corre os testes do servidor, os builds com
    typecheck e o `npm audit` de produção, que falha em high ou critical.
 
-## Decisões que ficam para o maestro
+## Decisões do maestro (2026-10-17: seguiu as recomendações, A nas três)
 
-- **D1. Papel do `dashboard.py`:**
+- **D1. Papel do `dashboard.py`: decidida A.**
   - **A) Fica como vista estática** (sem Node, gerada pelo cron), e o terminal é a interface do dia a dia.
     **RECOMENDADA:** o painel funciona offline e em qualquer browser, e não depende de fornecedores não oficiais.
   - **B) Substituí-lo pelo terminal.** Obrigaria a ter Node e o terminal a correr para ver o agente.
   - **C) Retirá-lo.** Perde-se a vista mínima que funciona sempre.
-- **D2. Pausar ações antes de resultados (earnings):**
+- **D2. Pausar ações antes de resultados (earnings): decidida A** (fica para depois do smoke testnet, #201).
   - **A) Proposta para depois do smoke testnet**, com um `earnings_block` igual ao `macro_block`, alimentado por um
     calendário. **RECOMENDADA**, porque só acrescenta cautela; a fonte (Nasdaq, não oficial) tem de ser avaliada
     antes.
   - **B) Já.**
   - **C) Nunca.**
-- **D3. Assistente de IA do terminal:**
+- **D3. Assistente de IA do terminal: decidida A** (sem `ANTHROPIC_API_KEY`, fica desligado; não há código a mudar).
   - **A) Desligado.** **RECOMENDADA:** custa dinheiro (API da Anthropic) e duplica os nossos analistas.
   - **B) Ligá-lo à API da Anthropic.**
   - **C) Adaptá-lo ao Gemini no plano grátis.** Exige mexer no código dele.

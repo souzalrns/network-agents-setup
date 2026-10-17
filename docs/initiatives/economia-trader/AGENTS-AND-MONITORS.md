@@ -61,6 +61,7 @@ por dia.
 | Configuração | Quick | Deep | Chaves | Custo |
 |---|---|---|---|---|
 | **Padrão** `examples/tradingagents.example.json` | Gemini 3.5 Flash Lite | Gemini 3.8 Flash | `GOOGLE_API_KEY` | **0**, dentro das quotas do plano grátis |
+| Opcional `examples/tradingagents.grok-free.example.json` | Gemini 3.5 Flash Lite | **Grok `:free`** no OpenRouter (`x-ai/grok-4-fast:free`) | `GOOGLE_API_KEY` + `OPENROUTER_API_KEY` (conta grátis) | **0**, mas só enquanto existir uma variante grátis do Grok |
 | Opcional `examples/tradingagents.grok.example.json` | Gemini 3.5 Flash Lite | **Grok 4.6** (xAI) | `GOOGLE_API_KEY` + `XAI_API_KEY` | Só as 2 chamadas deep por análise são pagas, por token |
 | Antiga P-56 (substituída) | Gemini 3.5 Flash Lite | Claude Sonnet 5 | Google + Anthropic | Pago na camada deep |
 
@@ -77,6 +78,17 @@ não têm chaves e que o padrão só usa o Google.
   segunda opinião.
 - No plano grátis, o Google pode usar os pedidos para melhorar os produtos. Os pedidos só levam
   tickers, notícias e números públicos, nunca chaves ou dados pessoais.
+
+**Grok grátis (decisão do maestro, 2026-10-17, opção A):**
+- O Grok não tem um plano grátis estável. No OpenRouter aparecem às vezes variantes `:free`, que
+  são promoções temporárias, com limites apertados e pedidos normalmente registados pelo
+  fornecedor.
+- Antes de usar o `grok-free`, confirma em openrouter.ai (modelos, filtro de preço grátis) que o
+  modelo existe. Se tiver outro nome, troca o `deep_think_llm`.
+- Se a variante desaparecer a meio, o analista falha e a entrada é vetada. Perde-se a segunda
+  opinião, nunca dinheiro.
+- Verificado com o TradingAgents `1394a3f`: o grafo constrói-se pelo endpoint
+  `https://openrouter.ai/api/v1`.
 
 ### Grok: porque é opcional e não o padrão
 

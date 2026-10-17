@@ -1,5 +1,6 @@
-"""The TradingAgents example configs: Gemini on the free plan by default (P-56, revised 2026-10-17),
-Grok only as an opt-in deep tier. They carry model choices, never keys."""
+"""The TradingAgents example configs: Gemini on the free plan by default (P-56, revised 2026-10-17).
+Grok is only an opt-in deep tier: paid on xAI, or a free variant on OpenRouter while one exists.
+They carry model choices, never keys."""
 
 import json
 import re
@@ -32,7 +33,17 @@ def test_grok_is_only_the_deep_tier_and_the_rest_stays_free():
     assert _provider(cfg, "deep") == "xai" and cfg["deep_think_llm"].startswith("grok-")
 
 
-@pytest.mark.parametrize("name", ["tradingagents.example.json", "tradingagents.grok.example.json"])
+def test_free_grok_goes_through_openrouter_free_variant_only():
+    cfg = _load("tradingagents.grok-free.example.json")
+    assert _provider(cfg, "quick") == "google"
+    assert _provider(cfg, "deep") == "openrouter"
+    assert cfg["deep_think_llm"].startswith("x-ai/grok-") and cfg["deep_think_llm"].endswith(":free")
+
+
+@pytest.mark.parametrize(
+    "name",
+    ["tradingagents.example.json", "tradingagents.grok.example.json", "tradingagents.grok-free.example.json"],
+)
 def test_examples_hold_no_credentials_and_keep_the_debate_short(name):
     cfg = _load(name)
     assert not [k for k in cfg if SECRETISH.search(k)]  # keys come from the environment only
