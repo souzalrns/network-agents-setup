@@ -15,6 +15,7 @@
 | `.github/`, `.claude/`, `docs/screenshots/` | removidos | Workflow e configuração próprios do upstream; o nosso CI é `.github/workflows/economia-trader-terminal.yml` |
 | `README.md` → `UPSTREAM-README.md` | renomeado | O `README.md` passa a ser o nosso, em PT |
 | `web/package.json` (`next` 15.5 → 16.4) e `server/package.json` (`fast-xml-parser` 4 → 5) + `package-lock.json` | dependências | `npm audit` de produção de 6 avisos (1 crítico, 3 altos) para **0**. Sem mudanças de código: 26 testes e os builds passaram |
+| `server/package.json` (`vitest` 2 → 4.1.11) + `package-lock.json` | dependência de desenvolvimento | O `vitest` 2 arrastava `tinypool`, `vite` e `esbuild` com avisos (2 críticos, 1 alto, 3 moderados) que o alerta do Dependabot não conseguiu corrigir sozinho. `npm audit` completo a **0**; produção só muda o `nanoid` 3.3.19 → 3.3.20 |
 | `server/vitest.config.ts` | novo | O vitest apanhava o `vitest.config.ts` da raiz do monorepo e não encontrava testes |
 | `web/lib/api-key.ts` | `turbopackIgnore` | O Next 16 avisava que ler `../data/.api-key` puxava o projecto inteiro para o build |
 | `server/src/providers/nasdaq.ts` | `replace("%")` → `replace(/%/g)` | Achado do semgrep (substituição incompleta) |
