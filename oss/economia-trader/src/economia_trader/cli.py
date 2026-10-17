@@ -250,6 +250,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--news", help="comma-separated tickers")
     p.add_argument("--macro", action="store_true", help="BLS release calendar (CPI, jobs, PPI, ...)")
     p.add_argument("--calendar-file", help="hand-kept releases JSON (e.g. FOMC days)")
+    p.add_argument(
+        "--econ-calendar",
+        action="store_true",
+        help="this week's Forex Factory calendar (Fed, ECB, CPI, NFP...; public, no key): pauses entries only",
+    )
+    p.add_argument("--econ-countries", default="USD", help="currencies for --econ-calendar (e.g. USD,EUR)")
     p.add_argument("--days", type=int, default=14, help="macro calendar window ahead")
     p.add_argument("--insiders", action="store_true", help="SEC Form 4 open-market trades (edgartools)")
     p.add_argument("--insider-days", type=int, default=3, help="Form 4 filings from the last N days")
@@ -274,6 +280,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", default=str(STATE_DIR / "dashboard.html"))
     p.add_argument("--refresh", type=int, help="auto-reload every N seconds")
     p.add_argument("--openstock-url", help="link tickers to an OpenStock instance (e.g. http://localhost:3000)")
+    p.add_argument(
+        "--openterminal-url",
+        help="link tickers to the market terminal (oss/economia-trader/terminal, e.g. http://localhost:3000)",
+    )
 
     p = sub.add_parser("office", help="Push agent states to a Star-Office-UI (pixel office)")
     p.add_argument("--url", required=True, help="Star-Office-UI base URL")
@@ -545,6 +555,11 @@ def _run(args: argparse.Namespace) -> int:
             added["macro"] = store.add(macro_events(rows))
         if args.calendar_file:
             added["calendar_file"] = store.add(macro_events(load_calendar_file(args.calendar_file), source="manual"))
+        if args.econ_calendar:
+            from .monitors import forexfactory_calendar
+
+            countries = [c.strip() for c in args.econ_countries.split(",") if c.strip()]
+            added["econ_calendar"] = store.add(macro_events(forexfactory_calendar(countries), source="forexfactory"))
         if args.insiders:
             from .signals import edgar_insider_trades, insider_events
 
@@ -625,7 +640,13 @@ def _run(args: argparse.Namespace) -> int:
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(
-            build_html(args.state_dir, refresh_s=args.refresh, openstock_url=args.openstock_url), encoding="utf-8"
+            build_html(
+                args.state_dir,
+                refresh_s=args.refresh,
+                openstock_url=args.openstock_url,
+                openterminal_url=args.openterminal_url,
+            ),
+            encoding="utf-8",
         )
         print(f"dashboard: {out}")
         return 0

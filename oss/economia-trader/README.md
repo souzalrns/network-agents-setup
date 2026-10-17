@@ -210,6 +210,15 @@ Telegram, a webhook (Slack/Discord/ntfy) or SMTP e-mail, configured by environme
 also kept in `alerts.jsonl`, and a channel that is down never stops the trader. See
 `docs/initiatives/economia-trader/ALERTS.md`.
 
+## Market terminal (OpenTerminal)
+
+`terminal/` is a market terminal (charts with indicators, heatmap, screener, quotes, macro, economic and earnings
+calendars, news) built on [OpenTerminal](https://github.com/ErTasselli/OpenTerminal) (MIT), with an **AGENT** widget
+that reads this package's state dir (read-only: book, stops, decisions, alerts, a STALE flag). It never places
+orders, and its market data (public but unofficial endpoints) never feeds a decision. `dashboard --openterminal-url`
+links every ticker to it; `monitor --econ-calendar` takes the same economic calendar (Forex Factory) into
+`macro_block`, only to pause entries. See `terminal/README.md` and `docs/initiatives/economia-trader/OPENTERMINAL.md`.
+
 ## Tuning (walk-forward, nothing traded)
 
 `economia-trader tune --space examples/tune.grid.example.json ...` tries every combination of the search

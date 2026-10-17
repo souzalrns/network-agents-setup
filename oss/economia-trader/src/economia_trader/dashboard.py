@@ -48,11 +48,28 @@ def _cell(c: Any) -> str:
     return c.html() if isinstance(c, Link) else _e(c)
 
 
-def _ticker(sym: Any, base: str | None) -> Any:
-    """Ticker -> link to ``<openstock>/stocks/<SYM>`` (OpenStock used as-is, side by side)."""
-    if not base or not sym:
+def _ticker(sym: Any, base: str | None, *, terminal: str | None = None) -> Any:
+    """Ticker -> link to our market terminal (``<terminal>/?symbol=<SYM>``, oss/economia-trader/terminal) or,
+    without it, to ``<openstock>/stocks/<SYM>`` (OpenStock used as-is, side by side)."""
+    if not sym or not (terminal or base):
         return sym
-    return Link(sym, f"{base.rstrip('/')}/stocks/{quote(str(sym).upper(), safe='')}")
+    sym_q = quote(str(sym).upper(), safe="")
+    if terminal:
+        return Link(sym, f"{terminal.rstrip('/')}/?symbol={sym_q}")
+    return Link(sym, f"{base.rstrip('/')}/stocks/{sym_q}")  # type: ignore[union-attr]
+
+
+STALE_AFTER_S = 900  # a loop that ticks every few minutes and has been silent this long is not running
+
+
+def _last_tick(journal: list[dict[str, Any]], now: datetime) -> tuple[str, bool]:
+    """("há N min", stale?) from the last ``run`` entry; ("nenhum", True) before the first tick."""
+    last = next((e for e in reversed(journal) if e.get("kind") == "run"), None)
+    if not last:
+        return "nenhum", True
+    age = max(0.0, (now - datetime.fromisoformat(last["ts"])).total_seconds())  # ts = when it was written
+    text = f"há {int(age)} s" if age < 90 else f"há {int(age // 60)} min" if age < 5400 else f"há {age / 3600:.1f} h"
+    return (f"SEM ATUALIZAÇÃO · {text}" if age > STALE_AFTER_S else text), age > STALE_AFTER_S
 
 
 def _table(head: list[str], rows: list[list[Any]], empty: str) -> str:
@@ -121,6 +138,7 @@ def build_html(
     now: datetime | None = None,
     refresh_s: int | None = None,
     openstock_url: str | None = None,
+    openterminal_url: str | None = None,
 ) -> str:
     sd = Path(state_dir)
     now = now or datetime.now(timezone.utc)
@@ -140,7 +158,7 @@ def build_html(
 
     pos_rows = [
         [
-            _ticker(s, openstock_url),
+            _ticker(s, openstock_url, terminal=openterminal_url),
             p["qty"],
             p["avg_price"],
             stops.get(s, "—"),
@@ -194,7 +212,9 @@ def build_html(
     news_rows = [
         [
             e["published_at"][:16].replace("T", " "),
-            _ticker((e["payload"].get("symbols") or "").split(",")[0].strip(), openstock_url),
+            _ticker(
+                (e["payload"].get("symbols") or "").split(",")[0].strip(), openstock_url, terminal=openterminal_url
+            ),
             Link(e["payload"].get("title"), e["payload"].get("url")),
         ]
         for e in news
@@ -210,7 +230,7 @@ def build_html(
     insider_rows = [
         [
             e["event_at"][:10],
-            _ticker(e["payload"].get("ticker"), openstock_url),
+            _ticker(e["payload"].get("ticker"), openstock_url, terminal=openterminal_url),
             e["payload"].get("insider"),
             e["payload"].get("role"),
             "compra" if e["payload"].get("side") == "buy" else "venda",
@@ -221,7 +241,7 @@ def build_html(
     social = [e for e in events if e.get("kind") == "social_sentiment"][-12:]
     social_rows = [
         [
-            _ticker(e["payload"].get("ticker"), openstock_url),
+            _ticker(e["payload"].get("ticker"), openstock_url, terminal=openterminal_url),
             e["payload"].get("source"),
             e["payload"].get("bullish_pct"),
             e["payload"].get("buzz"),
@@ -233,7 +253,7 @@ def build_html(
     ops = [e["payload"] for e in journal if e["kind"] == "opinion"][-10:]
     op_rows = [
         [
-            _ticker(o.get("ticker"), openstock_url),
+            _ticker(o.get("ticker"), openstock_url, terminal=openterminal_url),
             o.get("by") or "—",
             o.get("rating"),
             "confirma" if o.get("confirms") else "veta",
@@ -244,7 +264,7 @@ def build_html(
     fcs = [e["payload"] for e in journal if e["kind"] == "forecast"][-10:]
     fc_rows = [
         [
-            _ticker(f.get("ticker"), openstock_url),
+            _ticker(f.get("ticker"), openstock_url, terminal=openterminal_url),
             f.get("rating"),
             "confirma" if f.get("confirms") else "veta",
             f"{f['expected_return']:+.2%}" if f.get("expected_return") is not None else "—",
@@ -255,15 +275,19 @@ def build_html(
     timeline = [[e["ts"][:19].replace("T", " "), e["kind"], _summary(e)] for e in journal[-25:]][::-1]
     rej = Counter(rep["rejected_by_risk"]).most_common(6)
 
+    tick_text, stale = _last_tick(journal, now)
     cards = [
         ("Modo", state.get("mode", "—")),
+        ("Último tick", tick_text),
         ("Exchange", state.get("exchange", "—")),
         ("Versão", state.get("config_version", "—")),
         ("Kill switch", "ACIONADO" if killed else "livre"),
         ("Caixa (paper)", _money(broker.get("cash"))),
         ("P&L realizado hoje", _money(state.get("realized_today") or broker.get("realized_today"))),
     ]
-    card_html = "".join(_card(k, v, alert=(k == "Kill switch" and killed)) for k, v in cards)
+    card_html = "".join(
+        _card(k, v, alert=(k == "Kill switch" and killed) or (k == "Último tick" and stale)) for k, v in cards
+    )
     refresh = f'<meta http-equiv="refresh" content="{int(refresh_s)}">' if refresh_s else ""
     gate_rows = [["gate", f"{k}: {v}"] for k, v in rep["blocked_by_gate"].items()]
     gate_rows += [["auto-kill", r] for r in rep["auto_kills"]]
@@ -327,7 +351,10 @@ def build_html(
         (
             "Vetos por sentimento",
             ["Ativo", "Motivos"],
-            [[_ticker(v.get("ticker"), openstock_url), "; ".join(v.get("reasons", []))] for v in reversed(vetoes)],
+            [
+                [_ticker(v.get("ticker"), openstock_url, terminal=openterminal_url), "; ".join(v.get("reasons", []))]
+                for v in reversed(vetoes)
+            ],
             "Nenhum.",
         ),
         (
@@ -343,11 +370,12 @@ def build_html(
         for t, h, r, empty in sections
         if grid or not t.startswith("Grid ")  # the grid block only for a grid state dir
     )
+    terminal_link = f" · {Link('terminal de mercado', openterminal_url).html()}" if openterminal_url else ""
     return (
         '<!doctype html><html lang="pt"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f"{refresh}<title>economia-trader</title><style>{CSS}</style></head><body><main>"
-        f'<h1>economia-trader</h1><p class="muted">Gerado {_e(iso_now)} · fonte: {_e(sd)}</p>'
+        f'<h1>economia-trader</h1><p class="muted">Gerado {_e(iso_now)} · fonte: {_e(sd)}{terminal_link}</p>'
         f'<div class="cards">{card_html}</div><div class="grid">{blocks}</div></main></body></html>\n'
     )
 

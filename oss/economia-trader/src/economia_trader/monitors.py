@@ -6,7 +6,9 @@ keys: ``pip install 'economia-trader[data]'`` brings ``openbb-core`` + the ``new
 
 - ``news_events``: company news (OpenBB ``news.company``, provider ``nasdaq``, no key).
 - ``macro_events``: the BLS release calendar (CPI, Employment Situation, PPI, JOLTS, ...), plus
-  an optional hand-kept file for dates OpenBB does not list (e.g. FOMC decisions).
+  an optional hand-kept file for dates OpenBB does not list (e.g. FOMC decisions), plus the weekly
+  Forex Factory calendar (``forexfactory_calendar``: Fed, ECB, CPI, NFP... with consensus and previous,
+  the same public feed the OpenTerminal calendar uses). It is only ever used to *pause* new entries.
 - ``EventStore``: append-only, de-duplicated ``events.jsonl``; the runner reads it to block new
   entries around high-impact releases, and the dashboard reads it to show what moved.
 
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import urllib.request
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -126,7 +129,11 @@ def macro_events(
                 payload={
                     "name": name,
                     "importance": r.get("importance"),
-                    "high_impact": is_high_impact(str(name)),
+                    # the vendor's own flag when it has one (Forex Factory "impact": "High"), else our list
+                    "high_impact": r["high_impact"]
+                    if isinstance(r.get("high_impact"), bool)
+                    else is_high_impact(str(name)),
+                    "country": r.get("country"),
                     "consensus": r.get("consensus"),
                     "previous": r.get("previous"),
                     "actual": r.get("actual"),
@@ -201,6 +208,47 @@ def openbb_macro_calendar(start: str, end: str) -> list[dict[str, Any]]:
     from openbb import obb
 
     return _records(obb.bls.calendar(start_date=start, end_date=end))
+
+
+FOREX_FACTORY = "https://nfs.faireconomy.media/"
+
+
+def _ff_json(url: str) -> Any:
+    if not url.startswith(FOREX_FACTORY):
+        raise ValueError(f"refusing URL outside the Forex Factory export: {url}")
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "economia-trader"})  # noqa: S310
+    with urllib.request.urlopen(req, timeout=20) as resp:  # nosemgrep  # noqa: S310
+        return json.loads(resp.read().decode())
+
+
+def forexfactory_calendar(
+    countries: Iterable[str] = ("USD",), *, fetch: Callable[[str], Any] = _ff_json
+) -> list[dict[str, Any]]:
+    """This week's economic calendar (public export, no key) as rows for ``macro_events``.
+
+    Only a schedule: a high-impact release (``"impact": "High"``) feeds ``macro_block`` (no new entries
+    around it). It never opens a trade. The export only exists for the current week: run it daily.
+    """
+    wanted = {c.upper() for c in countries}
+    rows = fetch(f"{FOREX_FACTORY}ff_calendar_thisweek.json")
+    out = []
+    for r in rows if isinstance(rows, list) else []:
+        if not isinstance(r, dict) or str(r.get("country", "")).upper() not in wanted:
+            continue
+        if not r.get("title") or not r.get("date") or r.get("impact") == "Holiday":
+            continue
+        out.append(
+            {
+                "event": r["title"],
+                "date": r["date"],
+                "country": r.get("country"),
+                "importance": r.get("impact"),
+                "high_impact": r.get("impact") == "High",
+                "consensus": r.get("forecast") or None,
+                "previous": r.get("previous") or None,
+            }
+        )
+    return out
 
 
 def load_calendar_file(path: str | Path) -> list[dict[str, Any]]:

@@ -1,0 +1,58 @@
+name: economia-trader-terminal
+
+# oss/economia-trader/terminal: o OpenTerminal (MIT, ErTasselli/OpenTerminal@aed097c) incluído como terminal
+# de mercado do economia-trader, com a ponte só de leitura para o agente (widget AGENT + GET /api/agent).
+#
+# - test: testes do servidor (vitest, sem rede), build do servidor (tsc) e da web (next build, com typecheck);
+# - audit: `npm audit` das dependências de produção, a falhar em high/critical.
+#
+# Nenhum job tem credenciais nem chama fornecedores de dados: os testes usam transporte falso.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oss/economia-trader/terminal/**'
+      - '.github/workflows/economia-trader-terminal.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'oss/economia-trader/terminal/**'
+      - '.github/workflows/economia-trader-terminal.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: economia-trader-terminal-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: oss/economia-trader/terminal
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22
+          # o package.json da raiz do monorepo declara pnpm; este projecto usa npm com o seu próprio lockfile
+          package-manager-cache: false
+      - name: Install (lockfile)
+        run: npm ci --no-audit --no-fund
+      - name: Server tests (vitest, offline)
+        run: npm test -w server
+      - name: Build server and web (tsc + next build with typecheck)
+        run: npm run build
+      - name: Production dependencies have no high/critical advisories
+        run: npm audit --omit=dev --audit-level=high
