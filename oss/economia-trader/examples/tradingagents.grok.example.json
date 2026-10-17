@@ -1,0 +1,9 @@
+{
+  "llm_provider": "google",
+  "quick_think_llm": "gemini-3.5-flash-lite",
+  "deep_think_provider": "xai",
+  "deep_think_llm": "grok-4.6",
+  "max_debate_rounds": 1,
+  "max_risk_discuss_rounds": 1,
+  "output_language": "English"
+}
