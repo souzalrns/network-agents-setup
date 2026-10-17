@@ -17,51 +17,24 @@ updates:
       prefix: "chore(deps)"
       include: "scope"
 
-  # Node (apps/api)
-  - package-ecosystem: "npm"
-    directory: "/apps/api"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-    labels:
-      - "dependencies"
-      - "node"
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-
-  # Node (packages/core)
-  - package-ecosystem: "npm"
-    directory: "/packages/core"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-    labels:
-      - "dependencies"
-      - "node"
-
-  # Node (packages/mcp)
-  - package-ecosystem: "npm"
-    directory: "/packages/mcp"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-    labels:
-      - "dependencies"
-      - "node"
-
-  # Node (raiz — se tiver package.json)
+  # Node: workspace pnpm inteiro (packages/* e apps/*), com um só pnpm-lock.yaml na raiz.
+  # Não repetir entradas por pasta (apps/api, packages/*): o Dependabot abria PRs sem o lockfile,
+  # que falhavam no `pnpm install --frozen-lockfile` (ex.: #207 e #208, duplicados de #206 e #210).
   - package-ecosystem: "npm"
     directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    labels:
+      - "dependencies"
+      - "node"
+
+  # Node (oss/economia-trader/terminal): projecto npm à parte, com package-lock.json próprio
+  - package-ecosystem: "npm"
+    directory: "/oss/economia-trader/terminal"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
