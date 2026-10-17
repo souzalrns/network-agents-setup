@@ -46,6 +46,8 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
+          # o package.json da raiz do monorepo declara pnpm; este projecto usa npm com o seu próprio lockfile
+          package-manager-cache: false
       - name: Install (lockfile)
         run: npm ci --no-audit --no-fund
       - name: Server tests (vitest, offline)

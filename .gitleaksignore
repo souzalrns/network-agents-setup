@@ -24,3 +24,12 @@ ee956781d67c0c9d30f9803bab1455ccabed5cb8:runner/tests/test_mcp_knowledge.py:gene
 # O ficheiro actual já não tem a armadura no comentário; só o commit 86d1802 o tem, e
 # reescrever o histórico exigiria force-push (proibido).
 86d1802069c4c95237f997c98088686cdd9c0f40:oss/skill-notary/tests/helpers.py:private-key:13
+#
+# OpenTerminal (2026-10-17, PR #212): falsos positivos. Identificadores PÚBLICOS de séries de taxas do BCE
+# (B.U2.EUR.4F.G_N_A.SV_C_YM.SR_*) num campo chamado "key" em oss/economia-trader/terminal/server/src/routes/market.ts.
+# Não são segredos (são o caminho da API pública data-api.ecb.europa.eu). As linhas actuais levam
+# `// gitleaks:allow`; só o commit 82d6213 as tem sem a anotação, e reescrever o histórico exigiria force-push.
+82d621344441717bab52e2cdbc7ffe4c619a8d41:oss/economia-trader/terminal/server/src/routes/market.ts:generic-api-key:420
+82d621344441717bab52e2cdbc7ffe4c619a8d41:oss/economia-trader/terminal/server/src/routes/market.ts:generic-api-key:421
+82d621344441717bab52e2cdbc7ffe4c619a8d41:oss/economia-trader/terminal/server/src/routes/market.ts:generic-api-key:422
+82d621344441717bab52e2cdbc7ffe4c619a8d41:oss/economia-trader/terminal/server/src/routes/market.ts:generic-api-key:423

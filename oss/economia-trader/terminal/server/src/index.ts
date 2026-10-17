@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import expressRateLimit from "express-rate-limit";
 import { marketRouter } from "./routes/market.js";
 import { portfolioRouter } from "./routes/portfolio.js";
 import { aiRouter } from "./routes/ai.js";
@@ -37,10 +38,13 @@ app.use(express.json());
 // this deployment's IP rate-limited or banned by Nasdaq/Yahoo/Stooq/SEC.
 app.use("/api", rateLimit({ windowMs: 60_000, max: 240 }), marketRouter);
 // Portfolio data and the paid AI endpoint require a shared secret; see auth.ts.
-app.use("/api/portfolios", requireApiKey, portfolioRouter);
+// network-agents-setup: an explicit, well-known limiter on the database routes (the /api limiter above already
+// covers them; this one is the one static analysis such as CodeQL recognises).
+const dbLimiter = expressRateLimit({ windowMs: 60_000, limit: 120, standardHeaders: "draft-8", legacyHeaders: false });
+app.use("/api/portfolios", dbLimiter, requireApiKey, portfolioRouter);
 // economia-trader bridge (network-agents-setup): the agent's book and decisions are private like the
 // portfolio, so the same shared secret guards them. Read-only; see agent.ts.
-app.use("/api/agent", requireApiKey, rateLimit({ windowMs: 60_000, max: 120 }), agentRouter);
+app.use("/api/agent", dbLimiter, requireApiKey, agentRouter);
 app.use(
   "/api/ai",
   requireApiKey,

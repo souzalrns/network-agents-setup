@@ -44,8 +44,10 @@ describe("readAgentSnapshot", () => {
     expect(s).toMatchObject({ mode: "paper", exchange: "bybit", killSwitch: true, cash: "991.50", pendingOrders: 1, errorsInRow: 1 });
     expect(s.positions).toEqual([{ symbol: "BTCUSDT", qty: "0.0002", avgPrice: "50000", stop: "48500", stopOnExchange: true }]);
     expect(s.lastTick).toEqual({ at: "2026-10-17T10:00:00+00:00", ageSeconds: 300, stale: false });
-    expect(s.events[0].text).toBe("fill buy 0.0002 BTCUSDT @ 50000 (exchange)"); // newest first; the broken line is skipped
-    expect(s.alerts[0]).toMatchObject({ kind: "auto_kill", text: "Auto-kill: drawdown" });
+    const [newest] = s.events; // newest first; the half-written line is skipped
+    const [lastAlert] = s.alerts;
+    expect(newest.text).toBe("fill buy 0.0002 BTCUSDT @ 50000 (exchange)");
+    expect(lastAlert).toMatchObject({ kind: "auto_kill", text: "Auto-kill: drawdown" });
   });
 
   it("flags a stale agent when the last tick is older than the threshold", () => {

@@ -417,10 +417,10 @@ const INDEX_PROXIES: Record<string, string> = {
 // quote provider is needed).
 
 const EU_YIELD_SERIES: Array<{ flowRef: string; key: string; tenor: string }> = [
-  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_3M", tenor: "3M" },
-  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_5Y", tenor: "5Y" },
-  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y", tenor: "10Y" },
-  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_30Y", tenor: "30Y" },
+  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_3M", tenor: "3M" }, // gitleaks:allow (public ECB series id, not a secret)
+  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_5Y", tenor: "5Y" }, // gitleaks:allow (public ECB series id, not a secret)
+  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y", tenor: "10Y" }, // gitleaks:allow (public ECB series id, not a secret)
+  { flowRef: "YC", key: "B.U2.EUR.4F.G_N_A.SV_C_YM.SR_30Y", tenor: "30Y" }, // gitleaks:allow (public ECB series id, not a secret)
 ];
 
 // Deposit facility rate — the ECB's operative policy rate since the 2024

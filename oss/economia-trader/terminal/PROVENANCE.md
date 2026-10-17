@@ -21,6 +21,8 @@
 | `server/src/providers/tradingview.ts` | 2 × `// nosemgrep` com motivo | Falso positivo: o símbolo é chave de um `Map`, não de um objecto |
 | `web/components/Terminal.tsx` | `Object.hasOwn` nos atalhos | `map["constructor"]` devolvia a função nativa |
 | `server/src/agent.ts`, `server/src/routes/agent.ts`, `server/src/agent.test.ts`, `server/src/index.ts` | **novo**: ponte para o economia-trader | `GET /api/agent`, só leitura, protegido pela mesma chave do portfolio |
+| `server/src/index.ts`, `server/package.json` (`express-rate-limit` 8) | limite de pedidos em `/api/portfolios` e `/api/agent` | Achado do CodeQL: rotas que lêem disco/SQLite sem um limitador que ele reconheça (o `rateLimit` próprio continua no resto da `/api`) |
+| `server/src/routes/market.ts` (séries `EU_YIELD_SERIES`) | `// gitleaks:allow` | Falso positivo: são ids públicos de séries do BCE, não chaves |
 | `web/components/widgets/AgentWidget.tsx`, `store/terminal.ts`, `Workspace.tsx`, `Sidebar.tsx` | **novo**: widget AGENT (⌥0) | Posições, stops (na exchange ou no cliente), caixa, grid, último tick (com `STALE`), decisões e alertas do agente |
 | `web/components/Terminal.tsx`, `web/lib/symbol.ts` | **novo**: `/?symbol=SYM` | O painel do economia-trader liga cada ticker ao terminal; `BTCUSDT` abre `BTC` |
 
