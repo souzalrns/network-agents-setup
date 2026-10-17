@@ -112,3 +112,6 @@ pilots/test-f5-*/
 
 # artefactos de build do setuptools (pip install -e)
 *.egg-info/
+
+# Graphify: grafo de código local (graphify update .), gerado em cada máquina; não vai para o git
+graphify-out/
