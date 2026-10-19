@@ -33,7 +33,9 @@ __all__ = [
     "make_exchange",
 ]
 
-EXCHANGES = ("bybit", "mexc", "alpaca")
+EXCHANGES = ("bybit", "bybiteu", "mexc", "alpaca")
+# Bybit EU uses Bybit V5 keys too: BYBIT_API_KEY / BYBIT_API_SECRET (keys created on bybit.eu)
+CREDENTIAL_PREFIX = {"bybiteu": "BYBIT"}
 
 
 def make_exchange(
@@ -51,6 +53,7 @@ def make_exchange(
         trading, data = client if client else (None, None)
         network = "live" if mode is Mode.LIVE else "paper"
         return AlpacaPy(network, credentials=creds, trading=trading, data=data, allow_live_orders=mode is Mode.LIVE)
-    creds = None if mode is Mode.PAPER else Credentials.from_env(name.upper(), env)
+    prefix = CREDENTIAL_PREFIX.get(name, name.upper())
+    creds = None if mode is Mode.PAPER else Credentials.from_env(prefix, env)
     network = "testnet" if mode is Mode.TESTNET else "mainnet"
     return CcxtSpot(name, network, credentials=creds, client=client, allow_mainnet_orders=mode is Mode.LIVE)

@@ -79,6 +79,19 @@ python examples/smoke_testnet.py alpaca AAPL 1 examples/limits.stocks.example.js
 O script só foi validado offline com Bybit; o ramo Alpaca usa o mesmo protocolo (`order_status`,
 `place_stop`, `cancel_order`, `position_qty`), coberto pelos testes do #199, mas não pelo script.
 
+**Bybit EU (Portugal e resto do EEE):** a Bybit global bloqueia o acesso a partir de Portugal. Usa-se a
+venue `bybiteu` (`ccxt.bybiteu`: `bybit.eu`, testnet em `api-testnet.bybit.eu`), com chave criada na
+testnet da Bybit EU e os mesmos nomes de variáveis (`BYBIT_API_KEY`/`BYBIT_API_SECRET`). Nos comandos
+acima, trocar `bybit` por `bybiteu`:
+
+```bash
+economia-trader check-key --exchange bybiteu --mode testnet   # safe_for_trading: true, can_withdraw: false
+python examples/smoke_testnet.py bybiteu BTCUSDT 0.0002 examples/limits.example.json /tmp/et-smoke
+economia-trader verify-journal /tmp/et-smoke/journal.jsonl
+```
+
+O ciclo offline do script corre para `bybit` e `bybiteu` (`tests/test_smoke_script.py`, #201).
+
 **MEXC:** não tem testnet. `/api/v3/order/test` só valida o pedido e nunca enche, por isso não prova
 os pontos 1–6. Não conta como smoke L3.
 
@@ -92,6 +105,7 @@ os pontos 1–6. Não conta como smoke L3.
 | `alerts --test` com canais falsos | **feito**: canais falham (rede), código 0, segredo 0 vezes na saída e no `alerts.jsonl` |
 | Bybit testnet real | **BLOQUEADO**: o proxy da sessão recusa `api-testnet.bybit.com` (`CONNECT tunnel failed, response 403`); sem chaves de teste no ambiente |
 | Alpaca paper real | **BLOQUEADO**: idem (`paper-api.alpaca.markets` → 403) |
+| Bybit EU testnet real (maestro, 2026-10-19, máquina local) | **Reportado pelo maestro:** chave EU com `check-key` → `can_withdraw: false`; teste na testnet da Bybit EU concluído com sucesso; chaves antigas revogadas, chaves EU só no ambiente local. **Por anexar à #201:** o JSON do `smoke_testnet.py bybiteu` (7 checks) e o `verify-journal` (critério do §5) |
 
 ## 5. Critério para passar a L3 prolongado
 

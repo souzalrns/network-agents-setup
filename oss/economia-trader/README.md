@@ -69,6 +69,7 @@ economia-trader ticker   --exchange bybit --symbol BTCUSDT
 economia-trader backtest --exchange bybit --symbol BTCUSDT --interval 1h --limits limits.json
 economia-trader trade    --mode paper --symbol BTCUSDT --side buy --qty 0.0005 --stop 60000 --limits limits.json
 economia-trader check-key --exchange bybit --mode testnet
+economia-trader check-key --exchange bybiteu --mode testnet   # Bybit EU (bybit.eu): use it where Bybit global is geo-blocked, e.g. Portugal
 economia-trader gate --mode live          # which locks are open right now
 economia-trader kill --reason "drill"     # blocks every new order, all modes
 economia-trader verify-journal .economia-trader/journal.jsonl

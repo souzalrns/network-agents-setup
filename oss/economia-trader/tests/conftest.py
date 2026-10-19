@@ -33,6 +33,7 @@ MARKETS = {
     ],
 }
 MARKETS["mexc"] = MARKETS["bybit"]
+MARKETS["bybiteu"] = MARKETS["bybit"]
 
 
 def offline_ccxt(name, prices=None, *, perms=None, account=None, fail=None):

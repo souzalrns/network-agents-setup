@@ -1,4 +1,4 @@
-﻿"""Crypto spot through **ccxt** (MIT, 100+ exchanges): Bybit and MEXC today.
+"""Crypto spot through **ccxt** (MIT, 100+ exchanges): Bybit (global and EU) and MEXC today.
 
 We do not hand-roll exchange HTTP: ccxt already knows each venue's signing, symbols, testnet
 URLs, precision/lot size and quirks (e.g. Bybit spot market buys are quote-denominated unless
@@ -6,7 +6,9 @@ URLs, precision/lot size and quirks (e.g. Bybit spot market buys are quote-denom
 
 - mainnet orders are refused unless the instance was built for LIVE (the gate decides that);
 - MEXC has no testnet, so its "testnet" rung sends ``params={"test": True}`` (``/order/test``);
-- the key check reads each venue's own permission endpoint and refuses withdraw rights.
+- the key check reads each venue's own permission endpoint and refuses withdraw rights;
+- ``bybiteu`` is Bybit EU (``bybit.eu``, its own testnet): same V5 API as ``bybit``, for accounts
+  where Bybit global is geo-blocked (Portugal, #201).
 
 ``pip install economia-trader[crypto]``. ``client=`` injects any object with the ccxt API
 (tests pass a real ccxt instance with offline markets, or a fake).
@@ -21,7 +23,8 @@ from ..contracts import OrderIntent, dec
 from .base import Credentials, ExchangeError, KeyCheck, Kline, OrderStatus, Ticker, check_interval
 
 TESTNET_VIA_TEST_ORDERS = {"mexc"}  # venues with no sandbox: validate-only orders instead
-EXCHANGE_STOPS = {"bybit"}  # spot stop orders on the exchange (MEXC spot has none: client-side stop)
+BYBIT_V5 = {"bybit", "bybiteu"}  # same V5 API (ccxt.bybiteu subclasses ccxt.bybit), different host
+EXCHANGE_STOPS = BYBIT_V5  # spot stop orders on the exchange (MEXC spot has none: client-side stop)
 _STATUS = {
     "open": "open",
     "closed": "filled",
@@ -117,7 +120,7 @@ class CcxtSpot:
 
     def check_key(self) -> KeyCheck:
         """Each venue's own permission endpoint (ccxt implicit API). Unknown venue = refuse."""
-        if self.name == "bybit":
+        if self.name in BYBIT_V5:
             res = (self._call("query-api", self.client.privateGetV5UserQueryApi) or {}).get("result") or {}
             perms: dict[str, list[str]] = res.get("permissions") or {}
             flat = {p for group in perms.values() for p in (group or [])}
