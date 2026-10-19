@@ -178,3 +178,26 @@ def test_alpaca_key_check_and_factory():
     # the real SDK clients build offline too (no request is made at construction)
     real = make_exchange("alpaca", Mode.TESTNET, env=env)
     assert type(real.trading).__name__ == "TradingClient"
+
+
+def test_bybit_eu_is_its_own_venue_with_its_own_testnet():
+    """#201: Bybit global is geo-blocked from Portugal; Bybit EU (bybit.eu) has its own testnet."""
+    env = {"BYBIT_API_KEY": "k", "BYBIT_API_SECRET": "s"}  # keys created on bybit.eu, same V5 names
+    paper = make_exchange("bybiteu", Mode.PAPER, env={})
+    assert isinstance(paper.client, ccxt.bybiteu) and not paper.allow_mainnet_orders
+    t = make_exchange("bybiteu", Mode.TESTNET, env=env)
+    url = t.client.implode_hostname(t.client.urls["api"]["private"])
+    assert url == "https://api-testnet.bybit.eu" and t.client.apiKey == "k"
+    with pytest.raises(ExchangeError, match="BYBIT_API_KEY"):
+        make_exchange("bybiteu", Mode.TESTNET, env={})
+    # the global venue is unchanged
+    assert isinstance(make_exchange("bybit", Mode.PAPER, env={}).client, ccxt.bybit)
+
+
+def test_bybit_eu_key_check_and_exchange_stops():
+    bad = CcxtSpot("bybiteu", client=offline_ccxt("bybiteu", perms={"Wallet": ["Withdraw"], "Spot": ["SpotTrade"]}))
+    assert bad.check_key().can_withdraw and not bad.check_key().safe_for_trading
+    ok = CcxtSpot("bybiteu", "testnet", client=offline_ccxt("bybiteu"))
+    assert ok.check_key().safe_for_trading
+    ok.place_stop("BTCUSDT", D("0.0002"), D("48000"), "etx-stop")  # stop rests on the exchange, like bybit
+    assert any(c[0] == "create_order" for c in ok.client.calls)

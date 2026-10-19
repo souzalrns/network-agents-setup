@@ -2,6 +2,9 @@
 
 ## 0.1.0 (unreleased, incubating)
 
+- Bybit EU as its own venue `bybiteu` (`ccxt.bybiteu`, `bybit.eu` and its own testnet), for accounts where
+  Bybit global is geo-blocked (Portugal, #201). Same V5 API, key check and exchange-side stops as `bybit`;
+  keys keep the `BYBIT_API_KEY`/`BYBIT_API_SECRET` names. `bybit` (global) is unchanged.
 - Data contracts v1: `EconomicEvent` (four clocks, look-ahead guard), `TradeProposal`,
   `RiskAssessment`, `OrderIntent`, `Fill`, `SimulationRun`.
 - Risk engine: explicit caps (order notional, loss per trade incl. fees, daily loss,

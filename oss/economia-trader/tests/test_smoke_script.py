@@ -4,6 +4,7 @@ every network call recorded offline, so the commands in SMOKE-TESTNET.md cannot 
 import importlib.util
 from pathlib import Path
 
+import pytest
 from conftest import offline_ccxt
 
 from economia_trader.safety import ENV_ALLOW_TESTNET
@@ -18,12 +19,11 @@ def _script():
     return mod
 
 
-def test_smoke_cycle_offline(tmp_path):
+@pytest.mark.parametrize("venue", ["bybit", "bybiteu"])  # bybiteu: Bybit EU, for PT (#201)
+def test_smoke_cycle_offline(tmp_path, venue):
     env = {ENV_ALLOW_TESTNET: "1", "BYBIT_API_KEY": "k-offline", "BYBIT_API_SECRET": "s-offline"}
-    client = offline_ccxt("bybit")
-    ok = _script().smoke(
-        "bybit", "BTCUSDT", "0.0002", EXAMPLES / "limits.example.json", tmp_path, client=client, env=env
-    )
+    client = offline_ccxt(venue)
+    ok = _script().smoke(venue, "BTCUSDT", "0.0002", EXAMPLES / "limits.example.json", tmp_path, client=client, env=env)
     assert ok
     sells = [c for c in client.calls if c[0] == "create_order" and c[1][2] == "sell"]
     assert len(sells) == 2  # the resting stop (placed after the buy) + the one exit; the stop was cancelled first
