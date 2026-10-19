@@ -1,4 +1,4 @@
-"""Crypto spot through **ccxt** (MIT, 100+ exchanges): Bybit and MEXC today.
+﻿"""Crypto spot through **ccxt** (MIT, 100+ exchanges): Bybit and MEXC today.
 
 We do not hand-roll exchange HTTP: ccxt already knows each venue's signing, symbols, testnet
 URLs, precision/lot size and quirks (e.g. Bybit spot market buys are quote-denominated unless
