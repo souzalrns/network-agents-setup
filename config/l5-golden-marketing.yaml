@@ -1,0 +1,147 @@
+# Golden set do L5, pack de marketing (F3b-GS-1; P-34 = A).
+#
+# Mesmo formato e métricas do config/l5-golden-security.yaml (F0.7a): mede se o retrieve
+# REAL devolve o excerto certo do pack `docs/knowledge/marketing/` (F3c, P-35 = A) para
+# perguntas típicas da área. Mede retrieval relevante, não verdade (EXECUTION-PLAN §15.8).
+#
+# Porquê este pack: 16 dos 17 blocos `knowledge:` dos planos pedem `kb: marketing`, e até
+# aqui não havia nenhum caso de avaliação de marketing. A kb `marketing` tem mais ~30
+# fontes (copywriter.md, ai-findability.md, item-13-...), várias sobre o mesmo tema: o
+# `source_hit` mede também se o pack ganha a essas fontes vizinhas.
+#
+# Usado em dois sítios:
+#   - runner/tests/test_l5_golden_marketing.py (offline, sem rede): cada âncora cai em
+#     EXACTAMENTE um chunk da fonte do caso (chunking real) e a pergunta não copia a âncora;
+#   - `python -m plan_runner.l5_eval run --golden config/l5-golden-marketing.yaml`: mede
+#     contra o MCP real (MCP_URL + MCP_API_KEY; o DEV). Gasta 20 embeddings de pergunta.
+#
+# Cada caso tem a sua `source` (o pack tem 7 ficheiros); a de topo é só a omissão.
+# Perguntas parafraseadas de propósito, como no golden de security.
+
+version: 1
+kb: marketing                                  # = agent_id no knowledge_chunks
+source: docs/knowledge/marketing/multi-ai-findability.md
+k: 4                                           # = match_count por omissão do match_knowledge
+
+cases:
+  # --- creative-review-rubric.md -------------------------------------------------------------
+  - id: mkt-01
+    source: docs/knowledge/marketing/creative-review-rubric.md
+    section: "Saída"
+    question: Quando é que uma peça criativa pode ser dada como pronta a publicar?
+    anchor: só true se blockers vazio
+
+  - id: mkt-02
+    source: docs/knowledge/marketing/creative-review-rubric.md
+    section: "Dimensões (1–5)"
+    question: Em que critérios se pontua uma peça na revisão criativa, por exemplo a adequação ao formato?
+    anchor: Canal-fit
+
+  - id: mkt-03
+    source: docs/knowledge/marketing/creative-review-rubric.md
+    section: "Dimensões (1–5)"
+    question: A revisão criativa olha para o risco legal das afirmações do anúncio?
+    anchor: claims verificáveis
+
+  # --- influencer-briefing.md ----------------------------------------------------------------
+  - id: mkt-04
+    source: docs/knowledge/marketing/influencer-briefing.md
+    section: "Secções obrigatórias do brief"
+    question: Que secções tem de ter o brief enviado a um criador de conteúdo pago?
+    anchor: Creative freedom vs mandatory mentions
+
+  - id: mkt-05
+    source: docs/knowledge/marketing/influencer-briefing.md
+    section: "Fit criteria (exemplos)"
+    question: Como avaliar se um influenciador serve a marca para além do número de seguidores?
+    anchor: Relevância de nicho
+
+  # --- media-buying.md -----------------------------------------------------------------------
+  - id: mkt-06
+    source: docs/knowledge/marketing/media-buying.md
+    section: "Princípios"
+    question: O agente de compra de media pode gastar orçamento sem aprovação humana?
+    anchor: spend só após HITL
+
+  - id: mkt-07
+    source: docs/knowledge/marketing/media-buying.md
+    section: "Stop-loss"
+    question: Quando se deve pausar uma campanha paga que não está a converter?
+    anchor: Sem eventos de conversão
+
+  - id: mkt-08
+    source: docs/knowledge/marketing/media-buying.md
+    section: "Plataformas (quando escolher)"
+    question: Que plataforma de anúncios faz sentido para vender a empresas?
+    anchor: B2B (custo alto)
+
+  - id: mkt-09
+    source: docs/knowledge/marketing/media-buying.md
+    section: "Estrutura mínima"
+    question: Como se organiza a hierarquia entre campanha, conjunto de anúncios e anúncio?
+    anchor: audience + budget + placement
+
+  - id: mkt-10
+    source: docs/knowledge/marketing/media-buying.md
+    section: "Princípios"
+    question: Campanhas em sectores regulados, como saúde ou finanças, têm alguma regra especial?
+    anchor: Compliance de sector
+
+  # --- multi-ai-findability.md ---------------------------------------------------------------
+  - id: mkt-11
+    section: "Principio"
+    question: A optimização para assistentes de IA substitui o posicionamento nos resultados de pesquisa?
+    anchor: SEO classico (rankings em SERP)
+
+  - id: mkt-12
+    section: "O que e comum a GPT, Claude, Gemini, etc."
+    question: Que características tornam um texto fácil de citar por modelos como o ChatGPT ou o Claude?
+    anchor: answer-first
+
+  - id: mkt-13
+    section: "O que evitar no discurso"
+    question: Podemos prometer a um cliente que a marca dele vai passar a aparecer nas respostas do ChatGPT?
+    anchor: Garantia de aparecer
+
+  - id: mkt-14
+    section: "Relacao com SEO"
+    question: Qual é a relação entre o SEO tradicional e a preparação de conteúdo para motores generativos?
+    anchor: citabilidade multi-modelo
+
+  - id: mkt-15
+    section: "Principio"
+    question: Que famílias de sistemas de IA lêem, citam e recomendam conteúdo publicado?
+    anchor: Assistentes conversacionais
+
+  # --- seo-tech-audit-checklist.md -----------------------------------------------------------
+  - id: mkt-16
+    source: docs/knowledge/marketing/seo-tech-audit-checklist.md
+    section: "Checklist"
+    question: O que verificar numa primeira auditoria técnica de SEO a uma página, por exemplo nos títulos?
+    anchor: H1 único
+
+  - id: mkt-17
+    source: docs/knowledge/marketing/seo-tech-audit-checklist.md
+    section: "Checklist"
+    question: Em que ficheiro e em que formato sai o resultado da auditoria técnica de SEO?
+    anchor: PASS/FAIL por item
+
+  # --- ugc-pipeline.md -----------------------------------------------------------------------
+  - id: mkt-18
+    source: docs/knowledge/marketing/ugc-pipeline.md
+    section: "Duração"
+    question: Quanto tempo deve durar um vídeo de criador para testes e onde entra o call to action?
+    anchor: típico para testes
+
+  - id: mkt-19
+    source: docs/knowledge/marketing/ugc-pipeline.md
+    section: "Hook types"
+    question: Que tipos de gancho de abertura funcionam em vídeos feitos por utilizadores?
+    anchor: Resultado surpresa
+
+  # --- video-edit-checklist.md ---------------------------------------------------------------
+  - id: mkt-20
+    source: docs/knowledge/marketing/video-edit-checklist.md
+    section: "Checklist"
+    question: O que rever na edição de um vídeo curto antes de o exportar, por exemplo no texto no ecrã?
+    anchor: Legendas legíveis

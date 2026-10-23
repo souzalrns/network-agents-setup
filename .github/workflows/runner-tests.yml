@@ -47,6 +47,8 @@ on:
       - 'scripts/validity_report.py'
       # F3b: autoridade das fontes (test_f3b_authority.py)
       - 'config/knowledge-authority.yaml'
+      # F0.7a / F3b-GS-1: golden sets do L5 (test_l5_eval.py, test_l5_golden_marketing.py)
+      - 'config/l5-golden-*.yaml'
       - 'skills/**'
       # .claude/skills/ e copia gerada de skills/ (test_claude_skills_sync.py)
       - '.claude/skills/**'
@@ -103,6 +105,8 @@ on:
       - 'scripts/validity_report.py'
       # F3b: autoridade das fontes (test_f3b_authority.py)
       - 'config/knowledge-authority.yaml'
+      # F0.7a / F3b-GS-1: golden sets do L5 (test_l5_eval.py, test_l5_golden_marketing.py)
+      - 'config/l5-golden-*.yaml'
       - 'skills/**'
       # .claude/skills/ e copia gerada de skills/ (test_claude_skills_sync.py)
       - '.claude/skills/**'
