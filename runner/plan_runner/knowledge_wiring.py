@@ -35,9 +35,11 @@ worker externo (humano ou agente) sem saber que o contexto nao chegou.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
+from .artifact_sources import KNOWLEDGE_SOURCES_FILE, knowledge_sources
 from .events import EventLog
 from .knowledge import grounding_block, retrieve_knowledge
 from .mcp_knowledge import McpKnowledge, McpKnowledgeError
@@ -123,6 +125,10 @@ def inject_knowledge_context(
         return
 
     path.write_text(grounding_block(hits), encoding="utf-8")
+    # F3-ART-1: as fontes do contexto vão para o result.json do passo (artifact_sources.collect)
+    (path.parent / KNOWLEDGE_SOURCES_FILE).write_text(
+        json.dumps(knowledge_sources(hits, kb), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     log.append(
         "knowledge_context_injected",
         run_id,

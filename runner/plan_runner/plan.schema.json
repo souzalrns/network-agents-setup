@@ -109,6 +109,11 @@
           "description": "AU-20: kb que o retrieve_knowledge pode usar neste passo (sem isto: o kb do bloco knowledge:; sem nenhum, a tool fica de fora)",
           "items": {"type": "string", "pattern": "^[A-Za-z0-9_+-]{1,40}$"}
         },
+        "web_area": {
+          "type": "string",
+          "description": "F2: área do config/web-allowlist.yaml para a tool fetch_url (a área vem do plano, nunca do modelo)",
+          "pattern": "^[a-z][a-z0-9_-]{0,39}$"
+        },
         "context": {
           "type": "object",
           "description": "B1-bis (context_policy.py)",

@@ -116,8 +116,15 @@ def grounding_block(hits: list[dict[str, Any]]) -> str:
     for hit in hits:
         content = (hit.get("content") or "").strip().replace("\n", " ")
         citation = hit.get("citation") or {}
+        meta = hit.get("metadata") if isinstance(hit.get("metadata"), dict) else {}
         source = citation.get("source") or "?"
         locator = citation.get("locator") or "?"
-        lines.append(f"- {content} [Fonte: {source} @ {locator}]")
+        extra = [f"uri: {citation['uri']}"] if citation.get("uri") else []
+        if meta.get("status") and meta["status"] != "active":
+            extra.append(f"estado: {meta['status']}")
+        if meta.get("valid_to"):
+            extra.append(f"válido até {meta['valid_to']}")
+        tail = f" | {'; '.join(extra)}" if extra else ""
+        lines.append(f"- {content} [Fonte: {source} @ {locator}{tail}]")
     lines.append("[/L5 CONTEXT]")
     return "\n".join(lines)
