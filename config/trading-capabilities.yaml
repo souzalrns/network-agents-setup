@@ -1,0 +1,40 @@
+# Trading capabilities v1 — F6, domínio de prova (P-79 = A, maestro, 2026-10-23)
+# Não são agentes. O plan_runner corre actions; skills/agents implementam.
+# Validado no E7 (python -m plan_runner.areas). Sem execução: os 3 níveis são read/prepare;
+# o nível `act` é recusado pelo validador com act_in_production: forbidden.
+# A execução (paper/testnet/live) fica no oss/economia-trader, fora do runner, com os seus
+# próprios gates (docs/knowledge/trading/risk-policy.md). Dinheiro real bloqueado no setup.
+# Medição do Domain Onboarding Cost: docs/ops/F6-TRADING-DOC.md.
+
+version: 1
+domain: trading
+policy:
+  offensive: forbidden          # nada de manipulação de mercado, spoofing ou front-running
+  act_in_production: forbidden  # nenhum agente envia, aprova ou altera ordens, chaves ou limites
+  default_level: read
+  hitl: required                # a área trading tem hitl: required
+
+capabilities:
+  - id: market_analysis
+    description: Análise de mercado com fontes públicas permitidas, factos citados e hipóteses à parte.
+    levels: [read]
+    action: market_analysis
+    agent: trading.market_analysis
+    skill: skills/trading/market_analysis/SKILL.md
+    status: implemented
+
+  - id: risk_review
+    description: Verificação de propostas e limites contra a política de risco, com bloqueios para a decisão humana.
+    levels: [read, prepare]
+    action: risk_review
+    agent: trading.risk_review
+    skill: skills/trading/risk_review/SKILL.md
+    status: implemented
+
+  - id: post_trade_review
+    description: Revisão pós-trade semanal a partir do JSON do economia-trader review (processo à parte do resultado).
+    levels: [read, prepare]
+    action: post_trade_review
+    agent: trading.post_trade_review
+    skill: skills/trading/post_trade_review/SKILL.md
+    status: implemented

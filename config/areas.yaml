@@ -159,13 +159,27 @@ areas:
     grounding: slim   # B1-bis: directiva curta (agents/_shared/grounding.slim.md); risco fica full
 
   - id: finance
-    description: Contabilidade PT/BR e análise financeira. Trading (G1/B3) ainda não existe.
-    keywords: [contabil, balancete, iva, irs, imposto, fatura, financeir, orcament, despesa, lucro, fluxo de caixa, investiment, trading, bolsa, cripto, declaracao]
+    description: Contabilidade PT/BR e análise financeira. Trading está na área `trading` (F6).
+    keywords: [contabil, balancete, iva, irs, imposto, fatura, financeir, orcament, despesa, lucro, fluxo de caixa, investiment, declaracao]
     agents:
       - gestao.contabilidade
     horizontals: [meta.planejador]
     budget: {max_tokens: 40000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: required   # P-AG-118 (docs/estrutura-geral-agentes.md:156); grounding (agents/_shared/grounding.directive.md:39)
+
+  - id: trading
+    description: >
+      Domínio de prova do F6 (P-79 = A): análise de mercado, revisão de risco e revisão
+      pós-trade sobre o oss/economia-trader. Sem execução: nenhum agente envia, aprova ou
+      altera ordens (config/trading-capabilities.yaml). Dinheiro real bloqueado.
+    keywords: [trading, bolsa, cripto, backtest, volatil, trader]
+    agents:
+      - trading.market_analysis
+      - trading.risk_review
+      - trading.post_trade_review
+    horizontals: [meta.planejador]
+    budget: {max_tokens: 40000}   # igual à finance (área de risco)
+    hitl: required   # trading é domínio de alto risco (agents/_shared/grounding.directive.md:39)
 
   - id: gamedev
     description: Desenvolvimento de jogos (G2). Sem agentes na v1.

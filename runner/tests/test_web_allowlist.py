@@ -68,6 +68,10 @@ V1 = {
     "finance": ["bcb.gov.br", "cvm.gov.br", "b3.com.br", "fazenda.gov.br", "ibge.gov.br", "bportugal.pt",
                 "cmvm.pt", "ecb.europa.eu", "esma.europa.eu", "sec.gov", "federalreserve.gov", "imf.org",
                 "worldbank.org", "oecd.org", "bis.org"],
+    # F6 (P-79 = A, maestro, 2026-10-23: "segue com tudo o que recomendou"): só domínios já
+    # aprovados para a `finance`, sem nenhum novo.
+    "trading": ["b3.com.br", "cvm.gov.br", "bcb.gov.br", "cmvm.pt", "bportugal.pt", "ecb.europa.eu",
+                "esma.europa.eu", "sec.gov", "federalreserve.gov", "bis.org"],
     "gamedev": ["unity.com", "docs.unity3d.com", "unrealengine.com", "docs.unrealengine.com", "godotengine.org",
                 "docs.godotengine.org", "khronos.org", "blender.org", "docs.blender.org", "itch.io",
                 "partner.steamgames.com", "gamedeveloper.com"],
@@ -86,7 +90,7 @@ V1 = {
 def test_ficheiro_real_tem_a_v1_do_maestro():
     areas = wa.load(REPO_ROOT / wa.ALLOWLIST_FILE)["areas"]
     assert {a: list(d or []) for a, d in areas.items()} == V1
-    assert sum(len(d) for d in V1.values()) == 128  # 122 da v1 + 9 da P-46 - 3 nomes trocados
+    assert sum(len(d) for d in V1.values()) == 138  # 122 da v1 + 9 da P-46 - 3 nomes trocados + 10 do F6 (repetidos da finance)
 
 
 # P-46 = A: os endereços actuais das mesmas fontes (evidência: a sonda do CI, run 37807283070).

@@ -1,0 +1,109 @@
+{
+  "trades": [
+    {
+      "symbol": "BTCUSDT",
+      "mode": "paper",
+      "opened_at": "2026-10-23T19:35:34.062+00:00",
+      "closed_at": "2026-10-23T19:35:34.063+00:00",
+      "holding_s": 0.0,
+      "entries": [
+        "prop_0157d8168f0b"
+      ],
+      "proposers": [
+        "baseline@v1"
+      ],
+      "exit_by": [
+        "stop"
+      ],
+      "process": {
+        "grade": "clean",
+        "breaks": [],
+        "protection": {
+          "where": "client-side (paper)",
+          "gap_s": null,
+          "drops": 0
+        }
+      },
+      "outcome": {
+        "net": "-1.2484",
+        "gross": "-1.1494",
+        "r": "-1.13",
+        "risk_1r": "1.1000"
+      },
+      "costs": {
+        "fees": "0.0989",
+        "fees_bps": "19.8",
+        "entry_slippage_bps": "5.0",
+        "exit_slippage_bps": "5.0"
+      },
+      "finding": {
+        "type": "clean",
+        "stage": "-",
+        "detail": "nothing to change"
+      }
+    },
+    {
+      "symbol": "ETHUSDT",
+      "mode": "paper",
+      "opened_at": "2026-10-23T19:35:34.063+00:00",
+      "closed_at": "2026-10-23T19:35:34.063+00:00",
+      "holding_s": 0.0,
+      "entries": [
+        "prop_a93221618e17"
+      ],
+      "proposers": [
+        "baseline@v1"
+      ],
+      "exit_by": [
+        "baseline@v1"
+      ],
+      "process": {
+        "grade": "clean",
+        "breaks": [],
+        "protection": {
+          "where": "client-side (paper)",
+          "gap_s": null,
+          "drops": 0
+        }
+      },
+      "outcome": {
+        "net": "-0.0900",
+        "gross": "-0.0300",
+        "r": "-0.08",
+        "risk_1r": "1.0600"
+      },
+      "costs": {
+        "fees": "0.0600",
+        "fees_bps": "20.0",
+        "entry_slippage_bps": "5.0",
+        "exit_slippage_bps": "5.0"
+      },
+      "finding": {
+        "type": "clean",
+        "stage": "-",
+        "detail": "nothing to change"
+      }
+    }
+  ],
+  "weeks": {
+    "2026-W43": {
+      "closed": 2,
+      "hit_rate": 0.0,
+      "avg_win_r": null,
+      "avg_loss_r": "-0.60",
+      "expectancy_r": "-0.60",
+      "net": "-1.3384",
+      "largest_loss": "-1.2484",
+      "fees": "0.1589",
+      "fees_share_of_gross": null,
+      "process": {
+        "clean": 2
+      },
+      "breaks": {},
+      "pattern": null
+    }
+  },
+  "open": [],
+  "orphan_sells": 0,
+  "method": "process graded apart from outcome; adapted from HyperGrok's Trade Reviewer (MIT)"
+}

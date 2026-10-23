@@ -1,0 +1,66 @@
+# F6 (P-79 = A): domínio de prova trading — análise de mercado + revisão de risco + decisão
+# humana. Exemplo genérico, sem conta real e sem execução: nenhum passo envia ordens.
+# Uso (a partir de runner/):
+#   python -m plan_runner run ../docs/orchestration/trading/templates/examples/market-analysis-demo.plan.yaml \
+#     --mode stub --out ../pilots/run-trading-market
+#   PLAN_RUNNER_TOOLS=1 python -m plan_runner run ... --mode external --worker gemini --out ../pilots/run-trading-market
+# A tool `fetch_url` só busca domínios da área `trading` do config/web-allowlist.yaml.
+# O conhecimento do domínio chega por `repo_files` (o pack ainda não está no L5:
+# docs/ops/F6-TRADING-DOC.md, achado A-1).
+
+id: example-trading-market-analysis
+version: 1
+deliverable_type: trading_risk_review
+objective: >
+  Resumir o que as fontes públicas permitidas (reguladores e bancos centrais) dizem sobre o
+  contexto de taxas de juro e de supervisão que afecta cripto-activos à vista na UE, e
+  verificar contra a política de risco qualquer hipótese de entrada que a análise levante.
+audience: >
+  O maestro, que decide se alguma hipótese vale um teste em modo paper no economia-trader.
+
+budget:
+  max_steps: 4
+  max_tokens: 40000
+
+steps:
+  - id: analysis
+    action: market_analysis
+    vertical: trading
+    task: >
+      Usa a tool fetch_url para ler 1 a 3 páginas relevantes (só domínios permitidos).
+      Devolve JSON com "content" (Markdown: factos com fonte, hipóteses à parte, lacunas),
+      "sources" ({url, title, retrieved_at} das páginas usadas), "limitations" e "artifacts" ([]).
+      Não proponhas ordens; uma ideia de entrada é hipótese, com stop.
+    tools_allowed: [fetch_url]
+    web_area: trading
+    tool_limits: {max_tool_calls: 3}
+    repo_files:
+      - docs/knowledge/trading/risk-policy.md
+    output_artifact: artifacts/01-market-analysis.json
+
+  - id: risk
+    action: risk_review
+    vertical: trading
+    depends_on: [analysis]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-market-analysis.json]
+    repo_files:
+      - docs/knowledge/trading/risk-policy.md
+      - oss/economia-trader/examples/limits.example.json
+    output_artifact: artifacts/02-risk-review.md
+
+  - id: hitl_decision
+    action: plan_approve
+    depends_on: [risk]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/03-hitl.json
+
+done_when:
+  - artifacts/01-market-analysis.json exists
+  - artifacts/02-risk-review.md exists
+  - human_gate_resolved on hitl_decision
+  - no production_write by trading agents

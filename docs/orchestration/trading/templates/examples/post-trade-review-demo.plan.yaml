@@ -1,0 +1,50 @@
+# F6 (P-79 = A): domínio de prova trading — revisão pós-trade semanal a partir do output do
+# `economia-trader review`. Sem execução e sem rede.
+#
+# fixtures/paper-review-sample.json: saída REAL do `review` do oss/economia-trader sobre um
+# journal FICTÍCIO em modo paper (2 trades, exchange simulado dos testes; nada tocou num
+# exchange). Para a semana real: `economia-trader review --since <data> > review.json` e
+# trocar o path abaixo (o journal real nunca entra no git).
+# Uso (a partir de runner/):
+#   python -m plan_runner run ../docs/orchestration/trading/templates/examples/post-trade-review-demo.plan.yaml \
+#     --mode stub --out ../pilots/run-trading-review
+#   python -m plan_runner run ... --mode external --worker gemini --out ../pilots/run-trading-review
+
+id: example-trading-post-trade-review
+version: 1
+deliverable_type: trading_post_trade_review
+objective: >
+  Escrever a revisão pós-trade da semana a partir do JSON do economia-trader review:
+  processo avaliado à parte do resultado, resultado em R e em dinheiro, custos e o achado
+  repetível da semana.
+audience: >
+  O maestro, que decide se a estratégia continua em paper, muda de parâmetros ou pára.
+
+budget:
+  max_steps: 3
+  max_tokens: 30000
+
+steps:
+  - id: review
+    action: post_trade_review
+    vertical: trading
+    tools_allowed: [read_repo_file]
+    repo_files:
+      - docs/orchestration/trading/templates/examples/fixtures/paper-review-sample.json
+      - docs/knowledge/trading/post-trade-review-method.md
+    output_artifact: artifacts/01-post-trade-review.md
+
+  - id: hitl_decision
+    action: plan_approve
+    depends_on: [review]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/02-hitl.json
+
+done_when:
+  - artifacts/01-post-trade-review.md exists
+  - human_gate_resolved on hitl_decision
+  - no production_write by trading agents
