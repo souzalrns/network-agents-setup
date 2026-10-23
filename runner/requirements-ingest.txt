@@ -5,3 +5,6 @@
 # Antes de subir a versão: github.com/microsoft/markitdown/security (mitigação 4).
 # Os extras são os 3 formatos do spike (ADR §9, S2).
 markitdown[docx,pdf,xlsx]>=0.1.8
+# Pillow chega por transitiva (markitdown). Mínimo 13.0.0: abaixo há CVE-2026-112900 (RCE pelo
+# Ghostscript em EPS), CVE-2026-112393 (TIFF) e CVE-2026-112403 (miniatura JPEG) - 2026-10-23.
+pillow>=13.0.0
