@@ -1,0 +1,43 @@
+# F2 (EXECUTION-PLAN §7): 1 capability (market_research) + 1 tool de fetch com proveniência
+# no artefacto. Exemplo genérico, sem cliente real.
+# Uso: PLAN_RUNNER_TOOLS=1 plan_runner run docs/orchestration/marketing/templates/examples/web-research-demo.plan.yaml \
+#        --mode external --worker gemini --out ../pilots/run-web-research
+# A tool `fetch_url` só busca domínios da área `marketing` do config/web-allowlist.yaml
+# (a área vem daqui, do passo; o modelo só escolhe o URL). O result.json do passo lista
+# as fontes em meta.sources (F3-ART-1).
+
+id: example-web-research-demo
+version: 1
+deliverable_type: market_research
+objective: >
+  Resumir o que as fontes públicas da allowlist de marketing dizem sobre conteúdo
+  "answer-first" para pesquisa com IA, citando cada afirmação.
+audience: >
+  Equipa de marketing que vai escrever o brief SEO a seguir.
+
+budget:
+  max_steps: 4
+
+steps:
+  - id: research
+    action: research
+    task: >
+      Usa a tool fetch_url para ler 1 a 3 páginas relevantes (só domínios permitidos).
+      Devolve JSON com: "content" (resumo em Markdown, cada afirmação com a fonte),
+      "sources" (lista de {url, title, retrieved_at} das páginas que usaste),
+      "limitations" (o que não conseguiste confirmar ou buscar) e "artifacts" ([]).
+      Não inventes fontes: só as que a tool devolveu.
+    tools_allowed: [fetch_url]
+    web_area: marketing
+    tool_limits: {max_tool_calls: 3}
+    output_artifact: artifacts/01-web-research.json
+
+  - id: hitl_review
+    action: plan_approve
+    depends_on: [research]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/02-hitl.json

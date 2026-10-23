@@ -46,8 +46,8 @@ from typing import Any
 import httpx
 import yaml
 
+from . import artifact_sources, cost, hitl
 from . import context_policy as cp
-from . import cost, hitl
 from . import memory_wiring as mw
 from . import model_tiers as mt
 from . import repo_files as rf
@@ -722,6 +722,7 @@ class GeminiWorker:
         tools: bool | None = None,
         knowledge_backend: Callable[[], Any] | None = None,
         project_budget: bool | None = None,
+        web_fetcher: Callable[..., dict[str, Any]] | None = None,
     ):
         self.model = model or os.environ.get("AGENT_MODEL") or DEFAULT_MODEL
         # L4 (D3): True = DATABASE_URL do ambiente (se houver); so e usada por planos com `memory:`.
@@ -736,6 +737,7 @@ class GeminiWorker:
         # AU-20 (P-37 = B): executor de tools, desligado por omissao (PLAN_RUNNER_TOOLS=1 liga).
         self.tools = te.tools_enabled_from_env(dict(os.environ)) if tools is None else bool(tools)
         self.knowledge_backend = knowledge_backend
+        self.web_fetcher = web_fetcher  # F2: injectável nos testes; por omissão scripts/web_fetch.py
         # Budget-by-estimate (ADR-002): guarda projectiva antes da chamada, por
         # countTokens. Opt-in (PLAN_RUNNER_BUDGET_PROJECT=1); por omissao desligada,
         # por isso o comportamento normal nao muda.
@@ -912,6 +914,8 @@ class GeminiWorker:
                 self.memory, sm, memories, out_root=out_root, run_id=run_id, plan_id=plan_raw.get("id"), step_id=step_id)
         if mem_meta is not None:
             result["meta"]["memory"] = mem_meta
+        # F3-ART-1: o artefacto diz de onde veio (L5 injectado + tools com fontes)
+        result["meta"]["sources"] = artifact_sources.collect(pending, tools_meta)
         (pending / "result.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         (pending / ERROR_FILE).unlink(missing_ok=True)
         return result
@@ -935,7 +939,8 @@ class GeminiWorker:
         pending_dir = out_root / "pending_steps" / step_id
         resume_state, approvals, before = self._tool_approval_resume(out_root, pending_dir, step_id, run_id)
         ctx = te.ToolContext(repo_root=repo_root_from_out(out_root), out_root=out_root, step_id=step_id,
-                             knowledge_backend=self.knowledge_backend)
+                             knowledge_backend=self.knowledge_backend,
+                             web_area=(step_raw or {}).get("web_area"), web_fetcher=self.web_fetcher)
         events = EventLog(out_root / "events.jsonl")
         rows: list[dict[str, Any]] = []
         ledgers: list[dict[str, Any]] = []

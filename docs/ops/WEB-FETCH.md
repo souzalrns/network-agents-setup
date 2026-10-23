@@ -111,3 +111,13 @@ Para correr contra outros hosts nesta sessão, é preciso acrescentá-los à pol
 | `discover` (pesquisa) | Precisa de uma API de pesquisa (custo ou chave) | F2 canónico |
 | Domínios da allowlist por área (ADR §3, item 4) | São política: escolhe-os o maestro. O mecanismo está feito (§2.1) | F2-ALLOW-1 (P-25 = A) |
 | O destino do `scrape.yml` | Escreve em produção, por fora do T6 | P-24 |
+
+## F2b: a tool `fetch_url` no runner (2026-10-23)
+
+O `fetch` passa a estar disponível aos agentes como tool do executor (`runner/plan_runner/tool_executor.py`, AU-20), com a mesma proteção:
+
+- **a área vem do plano**, no passo, em `web_area: <área>` (`plan.schema.json`); o modelo só escolhe o URL. Sem `web_area`, a tool devolve `no_web_area` sem pedido de rede; numa área vazia, `blocked_by_allowlist`;
+- o texto chega ao modelo com uma linha `[Fonte: <URL final> | <título> | obtida em <data>]`, num máximo de 12 000 caracteres;
+- a proveniência completa (`uri`, `final_url`, `title`, `retrieved_at`, `content_hash`, `http_status`) fica no registo da chamada e em `result.json → meta.sources` (F3-ART-1, `runner/plan_runner/artifact_sources.py`).
+
+Exemplo: `docs/orchestration/marketing/templates/examples/web-research-demo.plan.yaml` (capability `market_research`, área `marketing`, artefacto JSON com `content`, `sources`, `limitations` e `artifacts`). Corre com `PLAN_RUNNER_TOOLS=1`. Testes: `runner/tests/test_f2_fetch_tool.py`.

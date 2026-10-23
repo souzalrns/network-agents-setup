@@ -97,6 +97,8 @@ class ToolContext:
     out_root: Path
     step_id: str
     knowledge_backend: Callable[[], Any] | None = None  # fábrica (lazy): só se cria se a tool correr
+    web_area: str | None = None  # F2: área do config/web-allowlist.yaml que o passo declara (`web_area`)
+    web_fetcher: Callable[..., dict[str, Any]] | None = None  # injectável (testes); por omissão scripts/web_fetch.py
 
 
 @dataclass(frozen=True)
@@ -144,6 +146,54 @@ def _retrieve_knowledge(args: dict[str, Any], ctx: ToolContext) -> dict[str, Any
     return {"ok": True, "content": json.dumps(out, ensure_ascii=False), "hits": len(out), "sources": sources}
 
 
+FETCH_MAX_CHARS = 12_000
+
+
+def _load_web_fetch(repo_root: Path) -> Any:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("plan_runner_web_fetch", repo_root / "scripts" / "web_fetch.py")
+    if spec is None or spec.loader is None:
+        raise RuntimeError("scripts/web_fetch.py não encontrado")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _fetch_url(args: dict[str, Any], ctx: ToolContext) -> dict[str, Any]:
+    """F2: 1 página web pelo `fetch` (F2a), com a allowlist da área do passo e a proveniência completa.
+
+    A área vem do plano (`web_area` no passo), nunca do modelo: o modelo só escolhe o URL,
+    e um domínio fora da área é recusado sem pedido de rede."""
+    from . import web_allowlist as wa
+
+    if not ctx.web_area:
+        return {"ok": False, "error": "no_web_area", "detail": "o passo não declara `web_area`; sem área não há allowlist"}
+    try:
+        allowlist, _ = wa.resolve_allowlist(ctx.repo_root, ctx.web_area, None)
+    except wa.AllowlistError as e:
+        return {"ok": False, "error": "blocked_by_allowlist", "detail": str(e)}
+    fetcher = ctx.web_fetcher or _load_web_fetch(ctx.repo_root).fetch
+    try:
+        got = fetcher(args["url"], allowlist=allowlist)
+    except Exception as e:  # noqa: BLE001 -- FetchError (ou outra) volta ao modelo como erro, com o código
+        code = getattr(e, "code", None) or "fetch_error"
+        return {"ok": False, "error": str(code), "detail": str(getattr(e, "detail", "") or e)[:300]}
+    meta = dict(got.get("source_meta") or {})
+    keep = ("uri", "final_url", "title", "retrieved_at", "content_hash", "status", "http_status")
+    prov = {k: meta.get(k) for k in keep if meta.get(k) is not None}
+    prov["kind"] = "web"
+    prov["area"] = ctx.web_area
+    head = f"[Fonte: {prov.get('final_url') or prov.get('uri')} | {prov.get('title', '')} | obtida em {prov.get('retrieved_at', '?')}]\n\n"
+    return {
+        "ok": True,
+        "content": head + str(got.get("content") or ""),
+        "warnings": list(got.get("warnings") or []),
+        "sources": [prov.get("final_url") or prov.get("uri")],
+        "provenance": [prov],
+    }
+
+
 REGISTRY: dict[str, Tool] = {
     "read_repo_file": Tool(
         name="read_repo_file",
@@ -167,6 +217,17 @@ REGISTRY: dict[str, Tool] = {
         handler=_retrieve_knowledge,
         kb_scoped=True,
     ),
+    "fetch_url": Tool(
+        name="fetch_url",
+        description=("Vai buscar 1 página web (http/https) e devolve o texto em Markdown com a fonte "
+                     "(URL final, título, data). Só domínios da allowlist da área do passo; robots.txt e "
+                     "limites de tamanho e tempo aplicam-se. Cita sempre o URL final no que escreveres."),
+        parameters={"type": "object", "properties": {"url": {"type": "string", "description": "URL completo (https://...)"}},
+                    "required": ["url"]},
+        level="read",
+        handler=_fetch_url,
+        max_output_chars=FETCH_MAX_CHARS,
+    ),
 }
 
 # Validação mais estrita do que o subconjunto de JSON Schema que o Gemini aceita
@@ -174,6 +235,8 @@ REGISTRY: dict[str, Tool] = {
 VALIDATION: dict[str, dict[str, Any]] = {
     "read_repo_file": {"type": "object", "additionalProperties": False, "required": ["path"],
                        "properties": {"path": {"type": "string", "minLength": 1, "maxLength": 300}}},
+    "fetch_url": {"type": "object", "additionalProperties": False, "required": ["url"],
+                  "properties": {"url": {"type": "string", "minLength": 8, "maxLength": 2000, "pattern": "^https?://"}}},
     "retrieve_knowledge": {"type": "object", "additionalProperties": False, "required": ["kb", "query"],
                            "properties": {"kb": {"type": "string", "pattern": KB_PATTERN},
                                           "query": {"type": "string", "minLength": 1, "maxLength": 1000},
@@ -388,9 +451,11 @@ def execute_call(
         out = {**out, "content": content[: tool.max_output_chars] + "\n[... cortado pelo executor]", "truncated": True}
     record["bytes"] = len(str(out.get("content") or "").encode("utf-8"))
     record["sources"] = list(out.get("sources") or [])[:20]
+    if out.get("provenance"):
+        record["provenance"] = list(out["provenance"])[:20]
     if out.get("truncated"):
         record["truncated"] = True
-    response = {k: v for k, v in out.items() if k != "sources"}
+    response = {k: v for k, v in out.items() if k not in ("sources", "provenance")}
     return done(response)
 
 
