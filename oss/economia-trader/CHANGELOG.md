@@ -2,6 +2,11 @@
 
 ## 0.1.0 (unreleased, incubating)
 
+- Post-trade review `economia-trader review` (`review.py`): per trade, the process graded apart from
+  the outcome (clean / minor / major break, by stage), the result in R and money after fees, entry and
+  exit slippage against the ticket, and one finding; per ISO week, hit rate, expectancy in R, largest
+  loss and fees share. Read-only, from the journal. Method adapted from HyperGrok's Trade Reviewer
+  (galleonlabs/hypergrok-trading-desk, MIT).
 - Bybit EU as its own venue `bybiteu` (`ccxt.bybiteu`, `bybit.eu` and its own testnet), for accounts where
   Bybit global is geo-blocked (Portugal, #201). Same V5 API, key check and exchange-side stops as `bybit`;
   keys keep the `BYBIT_API_KEY`/`BYBIT_API_SECRET` names. `bybit` (global) is unchanged.
