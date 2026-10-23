@@ -37,7 +37,15 @@ O `ANM:.github/workflows/scrape.yml` lê a página inteira, sem allowlist nem ro
 
 **Avisos:** `redirected` (o `final_url` é diferente do `uri`), `title_from_host` (a página sem `<title>`) e `decode_errors_replaced` (charset inválido).
 
-**Limitação conhecida:** o nome é resolvido para a verificação de SSRF e depois outra vez pelo httpx. Um ataque de DNS rebinding entre as 2 resoluções fica fora do F2a.
+**DNS rebinding (F2-SEC-1, 2026-10-23):**
+- **O que muda no `fetchtron` 0.2.0** (`oss/fetchtron`):
+  - em cada salto, o nome é resolvido **uma vez** e todos os endereços têm de ser públicos;
+  - a ligação vai para o IP verificado; o `Host` e o SNI/TLS ficam com o nome, por isso o certificado continua a ser validado para o nome;
+  - o robots.txt e os redirects usam o mesmo IP;
+  - atrás de um proxy do ambiente, quem resolve é o proxy; aí o IP não é fixado e o resultado leva o aviso `dns_not_pinned_proxy`.
+- **Estado no runner:** ainda usa o 0.1.0 do PyPI (`runner/requirements.txt`), por isso a janela de rebinding continua aberta até à publicação.
+- **Para ficar activo:** publicar o 0.2.0 (workflow `publish-fetchtron`, por tag `fetchtron-v0.2.0` ou à mão) e subir o pin para `fetchtron==0.2.0`. Os testes do runner já passam com o 0.2.0.
+- **Até lá:** a mitigação continua a ser a allowlist da área em cada chamada.
 
 ### 2.1 Allowlist por área (F2-ALLOW-1, P-25 = A)
 

@@ -9,8 +9,9 @@ sem allowlist nem robots, e escrevia directamente na tabela `scrapes` do Supabas
 - **allowlist** de domínios (o domínio e os subdomínios), verificada em cada redirect;
 - **robots.txt** (RFC 9309): 4xx = sem regras; 5xx ou inacessível = tudo proibido;
 - **sem endereços privados** (SSRF): loopback, rede privada, link-local, multicast,
-  reservados. Limitação conhecida: o nome é resolvido aqui e outra vez pelo httpx (DNS
-  rebinding fica fora do F2a);
+  reservados. DNS rebinding (F2-SEC-1): fechado no `fetchtron` 0.2.0 (o nome é resolvido
+  uma vez e a ligação vai para o IP verificado); fica activo aqui quando o pin do
+  `runner/requirements.txt` subir de 0.1.0 para 0.2.0, depois de publicado no PyPI;
 - **limites**: tamanho (lido em streaming, nunca a página inteira), prazo total do pedido
   (trava respostas lentas em gotas), redirects, content-type HTML;
 - **HTML → Markdown** pelo mesmo adapter MarkItDown do F1 (`HtmlConverter`, `strict=True`), no

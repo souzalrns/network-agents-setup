@@ -20,9 +20,11 @@ The allowlist is **data you pass in** (a list of domains; a domain also covers i
 subdomains). Where the policy comes from — a config file, an area map, a per-tenant
 rule — is the caller's business; fetchtron only enforces it.
 
-Honest limit (see POSITIONING.md): the host is resolved for the SSRF check and then
-again by the HTTP client, so a DNS-rebinding window exists. Roadmap closes it by
-pinning the resolved IP into the connection.
+DNS rebinding (0.2.0): on every hop the host is resolved **once**, every address must be
+public, and the connection goes to that checked address (``Host`` and TLS SNI/certificate
+still use the hostname), so a second, different DNS answer is never used. Behind an
+environment proxy the proxy resolves the name instead; then the IP is not pinned and the
+result carries the warning ``dns_not_pinned_proxy`` (see POSITIONING.md).
 """
 
 from __future__ import annotations
@@ -30,12 +32,13 @@ from __future__ import annotations
 import ipaddress
 import socket
 import time
+import urllib.request
 import urllib.robotparser
 from dataclasses import dataclass, field
 from hashlib import sha256
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "DEFAULT_USER_AGENT",
@@ -54,7 +57,7 @@ DEFAULT_MAX_BYTES = 5 * 1024 * 1024
 DEFAULT_MAX_REDIRECTS = 5
 ROBOTS_MAX_BYTES = 512 * 1024  # RFC 9309 §2.5: a client must read at least 500 KiB
 REDIRECT_CODES = (301, 302, 303, 307, 308)
-DEFAULT_USER_AGENT = "fetchtron/0.1 (+https://pypi.org/project/fetchtron/)"
+DEFAULT_USER_AGENT = "fetchtron/0.2 (+https://pypi.org/project/fetchtron/)"
 
 ERROR_CODES = (
     "invalid_uri",
@@ -128,22 +131,65 @@ def is_public_address(ip: str) -> bool:
     return not any(getattr(addr, flag) for flag in _NON_PUBLIC_FLAGS)
 
 
-def _check_url(url: str, allowlist, *, allow_private: bool) -> None:
+def _default_port(scheme: str) -> int:
+    return 443 if scheme == "https" else 80
+
+
+def _check_url(url: str, allowlist, *, allow_private: bool) -> list[str]:
+    """Validate scheme + allowlist, resolve the host **once** and return its addresses.
+
+    Every address must be public (unless ``allow_private``). The caller connects to one of
+    these addresses (``_pinned``), never to a second DNS answer: that closes the
+    DNS-rebinding window between this check and the connection.
+    """
     parts = urlsplit(url)
     if parts.scheme not in ("http", "https") or not parts.hostname:
         raise FetchError("invalid_uri", f"only http/https with a host: {clean_uri(url)}")
     if not host_allowed(parts.hostname, allowlist):
         raise FetchError("blocked_by_allowlist", f"{parts.hostname} is not in the allowlist {list(allowlist)}")
-    if allow_private:
-        return
+    port = parts.port or _default_port(parts.scheme)
     try:
-        infos = socket.getaddrinfo(parts.hostname, parts.port or 443, proto=socket.IPPROTO_TCP)
+        infos = socket.getaddrinfo(parts.hostname, port, proto=socket.IPPROTO_TCP)
     except socket.gaierror as exc:
         raise FetchError("http_error", f"the name {parts.hostname} does not resolve: {exc}") from exc
+    ips: list[str] = []
     for info in infos:
-        ip = info[4][0]
-        if not is_public_address(ip):
+        ip = info[4][0].split("%")[0]  # drop an IPv6 zone id
+        if not allow_private and not is_public_address(ip):
             raise FetchError("blocked_private_address", f"{parts.hostname} resolves to {ip} (not public)")
+        if ip not in ips:
+            ips.append(ip)
+    if not ips:
+        raise FetchError("http_error", f"the name {parts.hostname} has no address")
+    return sorted(ips, key=lambda ip: ":" in ip)  # IPv4 first (IPv6 is often unroutable)
+
+
+def _proxied(url: str, trust_env: bool) -> bool:
+    """True if an environment proxy would carry this URL (then the proxy resolves the name)."""
+    if not trust_env:
+        return False
+    parts = urlsplit(url)
+    proxies = urllib.request.getproxies_environment()
+    if not (proxies.get(parts.scheme) or proxies.get("all")):
+        return False
+    return not urllib.request.proxy_bypass_environment(parts.hostname or "", proxies)
+
+
+def _pinned(url: str, ip: str) -> tuple[str, dict, dict]:
+    """The request for ``url`` sent to ``ip``: (url with the IP, headers, httpx extensions).
+
+    ``Host`` keeps the name (virtual hosting) and, for https, the ``sni_hostname``
+    extension makes httpcore use the name for SNI **and** certificate verification.
+    """
+    parts = urlsplit(url)
+    host = parts.hostname or ""
+    ip_host = f"[{ip}]" if ":" in ip else ip
+    netloc = ip_host if parts.port is None else f"{ip_host}:{parts.port}"
+    if "@" in parts.netloc:  # keep user:pass for httpx's basic auth
+        netloc = f"{parts.netloc.rsplit('@', 1)[0]}@{netloc}"
+    headers = {"Host": host if parts.port is None else f"{host}:{parts.port}"}
+    extensions = {"sni_hostname": host} if parts.scheme == "https" else {}
+    return urlunsplit((parts.scheme, netloc, parts.path or "/", parts.query, "")), headers, extensions
 
 
 def _read_limited(response, max_bytes: int, deadline: float, what: str) -> bytes:
@@ -160,28 +206,40 @@ def _read_limited(response, max_bytes: int, deadline: float, what: str) -> bytes
     return bytes(body)
 
 
-def _get(client, url: str, max_bytes: int, deadline: float, what: str):
+def _get(client, url: str, max_bytes: int, deadline: float, what: str, ips=None):
+    """GET ``url``; with ``ips``, connect only to those checked addresses (in order).
+
+    The next address is tried only when the connection itself fails (e.g. an unroutable
+    IPv6 record); any other error is final.
+    """
     import httpx
 
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise FetchError("timeout", f"{what}: the total request deadline passed")
-    try:
-        with client.stream("GET", url, timeout=remaining) as response:
-            body = _read_limited(response, max_bytes, deadline, what)
-            return response, body
-    except httpx.TimeoutException as exc:
-        raise FetchError("timeout", f"{what}: {type(exc).__name__}") from exc
-    except httpx.HTTPError as exc:
-        raise FetchError("http_error", f"{what}: {type(exc).__name__}: {exc}") from exc
+    targets = [_pinned(url, ip) for ip in ips] if ips else [(url, {}, {})]
+    for i, (target, headers, extensions) in enumerate(targets):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise FetchError("timeout", f"{what}: the total request deadline passed")
+        try:
+            with client.stream("GET", target, headers=headers, extensions=extensions, timeout=remaining) as response:
+                body = _read_limited(response, max_bytes, deadline, what)
+                return response, body
+        except httpx.ConnectError as exc:
+            if i + 1 < len(targets):
+                continue
+            raise FetchError("http_error", f"{what}: {type(exc).__name__}: {exc}") from exc
+        except httpx.TimeoutException as exc:
+            raise FetchError("timeout", f"{what}: {type(exc).__name__}") from exc
+        except httpx.HTTPError as exc:
+            raise FetchError("http_error", f"{what}: {type(exc).__name__}: {exc}") from exc
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
-def _robots_allows(client, url: str, deadline: float, user_agent: str) -> None:
+def _robots_allows(client, url: str, deadline: float, user_agent: str, ips=None) -> None:
     """RFC 9309: 4xx = no rules (allowed); 5xx or unreachable = everything disallowed."""
     parts = urlsplit(url)
     robots_url = urlunsplit((parts.scheme, parts.netloc, "/robots.txt", "", ""))
     try:
-        response, body = _get(client, robots_url, ROBOTS_MAX_BYTES, deadline, "robots.txt")
+        response, body = _get(client, robots_url, ROBOTS_MAX_BYTES, deadline, "robots.txt", ips)
     except FetchError as exc:
         if exc.code == "too_large":
             body, response = b"", None  # RFC 9309 §2.5: read the start only; here, no rules
@@ -220,8 +278,10 @@ def fetch(
 
     Enforces, on the first request and **every redirect hop**: the deny-by-default
     ``allowlist`` (a domain also covers its subdomains), SSRF protection (unless
-    ``allow_private``), robots.txt (unless ``robots=False``), and caps on ``max_bytes``,
-    ``timeout_s`` (total) and ``max_redirects``. ``content_types``, if given, is an
+    ``allow_private``) with the connection pinned to the checked address (DNS rebinding;
+    not behind an environment proxy, which resolves the name itself: warning
+    ``dns_not_pinned_proxy``), robots.txt (unless ``robots=False``), and caps on
+    ``max_bytes``, ``timeout_s`` (total) and ``max_redirects``. ``content_types``, if given, is an
     iterable of allowed content-type prefixes (e.g. ``["text/html"]``); omit it to
     accept any. Raises ``FetchError`` with a ``code`` from ``ERROR_CODES``.
 
@@ -238,10 +298,14 @@ def fetch(
     headers = {"User-Agent": user_agent}
     with httpx.Client(follow_redirects=False, headers=headers, trust_env=trust_env) as client:
         for _hop in range(max_redirects + 1):
-            _check_url(current, allowlist, allow_private=allow_private)
+            ips = _check_url(current, allowlist, allow_private=allow_private)
+            if _proxied(current, trust_env):
+                ips = None  # the proxy resolves the name; pinning would bypass or break it
+                if "dns_not_pinned_proxy" not in warnings:
+                    warnings.append("dns_not_pinned_proxy")
             if robots:
-                _robots_allows(client, current, deadline, user_agent)
-            response, body = _get(client, current, max_bytes, deadline, "page")
+                _robots_allows(client, current, deadline, user_agent, ips)
+            response, body = _get(client, current, max_bytes, deadline, "page", ips)
             location = response.headers.get("location")
             if response.status_code in REDIRECT_CODES and location:
                 current = urljoin(current, location)
