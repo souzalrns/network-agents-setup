@@ -73,6 +73,11 @@ print(json.dumps({"version": version, "hits": len(hits),
                   "citation": (hits[0].get("citation") if hits else None)}, ensure_ascii=False))
 """
 
+P81_LINE = (
+    "- **P-81** (conhecimento de trading no L5): recomendada **A** (`_kb_for` genérico: kb = id da "
+    "área). Falta a decisão do maestro; até lá o pack de trading lê o conhecimento por `repo_files`."
+)
+
 ITEMS = (
     ("MCP-V3", "F3b-AUTH-1", "Retrieve do MCP em produção na v3 (SQL + KNOWLEDGE_RPC_V3)"),
     ("F2", "F2", "web-research-demo (fetch_url, allowlist, proveniência)"),
@@ -122,6 +127,9 @@ def rel(path: Path) -> str:
 def run_cmd(args: list[str], *, log: Path, env: dict[str, str], timeout: int) -> tuple[int, str]:
     """Corre em runner/ e grava o log (com as chaves apagadas). Devolve (código, saída)."""
     try:
+        # Falso positivo (auditoria): lista sem shell; os elementos são o interpretador, módulos
+        # fixos do runner e caminhos do repositório resolvidos aqui; nada vem de input externo.
+        # nosemgrep: dangerous-subprocess-use-audit
         proc = subprocess.run(
             args, cwd=RUNNER, env=env, capture_output=True, text=True, encoding="utf-8",
             errors="replace", timeout=timeout, check=False,
@@ -302,14 +310,15 @@ def render(results: list[Result], out: Path, *, started: str, stub: bool) -> str
         "",
         "## Pendente de decisão (não é deste script)",
         "",
-        "- **P-81** (conhecimento de trading no L5): recomendada **A** (`_kb_for` genérico: kb = id da "
-        "área). Falta a decisão do maestro; até lá o pack de trading lê o conhecimento por `repo_files`.",
+        P81_LINE,
     ]
     return "\n".join(lines) + "\n"
 
 
 def preflight(stub: bool) -> list[str]:
     problems = [f"falta o ficheiro {p}" for p in [*PLANS.values(), GOLDEN] if not (REPO_ROOT / p).is_file()]
+    # Falso positivo (auditoria): lista fixa sem shell (o interpretador e um import constante).
+    # nosemgrep: dangerous-subprocess-use-audit
     probe = subprocess.run([sys.executable, "-c", "import plan_runner, yaml"], cwd=RUNNER,
                            capture_output=True, text=True, check=False)
     if probe.returncode != 0:
