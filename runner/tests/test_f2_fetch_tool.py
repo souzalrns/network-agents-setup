@@ -83,7 +83,7 @@ def test_url_que_nao_e_http_e_recusado_na_validacao(tmp_path):
 def test_fontes_do_artefacto_juntam_l5_e_tools_sem_repetir(tmp_path):
     hits = [
         {"content": "x", "citation": {"source": "docs/knowledge/marketing/geo.md", "uri": "repo://geo", "locator": "§2"},
-         "metadata": {"status": "active", "document_type": "md", "valid_to": "2027-01-01"}},
+         "metadata": {"status": "active", "document_type": "md", "effective_until": "2027-01-01T00:00:00+00:00"}},
         {"content": "y", "citation": {"source": "docs/knowledge/marketing/geo.md", "uri": "repo://geo", "locator": "§2"}},
     ]
     (tmp_path / asrc.KNOWLEDGE_SOURCES_FILE).write_text(json.dumps(asrc.knowledge_sources(hits, "marketing")))
@@ -92,7 +92,7 @@ def test_fontes_do_artefacto_juntam_l5_e_tools_sem_repetir(tmp_path):
                             {"tool": "fetch_url", "ok": False, "error": "timeout"}]}
     sources = asrc.collect(tmp_path, tools_meta)
     assert [s["kind"] for s in sources] == ["l5", "web", "tool"]  # o hit repetido do L5 conta uma vez
-    assert sources[0]["valid_to"] == "2027-01-01" and sources[0]["locator"] == "§2"
+    assert sources[0]["effective_until"].startswith("2027-01-01") and sources[0]["locator"] == "§2"
     assert sources[1]["final_url"].endswith("?v=1") and sources[1]["tool"] == "fetch_url"
     assert sources[2] == {"kind": "tool", "tool": "read_repo_file", "source": "README.md"}
 
@@ -103,7 +103,7 @@ def test_passo_sem_fontes_diz_lista_vazia(tmp_path):
 
 def test_bloco_do_l5_mostra_uri_estado_e_validade():
     block = grounding_block([{"content": "a", "citation": {"source": "s.md", "locator": "§1", "uri": "repo://s"},
-                              "metadata": {"status": "superseded", "valid_to": "2026-12-31"}}])
+                              "metadata": {"status": "superseded", "effective_until": "2026-12-31T00:00:00+00:00"}}])
     assert "[Fonte: s.md @ §1 | uri: repo://s; estado: superseded; válido até 2026-12-31]" in block
 
 

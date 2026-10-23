@@ -103,6 +103,21 @@ def retrieve_knowledge(
     )
 
 
+# F3b (P-31 = D): regra de conflitos no prompt do worker. Vai dentro do bloco do L5 e só
+# com 2 ou mais fontes (o único caso em que pode haver conflito): na directiva de grounding
+# custaria ~900 tokens por run em todos os agentes (test_context_opt, calibração do B1).
+CONFLICT_RULE = (
+    "Se 2 fontes divergirem: a 'substituída por' perde; depois ganha a de maior autoridade "
+    "(oficial > curado > experimental) e, com a mesma, a de data mais recente. Diz que há "
+    "conflito e cita as 2; sem desempate, ou em domínio de alto risco, (b) + HITL."
+)
+
+
+def _day(value: Any) -> str:
+    """ISO 8601 do MCP (`2026-10-05T10:00:00+00:00`) → só o dia."""
+    return str(value)[:10]
+
+
 def grounding_block(hits: list[dict[str, Any]]) -> str:
     if not hits:
         return (
@@ -120,11 +135,23 @@ def grounding_block(hits: list[dict[str, Any]]) -> str:
         source = citation.get("source") or "?"
         locator = citation.get("locator") or "?"
         extra = [f"uri: {citation['uri']}"] if citation.get("uri") else []
+        # F3b (P-31 = D): autoridade e data de cada fonte, para o worker resolver
+        # conflitos pela CONFLICT_RULE (no fim do bloco, com 2+ fontes).
+        if meta.get("authority"):
+            extra.append(f"autoridade: {meta['authority']}")
+        if meta.get("retrieved_at"):
+            extra.append(f"data: {_day(meta['retrieved_at'])}")
         if meta.get("status") and meta["status"] != "active":
             extra.append(f"estado: {meta['status']}")
-        if meta.get("valid_to"):
-            extra.append(f"válido até {meta['valid_to']}")
+        if meta.get("superseded_by"):
+            extra.append(f"substituída por {meta['superseded_by']}")
+        if meta.get("effective_from"):
+            extra.append(f"em vigor desde {_day(meta['effective_from'])}")
+        if meta.get("effective_until"):
+            extra.append(f"válido até {_day(meta['effective_until'])}")
         tail = f" | {'; '.join(extra)}" if extra else ""
         lines.append(f"- {content} [Fonte: {source} @ {locator}{tail}]")
+    if len(hits) > 1:
+        lines.append(CONFLICT_RULE)
     lines.append("[/L5 CONTEXT]")
     return "\n".join(lines)
