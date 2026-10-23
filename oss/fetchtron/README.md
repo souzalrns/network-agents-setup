@@ -51,7 +51,8 @@ containment in one call, on a maintained client.
 
 See `POSITIONING.md` for the evidence-based comparison with raw `requests`/`httpx`,
 `advocate`, and the web tools in `langchain`/`smolagents` — including the one place a
-competitor does better (DNS-rebinding) and how fetchtron's roadmap closes it.
+competitor did better (DNS-rebinding) until 0.2.0, which pins the checked IP into the
+connection.
 
 ## Install
 

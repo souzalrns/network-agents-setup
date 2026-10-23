@@ -27,14 +27,16 @@ HTTP GET — allowlist + SSRF + robots + caps. It is **not** a scraper, **not** 
 - **What it is:** the closest prior art. A `requests` wrapper whose connection pool
   validates the **connected IP** against a blocklist, which is the right place to stop
   DNS rebinding.
-- **What it has that we don't (honest):** because it checks at connect time, it closes
-  the **DNS-rebinding** window that fetchtron currently leaves open (fetchtron resolves
-  the name for its check and the client resolves again for the connection — a TOCTOU gap).
+- **What it had that we didn't (until 0.2.0):** because it checks at connect time, it
+  closed the **DNS-rebinding** window. fetchtron 0.2.0 closes it too: it resolves once,
+  checks every address and connects to the checked one (with `Host` and TLS SNI kept on
+  the name). Behind an environment proxy the proxy resolves instead (warning
+  `dns_not_pinned_proxy`).
 - **Where fetchtron is ahead:** `advocate` is `requests`-only and effectively
   unmaintained (no `httpx`/async, stale releases); it has **no allowlist** (it blocks bad
   IPs but does not enforce "only these domains"), **no robots.txt**, and **no per-hop
   re-validation tied to an allowlist**. fetchtron adds deny-by-default allowlisting,
-  robots, and caps, on a maintained client — and names the rebinding gap openly (below).
+  robots, and caps, on a maintained client.
 
 ### `langchain` web tools / `smolagents` web tools
 - **What they are:** convenience fetch/search tools and document loaders built for
@@ -63,11 +65,10 @@ one call on a maintained client**. No single competitor offers all of it.
 
 ## Honest limits (what fetchtron does NOT do yet)
 
-- **DNS rebinding.** The host is resolved for the SSRF check, then resolved again by
-  `httpx` for the connection — a TOCTOU window `advocate` closes at connect time.
-  **Roadmap:** resolve once, assert all A/AAAA records are public, and pin the chosen IP
-  into the connection (a custom `httpx` transport) so the checked address is the connected
-  address.
+- **DNS rebinding behind a proxy.** Since 0.2.0 the checked address is the connected
+  address (closed for direct connections). Behind an environment proxy the proxy resolves
+  the name, so pinning is skipped and the result says so (`dns_not_pinned_proxy`): the
+  proxy's own egress policy applies there.
 - **GET only.** No POST/PUT; it is a read primitive.
 - **Not a crawler.** One URL, one response (following redirects). No link discovery.
 - **Not a parser.** Returns bytes + best-effort text; HTML→Markdown, extraction and
@@ -75,6 +76,5 @@ one call on a maintained client**. No single competitor offers all of it.
 
 ## What would make it "more the choice" (roadmap, not claims)
 
-- Close the DNS-rebinding gap (pin the resolved IP) — the one place `advocate` leads.
 - An async `fetch` (httpx is async-ready) for agent runtimes.
 - Optional structured audit record of every blocked attempt (for SIEM ingestion).
