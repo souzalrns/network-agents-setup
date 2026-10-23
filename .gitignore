@@ -12,6 +12,12 @@ runner/*.pyc
 runner/edit_safe.py
 
 # === Pilots de diagnostico (efemeros) ===
+# F6, achado A-4 (2026-10-23): qualquer run local em pilots/ fica fora do git por omissão;
+# só a evidência versionada de propósito (pilots/evidence/, pilots/piloto-*/) continua a entrar.
+# As regras específicas abaixo ficam (redundantes, mas documentam os runs conhecidos).
+pilots/*
+!pilots/evidence/
+!pilots/piloto-*/
 pilots/diag-*/
 pilots/debug-*.log
 pilots/stderr-*.log
