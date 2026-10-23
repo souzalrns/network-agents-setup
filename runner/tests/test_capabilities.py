@@ -48,7 +48,8 @@ def _repo(tmp_path: Path, caps: list[dict] | None = None, policy: dict | None = 
 
 def test_ficheiros_reais_de_security_e_marketing_sao_validos():
     names = [p.name for p in capability_files(REPO_ROOT)]
-    assert names == ["marketing-capabilities.yaml", "security-capabilities.yaml"]
+    # F6 (P-79 = A): o 3.º domínio, trading, entra só com o seu ficheiro.
+    assert names == ["marketing-capabilities.yaml", "security-capabilities.yaml", "trading-capabilities.yaml"]
     assert validate_areas(REPO_ROOT) == []
 
 
@@ -143,7 +144,7 @@ def test_inventario(tmp_path):
 def test_inventario_real_e_cli(capsys):
     assert areas_main([str(REPO_ROOT), "--inventory"]) == 0
     out = capsys.readouterr().out
-    assert "2 ficheiro(s) de capabilities válido(s)" in out
+    assert "3 ficheiro(s) de capabilities válido(s)" in out
     for key in ("agents_without_skill", "skills_without_agent", "agents_using_claude_pack", "shared_skill_action_differs"):
         assert key in out
     assert "security.triage" not in out.split("agents_without_skill")[1].split("skills_without_agent")[0]

@@ -103,6 +103,19 @@ areas:
     - worldbank.org
     - oecd.org
     - bis.org
+  # F6 (P-79 = A): só domínios já aprovados para a `finance` (P-25/P-46), repetidos de
+  # propósito. Exchanges e agregadores de cripto ficam de fora até decisão do maestro.
+  trading:
+    - b3.com.br
+    - cvm.gov.br
+    - bcb.gov.br
+    - cmvm.pt
+    - bportugal.pt
+    - ecb.europa.eu
+    - esma.europa.eu
+    - sec.gov
+    - federalreserve.gov
+    - bis.org
   gamedev:
     - unity.com
     - docs.unity3d.com

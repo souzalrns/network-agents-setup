@@ -101,6 +101,10 @@ EXCLUDE_DESIGN = (
     "estes ficheiros por repo_files (SEC-1, F3c-DESIGN-1 opção A), não por retrieve; "
     "reavaliar no F3c-DESIGN-1"
 )
+EXCLUDE_TRADING = (
+    "F6 trading: lido pelos planos via repo_files; não entra no L5 até a decisão do "
+    "_kb_for (docs/ops/F6-TRADING-DOC.md, achado A-1: uma kb nova cairia em `global`)"
+)
 EXCLUDED: dict[str, str] = {
     "docs/knowledge/README.md": EXCLUDE_META,
     "docs/knowledge/skills-map.md": EXCLUDE_META,
@@ -127,6 +131,8 @@ EXCLUDED: dict[str, str] = {
     "docs/knowledge/design/ux-principles.md": EXCLUDE_DESIGN,
     "docs/knowledge/design/ux-writing-examples.md": EXCLUDE_DESIGN,
     "docs/knowledge/design/ux-writing-principles.md": EXCLUDE_DESIGN,
+    "docs/knowledge/trading/post-trade-review-method.md": EXCLUDE_TRADING,
+    "docs/knowledge/trading/risk-policy.md": EXCLUDE_TRADING,
 }
 
 
