@@ -137,6 +137,24 @@ Every config has a `version` (hash of filters + exits) stamped on each proposal,
 measured per version instead of remembered. `flow.json` is vendor-neutral
 (`examples/flow.example.json`); `available_at` keeps the screen from seeing the future.
 
+## Post-trade review
+
+`economia-trader review [--since 2026-10-20]` reviews every closed trade (flat -> position -> flat
+on one symbol) from the journal's exchange fills, never from intentions:
+
+- **process**, graded first and apart from the result: `clean`, `minor break` or `major break`,
+  naming the stage. Major: an entry without a stop, a fill without an approved risk assessment,
+  a testnet/live position that never had a stop, a book/exchange mismatch. Minor: the exchange stop
+  resting more than 60 s after the fill, a stop only client-side, a dropped stop, an execution error;
+- **outcome** in R (1R = the risk engine's `loss_at_stop`) and money, after fees;
+- **costs**: entry and exit slippage against the ticket price (bps), fees (money and bps);
+- **one finding** per trade (the break, a cost leak, or a control that worked), and per ISO week:
+  hit rate, average win/loss in R, expectancy in R, largest loss, fees as a share of gross, and the
+  most frequent break.
+
+The method is adapted from the Trade Reviewer of
+[HyperGrok](https://github.com/galleonlabs/hypergrok-trading-desk) (Galleon Labs, MIT); the code is ours.
+
 ## News, macro and LLM analysts (reused, not rebuilt)
 
 - `economia-trader monitor`: company news and the BLS release calendar through **OpenBB**

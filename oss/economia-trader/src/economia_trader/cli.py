@@ -18,6 +18,7 @@
     economia-trader run    --exchange alpaca --mode paper --flow-file flow.json --limits limits.json \
                            [--config run.json] [--cash 100] [--every-min 240 | --once]
     economia-trader report [--journal .economia-trader/journal.jsonl]
+    economia-trader review [--journal .economia-trader/journal.jsonl] [--since 2026-10-20]   # post-trade review
     economia-trader monitor [--news AAPL,MSFT] [--macro] [--calendar-file fomc.json] [--days 14] [--polymarket]
     economia-trader export-klines --exchange alpaca --symbols SPY,QQQ --interval 1d --out data.csv   # FinRL
     economia-trader dashboard [--state-dir .economia-trader] [--out dashboard.html] [--refresh 60]
@@ -46,6 +47,7 @@ from .flow import JsonFileFlowSource
 from .journal import Journal, verify
 from .paper import PaperBroker
 from .report import report
+from .review import review
 from .risk import RiskLimits
 from .runner import RunConfig, Runner
 from .safety import ExecutionBlocked, HitlApprover, KillSwitch, Mode, deny_all, gate_report
@@ -295,6 +297,10 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("report", help="Results per strategy version, from the journal")
     p.add_argument("--journal", default=str(STATE_DIR / "journal.jsonl"))
+
+    p = sub.add_parser("review", help="Post-trade review: process graded apart from outcome, per trade and week")
+    p.add_argument("--journal", default=str(STATE_DIR / "journal.jsonl"))
+    p.add_argument("--since", help="only trades closed at or after this ISO date/time (UTC)")
 
     args = ap.parse_args(argv)
     try:
@@ -665,6 +671,9 @@ def _run(args: argparse.Namespace) -> int:
 
     if args.cmd == "report":
         _print(report(args.journal))
+        return 0
+    if args.cmd == "review":
+        _print(review(args.journal, since=args.since))
         return 0
 
     if args.cmd == "verify-journal":

@@ -8,3 +8,8 @@ urllib, hmac, hashlib, json, decimal). The optional `hitl` extra installs hitlwr
 The core has no third-party runtime dependencies. Exchange access comes from optional extras,
 installed separately and not redistributed: ccxt (MIT, crypto) and alpaca-py (Apache-2.0,
 stocks). Not financial advice; trading can lose all invested capital.
+
+The post-trade review method (review.py: process graded apart from outcome, costs against the
+ticket, one finding per trade, weekly summary) is adapted from the Trade Reviewer skill of
+HyperGrok (https://github.com/galleonlabs/hypergrok-trading-desk, commit cdce564,
+skills/desk-post-trade-review), Copyright (c) 2026 Galleon Labs, MIT License. No code was copied.
