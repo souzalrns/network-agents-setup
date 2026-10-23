@@ -187,3 +187,44 @@ status: active
 jurisdiction: PT
 effective_from: 2024-01-01   # a data da própria fonte, nunca inventada
 ```
+
+## F3b: autoridade e conflitos (2026-10-23, P-31 = D, P-32 = B, P-33 = B)
+
+> Política em `config/knowledge-authority.yaml`; código em `runner/plan_runner/authority.py`; aplicada pelo `scripts/ingest_apply.py`. Migração: `scripts/migrations/f3b_authority_v3.sql` (corre **depois** da F3a). Testes: `runner/tests/test_f3b_authority.py` e `runner/tests/test_f3b_authority_db.py` (Postgres + pgvector, no job `test-rag`).
+
+**Níveis (P-32 = B):** `oficial` > `curado` > `experimental`. Hoje não há regras: as fontes todas ficam `curado`. O `default` do config tem de ser `curado`, porque é o que a v3 assume quando não há autoridade gravada. O ingest só grava a autoridade (em `knowledge_sources.meta->>'authority'`) quando ela é diferente de `curado`. Por isso, as fontes de hoje **não** passam a `META_UPDATED`.
+
+**No sidecar** (`<nome>.meta.yaml`), sempre opcional:
+- `authority: oficial | curado | experimental` ganha a qualquer regra do config. Um valor desconhecido dá `INVALID_META`.
+- Supersessão explícita (P-31 = D): na fonte **antiga**, `status: superseded` + `superseded_by: <path ou uri da nova>`. Um `superseded_by` sem `status: superseded` dá `INVALID_META`. Não há detecção semântica de conflitos.
+
+**RPC nova `match_knowledge_v3`:** igual à v2, mais as colunas `authority` e `superseded_by` e o filtro opcional `min_authority`.
+- Por omissão devolve tudo, pela ordem da semelhança, sem reordenar (P-33 = B).
+- Um plano legal ou de security pode pedir `filters: {min_authority: oficial}` no bloco `knowledge:`.
+- Um valor desconhecido dá erro, nunca um RAG vazio em silêncio.
+- A `match_knowledge` e a v2 não mudam.
+- A BD ganha 2 CHECK sobre o `meta`, com as mesmas regras do ingest.
+
+**No runner:**
+- O bloco `[L5 CONTEXT]` mostra, por fonte, `autoridade`, `data` (`retrieved_at`), `estado`, `substituída por` e a vigência.
+- Com 2 ou mais fontes, o bloco leva também a regra de conflitos (`knowledge.CONFLICT_RULE`):
+  1. a fonte substituída perde;
+  2. depois ganha a de maior autoridade;
+  3. com a mesma autoridade, ganha a mais recente;
+  4. o worker diz sempre que há conflito e cita as 2;
+  5. sem desempate, ou num domínio de alto risco, aplica-se (b) + HITL.
+- A regra **não** está em `agents/_shared/grounding.directive.md`. Ali custaria cerca de 900 tokens por run em todos os agentes (`test_context_opt`).
+- O `result.json → meta.sources` leva `authority`, `superseded_by` e as datas.
+
+**Ordem segura para o DEV** (nenhum passo parte produção):
+1. **Merge do PR do NAS.** O ingest passa a validar `authority` e `superseded_by`. Hoje nenhum sidecar os tem, por isso nada muda nos dados.
+2. **Correr `scripts/migrations/f3b_authority_v3.sql`** no SQL Editor do Supabase (`agent-network-memory`).
+   - Antes, correr a query de controlo **ANTES** que está no fim do ficheiro. Tem de dar 0 linhas.
+   - O ficheiro é idempotente. As queries de controlo **DEPOIS** também estão no fim.
+3. **Merge do PR do MCP e ligar `KNOWLEDGE_RPC_V3=1`** nas env vars da Vercel (Production), seguido de redeploy.
+   - A v3 já devolve tudo o que a v2 devolve: não precisa da `KNOWLEDGE_RPC_V2`.
+   - Se a v3 não existir (`PGRST202`), o MCP avisa e cai para a v2 (e, sem a v2, para a `match_knowledge`).
+   - Desligar a flag é o rollback, sem SQL.
+4. **Confirmar:** um `retrieve_knowledge` traz `metadata.authority = "curado"`, e com `filters: {"min_authority": "oficial"}` não volta nada, porque hoje não há fontes `oficial`.
+
+**Rollback:** desligar `KNOWLEDGE_RPC_V3`. A v3 e os CHECK podem ficar: não mudam nada do que existia.

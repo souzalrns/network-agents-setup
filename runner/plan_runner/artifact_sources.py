@@ -21,7 +21,7 @@ MAX_SOURCES = 50
 
 
 def knowledge_sources(hits: list[dict[str, Any]], kb: str) -> list[dict[str, Any]]:
-    """As citações dos hits do L5, no formato das fontes do artefacto (v2 traz estado e validade)."""
+    """As citações dos hits do L5, no formato das fontes do artefacto (v2: estado e validade; v3: autoridade)."""
     out: list[dict[str, Any]] = []
     for h in hits or []:
         if not isinstance(h, dict):
@@ -36,8 +36,11 @@ def knowledge_sources(hits: list[dict[str, Any]], kb: str) -> list[dict[str, Any
             "locator": cit.get("locator"),
             "status": meta.get("status"),
             "document_type": meta.get("document_type"),
-            "valid_from": meta.get("valid_from"),
-            "valid_to": meta.get("valid_to"),
+            "authority": meta.get("authority"),
+            "retrieved_at": meta.get("retrieved_at"),
+            "superseded_by": meta.get("superseded_by"),
+            "effective_from": meta.get("effective_from"),
+            "effective_until": meta.get("effective_until"),
         }
         out.append({k: v for k, v in src.items() if v not in (None, "")})
     return out

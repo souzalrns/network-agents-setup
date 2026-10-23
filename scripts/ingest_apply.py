@@ -59,6 +59,8 @@ _load_env(ROOT / ".env")
 
 # --- imports do runner (depois do sys.path) ---------------------------------
 
+from plan_runner.authority import apply_authority  # noqa: E402
+from plan_runner.authority import load_policy as load_authority_policy  # noqa: E402
 from plan_runner.chunking import chunk_markdown  # noqa: E402
 from plan_runner.embedder import EmbedderError, embed_text  # noqa: E402
 from plan_runner.provenance import (  # noqa: E402
@@ -83,6 +85,8 @@ from scripts.ingest_delta import MANIFEST, sha256_file  # noqa: E402
 # F3b (P-27 = C, P-28 = C): classes de validade das fontes. Carregada aqui, do repo real
 # (os testes mudam o ROOT para um tmp_path depois do import).
 VALIDITY = load_policy(ROOT / "config" / "knowledge-validity.yaml")
+# F3b (P-31 = D, P-32 = B): autoridade por path, com override no sidecar.
+AUTHORITY = load_authority_policy(ROOT / "config" / "knowledge-authority.yaml")
 
 
 # --- retry com backoff exponencial para o rate limit do Gemini --------------
@@ -186,6 +190,10 @@ def apply_one(
     F3b (validade): a classe da fonte (config/knowledge-validity.yaml) exige datas ou da
     um TTL. Sidecar sem a data exigida = INVALID_META. Sem sidecar numa classe datada = so
     um aviso em "warnings" (nao se inventam datas; a fonte entra como antes).
+
+    F3b (autoridade): config/knowledge-authority.yaml (por path) ou `authority` no sidecar;
+    so se grava quando difere de `curado`. `superseded_by` sem `status: superseded` ou
+    `authority` desconhecida = INVALID_META.
     """
     full = ROOT / rel
     if not full.is_file():
@@ -197,9 +205,10 @@ def apply_one(
     try:
         meta = load_meta(full, content_hash)
         meta, warnings = apply_validity(VALIDITY, rel, meta)
+        meta = apply_authority(AUTHORITY, rel, meta or default_meta(rel))
     except ProvenanceError as exc:
         return {"action": "INVALID_META", "chunks": 0, "deleted": 0, "note": str(exc)}
-    provenance = to_source_columns(meta or default_meta(rel))
+    provenance = to_source_columns(meta)
 
     def done(result: dict) -> dict:
         if warnings:

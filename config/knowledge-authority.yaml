@@ -1,0 +1,25 @@
+# F3b, autoridade das fontes do L5 (maestro, 2026-10-06): P-31 = D, P-32 = B, P-33 = B.
+# Lido por runner/plan_runner/authority.py, que o scripts/ingest_apply.py aplica a cada fonte
+# do MANIFEST antes de gravar a proveniência (knowledge_sources.meta->>'authority').
+#
+# - 3 níveis, do mais forte para o mais fraco: oficial > curado > experimental.
+# - `default` vale para tudo o que nenhuma regra apanha. Tem de ser `curado`: é o valor que a
+#   match_knowledge_v3 assume quando a fonte não tem autoridade gravada (as 39 fontes de hoje,
+#   P-32 = B). Por isso o ingest só grava a autoridade quando difere do default (sem
+#   META_UPDATED nas fontes actuais).
+# - `rules`: a 1.ª que bater ganha (glob no path ou esquema do `uri`). O sidecar
+#   (`<nome>.meta.yaml`) pode fixar `authority: <nível>` e ganha a qualquer regra.
+# - Supersessão (P-31 = D): no sidecar da fonte antiga, `status: superseded` +
+#   `superseded_by: <path ou uri da nova>`. A v3 devolve o `superseded_by`; o worker decide
+#   pela regra de conflitos do bloco do L5 (knowledge.CONFLICT_RULE). Sem detecção semântica.
+# - Retrieve (P-33 = B): devolve tudo, com a autoridade no `metadata`; o plano pode pedir
+#   `filters: {min_authority: oficial}` no bloco `knowledge:` (planos legais ou de security).
+version: 1
+levels: [oficial, curado, experimental]
+default: curado
+rules: []
+# Exemplo (ainda sem fontes destas no MANIFEST; acrescentar quando entrarem):
+#   - authority: oficial
+#     paths: ["docs/knowledge/legal/oficial/**"]
+#   - authority: experimental
+#     uri_schemes: [http, https]
