@@ -369,7 +369,9 @@ def main(argv: list[str] | None = None) -> int:
         elif key == "F3-ART-1":
             do_artifacts(res, results, stub=args.stub)
         res.seconds = time.monotonic() - t0
-        print(f"  {res.status}: {res.detail}", flush=True)
+        # Só o resultado: o detalhe (que pode vir da saída dos subprocessos) fica no REPORT.md,
+        # já redigido.
+        print(f"  {res.status} ({res.seconds:.0f}s)", flush=True)
 
     ordered = [results[k] for k in keys]
     report = redact(render(ordered, out, started=started, stub=args.stub), env)

@@ -61,10 +61,12 @@ def test_sem_credenciais_falha_logo_e_so_mostra_os_nomes(sc, monkeypatch, capsys
 
 
 def test_valores_das_chaves_nunca_saem(sc) -> None:
-    env = {"GEMINI_API_KEY": "AIzaSECRETO123", "MCP_API_KEY": "chave-mcp-muito-secreta"}
-    text = "url https://x/api/mcp/k/chave-mcp-muito-secreta e key=AIzaSECRETO123"
+    # Valores gerados em execução: nenhum valor parecido com uma chave fica no código (gitleaks).
+    gemini, mcp = "g" + uuid.uuid4().hex, "m" + uuid.uuid4().hex
+    env = {"GEMINI_API_KEY": gemini, "MCP_API_KEY": mcp}
+    text = f"url https://x/api/mcp/k/{mcp} e a outra {gemini}"
     clean = sc.redact(text, env)
-    assert "SECRETO" not in clean and "muito-secreta" not in clean
+    assert gemini not in clean and mcp not in clean
     assert "<MCP_API_KEY>" in clean and "<GEMINI_API_KEY>" in clean
 
 
