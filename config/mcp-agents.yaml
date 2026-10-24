@@ -1,0 +1,56 @@
+# Inventário dos agentes do MCP de produção (agent-network-mcp, lib/agents.js), v1 (OFFICE-A1)
+#
+# Para quê: o escritório mostra TODOS os agentes, incluindo os que só existem no MCP de
+# produção (os que conhecem cada negócio). O runner não lê este ficheiro; o router também não.
+#
+# Campos:
+#   id:      a chave em lib/agents.js (export AGENTS);
+#   runtime: o id do mesmo agente no runner (agents/**/*.agent.md) quando existe nos dois
+#            sítios; null quando só existe no MCP. Um agente com runtime aparece no escritório
+#            pelo id do runner (uma vez só); um agente só do MCP aparece como `mcp:<id>`.
+#
+# Sincronização: este ficheiro é uma cópia dos ids de lib/agents.js em agent-network-mcp
+# @ 388db8a (2026-10-24). Ao adicionar ou renomear um agente no MCP, actualizar aqui
+# (a verificação automática entre os 2 repos é o item OFFICE-MCP-SYNC).
+#
+# Os agentes do MCP ainda não emitem eventos: no escritório aparecem "sem telemetria",
+# nunca "à espera" como se soubéssemos (docs/ops/OFFICE.md §4).
+
+version: 1
+source: agent-network-mcp/lib/agents.js@388db8a
+
+agents:
+  - {id: mesaflow, runtime: null}
+  - {id: viannalegal, runtime: null}
+  - {id: vianna-gestao, runtime: null}
+  - {id: sst, runtime: null}
+  - {id: construtora, runtime: null}
+  - {id: hvac, runtime: null}
+  - {id: pladur, runtime: null}
+  - {id: reformas, runtime: null}
+  - {id: direito-br-pt, runtime: null}
+  - {id: canidelo, runtime: null}
+  - {id: apps-produto, runtime: null}
+  - {id: investimentos-brasil, runtime: null}
+  - {id: gestao-empresarial, runtime: gestao.gestao-empresarial}
+  - {id: contabilidade, runtime: gestao.contabilidade}
+  - {id: design, runtime: design.identidade-visual}
+  - {id: cursos-formacoes, runtime: null}
+  - {id: imobiliario-digital, runtime: null}
+  - {id: engenharia-civil-arquitetura, runtime: null}
+  - {id: engenharia-eletrica-hidraulica, runtime: null}
+  - {id: refrigeracao-hvac, runtime: null}
+  - {id: eletrodomesticos, runtime: null}
+  - {id: cardiologia, runtime: null}
+  - {id: dermatologia, runtime: null}
+  - {id: oftalmologia, runtime: null}
+  - {id: revisor-codigo, runtime: engenharia.revisor-codigo}
+  - {id: qualidade-dados, runtime: engenharia.qualidade-dados}
+  - {id: guia-tdd, runtime: engenharia.guia-tdd}
+  - {id: arquitetura-agentes, runtime: meta.arquitetura-agentes}
+  - {id: planejador, runtime: meta.planejador}
+  - {id: desenvolvimento, runtime: engenharia.desenvolvimento}
+  - {id: marketing, runtime: marketing.marketing}
+  - {id: comunicacoes-atendimento, runtime: atendimento.comunicacoes-atendimento}
+  - {id: produto-tech-transversal, runtime: produto.produto-tech-transversal}
+  - {id: radar-ferramentas, runtime: meta.radar-ferramentas}

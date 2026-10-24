@@ -1,7 +1,9 @@
 """OFFICE-A1: o mapa de lugares (config/office.yaml) e a projecção dos eventos reais.
 
 O escritório não pode mentir:
-- nenhum agente fica sem lugar, em dois lugares, ou aparece sem existir;
+- nenhum agente (dos 79 do runner e dos 21 só do MCP de produção) fica sem lugar, em dois
+  lugares, ou aparece sem existir; os departamentos são do escritório, não do router;
+- os agentes do MCP não emitem eventos: ficam "sem telemetria", nunca "à espera";
 - cada passo de plano é atribuível a um agente pela `action:` do frontmatter;
 - o estado vem só de eventos do runner (events.jsonl), com a ordem erro > precisa de ti >
   a trabalhar > a pensar > à espera, e um run real em stub acaba "precisa de ti" no gate.
@@ -65,19 +67,38 @@ def test_office_yaml_real_e_valido() -> None:
     assert office.validate_office(REPO_ROOT) == []
 
 
-def test_marketing_tem_9_lugares_e_os_57_agentes() -> None:
-    mk = _dept(office.load_office(REPO_ROOT), "marketing")
+def _n(dept: dict) -> int:
+    return sum(len(s["agents"]) for s in dept["seats"])
+
+
+def test_todos_os_100_agentes_aparecem_nas_2_alas() -> None:
+    data = office.load_office(REPO_ROOT)
+    assert sum(_n(d) for d in data["departments"]) == 100
+    negocios = [d for d in data["departments"] if d["wing"] == "negocios"]
+    assert sum(_n(d) for d in negocios) == 19  # os agentes de cada negócio, só no MCP
+    mk, com = _dept(data, "marketing"), _dept(data, "comercial")
     assert len(mk["seats"]) == 9 and mk["lead"] == "marketing.marketing"
-    assert sum(len(s["agents"]) for s in mk["seats"]) == 57
+    assert _n(mk) + _n(com) == 57  # os 57 da área marketing do router, em 2 departamentos
+
+
+def test_agente_nos_2_sitios_entra_pelo_id_do_runner_e_so_uma_vez() -> None:
+    mcp = {e["id"]: e["runtime"] for e in office.load_mcp_agents(REPO_ROOT)}
+    assert len(mcp) == 34 and sum(r is None for r in mcp.values()) == 21
+    placed = [a for d in office.load_office(REPO_ROOT)["departments"] for s in d["seats"] for a in s["agents"]]
+    for mid, runtime in mcp.items():
+        assert (f"mcp:{mid}" in placed) == (runtime is None), mid
 
 
 @pytest.mark.parametrize("mutate, expected", [
     (lambda d: _dept(d, "trading")["seats"][0]["agents"].remove("trading.market_analysis"), "sem lugar"),
     (lambda d: _dept(d, "trading")["seats"][1]["agents"].append("trading.market_analysis"), "em dois lugares"),
-    (lambda d: _dept(d, "trading")["seats"][0]["agents"].append("trading.agente_inventado"), "não é agente da área"),
+    (lambda d: _dept(d, "trading")["seats"][0]["agents"].append("trading.agente_inventado"), "não existe"),
     (lambda d: _dept(d, "trading").update(lead="marketing.marketing"), "lead `marketing.marketing`"),
-    (lambda d: d["departments"].reverse(), "pela mesma ordem"),
-    (lambda d: _dept(d, "legal")["seats"].append({"id": "legal-x", "name": "X", "does": "y", "agents": []}), "lugar sem agentes"),
+    (lambda d: _dept(d, "jogos")["seats"].append({"id": "jogos-x", "name": "X", "does": "y", "agents": []}), "lugar sem agentes"),
+    (lambda d: _dept(d, "negocio-saude")["seats"][0]["agents"].remove("mcp:cardiologia"), "`mcp:cardiologia` sem lugar"),
+    (lambda d: _dept(d, "software")["seats"][0]["agents"].append("mcp:revisor-codigo"), "não existe"),
+    (lambda d: _dept(d, "trading").update(wing="ala-nova"), "`wing`"),
+    (lambda d: d["departments"].append(dict(_dept(d, "jogos"))), "departamento `jogos` repetido"),
     (lambda d: _dept(d, "trading")["seats"][1].update(id="trading-mercado"), "repetido"),
     (lambda d: _dept(d, "trading")["seats"][0].update(does=" "), "`does` vazio"),
 ])
@@ -121,10 +142,20 @@ def _seat(snap: dict, sid: str) -> dict:
     return next(s for d in snap["departments"] for s in d["seats"] if s["id"] == sid)
 
 
-def test_sem_eventos_tudo_a_espera_e_areas_vazias_sem_estado() -> None:
+def test_sem_eventos_runner_a_espera_mcp_sem_telemetria_e_vazios_sem_estado() -> None:
     snap = _project([])
-    assert {d["id"]: d["state"] for d in snap["departments"]}["legal"] is None
-    assert {d["state"] for d in snap["departments"] if d["seats"]} == {"idle"}
+    states = {d["id"]: d["state"] for d in snap["departments"]}
+    assert states["jogos"] is None and states["documentacao"] is None
+    assert states["marketing"] == "idle" and states["negocio-construcao"] == "untracked"
+    assert states["financas"] == "idle"  # contabilidade (runner) à espera ganha a investimentos (MCP)
+    assert _agent(snap, "mcp:viannalegal")["state"] == "untracked"
+    assert snap["agent_count"] == 100
+
+
+def test_snapshot_diz_que_o_agente_do_runner_tambem_esta_no_mcp() -> None:
+    snap = office.snapshot(REPO_ROOT, [])
+    assert _agent(snap, "marketing.marketing")["mcp"] == "marketing"
+    assert _agent(snap, "marketing.research")["mcp"] is None
 
 
 def test_cada_evento_da_o_seu_estado() -> None:
@@ -188,6 +219,7 @@ def test_run_real_em_stub_acaba_precisa_de_ti_no_lugar_da_qualidade(run_dir) -> 
     for aid in ("marketing.research", "marketing.seo_brief", "marketing.copy_answer_first"):
         assert _agent(snap, aid)["state"] == "idle"
     assert next(d for d in snap["departments"] if d["id"] == "trading")["state"] == "idle"
+    assert next(d for d in snap["departments"] if d["id"] == "negocio-viannalegal")["state"] == "untracked"
 
 
 def test_cli_valida_e_projecta(run_dir, capsys) -> None:
@@ -196,4 +228,4 @@ def test_cli_valida_e_projecta(run_dir, capsys) -> None:
     run_plan(SEO_DEMO, mode="stub", out_dir=run_dir)
     assert office.main(["--project", str(run_dir)]) == 0
     snap = json.loads(capsys.readouterr().out)
-    assert snap["states"] == ["error", "needs", "working", "thinking", "idle"]
+    assert snap["states"] == ["error", "needs", "working", "thinking", "idle", "untracked"]
