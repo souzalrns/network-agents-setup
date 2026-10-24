@@ -93,7 +93,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 > **Contagens:**
-> - **142 itens vivos** (§4): ABERTO 77, EM CURSO 19, BLOQUEADO 46;
+> - **142 itens vivos** (§4): ABERTO 76, EM CURSO 20, BLOQUEADO 46;
 > - **126 linhas de histórico** (§7): 105 fechadas, 21 obsoletas;
 > - **43 contradições resolvidas** (§8): 26 da auditoria #65 + 17 novas;
 > - **50 decisões** em A/B/C (§10): **todas decididas** (P-1 a P-50; P-47 e P-48 a 2026-10-09 pelo maestro, P-49 e P-50 a 2026-10-09 sob autonomia delegada); **0 pendentes**.
@@ -432,7 +432,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Média | 55 | F0.6, F2, F6, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3b-AUTH-1, AU-44, S27, S19, S32, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, AU-12, H-01, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-ART-1, ING-009, R-010, GOV-42001-1, SKILL-SCOUT-2, AUDITRON-1, PLANWRIGHT-1, OFFICE-A1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 74 | F0.12, F1b, F3c-DESIGN-1, F2-SEC-1, W-010, R-001, S21, S28, SEC-3, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, S-005, GOV-PRIV-2, GOV-RET-2, AU-11b, ING-012, SKILL-SCOUT-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, RUNNER-WHY-1, TRADER-SIM-1, OFFICE-3D-1, OFFICE-VOZ-1, OFFICE-MCP-SYNC |
 
-**Por estado:** ABERTO 77 · EM CURSO 19 · BLOQUEADO 46.
+**Por estado:** ABERTO 76 · EM CURSO 20 · BLOQUEADO 46.
 **NÃO VERIFICADO (4):** S20, S27, A22, T-003.
 
 ## 7. Histórico (131 linhas: 110 FECHADO, 21 OBSOLETO)
