@@ -5,6 +5,6 @@ mcp==1.30.0
 jsonschema>=4.26.0
 groundwright==0.1.0  # porta de grounding do L5 (RAG-EVAL-1, extraído de oss/groundwright)
 doneproof==0.1.0  # motor do done_when (devolvido de oss/doneproof)
-fetchtron==0.1.0  # núcleo de fetch seguro do scripts/web_fetch.py (devolvido de oss/fetchtron)
+fetchtron==0.2.0  # núcleo de fetch seguro do scripts/web_fetch.py (devolvido de oss/fetchtron)
 hitlwright==0.1.0  # contrato HITL v1 do hitl.py (devolvido de oss/hitlwright)
 tokenwright==0.1.0  # motor de custo do cost.py (devolvido de oss/tokenwright)
