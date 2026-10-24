@@ -93,6 +93,7 @@ python -m plan_runner.office --html ../pilots/office/index.html --label "Ensaio 
 - O estado vai sempre em texto, além dos sinais do avatar; cada avatar tem nome acessível ("Agente IA …").
 - O HTML vai para `pilots/` (no `.gitignore`): é gerado, não se versiona.
 - **Ao vivo** (actualização sozinha) só com o OFFICE-A2; até lá, gera-se a partir dos runs.
+- **Onde vive (P-85 = A):** não se publica enquanto for gerada dos runs; ao vivo, vai para o agent-network-mcp com login, junto com a caixa de aprovações (OFFICE-A4).
 
 ## 7. Próximas fases
 

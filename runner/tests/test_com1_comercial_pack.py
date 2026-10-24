@@ -22,6 +22,7 @@ from plan_runner import areas as ar
 from plan_runner import office
 from plan_runner.engine import run_plan
 from plan_runner.plan_schema import plan_errors
+from plan_runner.router import score_areas
 from plan_runner.skills import resolve_skill_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -105,3 +106,26 @@ def test_stub_vai_ate_ao_gate_e_o_comercial_fica_precisa_de_ti(run_dir) -> None:
     seats = {s["id"]: s["state"] for s in comercial["seats"]}
     assert seats["comercial-follow-ups"] == "needs"
     assert seats["comercial-leads"] == "idle" and seats["comercial-propostas"] == "idle"
+
+
+@pytest.mark.parametrize("request_text, only_marketing", [
+    ("Prepara uma proposta para este pedido de remodelação de casa de banho", True),
+    ("Faz o follow-up das propostas que estão paradas há duas semanas", True),
+    # Casam também noutra área ("site" -> software, "cliente" -> ops): o router já trata o
+    # empate pela margem (clarificação), como antes; o que muda é o marketing passar a contar.
+    ("Qualifica estes leads que chegaram pelo formulário do site", False),
+    ("Preciso de um follow up educado para o cliente da cozinha", False),
+])
+def test_router_do_runner_leva_pedidos_comerciais_ao_marketing(request_text, only_marketing) -> None:
+    """P-84 = A (maestro, 2026-10-24): keywords comerciais na área marketing."""
+    hits = score_areas(request_text, _yaml("config/areas.yaml")["areas"])
+    winners = [area for area, kws in hits.items() if kws]
+    assert "marketing" in winners, hits
+    if only_marketing:
+        assert winners == ["marketing"], hits
+
+
+def test_orcamento_continua_nas_financas() -> None:
+    """A P-84 não mexe no "orçamento" (fica em finance; ver docs/ops/COMERCIAL.md § Router)."""
+    hits = score_areas("Prepara o orçamento anual de despesas", _yaml("config/areas.yaml")["areas"])
+    assert hits["finance"] and not hits["marketing"]

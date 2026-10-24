@@ -36,12 +36,13 @@ python -m plan_runner run ... --mode external --worker gemini --out ../pilots/ru
 
 Testes: `runner/tests/test_com1_comercial_pack.py` (E7, capabilities sem execução, contrato das skills, plano só com dados fictícios, stub até ao gate e o Comercial "precisa de ti" no escritório).
 
-## Router (o que NÃO mudou, e uma decisão para o maestro)
+## Router (P-84 = A, maestro, 2026-10-24)
 
-- Os 3 agentes entram na área `marketing` de `config/areas.yaml` sem keywords novas. Este é o router do **runner** (`plan_runner/router.py`); o conector do Claude.ai usa o router do `agent-network-mcp`, que não lê este ficheiro.
-- Pelo router do runner, um pedido que diga só "proposta" ou "follow-up" não casa com nenhuma área e vai para a área de fallback (`horizontal`, o planeador); pelos planos (o caminho principal), as actions chegam directamente aos agentes.
-- **Ambiguidade antiga:** `orcament` está na área `finance`. "Pedido de orçamento" de um cliente (comercial) vai hoje para Finanças.
-- Decisão a propor no §10 do PENDENCIAS: juntar keywords comerciais à área `marketing` e tratar "orçamento" no sentido comercial.
+- Os 3 agentes estão na área `marketing` de `config/areas.yaml`. Este é o router do **runner** (`plan_runner/router.py`); o conector do Claude.ai usa o router do `agent-network-mcp`, que não lê este ficheiro.
+- **Keywords comerciais na área `marketing`:** `propost`, `follow up`, `follow-up` (o router não troca o hífen por espaço, por isso entram as 2 formas), `lead` e `leads`.
+- Uma frase só comercial ("prepara uma proposta…", "faz o follow-up…") vai para o marketing; se casar também noutra área ("site" → software, "cliente" → ops), o router pede clarificação pela margem, como antes.
+- **"Orçamento" continua em `finance`.** "Pedido de orçamento" de um cliente (comercial) vai para Finanças; os testes guardam este comportamento até haver decisão em contrário.
+- Testes: `test_router_do_runner_leva_pedidos_comerciais_ao_marketing` e `test_orcamento_continua_nas_financas` em `runner/tests/test_com1_comercial_pack.py`.
 
 ## Fora deste pack (registado)
 

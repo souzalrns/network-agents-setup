@@ -65,7 +65,7 @@ areas:
 
   - id: marketing
     description: Estratégia, copy, criativos, media, SEO/GEO, conteúdo e identidade visual.
-    keywords: [marketing, instagram, tiktok, linkedin, facebook, post, posts, campanha, anuncio, publicidade, seo, conteudo, copy, slogan, influenc, ugc, marca, branding, identidade visual, logotipo, reels, newsletter, criativo, lancamento, colecao, trend, trends, hashtag, artigo, blog, storytelling, audiencia, promov]
+    keywords: [marketing, instagram, tiktok, linkedin, facebook, post, posts, campanha, anuncio, publicidade, seo, conteudo, copy, slogan, influenc, ugc, marca, branding, identidade visual, logotipo, reels, newsletter, criativo, lancamento, colecao, trend, trends, hashtag, artigo, blog, storytelling, audiencia, promov, propost, follow up, follow-up, lead, leads]  # P-84 = A: Comercial (COM-1)
     agents:
       - marketing.marketing
       - marketing.internal_brief
