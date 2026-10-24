@@ -14,6 +14,7 @@ CLI:  cd runner && python -m plan_runner.office --html ../pilots/office/index.ht
 """
 from __future__ import annotations
 
+import re
 from html import escape
 from typing import Any
 
@@ -31,28 +32,10 @@ STATE_COLOR = {
 }
 WING_LABEL = {"funcoes": "Ala das funções", "negocios": "Ala dos negócios"}
 
-# Departamento -> (cor do corpo, símbolo na barriga). Um departamento novo sem tema usa o neutro.
-THEME = {
-    "direcao": ("#475569", "star"),
-    "marketing": ("#FF8A3D", "megaphone"),
-    "comercial": ("#0D9488", "tag"),
-    "atendimento": ("#60A5FA", "chat"),
-    "financas": ("#2FB67C", "euro"),
-    "juridico": ("#8B5CF6", "scale"),
-    "software": ("#4F7CFF", "code"),
-    "seguranca": ("#EF4444", "shield"),
-    "pesquisa": ("#22B8CF", "lens"),
-    "trading": ("#F2C230", "chart"),
-    "jogos": ("#EC4899", "gamepad"),
-    "documentacao": ("#A3E635", "page"),
-    "negocio-construcao": ("#C2410C", "house"),
-    "negocio-viannalegal": ("#7C3AED", "scale"),
-    "negocio-imobiliario": ("#0EA5E9", "house"),
-    "negocio-produto": ("#6366F1", "code"),
-    "negocio-formacao": ("#22C55E", "cap"),
-    "negocio-saude": ("#F43F5E", "heart"),
-}
+# O tema de cada departamento (cor do corpo, símbolo na barriga) vem do config/office.yaml:
+# o core não conhece departamentos. Sem tema válido, usa o neutro.
 NEUTRAL = ("#94A3B8", "star")
+_HEX = re.compile(r"#[0-9A-Fa-f]{6}")
 
 _ICON = {
     "megaphone": '<polygon points="53,101 53,107 57,107 66,111 66,97 57,101"/>',
@@ -122,8 +105,17 @@ svg .w{fill:#fff;stroke:#111827;stroke-width:2.5}svg .k{fill:#111827}svg .m{fill
 """
 
 
-def theme(dept_id: str) -> tuple[str, str]:
-    return THEME.get(dept_id, NEUTRAL)
+ICONS = frozenset(_ICON)
+
+
+def theme_ok(t: Any) -> bool:
+    return (isinstance(t, dict) and isinstance(t.get("color"), str) and bool(_HEX.fullmatch(t["color"]))
+            and t.get("icon") in _ICON)
+
+
+def theme(dept: dict[str, Any]) -> tuple[str, str]:
+    t = dept.get("theme")
+    return (t["color"], t["icon"]) if theme_ok(t) else NEUTRAL
 
 
 def avatar(color: str, icon: str, state: str, size: int, label: str) -> str:
@@ -219,7 +211,7 @@ def render(snapshot: dict[str, Any], label: str | None = None) -> str:
     for wing in ("funcoes", "negocios"):
         out.append(f"<h2>{WING_LABEL[wing]}</h2><div class=\"grid\">")
         for d in (x for x in depts if x.get("wing") == wing):
-            color, icon = theme(d["id"])
+            color, icon = theme(d)
             minis = "".join(
                 avatar(color, icon, a["state"], 30, _label(a, d["name"])) for s in d["seats"] for a in s["agents"]
             ) or '<span class="empty">sem agentes ainda</span>'
@@ -234,7 +226,7 @@ def render(snapshot: dict[str, Any], label: str | None = None) -> str:
     # Níveis 2 e 3 — departamento e lugar
     out.append("<h2>Departamentos</h2>")
     for d in depts:
-        color, icon = theme(d["id"])
+        color, icon = theme(d)
         out.append(f'<section class="dept" id="d-{escape(d["id"])}"><div class="head"><h3>{escape(d["name"])}</h3>{_pill(d["state"])}</div>')
         if not d["seats"]:
             out.append('<p class="empty">Sem agentes ainda.</p>')

@@ -16,6 +16,8 @@
 #   - lead: null ou um agente do próprio departamento. Só é Lead quem orquestra de facto
 #     (marketing.marketing); não se inventam chefes decorativos;
 #   - departments[].id e seats[].id únicos; wing = funcoes | negocios; name e does não vazios;
+#   - theme: {color: "#RRGGBB", icon: <símbolo genérico>} dá a cor e o símbolo dos avatares
+#     (os símbolos estão em runner/plan_runner/office_html.py; o core não conhece departamentos);
 #   - um departamento sem agentes fica com seats: [] e o escritório mostra "sem agentes ainda".
 #
 # Nomes de lugar são FUNÇÕES, nunca nomes humanos: quem fala com o escritório tem de
@@ -31,6 +33,7 @@ departments:
   - id: direcao
     wing: funcoes
     name: Direção
+    theme: {color: "#475569", icon: star}
     lead: null
     seats:
       - id: direcao-estrategia
@@ -45,6 +48,7 @@ departments:
   - id: marketing
     wing: funcoes
     name: Marketing
+    theme: {color: "#FF8A3D", icon: megaphone}
     lead: marketing.marketing
     seats:
       - id: marketing-lead
@@ -87,6 +91,7 @@ departments:
   - id: comercial
     wing: funcoes
     name: Comercial
+    theme: {color: "#0D9488", icon: tag}
     lead: null
     seats:
       - id: comercial-prospecao
@@ -105,6 +110,7 @@ departments:
   - id: atendimento
     wing: funcoes
     name: Atendimento
+    theme: {color: "#60A5FA", icon: chat}
     lead: null
     seats:
       - id: atendimento-mensagens
@@ -115,6 +121,7 @@ departments:
   - id: financas
     wing: funcoes
     name: Finanças
+    theme: {color: "#2FB67C", icon: euro}
     lead: null
     seats:
       - id: financas-contabilidade
@@ -129,6 +136,7 @@ departments:
   - id: juridico
     wing: funcoes
     name: Jurídico & Compliance
+    theme: {color: "#8B5CF6", icon: scale}
     lead: null
     seats:
       - id: juridico-direito-br-pt
@@ -139,6 +147,7 @@ departments:
   - id: software
     wing: funcoes
     name: Software
+    theme: {color: "#4F7CFF", icon: code}
     lead: null
     seats:
       - id: software-engenharia
@@ -157,6 +166,7 @@ departments:
   - id: seguranca
     wing: funcoes
     name: Segurança
+    theme: {color: "#EF4444", icon: shield}
     lead: null
     seats:
       - id: security-triagem
@@ -175,6 +185,7 @@ departments:
   - id: pesquisa
     wing: funcoes
     name: Pesquisa
+    theme: {color: "#22B8CF", icon: lens}
     lead: null
     seats:
       - id: research-radar
@@ -185,6 +196,7 @@ departments:
   - id: trading
     wing: funcoes
     name: Trading
+    theme: {color: "#F2C230", icon: chart}
     lead: null
     seats:
       - id: trading-mercado
@@ -203,12 +215,14 @@ departments:
   - id: jogos
     wing: funcoes
     name: Jogos
+    theme: {color: "#EC4899", icon: gamepad}
     lead: null
     seats: []
 
   - id: documentacao
     wing: funcoes
     name: Documentação
+    theme: {color: "#A3E635", icon: page}
     lead: null
     seats: []
 
@@ -216,6 +230,7 @@ departments:
   - id: negocio-construcao
     wing: negocios
     name: Construção & Técnica
+    theme: {color: "#C2410C", icon: house}
     lead: null
     seats:
       - id: construcao-obra
@@ -238,6 +253,7 @@ departments:
   - id: negocio-viannalegal
     wing: negocios
     name: ViannaLegal
+    theme: {color: "#7C3AED", icon: scale}
     lead: null
     seats:
       - id: viannalegal-site
@@ -252,6 +268,7 @@ departments:
   - id: negocio-imobiliario
     wing: negocios
     name: Imobiliário
+    theme: {color: "#0EA5E9", icon: house}
     lead: null
     seats:
       - id: imobiliario-canidelo
@@ -266,6 +283,7 @@ departments:
   - id: negocio-produto
     wing: negocios
     name: Produto Digital
+    theme: {color: "#6366F1", icon: code}
     lead: null
     seats:
       - id: produto-mesaflow
@@ -280,6 +298,7 @@ departments:
   - id: negocio-formacao
     wing: negocios
     name: Formação & SST
+    theme: {color: "#22C55E", icon: cap}
     lead: null
     seats:
       - id: formacao-cursos
@@ -294,6 +313,7 @@ departments:
   - id: negocio-saude
     wing: negocios
     name: Saúde (informação)
+    theme: {color: "#F43F5E", icon: heart}
     lead: null
     seats:
       - id: saude-especialidades
