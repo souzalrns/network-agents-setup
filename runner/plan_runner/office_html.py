@@ -197,9 +197,11 @@ def render(snapshot: dict[str, Any], label: str | None = None) -> str:
     out = ['<!doctype html><html lang="pt"><head><meta charset="utf-8">',
            '<meta name="viewport" content="width=device-width,initial-scale=1">',
            f"<title>Escritório dos Agentes</title><style>{_CSS}</style></head><body><main>",
-           "<h1>Escritório dos Agentes</h1>",
-           f'<p class="muted">{_n(total, "agente IA", "agentes IA")} · {_n(len(depts), "departamento", "departamentos")} · gerado em {escape(_when(str(snapshot.get("generated_at", ""))))}. '
-           "Cada estado vem de um evento real do runner; os agentes do MCP de produção ainda não emitem eventos.</p>"]
+           "<h1>Escritório dos Agentes</h1>"]
+    when = escape(_when(str(snapshot.get("generated_at", ""))))
+    out.append(f'<p class="muted">{_n(total, "agente IA", "agentes IA")} · {_n(len(depts), "departamento", "departamentos")} · '
+               f"gerado em {when}. Cada estado vem de um evento real do runner; "
+               "os agentes do MCP de produção ainda não emitem eventos.</p>")
     if label:
         out.append(f'<div class="banner">{escape(label)}</div>')
     out.append('<div class="legend">')
