@@ -1,0 +1,322 @@
+# Escritório dos Agentes — mapa de lugares, v1 (OFFICE-A1; decisões do maestro de 2026-10-24:
+# opção A = projecção de eventos reais; D1 = A, departamentos separados das áreas do router)
+#
+# O que é: a camada VISÍVEL por cima do motor. Duas alas:
+#   - funcoes:  os departamentos de trabalho (Marketing, Comercial, Software, ...);
+#   - negocios: uma sala por unidade de negócio, com os agentes que conhecem esse negócio.
+# Os departamentos NÃO são as áreas de config/areas.yaml: o router continua a escolher pela
+# área; o escritório só agrupa para pessoas lerem. Mudar um lugar aqui não mexe no routing.
+#
+# Regras (validadas por runner/plan_runner/office.py, corrido no runner-tests.yml):
+#   - cada agente do runner (areas[].agents[] de config/areas.yaml) está em exactamente um
+#     lugar do escritório: sem órfãos, sem duplicados, sem inventados;
+#   - cada agente só do MCP de produção (config/mcp-agents.yaml com runtime: null) está em
+#     exactamente um lugar, escrito `mcp:<id>`; os que existem nos dois sítios entram pelo
+#     id do runner;
+#   - lead: null ou um agente do próprio departamento. Só é Lead quem orquestra de facto
+#     (marketing.marketing); não se inventam chefes decorativos;
+#   - departments[].id e seats[].id únicos; wing = funcoes | negocios; name e does não vazios;
+#   - theme: {color: "#RRGGBB", icon: <símbolo genérico>} dá a cor e o símbolo dos avatares
+#     (os símbolos estão em runner/plan_runner/office_html.py; o core não conhece departamentos);
+#   - um departamento sem agentes fica com seats: [] e o escritório mostra "sem agentes ainda".
+#
+# Nomes de lugar são FUNÇÕES, nunca nomes humanos: quem fala com o escritório tem de
+# saber que fala com uma IA (AI Act, art. 50). A identificação "agente IA" é da UI.
+#
+# Estado de um lugar = o mais grave dos seus agentes; o de um departamento = o mais
+# grave dos seus lugares (ordem e eventos em docs/ops/OFFICE.md).
+
+version: 1
+
+departments:
+  # ---------------------------------------------------------------- ala das funções
+  - id: direcao
+    wing: funcoes
+    name: Direção
+    theme: {color: "#475569", icon: star}
+    lead: null
+    seats:
+      - id: direcao-estrategia
+        name: ESTRATÉGIA
+        does: Prioridades e trade-offs entre os negócios do portefólio
+        agents: [gestao.gestao-empresarial]
+      - id: direcao-planeamento
+        name: PLANEAMENTO
+        does: Transforma pedidos em planos e escolhe as skills certas
+        agents: [meta.planejador, meta.using_agent_skills]
+
+  - id: marketing
+    wing: funcoes
+    name: Marketing
+    theme: {color: "#FF8A3D", icon: megaphone}
+    lead: marketing.marketing
+    seats:
+      - id: marketing-lead
+        name: MARKETING LEAD
+        does: Define o plano e distribui o trabalho
+        agents: [marketing.marketing, marketing.marketing_plan, marketing.marketing_council, marketing.marketing_ideas, marketing.marketing_loops, marketing.marketing_psychology, marketing.internal_brief, marketing.launch]
+      - id: marketing-pesquisa
+        name: PESQUISA
+        does: Mercado, tendências e concorrentes
+        agents: [marketing.research, marketing.trend_hunter, marketing.competitors, marketing.competitor_profiling, marketing.content_analyst]
+      - id: marketing-seo
+        name: SEO & IA
+        does: Ser encontrado no Google e nas IAs
+        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.aso, marketing.directory_submissions, marketing.free_tools]
+      - id: marketing-conteudo
+        name: CONTEÚDO & REDES
+        does: Textos, newsletter e redes sociais
+        agents: [marketing.copy_answer_first, marketing.copy_social, marketing.storytelling, marketing.emails, marketing.sms, marketing.ugc, marketing.influencer, marketing.community_marketing]
+      - id: marketing-criativos
+        name: CRIATIVOS
+        does: Imagem, vídeo e identidade visual
+        agents: [marketing.ad_creative, marketing.image, marketing.editor_video, design.identidade-visual]
+      - id: marketing-ads
+        name: ADS & DADOS
+        does: Campanhas, medição e testes
+        agents: [marketing.media_buyer, marketing.analytics, marketing.attribution, marketing.ab_testing, marketing.cro]
+      - id: marketing-conversao
+        name: CONVERSÃO
+        does: Transforma visitas em clientes e retém-nos
+        agents: [marketing.lead_magnets, marketing.popups, marketing.paywalls, marketing.signup, marketing.onboarding, marketing.churn_prevention, marketing.referrals]
+      - id: marketing-relacoes
+        name: RELAÇÕES & EVENTOS
+        does: Imprensa, parcerias e eventos
+        agents: [marketing.public_relations, marketing.co_marketing, marketing.events]
+      - id: marketing-qualidade
+        name: QUALIDADE
+        does: Revê tudo antes de sair
+        agents: [marketing.critic, marketing.critic_item13, marketing.creative_review]
+
+  - id: comercial
+    wing: funcoes
+    name: Comercial
+    theme: {color: "#0D9488", icon: tag}
+    lead: null
+    seats:
+      - id: comercial-prospecao
+        name: PROSPEÇÃO
+        does: Encontra potenciais clientes e faz o primeiro contacto
+        agents: [marketing.prospecting, marketing.cold_email]
+      - id: comercial-ofertas
+        name: OFERTAS & PREÇOS
+        does: Desenha ofertas, preços e posicionamento
+        agents: [marketing.offers, marketing.pricing, marketing.product_marketing]
+      - id: comercial-vendas
+        name: VENDAS
+        does: Materiais de venda e funil comercial
+        agents: [marketing.sales_enablement, marketing.revops]
+
+  - id: atendimento
+    wing: funcoes
+    name: Atendimento
+    theme: {color: "#60A5FA", icon: chat}
+    lead: null
+    seats:
+      - id: atendimento-mensagens
+        name: MENSAGENS DE CLIENTES
+        does: Tria mensagens de clientes e redige respostas
+        agents: [atendimento.comunicacoes-atendimento]
+
+  - id: financas
+    wing: funcoes
+    name: Finanças
+    theme: {color: "#2FB67C", icon: euro}
+    lead: null
+    seats:
+      - id: financas-contabilidade
+        name: CONTABILIDADE
+        does: Facturação, despesas e impostos em Portugal e no Brasil
+        agents: [gestao.contabilidade]
+      - id: financas-investimentos
+        name: INVESTIMENTOS BRASIL
+        does: Mercado brasileiro, renda fixa e variável
+        agents: [mcp:investimentos-brasil]
+
+  - id: juridico
+    wing: funcoes
+    name: Jurídico & Compliance
+    theme: {color: "#8B5CF6", icon: scale}
+    lead: null
+    seats:
+      - id: juridico-direito-br-pt
+        name: DIREITO BRASIL-PORTUGAL
+        does: Contratos, imigração e questões entre os dois países
+        agents: [mcp:direito-br-pt]
+
+  - id: software
+    wing: funcoes
+    name: Software
+    theme: {color: "#4F7CFF", icon: code}
+    lead: null
+    seats:
+      - id: software-engenharia
+        name: ENGENHARIA
+        does: Escreve, testa e revê código e dados
+        agents: [engenharia.desenvolvimento, engenharia.guia-tdd, engenharia.revisor-codigo, engenharia.qualidade-dados]
+      - id: software-design
+        name: DESIGN DE PRODUTO
+        does: Desenha ecrãs, fluxos e textos de interface
+        agents: [design.ui, design.ux, design.ux_writer, design.design_critic]
+      - id: software-arquitetura
+        name: PRODUTO & ARQUITETURA
+        does: Revê a qualidade dos produtos e a arquitectura da rede de agentes
+        agents: [meta.arquitetura-agentes, produto.produto-tech-transversal]
+
+  - id: seguranca
+    wing: funcoes
+    name: Segurança
+    theme: {color: "#EF4444", icon: shield}
+    lead: null
+    seats:
+      - id: security-triagem
+        name: TRIAGEM
+        does: Separa o que é urgente do que não é
+        agents: [security.triage]
+      - id: security-auditoria
+        name: AUDITORIA
+        does: Audita código, skills e configs MCP (OWASP LLM)
+        agents: [meta.security-auditor]
+      - id: security-relatorios
+        name: RELATÓRIOS
+        does: Junta os findings num relatório com evidência
+        agents: [security.reporter]
+
+  - id: pesquisa
+    wing: funcoes
+    name: Pesquisa
+    theme: {color: "#22B8CF", icon: lens}
+    lead: null
+    seats:
+      - id: research-radar
+        name: RADAR DE FERRAMENTAS
+        does: Sabe o estado de cada ferramenta já avaliada
+        agents: [meta.radar-ferramentas]
+
+  - id: trading
+    wing: funcoes
+    name: Trading
+    theme: {color: "#F2C230", icon: chart}
+    lead: null
+    seats:
+      - id: trading-mercado
+        name: ANÁLISE DE MERCADO
+        does: Analisa mercados com fontes públicas e factos citados
+        agents: [trading.market_analysis]
+      - id: trading-risco
+        name: RISCO
+        does: Confere cada proposta contra a política de risco
+        agents: [trading.risk_review]
+      - id: trading-revisao
+        name: REVISÃO PÓS-TRADE
+        does: Revê a semana de operações em papel
+        agents: [trading.post_trade_review]
+
+  - id: jogos
+    wing: funcoes
+    name: Jogos
+    theme: {color: "#EC4899", icon: gamepad}
+    lead: null
+    seats: []
+
+  - id: documentacao
+    wing: funcoes
+    name: Documentação
+    theme: {color: "#A3E635", icon: page}
+    lead: null
+    seats: []
+
+  # ---------------------------------------------------------------- ala dos negócios
+  - id: negocio-construcao
+    wing: negocios
+    name: Construção & Técnica
+    theme: {color: "#C2410C", icon: house}
+    lead: null
+    seats:
+      - id: construcao-obra
+        name: OBRA & RENOVAÇÃO
+        does: Construção ICF, pladur e renovações
+        agents: [mcp:construtora, mcp:pladur, mcp:reformas]
+      - id: construcao-clima
+        name: CLIMATIZAÇÃO
+        does: Ar condicionado, aquecimento e refrigeração
+        agents: [mcp:hvac, mcp:refrigeracao-hvac]
+      - id: construcao-engenharia
+        name: ENGENHARIA
+        does: Estruturas e instalações eléctricas e hidráulicas
+        agents: [mcp:engenharia-civil-arquitetura, mcp:engenharia-eletrica-hidraulica]
+      - id: construcao-reparacoes
+        name: REPARAÇÕES
+        does: Manutenção de eletrodomésticos de cozinha
+        agents: [mcp:eletrodomesticos]
+
+  - id: negocio-viannalegal
+    wing: negocios
+    name: ViannaLegal
+    theme: {color: "#7C3AED", icon: scale}
+    lead: null
+    seats:
+      - id: viannalegal-site
+        name: CIDADANIA
+        does: Assessoria de cidadania portuguesa para brasileiros
+        agents: [mcp:viannalegal]
+      - id: viannalegal-gestao
+        name: GESTÃO DE PROCESSOS
+        does: Sistema interno de processos do escritório
+        agents: [mcp:vianna-gestao]
+
+  - id: negocio-imobiliario
+    wing: negocios
+    name: Imobiliário
+    theme: {color: "#0EA5E9", icon: house}
+    lead: null
+    seats:
+      - id: imobiliario-canidelo
+        name: CANIDELO
+        does: Venda do apartamento em Canidelo
+        agents: [mcp:canidelo]
+      - id: imobiliario-digital
+        name: IMOBILIÁRIO DIGITAL
+        does: Avaliação e análise de mercado imobiliário
+        agents: [mcp:imobiliario-digital]
+
+  - id: negocio-produto
+    wing: negocios
+    name: Produto Digital
+    theme: {color: "#6366F1", icon: code}
+    lead: null
+    seats:
+      - id: produto-mesaflow
+        name: MESAFLOW
+        does: SaaS de gestão de restaurantes
+        agents: [mcp:mesaflow]
+      - id: produto-apps
+        name: APPS
+        does: Coordenação dos apps da LRNSdigital
+        agents: [mcp:apps-produto]
+
+  - id: negocio-formacao
+    wing: negocios
+    name: Formação & SST
+    theme: {color: "#22C55E", icon: cap}
+    lead: null
+    seats:
+      - id: formacao-cursos
+        name: CURSOS
+        does: Conteúdo formativo, alunos e certificados
+        agents: [mcp:cursos-formacoes]
+      - id: formacao-sst
+        name: SEGURANÇA NO TRABALHO
+        does: Consultoria e formações de SST
+        agents: [mcp:sst]
+
+  - id: negocio-saude
+    wing: negocios
+    name: Saúde (informação)
+    theme: {color: "#F43F5E", icon: heart}
+    lead: null
+    seats:
+      - id: saude-especialidades
+        name: ESPECIALIDADES
+        does: Informação de cardiologia, dermatologia e oftalmologia (não substitui o médico)
+        agents: [mcp:cardiologia, mcp:dermatologia, mcp:oftalmologia]
