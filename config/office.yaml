@@ -1,0 +1,175 @@
+# Escritório dos Agentes — mapa de lugares, v1 (OFFICE-A1; decisão do maestro 2026-10-24, opção A)
+#
+# O que é: a camada VISÍVEL por cima do motor. Cada departamento é uma área de
+# config/areas.yaml; cada lugar agrupa agentes reais. O escritório nunca mostra
+# um agente que não exista nem esconde um que exista.
+#
+# Regras (validadas por runner/plan_runner/office.py, corrido no runner-tests.yml):
+#   - departments[].id = os ids de config/areas.yaml, todos, pela mesma ordem;
+#   - cada agente de areas[].agents[] está em exactamente um seats[].agents[]
+#     do departamento da sua área (sem órfãos, sem duplicados, sem inventados);
+#   - lead: null ou um agente do próprio departamento. Só é Lead quem orquestra
+#     de facto (marketing.marketing); não se inventam chefes decorativos;
+#   - seats[].id únicos no ficheiro; name e does não vazios;
+#   - áreas sem agentes (legal, gamedev, docs) ficam com seats: [] e o escritório
+#     mostra "sem agentes ainda".
+#
+# Nomes de lugar são FUNÇÕES, nunca nomes humanos: quem fala com o escritório tem de
+# saber que fala com uma IA (AI Act, art. 50). A identificação "agente IA" é da UI.
+#
+# Estado de um lugar = o mais grave dos seus agentes; o de um departamento = o mais
+# grave dos seus lugares (ordem e eventos em docs/ops/OFFICE.md).
+
+version: 1
+
+departments:
+  - id: software
+    name: Software
+    lead: null
+    seats:
+      - id: software-engenharia
+        name: ENGENHARIA
+        does: Escreve, testa e revê código e dados
+        agents: [engenharia.desenvolvimento, engenharia.guia-tdd, engenharia.revisor-codigo, engenharia.qualidade-dados]
+      - id: software-design
+        name: DESIGN DE PRODUTO
+        does: Desenha ecrãs, fluxos e textos de interface
+        agents: [design.ui, design.ux, design.ux_writer, design.design_critic]
+      - id: software-arquitetura
+        name: PRODUTO & ARQUITETURA
+        does: Revê a qualidade dos produtos e a arquitectura da rede de agentes
+        agents: [meta.arquitetura-agentes, produto.produto-tech-transversal]
+
+  - id: marketing
+    name: Marketing
+    lead: marketing.marketing
+    seats:
+      - id: marketing-lead
+        name: MARKETING LEAD
+        does: Define o plano e distribui o trabalho
+        agents: [marketing.marketing, marketing.marketing_plan, marketing.marketing_council, marketing.marketing_ideas, marketing.marketing_loops, marketing.marketing_psychology, marketing.internal_brief, marketing.launch]
+      - id: marketing-pesquisa
+        name: PESQUISA
+        does: Mercado, tendências e concorrentes
+        agents: [marketing.research, marketing.trend_hunter, marketing.competitors, marketing.competitor_profiling, marketing.content_analyst]
+      - id: marketing-seo
+        name: SEO & IA
+        does: Ser encontrado no Google e nas IAs
+        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.aso, marketing.directory_submissions, marketing.free_tools]
+      - id: marketing-conteudo
+        name: CONTEÚDO & REDES
+        does: Textos, newsletter e redes sociais
+        agents: [marketing.copy_answer_first, marketing.copy_social, marketing.storytelling, marketing.emails, marketing.cold_email, marketing.sms, marketing.ugc, marketing.influencer, marketing.community_marketing]
+      - id: marketing-criativos
+        name: CRIATIVOS
+        does: Imagem, vídeo e identidade visual
+        agents: [marketing.ad_creative, marketing.image, marketing.editor_video, design.identidade-visual]
+      - id: marketing-ads
+        name: ADS & DADOS
+        does: Campanhas, medição e testes
+        agents: [marketing.media_buyer, marketing.analytics, marketing.attribution, marketing.ab_testing, marketing.cro]
+      - id: marketing-conversao
+        name: CONVERSÃO
+        does: Transforma visitas em clientes e retém-nos
+        agents: [marketing.lead_magnets, marketing.popups, marketing.paywalls, marketing.signup, marketing.onboarding, marketing.churn_prevention, marketing.referrals]
+      - id: marketing-comercial
+        name: COMERCIAL
+        does: Ofertas, preços, vendas e parcerias
+        agents: [marketing.offers, marketing.pricing, marketing.product_marketing, marketing.sales_enablement, marketing.revops, marketing.prospecting, marketing.co_marketing, marketing.events, marketing.public_relations]
+      - id: marketing-qualidade
+        name: QUALIDADE
+        does: Revê tudo antes de sair
+        agents: [marketing.critic, marketing.critic_item13, marketing.creative_review]
+
+  - id: legal
+    name: Jurídico
+    lead: null
+    seats: []
+
+  - id: ops
+    name: Operações
+    lead: null
+    seats:
+      - id: ops-gestao
+        name: GESTÃO
+        does: Prioridades e trade-offs entre os negócios do portefólio
+        agents: [gestao.gestao-empresarial]
+      - id: ops-atendimento
+        name: ATENDIMENTO
+        does: Tria mensagens de clientes e redige respostas
+        agents: [atendimento.comunicacoes-atendimento]
+
+  - id: research
+    name: Pesquisa
+    lead: null
+    seats:
+      - id: research-radar
+        name: RADAR DE FERRAMENTAS
+        does: Sabe o estado de cada ferramenta já avaliada
+        agents: [meta.radar-ferramentas]
+
+  - id: finance
+    name: Finanças
+    lead: null
+    seats:
+      - id: finance-contabilidade
+        name: CONTABILIDADE
+        does: Facturação, despesas e impostos em Portugal e no Brasil
+        agents: [gestao.contabilidade]
+
+  - id: trading
+    name: Trading
+    lead: null
+    seats:
+      - id: trading-mercado
+        name: ANÁLISE DE MERCADO
+        does: Analisa mercados com fontes públicas e factos citados
+        agents: [trading.market_analysis]
+      - id: trading-risco
+        name: RISCO
+        does: Confere cada proposta contra a política de risco
+        agents: [trading.risk_review]
+      - id: trading-revisao
+        name: REVISÃO PÓS-TRADE
+        does: Revê a semana de operações em papel
+        agents: [trading.post_trade_review]
+
+  - id: gamedev
+    name: Jogos
+    lead: null
+    seats: []
+
+  - id: security
+    name: Segurança
+    lead: null
+    seats:
+      - id: security-triagem
+        name: TRIAGEM
+        does: Separa o que é urgente do que não é
+        agents: [security.triage]
+      - id: security-auditoria
+        name: AUDITORIA
+        does: Audita código, skills e configs MCP (OWASP LLM)
+        agents: [meta.security-auditor]
+      - id: security-relatorios
+        name: RELATÓRIOS
+        does: Junta os findings num relatório com evidência
+        agents: [security.reporter]
+
+  - id: docs
+    name: Documentação
+    lead: null
+    seats: []
+
+  - id: horizontal
+    name: Transversal
+    lead: null
+    seats:
+      - id: horizontal-planeador
+        name: PLANEADOR
+        does: Transforma pedidos em planos com critério de pronto
+        agents: [meta.planejador]
+      - id: horizontal-skills
+        name: GUIA DE SKILLS
+        does: Escolhe a skill certa para cada tarefa
+        agents: [meta.using_agent_skills]

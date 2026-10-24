@@ -163,6 +163,9 @@ jobs:
       - name: Validar config/areas.yaml contra agents/ (E7)
         run: python -m plan_runner.areas
 
+      - name: Validar config/office.yaml contra as áreas e os agentes (OFFICE-A1)
+        run: python -m plan_runner.office
+
       - name: Run tests with coverage
         run: |
           python -m pytest tests/ -v \
