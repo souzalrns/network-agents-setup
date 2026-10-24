@@ -9,6 +9,9 @@ on:
       # E7: o validador do areas.yaml tem de correr quando mudam os agentes ou o YAML.
       - 'agents/**'
       - 'config/areas.yaml'
+      # OFFICE-A1: mapa de lugares do escritório e inventário do MCP (python -m plan_runner.office)
+      - 'config/office.yaml'
+      - 'config/mcp-agents.yaml'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
@@ -71,6 +74,9 @@ on:
       # E7: o validador do areas.yaml tem de correr quando mudam os agentes ou o YAML.
       - 'agents/**'
       - 'config/areas.yaml'
+      # OFFICE-A1: mapa de lugares do escritório e inventário do MCP (python -m plan_runner.office)
+      - 'config/office.yaml'
+      - 'config/mcp-agents.yaml'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
