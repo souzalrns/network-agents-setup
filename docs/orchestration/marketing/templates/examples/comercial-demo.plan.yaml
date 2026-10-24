@@ -1,0 +1,66 @@
+# COM-1 (D2 = A, maestro, 2026-10-24): pack Comercial — do pedido inbound à proposta e aos
+# follow-ups, sem enviar nada. Tudo prepara; o envio é sempre humano (gate no fim).
+#
+# fixtures/comercial-pedido-ficticio.md: pedido, tabela de preços e pipeline FICTÍCIOS (o demo
+# não pode inventar preços nem usar dados de clientes reais). Num run real, o pedido e o
+# pipeline entram pelos inputs e nunca vão para o git.
+# Uso (a partir de runner/):
+#   python -m plan_runner run ../docs/orchestration/marketing/templates/examples/comercial-demo.plan.yaml \
+#     --mode stub --out ../pilots/run-comercial
+#   python -m plan_runner run ... --mode external --worker gemini --out ../pilots/run-comercial
+
+id: example-comercial-demo
+version: 1
+deliverable_type: comercial_proposal_pack
+objective: >
+  Qualificar um pedido inbound de renovação, preparar a proposta com preços só da tabela do
+  plano e as lacunas à vista, e rever o pipeline em aberto com os follow-ups devidos, sem
+  enviar nada.
+audience: >
+  O dono do negócio, que revê, completa as lacunas e envia (ou não) cada mensagem.
+
+budget:
+  max_steps: 5
+  max_tokens: 40000
+
+steps:
+  - id: qualify
+    action: lead_qualification
+    tools_allowed: [read_repo_file]
+    repo_files:
+      - docs/orchestration/marketing/templates/examples/fixtures/comercial-pedido-ficticio.md
+    output_artifact: artifacts/01-qualificacao.md
+
+  - id: proposal
+    action: proposal
+    depends_on: [qualify]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-qualificacao.md]
+    repo_files:
+      - docs/orchestration/marketing/templates/examples/fixtures/comercial-pedido-ficticio.md
+    output_artifact: artifacts/02-proposta.md
+
+  - id: follow_ups
+    action: follow_up
+    depends_on: [proposal]
+    tools_allowed: [read_repo_file]
+    repo_files:
+      - docs/orchestration/marketing/templates/examples/fixtures/comercial-pedido-ficticio.md
+    output_artifact: artifacts/03-follow-ups.md
+
+  - id: hitl_send_decision
+    action: plan_approve
+    depends_on: [follow_ups]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/01-qualificacao.md exists
+  - artifacts/02-proposta.md exists
+  - artifacts/03-follow-ups.md exists
+  - human_gate_resolved on hitl_send_decision
+  - no external_send without approve

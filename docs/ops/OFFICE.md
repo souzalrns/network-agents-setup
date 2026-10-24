@@ -5,7 +5,7 @@
 > Não guarda estado próprio, não anima trabalho que não existe e não esconde nenhum agente.
 > O motor (planos, router, HITL, memória) não muda: o escritório só o lê.
 
-**Hoje:** 100 agentes (79 do runner + 21 só do MCP de produção), 18 departamentos em 2 alas, 41 lugares.
+**Hoje:** 103 agentes (82 do runner + 21 só do MCP de produção), 18 departamentos em 2 alas, 44 lugares. O Comercial ganhou LEADS INBOUND, PROPOSTAS e FOLLOW-UPS com o COM-1 (`docs/ops/COMERCIAL.md`).
 
 ## 1. Peças
 
@@ -100,7 +100,7 @@ python -m plan_runner.office --html ../pilots/office/index.html --label "Ensaio 
 |---|---|---|---|
 | OFFICE-A2 | Eventos no Supabase (tabela só de acréscimo + Realtime) para o escritório ao vivo, do runner e das chamadas ao MCP | AMBOS | O SQL em produção e as credenciais do runner são do maestro |
 | OFFICE-MCP-SYNC | Verificação automática entre `lib/agents.js` (MCP) e `config/mcp-agents.yaml` | CLAUDE | — |
-| COM-1 | Pack Comercial: propostas, follow-ups e qualificação inbound (D2 = A) | CLAUDE | — |
+| COM-1 | Pack Comercial: propostas, follow-ups e qualificação inbound (D2 = A), em `docs/ops/COMERCIAL.md` | CLAUDE | — |
 | OFFICE-A3 | Escritório 2D com 3 níveis (empresa → departamento → lugar) a ler o snapshot | CLAUDE | — (começa com snapshots de stub) |
 | OFFICE-A4 | Caixa "precisa de ti": aprovar ou recusar gates a partir do escritório, com autenticação e registo de auditoria | AMBOS | Autenticação do escritório por decidir; OFFICE-A2 |
 | RUNNER-WHY-1 | O "porquê" de cada passo, aberto a partir do lugar | CLAUDE | — (já no §4) |
