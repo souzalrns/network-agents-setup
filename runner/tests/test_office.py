@@ -106,6 +106,8 @@ def test_agente_nos_2_sitios_entra_pelo_id_do_runner_e_so_uma_vez() -> None:
     (lambda d: _dept(d, "software")["seats"][0]["agents"].append("mcp:revisor-codigo"), "não existe"),
     (lambda d: _dept(d, "trading").update(wing="ala-nova"), "`wing`"),
     (lambda d: d["departments"].append(dict(_dept(d, "jogos"))), "departamento `jogos` repetido"),
+    (lambda d: _dept(d, "jogos").update(theme={"color": "rosa", "icon": "star"}), "`theme` inválido"),
+    (lambda d: _dept(d, "jogos").update(theme={"color": "#EC4899", "icon": "foguete"}), "`theme` inválido"),
     (lambda d: _dept(d, "trading")["seats"][1].update(id="trading-mercado"), "repetido"),
     (lambda d: _dept(d, "trading")["seats"][0].update(does=" "), "`does` vazio"),
 ])

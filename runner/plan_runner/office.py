@@ -35,6 +35,7 @@ from typing import Any
 import yaml
 
 from .areas import agent_ids, load_areas
+from .office_html import ICONS, theme_ok
 from .skills import _frontmatter
 
 OFFICE_FILE = Path("config") / "office.yaml"
@@ -154,6 +155,8 @@ def validate_office(repo_root: Path) -> list[str]:
             errors.append(f"{did}: `wing` tem de ser {' | '.join(WINGS)}")
         if not isinstance(dept.get("name"), str) or not dept["name"].strip():
             errors.append(f"{did}: `name` vazio")
+        if dept.get("theme") is not None and not theme_ok(dept["theme"]):
+            errors.append(f"{did}: `theme` inválido (color #RRGGBB e icon um de: {', '.join(sorted(ICONS))})")
         members: set[str] = set()
         for seat in dept.get("seats") or []:
             sid = seat.get("id") if isinstance(seat, dict) else None
@@ -271,6 +274,7 @@ def project(events: Iterable[dict[str, Any]], office: dict, actions: dict[str, s
                           "state": worst(m["state"] for m in members), "agents": members})
         departments.append({
             "id": dept["id"], "wing": dept.get("wing"), "name": dept["name"], "lead": dept.get("lead"),
+            "theme": dept.get("theme"),
             "agent_count": sum(len(s["agents"]) for s in seats),
             "state": worst(s["state"] for s in seats) if seats else None,
             "seats": seats,
