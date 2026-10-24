@@ -128,3 +128,10 @@ def test_ensaio_stub_ate_ao_gate_sem_tocar_na_evidencia(sc, out_dir) -> None:
     assert [r["key"] for r in data][:2] == ["MCP-V3", "F2"]
     after = set(EVIDENCE.glob("setup-close-*")) if EVIDENCE.exists() else set()
     assert after == before  # um ensaio nunca vai para a evidência versionada
+
+
+def test_com1_em_stub_vai_ate_ao_gate_e_diz_o_que_conferir(sc, out_dir) -> None:
+    assert sc.main(["--stub", "--only", "COM-1", "--out", str(out_dir)]) == 0
+    report = (out_dir / "REPORT.md").read_text(encoding="utf-8")
+    assert "| COM-1 | COM-1 | **PASS** |" in report
+    assert "cliente C (pediu para parar) fora dos rascunhos" in report

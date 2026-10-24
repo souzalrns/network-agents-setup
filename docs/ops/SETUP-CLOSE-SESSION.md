@@ -38,7 +38,7 @@ $env:MCP_API_KEY = "<a chave do MCP>"
    - Publicar é público e irreversível: uma versão no PyPI não se substitui.
 2. Diz-me "sobe o pin do fetchtron". É 1 linha em `runner/requirements.txt` (`fetchtron==0.2.0`). Os testes do runner já passam com o 0.2.0.
 
-## 4. Runs reais e evidência (F2, F3b-GS-1, F6, F5-ROUTE-1, F3-ART-1)
+## 4. Runs reais e evidência (F2, F3b-GS-1, F6, COM-1, F5-ROUTE-1, F3-ART-1)
 
 ```powershell
 python scripts/setup_close_runs.py --check   # tem de dizer "ambiente e ficheiros prontos"
@@ -50,6 +50,7 @@ python scripts/setup_close_runs.py           # corre tudo (~15–30 min, Gemini 
 - **Repetir só o que falhou:** `python scripts/setup_close_runs.py --only F2,F6-MARKET`.
 - **`MCP-V3` em FAIL com "v2":** o passo 1 ainda não está activo; repete-o.
 - **Os runs param no gate humano:** é o previsto. Nada é aprovado nem executado por este script.
+- **COM-1 (Comercial):** no gate, confere as 3 peças em `run-com-1/`: preços só da tabela fictícia, lacunas marcadas `[[A DEFINIR]]` e o cliente C (pediu para parar) fora dos rascunhos de follow-up.
 - **No fim:** `git add pilots/evidence/setup-close-*.md`, faz commit e manda-me o `REPORT.md`. Eu fecho os itens no `PENDENCIAS.md`.
 
 ## 5. Datas reais de 2 fontes (F3b-VAL-1)
