@@ -14,7 +14,12 @@ $env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app"
 $env:MCP_API_KEY = "<a chave do MCP>"
 ```
 
-## 1. Autoridade das fontes em produção (F3b-AUTH-1)
+## 1. Autoridade das fontes em produção (F3b-AUTH-1) — FEITO a 2026-10-24
+
+> Feito pelo Claude com autorização do maestro: query de controlo (0 violações), migração aplicada no `agent-network-memory` (a `match_knowledge_v3` em produção é idêntica à do ficheiro: o hash da fonte bate), `KNOWLEDGE_RPC_V3=1` na Vercel e redeploy de produção (`9803caa`). Falta só a confirmação pelo item **MCP-V3** do passo 4 (precisa da chave do MCP).
+
+O que foi feito (para referência ou para repetir):
+
 
 1. No SQL Editor do Supabase (`agent-network-memory`):
    - Corre a **query de controlo ANTES**, que está no fim de `scripts/migrations/f3b_authority_v3.sql`. Tem de dar 0 linhas. Já a corri a 23/10 (só leitura): 0 violações.
@@ -32,7 +37,10 @@ $env:MCP_API_KEY = "<a chave do MCP>"
    - A resposta tem de citar `docs/knowledge/security-agents-stack.md`.
    - Com o passo 1 feito, o `metadata` traz também `authority: curado`.
 
-## 3. Publicar o fetchtron 0.2.0 (F2-SEC-1, fecha o DNS rebinding)
+## 3. Publicar o fetchtron 0.2.0 (F2-SEC-1, fecha o DNS rebinding) — FEITO a 2026-10-24
+
+> Publicado pelo workflow `publish-fetchtron` (Trusted Publishing, run 40130358084) e pin subido para `fetchtron==0.2.0` em `runner/requirements.txt`. Nada a fazer aqui.
+
 
 1. Depois do merge do PR do F2-SEC-1: GitHub → Actions → **Publish fetchtron to PyPI** → Run workflow (`main`).
    - Publicar é público e irreversível: uma versão no PyPI não se substitui.
