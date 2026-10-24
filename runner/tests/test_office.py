@@ -71,14 +71,21 @@ def _n(dept: dict) -> int:
     return sum(len(s["agents"]) for s in dept["seats"])
 
 
-def test_todos_os_100_agentes_aparecem_nas_2_alas() -> None:
+def _expected_total() -> int:
+    runtime = {a for area in office.load_areas(REPO_ROOT) for a in area.get("agents") or []}
+    mcp_only = [e for e in office.load_mcp_agents(REPO_ROOT) if e["runtime"] is None]
+    return len(runtime) + len(mcp_only)
+
+
+def test_todos_os_agentes_aparecem_nas_2_alas() -> None:
     data = office.load_office(REPO_ROOT)
-    assert sum(_n(d) for d in data["departments"]) == 100
+    assert sum(_n(d) for d in data["departments"]) == _expected_total() >= 100
     negocios = [d for d in data["departments"] if d["wing"] == "negocios"]
     assert sum(_n(d) for d in negocios) == 19  # os agentes de cada negócio, só no MCP
     mk, com = _dept(data, "marketing"), _dept(data, "comercial")
     assert len(mk["seats"]) == 9 and mk["lead"] == "marketing.marketing"
-    assert _n(mk) + _n(com) == 57  # os 57 da área marketing do router, em 2 departamentos
+    area_mk = next(a for a in office.load_areas(REPO_ROOT) if a["id"] == "marketing")
+    assert _n(mk) + _n(com) == len(area_mk["agents"])  # a área marketing do router, em 2 departamentos
 
 
 def test_agente_nos_2_sitios_entra_pelo_id_do_runner_e_so_uma_vez() -> None:
@@ -149,7 +156,7 @@ def test_sem_eventos_runner_a_espera_mcp_sem_telemetria_e_vazios_sem_estado() ->
     assert states["marketing"] == "idle" and states["negocio-construcao"] == "untracked"
     assert states["financas"] == "idle"  # contabilidade (runner) à espera ganha a investimentos (MCP)
     assert _agent(snap, "mcp:viannalegal")["state"] == "untracked"
-    assert snap["agent_count"] == 100
+    assert snap["agent_count"] == _expected_total()
 
 
 def test_snapshot_diz_que_o_agente_do_runner_tambem_esta_no_mcp() -> None:
@@ -229,3 +236,36 @@ def test_cli_valida_e_projecta(run_dir, capsys) -> None:
     assert office.main(["--project", str(run_dir)]) == 0
     snap = json.loads(capsys.readouterr().out)
     assert snap["states"] == ["error", "needs", "working", "thinking", "idle", "untracked"]
+
+
+# --- escritório 2D (OFFICE-A3 v0) ---------------------------------------------------------------
+
+
+def test_html_mostra_todos_os_agentes_e_o_estado_em_texto(run_dir) -> None:
+    from plan_runner.office_html import render
+
+    run_plan(SEO_DEMO, mode="stub", out_dir=run_dir)
+    snap = office.snapshot(REPO_ROOT, [run_dir])
+    html = render(snap, label="Ensaio em stub")
+    ids = [a["id"] for d in snap["departments"] for s in d["seats"] for a in s["agents"]]
+    assert len(ids) == _expected_total()
+    for aid in ids:
+        assert f"Agente IA {aid} (" in html, aid  # cada agente tem nome acessível (nível 1 e 2)
+    assert "precisa de ti" in html and "sem telemetria" in html and "Ensaio em stub" in html
+    assert "<script" not in html and "http://" not in html and "https://" not in html  # autónomo, sem rede
+
+
+def test_html_escapa_texto_do_mapa() -> None:
+    from plan_runner.office_html import render
+
+    snap = _project([])
+    snap["departments"][0]["seats"][0]["does"] = "<img src=x onerror=alert(1)>"
+    assert "<img src=x" not in render(snap) and "&lt;img src=x" in render(snap)
+
+
+def test_cli_gera_o_html(run_dir) -> None:
+    out = run_dir / "office" / "index.html"
+    run_plan(SEO_DEMO, mode="stub", out_dir=run_dir / "run")
+    assert office.main(["--html", str(out), "--label", "Ensaio", str(run_dir / "run")]) == 0
+    assert out.read_text(encoding="utf-8").startswith("<!doctype html>")
+    assert office.main(["--html", str(out), "--label"]) == 2

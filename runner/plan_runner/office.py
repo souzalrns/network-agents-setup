@@ -20,6 +20,8 @@ MCP não emitem eventos: ficam `untracked` ("sem telemetria"), nunca `idle`.
 
 CLI:  cd runner && python -m plan_runner.office                      (sai 1 e lista os erros)
       cd runner && python -m plan_runner.office --project RUN_DIR...  (snapshot JSON dos runs)
+      cd runner && python -m plan_runner.office --html OUT.html [--label TEXTO] RUN_DIR...
+                                                                       (escritório 2D, office_html.py)
 """
 from __future__ import annotations
 
@@ -301,6 +303,22 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args and args[0] == "--project":
         print(json.dumps(snapshot(repo_root, [Path(p) for p in args[1:]]), indent=2, ensure_ascii=False))
+        return 0
+    if args and args[0] == "--html":
+        from .office_html import render
+
+        if len(args) < 2:
+            print("uso: --html OUT.html [--label TEXTO] RUN_DIR...", file=sys.stderr)
+            return 2
+        out, rest, label = Path(args[1]), args[2:], None
+        if rest[:1] == ["--label"]:
+            if len(rest) < 2:
+                print("--label precisa de um texto", file=sys.stderr)
+                return 2
+            label, rest = rest[1], rest[2:]
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(render(snapshot(repo_root, [Path(p) for p in rest]), label=label), encoding="utf-8")
+        print(f"escritório 2D: {out}")
         return 0
     office = load_office(repo_root)
     depts = office.get("departments") or []
