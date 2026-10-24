@@ -236,3 +236,36 @@ def test_cli_valida_e_projecta(run_dir, capsys) -> None:
     assert office.main(["--project", str(run_dir)]) == 0
     snap = json.loads(capsys.readouterr().out)
     assert snap["states"] == ["error", "needs", "working", "thinking", "idle", "untracked"]
+
+
+# --- escritório 2D (OFFICE-A3 v0) ---------------------------------------------------------------
+
+
+def test_html_mostra_todos_os_agentes_e_o_estado_em_texto(run_dir) -> None:
+    from plan_runner.office_html import render
+
+    run_plan(SEO_DEMO, mode="stub", out_dir=run_dir)
+    snap = office.snapshot(REPO_ROOT, [run_dir])
+    html = render(snap, label="Ensaio em stub")
+    ids = [a["id"] for d in snap["departments"] for s in d["seats"] for a in s["agents"]]
+    assert len(ids) == _expected_total()
+    for aid in ids:
+        assert f"Agente IA {aid} (" in html, aid  # cada agente tem nome acessível (nível 1 e 2)
+    assert "precisa de ti" in html and "sem telemetria" in html and "Ensaio em stub" in html
+    assert "<script" not in html and "http://" not in html and "https://" not in html  # autónomo, sem rede
+
+
+def test_html_escapa_texto_do_mapa() -> None:
+    from plan_runner.office_html import render
+
+    snap = _project([])
+    snap["departments"][0]["seats"][0]["does"] = "<img src=x onerror=alert(1)>"
+    assert "<img src=x" not in render(snap) and "&lt;img src=x" in render(snap)
+
+
+def test_cli_gera_o_html(run_dir) -> None:
+    out = run_dir / "office" / "index.html"
+    run_plan(SEO_DEMO, mode="stub", out_dir=run_dir / "run")
+    assert office.main(["--html", str(out), "--label", "Ensaio", str(run_dir / "run")]) == 0
+    assert out.read_text(encoding="utf-8").startswith("<!doctype html>")
+    assert office.main(["--html", str(out), "--label"]) == 2

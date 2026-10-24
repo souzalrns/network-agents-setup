@@ -79,7 +79,22 @@ Agregação:
 
 **Privacidade:** o snapshot só leva metadados (ids, estado, hora, tipo de evento). Nunca leva o objectivo do plano, payloads, conteúdos ou nomes de clientes. Isto conta sobretudo para o Jurídico (sigilo profissional da OA e RGPD).
 
-## 6. Próximas fases
+## 6. Escritório 2D (OFFICE-A3, v0)
+
+```bash
+cd runner
+python -m plan_runner.office --html ../pilots/office/index.html --label "Ensaio em stub" ../pilots/run-*/
+```
+
+- Uma página HTML **autónoma** (`plan_runner/office_html.py`): sem servidor, sem rede, sem JavaScript e sem custo; abre em qualquer browser, também no telemóvel, e respeita o modo escuro e quem desliga as animações.
+- **Nível 1 (empresa):** as 2 alas, cada departamento com todos os agentes em miniatura e o estado.
+- **Nível 2 (departamento):** os lugares, o que cada um faz e os agentes maiores (estilo cápsula).
+- **Nível 3 (lugar):** a tabela de cada agente: estado, último evento, run, passo, hora e se também está no MCP.
+- O estado vai sempre em texto, além dos sinais do avatar; cada avatar tem nome acessível ("Agente IA …").
+- O HTML vai para `pilots/` (no `.gitignore`): é gerado, não se versiona.
+- **Ao vivo** (actualização sozinha) só com o OFFICE-A2; até lá, gera-se a partir dos runs.
+
+## 7. Próximas fases
 
 | ID | Fase | Dono | Bloqueio |
 |---|---|---|---|
