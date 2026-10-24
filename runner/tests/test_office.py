@@ -71,14 +71,21 @@ def _n(dept: dict) -> int:
     return sum(len(s["agents"]) for s in dept["seats"])
 
 
-def test_todos_os_100_agentes_aparecem_nas_2_alas() -> None:
+def _expected_total() -> int:
+    runtime = {a for area in office.load_areas(REPO_ROOT) for a in area.get("agents") or []}
+    mcp_only = [e for e in office.load_mcp_agents(REPO_ROOT) if e["runtime"] is None]
+    return len(runtime) + len(mcp_only)
+
+
+def test_todos_os_agentes_aparecem_nas_2_alas() -> None:
     data = office.load_office(REPO_ROOT)
-    assert sum(_n(d) for d in data["departments"]) == 100
+    assert sum(_n(d) for d in data["departments"]) == _expected_total() >= 100
     negocios = [d for d in data["departments"] if d["wing"] == "negocios"]
     assert sum(_n(d) for d in negocios) == 19  # os agentes de cada negócio, só no MCP
     mk, com = _dept(data, "marketing"), _dept(data, "comercial")
     assert len(mk["seats"]) == 9 and mk["lead"] == "marketing.marketing"
-    assert _n(mk) + _n(com) == 57  # os 57 da área marketing do router, em 2 departamentos
+    area_mk = next(a for a in office.load_areas(REPO_ROOT) if a["id"] == "marketing")
+    assert _n(mk) + _n(com) == len(area_mk["agents"])  # a área marketing do router, em 2 departamentos
 
 
 def test_agente_nos_2_sitios_entra_pelo_id_do_runner_e_so_uma_vez() -> None:
@@ -149,7 +156,7 @@ def test_sem_eventos_runner_a_espera_mcp_sem_telemetria_e_vazios_sem_estado() ->
     assert states["marketing"] == "idle" and states["negocio-construcao"] == "untracked"
     assert states["financas"] == "idle"  # contabilidade (runner) à espera ganha a investimentos (MCP)
     assert _agent(snap, "mcp:viannalegal")["state"] == "untracked"
-    assert snap["agent_count"] == 100
+    assert snap["agent_count"] == _expected_total()
 
 
 def test_snapshot_diz_que_o_agente_do_runner_tambem_esta_no_mcp() -> None:

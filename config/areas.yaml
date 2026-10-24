@@ -84,6 +84,9 @@ areas:
       - marketing.influencer
       - marketing.media_buyer
       - marketing.ugc
+      - marketing.proposals             # COM-1 (D2 = A): no escritório, departamento Comercial
+      - marketing.follow_ups
+      - marketing.inbound_qualification
       # marketingskills (MIT), gerados por scripts/vendor_marketingskills.py
       - marketing.ab_testing
       - marketing.analytics

@@ -464,3 +464,29 @@ capabilities:
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
   # END marketingskills
+
+  # COM-1 (D2 = A, maestro, 2026-10-24): pack Comercial, skills próprias (não vêm do vendor).
+  # Só preparam: o envio, a resposta e a marcação são sempre humanos (gate plan_approve).
+  - id: lead_qualification
+    description: "Qualificação de pedidos inbound contra os critérios do negócio, com evidência citada; orçamento e decisor nunca estimados."
+    levels: [read, prepare]
+    action: lead_qualification
+    agent: marketing.inbound_qualification
+    skill: skills/marketing/lead_qualification/SKILL.md
+    status: implemented
+
+  - id: commercial_proposal
+    description: "Proposta comercial a partir do brief: âmbito incluído e excluído, preços só da tabela do plano, lacunas à vista, email de envio."
+    levels: [prepare]
+    action: proposal
+    agent: marketing.proposals
+    skill: skills/marketing/proposal/SKILL.md
+    status: implemented
+
+  - id: sales_follow_up
+    description: "Follow-ups de propostas e negócios parados, com motivo novo e cadência; quem pede para parar sai da lista."
+    levels: [read, prepare]
+    action: follow_up
+    agent: marketing.follow_ups
+    skill: skills/marketing/follow_up/SKILL.md
+    status: implemented

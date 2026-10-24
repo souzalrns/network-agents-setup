@@ -89,6 +89,18 @@ departments:
     name: Comercial
     lead: null
     seats:
+      - id: comercial-leads
+        name: LEADS INBOUND
+        does: Qualifica os pedidos que chegam e propõe a resposta
+        agents: [marketing.inbound_qualification]
+      - id: comercial-propostas
+        name: PROPOSTAS
+        does: Do pedido do cliente à proposta pronta a rever
+        agents: [marketing.proposals]
+      - id: comercial-follow-ups
+        name: FOLLOW-UPS
+        does: Segue propostas paradas com um motivo novo
+        agents: [marketing.follow_ups]
       - id: comercial-prospecao
         name: PROSPEÇÃO
         does: Encontra potenciais clientes e faz o primeiro contacto
