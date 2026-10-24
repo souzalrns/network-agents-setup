@@ -8,6 +8,7 @@ Itens (PENDENCIAS §4):
   F3b-GS-1     F3b-GS-1    golden set de marketing contra o MCP real (l5_eval run)
   F6-MARKET    F6          trading: market-analysis-demo (fetch_url na área trading + risco)
   F6-REVIEW    F6          trading: post-trade-review-demo (JSON do economia-trader review)
+  COM-1        COM-1       comercial: comercial-demo (lead → proposta → follow-ups; dados fictícios)
   F5-ROUTE-1   F5-ROUTE-1  um run que começa no router (route --execute)
   F3-ART-1     F3-ART-1    meta.sources nos result.json dos runs acima (derivado, sem chamadas)
 
@@ -53,7 +54,10 @@ PLANS = {
     "F2": "docs/orchestration/marketing/templates/examples/web-research-demo.plan.yaml",
     "F6-MARKET": "docs/orchestration/trading/templates/examples/market-analysis-demo.plan.yaml",
     "F6-REVIEW": "docs/orchestration/trading/templates/examples/post-trade-review-demo.plan.yaml",
+    "COM-1": "docs/orchestration/marketing/templates/examples/comercial-demo.plan.yaml",
 }
+# O que o maestro confere no gate do COM-1 (não se avalia o texto do modelo por heurística).
+COM1_GATE_CHECK = "preços só da tabela fictícia, lacunas marcadas e o cliente C (pediu para parar) fora dos rascunhos"
 TOOLS_PLANS = {"F2", "F6-MARKET"}  # usam fetch_url: PLAN_RUNNER_TOOLS=1
 GOLDEN = "config/l5-golden-marketing.yaml"
 ROUTE_REQUEST = (
@@ -84,6 +88,7 @@ ITEMS = (
     ("F3b-GS-1", "F3b-GS-1", "Golden set de marketing contra o MCP real"),
     ("F6-MARKET", "F6", "Trading: market-analysis-demo"),
     ("F6-REVIEW", "F6", "Trading: post-trade-review-demo"),
+    ("COM-1", "COM-1", "Comercial: comercial-demo (lead → proposta → follow-ups)"),
     ("F5-ROUTE-1", "F5-ROUTE-1", "Run que começa no router (route --execute)"),
     ("F3-ART-1", "F3-ART-1", "meta.sources nos result.json dos runs"),
 )
@@ -209,6 +214,8 @@ def do_plan(res: Result, out: Path, env: dict[str, str], *, stub: bool) -> None:
             res.detail += "; mas a tool fetch_url não trouxe nenhuma fonte web (ver o log e o result.json)"
         else:
             res.detail += f"; {len(web)} fonte(s) web da fetch_url"
+    if res.status == "PASS" and res.key == "COM-1":
+        res.detail += f"; rever no gate: {COM1_GATE_CHECK}"
 
 
 def do_mcp(res: Result, out: Path, env: dict[str, str]) -> None:
@@ -267,7 +274,7 @@ def do_artifacts(res: Result, results: dict[str, Result], *, stub: bool) -> None
     if stub:
         res.status, res.detail = "SKIP", "em stub não há worker nem tools, por isso não há fontes"
         return
-    runs = [r for k, r in results.items() if k in ("F2", "F6-MARKET", "F6-REVIEW", "F5-ROUTE-1") and r.status != "SKIP"]
+    runs = [r for k, r in results.items() if k in ("F2", "F6-MARKET", "F6-REVIEW", "COM-1", "F5-ROUTE-1") and r.status != "SKIP"]
     if not runs:
         res.status, res.detail = "SKIP", "nenhum run desta sessão para ler"
         return
