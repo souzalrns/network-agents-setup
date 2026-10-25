@@ -38,5 +38,5 @@
 `ops/PENDENCIAS-CRUZADAS.md`, `STATUS-PROJETOS.md`, `STATUS-ECOSSISTEMA.md` e o `STATUS.md`
 anterior saíram da árvore. Nada se perdeu: a ficha de cada um (o que era, período, o que o substituiu)
 e o link permanente para o texto integral estão no §13 do
-[`PENDENCIAS-HISTORICO.md`](./initiatives/PENDENCIAS-HISTORICO.md). O commit fica marcado com a tag
-git `arquivo-2026-10-25`.
+[`PENDENCIAS-HISTORICO.md`](./initiatives/PENDENCIAS-HISTORICO.md). O último commit com os ficheiros
+na árvore é o `007907e`.

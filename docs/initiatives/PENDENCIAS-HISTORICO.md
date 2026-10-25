@@ -573,8 +573,8 @@ Para quem chega com um ID antigo. Uma linha por item com aliases (§4) e por lin
 
 Decisão do maestro (2026-10-25, opção B): os documentos antigos saíram da árvore e ficam **aqui**, um
 por linha. Nada se perdeu: o texto integral abre pelo link, fixado num commit (o link nunca muda e os
-números de linha mantêm-se). O commit em que os ficheiros ainda estavam na árvore tem a tag git
-`arquivo-2026-10-25` (`network-agents-setup` `007907e`; `agent-network-mcp` `de92ab7`).
+números de linha mantêm-se). Último commit com os ficheiros na árvore: `network-agents-setup` `007907e`
+(`git checkout 007907e -- docs/archive/` traz tudo de volta) e `agent-network-mcp` `de92ab7`.
 
 **Regras:**
 - O estado vem sempre do `PENDENCIAS.md`. Nada destes documentos é estado actual.
