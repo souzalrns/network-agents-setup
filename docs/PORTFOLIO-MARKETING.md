@@ -109,7 +109,7 @@ Documento completo: [marketing-agency-agents.md](./marketing-agency-agents.md)
 | [ONE-PAGER-MARKETING-AGENTS.md](./ONE-PAGER-MARKETING-AGENTS.md) | Resumo 1 página |
 | [marketing-agency-agents.md](./marketing-agency-agents.md) | Prompts + limites |
 | [knowledge/](./knowledge/) | Packs por agente |
-| [knowledge/item-13-ai-findability.md](./knowledge/item-13-ai-findability.md) | AI Findability |
+| [item-13-ai-findability.md](./item-13-ai-findability.md) | AI Findability (playbook) |
 | [knowledge/skills-map.md](./knowledge/skills-map.md) | Skills → agentes |
 | [CONCLUSAO-SETUP-MARKETING.md](./CONCLUSAO-SETUP-MARKETING.md) | Fecho e próximos passos |
 

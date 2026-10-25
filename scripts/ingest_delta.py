@@ -31,7 +31,8 @@ ROOT = Path(__file__).resolve().parent.parent
 # path, agent_id (network), priority
 MANIFEST: list[tuple[str, str, str]] = [
     ("docs/item-13-ai-findability.md", "marketing+produto-tech-transversal", "P0"),
-    ("docs/knowledge/item-13-ai-findability.md", "marketing", "P0"),
+    # H-01 (2026-10-25): o resumo docs/knowledge/item-13-ai-findability.md saiu (repetia o playbook
+    # acima e o docs/knowledge/ai-findability.md); a fonte foi purgada do Supabase depois do merge.
     ("docs/knowledge/ai-findability.md", "marketing", "P0"),
     ("docs/knowledge/seo-specialist.md", "produto-tech-transversal", "P0"),
     # F0.4 (EXECUTION-PLAN §7; D-EP2 = A): pack da área security, consumido pelo bloco

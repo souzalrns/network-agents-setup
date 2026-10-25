@@ -38,7 +38,6 @@ Relacionado: [item-13-ai-findability.md](./item-13-ai-findability.md) §11 · ow
 | Path | Agent dono (rede) | Prioridade |
 |------|-------------------|------------|
 | `docs/item-13-ai-findability.md` | marketing + produto-tech-transversal | P0 |
-| `docs/knowledge/item-13-ai-findability.md` | marketing | P0 |
 | `docs/knowledge/ai-findability.md` | marketing | P0 |
 | `docs/knowledge/seo-specialist.md` | produto-tech / marketing | P0 |
 | `docs/knowledge/ai-visibility.md` | marketing | P1 |
