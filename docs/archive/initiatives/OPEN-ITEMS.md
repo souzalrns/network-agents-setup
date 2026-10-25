@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/initiatives/OPEN-ITEMS.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 > **HISTÓRICO.** O estado dos pendentes está em docs/initiatives/PENDENCIAS.md. Este documento não é actualizado.
 
 # Itens em Aberto — Relatório Consolidado (2026-09-20)

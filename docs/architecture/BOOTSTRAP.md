@@ -6,9 +6,9 @@ Documento produzido para corrigir a causa raiz da "amnésia entre sessões": o b
 
 | Sistema | Última actualização | Estado |
 |---|---|---|
-| `docs/STATUS.md` + `docs/STATUS-PROJETOS.md` + `docs/STATUS-ECOSSISTEMA.md` (rollup de 9 repos) | 18/08/2026 | Histórico — não editar sem necessidade, mantém a arquitectura PCU original |
+| `docs/STATUS.md` + `docs/archive/STATUS-PROJETOS.md` + `docs/archive/STATUS-ECOSSISTEMA.md` (rollup de 9 repos) | 18/08/2026 | Histórico — não editar sem necessidade, mantém a arquitectura PCU original |
 | Supabase `agent-network-memory` (`mpsuurqilnhsvbnjmrpm`), tabelas `system_inventory`/`pendencias_negocio` | **12-18/08/2026** — confirmado por query directa | **Mais desactualizado que o próprio ficheiro que o cita como "fonte canónica"** — não é uma fonte mais actual, é uma terceira cópia igualmente parada |
-| `docs/initiatives/STATUS.md` | 2026-09-18 (hoje) | **Fonte corrente para este repo** (até 2026-10-03; desde então os pendentes estão só no `PENDENCIAS.md`, ver abaixo) |
+| `docs/archive/initiatives/STATUS.md` | 2026-09-18 (hoje) | **Fonte corrente para este repo** (até 2026-10-03; desde então os pendentes estão só no `PENDENCIAS.md`, ver abaixo) |
 
 Nenhum dos três sabia da existência dos outros dois antes desta correcção.
 
@@ -16,16 +16,16 @@ Nenhum dos três sabia da existência dos outros dois antes desta correcção.
 
 Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 repos e a arquitectura PCU histórica ficam intactos). Corrigir só o **ponteiro**:
 
-- `docs/STATUS.md` ganhou uma nota no topo a dizer que é histórico e a apontar para `docs/initiatives/STATUS.md`.
-- `CLAUDE.md` (bootstrap) passou a listar `ECOSYSTEM.md` → `docs/initiatives/STATUS.md` → `GOVERNANCE.md` como os 3 primeiros ficheiros a ler, antes do rollup de 9 repos.
+- `docs/STATUS.md` ganhou uma nota no topo a dizer que é histórico e a apontar para `docs/archive/initiatives/STATUS.md`.
+- `CLAUDE.md` (bootstrap) passou a listar `ECOSYSTEM.md` → `docs/archive/initiatives/STATUS.md` → `GOVERNANCE.md` como os 3 primeiros ficheiros a ler, antes do rollup de 9 repos.
 - Este ficheiro (`BOOTSTRAP.md`) é o índice que faltava.
 
 ## Estado dos pendentes (2026-10-03, H-001)
 
 **O único documento com o estado dos pendentes é [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md)** (decisão P-6 = A):
 - tabela única de itens vivos (§4), histórico (§7), contradições resolvidas (§8), decisões em A/B/C (§10) e índice de aliases de IDs antigos (§11);
-- `docs/initiatives/STATUS.md` fica com o estado dos sistemas (Done, infra, credenciais, resumos do dia); as listas de pendentes dele são históricas;
-- `docs/audit/PLANO-DE-ACAO.md`, `docs/initiatives/OPEN-ITEMS.md` e o estado do `EXECUTION-PLAN.md` são históricos (aviso no topo de cada um).
+- `docs/archive/initiatives/STATUS.md` fica com o estado dos sistemas (Done, infra, credenciais, resumos do dia); as listas de pendentes dele são históricas;
+- `docs/archive/audit/PLANO-DE-ACAO.md`, `docs/archive/initiatives/OPEN-ITEMS.md` e o estado do `EXECUTION-PLAN.md` são históricos (aviso no topo de cada um).
 
 ## Plano de execução (2026-10-03)
 
@@ -33,7 +33,7 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 |---|---|
 | [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) | **Plano de execução aprovado pelo maestro (2026-10-03, D-EP1..9 = A).** Universal Core → Domain Packs, matrizes P0/P1/P2 corrigidas com evidência, roadmap F0–F6 (o F0 revalida o L5 existente), Fase 2 só como norte, governança do próprio plano. Diz o que deve acontecer e porquê; o estado vivo está em [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md) (até 2026-10-03 estava em `STATUS.md` / `OPEN-ITEMS.md`) |
 | [`execution-plan-sources/`](./execution-plan-sources/README.md) | Fontes do plano, arquivadas tal como foram escritas (análises do maestro e externas) |
-| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | **Histórico** (2026-09-18, anterior à D1). Substituído pelo EXECUTION-PLAN (D-EP7) |
+| [`MASTER-PLAN.md`](../archive/architecture/MASTER-PLAN.md) | **Histórico** (2026-09-18, anterior à D1). Substituído pelo EXECUTION-PLAN (D-EP7) |
 
 ## Os 11 documentos de arquitectura produzidos em 2026-09-18
 
@@ -48,7 +48,7 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 | [`SECURITY.md`](./SECURITY.md) | Frameworks (OWASP LLM Top 10 2026, NIST AI RMF, MITRE ATLAS, MAESTRO) + 8 ferramentas |
 | [`SECURITY-AUDIT.md`](./SECURITY-AUDIT.md) / [`SECURITY-AUDIT-FULL.md`](./SECURITY-AUDIT-FULL.md) | Auditorias reais correlaes contra este repo |
 | [`RATE-LIMITS.md`](./RATE-LIMITS.md) | Causa raiz confirmada da falha do `ingest-knowledge` (quota Gemini) |
-| [`MASTER-PLAN.md`](./MASTER-PLAN.md) | Diagrama completo FEITO/ALTERAR/CRIAR + repos a acoplar vs. extrair. **Histórico desde 2026-10-03:** ver [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) |
+| [`MASTER-PLAN.md`](../archive/architecture/MASTER-PLAN.md) | Diagrama completo FEITO/ALTERAR/CRIAR + repos a acoplar vs. extrair. **Histórico desde 2026-10-03:** ver [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md) |
 | [`memory/FASE1-MEMORIA.md`](./memory/FASE1-MEMORIA.md), [`FASE2`](./memory/FASE2-MEMORIA.md), [`FASE3`](./memory/FASE3-MEMORIA.md), [`FASE4-SINTESE`](./memory/FASE4-SINTESE.md) | Auditoria de memória/federação (dsh-long-memory, Graphiti, Cognee, LightRAG, Mem0, Hindsight, MELD, Stigmem, ai-memory-mcp, sandbox, observabilidade) |
 | [`governance/audit/GOV-FASE1.md`](./governance/audit/GOV-FASE1.md) a [`GOV-FASE3.md`](./governance/audit/GOV-FASE3.md), [`AUDIT-GOVERNANCE.md`](./governance/audit/AUDIT-GOVERNANCE.md) | Auditoria de governança (ADR-001, AGT/AgentMesh, agentgateway, ContextForge, Cedar/OPA, SPIFFE/SPIRE) |
 | [`agents-audit/FASE1-AGENTES.md`](./agents-audit/FASE1-AGENTES.md) + [`agents-audit/deep/*.md`](./agents-audit/deep/) | Auditoria de agentes (2026-09-18, Fase 1): estado real do runtime próprio (TS `orchestrator/` + Python `plan_runner/`) + Microsoft Agent Framework, Google ADK, OpenAI Agents SDK, LlamaIndex, DSPy, smolagents — complementa `patterns-from-orchestrators/`, já existente e não refeito |
@@ -72,4 +72,4 @@ Manter os 3 sistemas como estão (não fundir, não apagar — o rollup de 9 rep
 
 ## Para a próxima sessão
 
-Se estiveres a ler isto porque seguiste o bootstrap do `CLAUDE.md`: já estás no sítio certo. Lê [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md) a seguir para as pendências correntes (o `docs/initiatives/STATUS.md` só tem o estado dos sistemas).
+Se estiveres a ler isto porque seguiste o bootstrap do `CLAUDE.md`: já estás no sítio certo. Lê [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md) a seguir para as pendências correntes (o `docs/archive/initiatives/STATUS.md` só tem o estado dos sistemas).

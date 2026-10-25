@@ -48,7 +48,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | 7.1 | Recursos | Cumpre | `config/areas.yaml::budget`; `config/model-tiers.yaml`; `config/model-prices.yaml`; `docs/ops/BUDGET.md` | — |
 | 7.2 | Competência | Parcial | `CLAUDE.md`; `docs/generated/SKILLS.md` | GOV-42001-1 |
 | 7.3 | Consciencialização | Parcial | `CLAUDE.md` | GOV-42001-1 |
-| 7.4 | Comunicação | Parcial | `docs/ops/PROGRESS-SESSAO.md` | GOV-42001-1 |
+| 7.4 | Comunicação | Parcial | `docs/archive/ops/PROGRESS-SESSAO.md` | GOV-42001-1 |
 | 7.5 | Informação documentada | Cumpre | `docs/initiatives/PENDENCIAS.md`; `docs/architecture/adr/ADR-F3-PROVENANCE-RETRIEVE.md` | — |
 | 8.1 | Planeamento e controlo operacional | Cumpre | `runner/plan_runner/engine.py`; `.github/workflows/runner-tests.yml` | — |
 | 8.2 | Avaliação de risco de IA (operação) | Falta | — | GOV-42001-1 |

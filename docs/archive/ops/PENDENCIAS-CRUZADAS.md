@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/ops/PENDENCIAS-CRUZADAS.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 # Pendências cruzadas: PLANO-DE-ACAO × OPEN-ITEMS × EXECUTION-PLAN
 
 > **Auditoria só de leitura (2026-10-03).** Não alterei nenhum dos 3 documentos; este ficheiro só regista o cruzamento.

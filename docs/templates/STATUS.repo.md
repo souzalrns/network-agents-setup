@@ -4,7 +4,7 @@
 > Este ficheiro é o índice **deste repositório**. Para a visão geral da LRNSdigital
 > (todos os projetos, pendências cruzadas), consultar:
 > - Supabase `system_inventory` + `pendencias_negocio` (fonte operacional)
-> - `docs/STATUS-ECOSSISTEMA.md` no repo `network-agents-setup` (espelho legível no Git)
+> - `docs/archive/STATUS-ECOSSISTEMA.md` no repo `network-agents-setup` (espelho legível no Git)
 
 ## Identidade
 

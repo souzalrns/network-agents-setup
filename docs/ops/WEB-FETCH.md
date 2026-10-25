@@ -1,7 +1,7 @@
 # `fetch`: páginas web com proveniência (F2a)
 
 > Primitiva do contrato `docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md` (§2–§3, "RESEARCH ≠ WEB SCRAPING").
-> Código: `scripts/web_fetch.py`. Testes: `runner/tests/test_web_fetch.py`. Estado da cadeia: `docs/initiatives/PENDENCIAS_T6.md`.
+> Código: `scripts/web_fetch.py`. Testes: `runner/tests/test_web_fetch.py`. Estado da cadeia: `docs/archive/initiatives/PENDENCIAS_T6.md`.
 
 ## 1. O que faz
 

@@ -1,6 +1,6 @@
 """Registo de áreas (config/areas.yaml): carregar e validar contra agents/.
 
-E7 (docs/audit/PLANO-DE-ACAO.md §13.2): o CI falha se o YAML divergir dos
+E7 (docs/archive/audit/PLANO-DE-ACAO.md §13.2): o CI falha se o YAML divergir dos
 agentes reais. Fica no runner porque é aqui (núcleo Python, D1) que o router
 hierárquico da D2 vai ler este ficheiro; a validação é a primeira peça dele.
 

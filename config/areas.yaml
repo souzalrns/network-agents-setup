@@ -1,4 +1,4 @@
-# Registo de áreas — v1 (J5 do docs/audit/PLANO-DE-ACAO.md; D2 de docs/audit/DECISAO-2-maestro.md)
+# Registo de áreas — v1 (J5 do docs/archive/audit/PLANO-DE-ACAO.md; D2 de docs/audit/DECISAO-2-maestro.md)
 #
 # O que é: DADOS para o router hierárquico híbrido (D2). Primeiro escolhe-se a
 # área (palavras-chave/embeddings); só dentro dela se escolhe o agente (LLM).
@@ -21,7 +21,7 @@
 #     nenhum fique inalcançável.
 #
 # O que fica por decidir (cada ponto tem uma opção recomendada por omissão em
-# docs/audit/PLANO-DE-ACAO.md, secção "Decisões tomadas vs. em aberto"):
+# docs/archive/audit/PLANO-DE-ACAO.md, secção "Decisões tomadas vs. em aberto"):
 #   1. ~~Validação em CI~~ FEITO (E7): runner/plan_runner/areas.py, corrido no
 #      runner-tests.yml (`python -m plan_runner.areas`). Falha se um id não existir,
 #      se um agente ficar órfão ou estiver em duas áreas.

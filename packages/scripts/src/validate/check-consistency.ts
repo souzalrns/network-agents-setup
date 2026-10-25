@@ -82,6 +82,9 @@ function checkStatusDoc(): CheckResult[] {
     message: 'docs/STATUS.md presente',
   });
 
+  // H-01 (2026-10-25): o docs/STATUS.md passou a índice curto e actual; o conteúdo antigo
+  // (pipeline jurídico TS, isolamento de banco) está em docs/archive/STATUS-ate-2026-08-18.md.
+  // As frases exigidas são as invariantes do índice novo.
   const requiredPhrases: Array<{ id: string; phrase: string; why: string }> = [
     {
       id: 'status.two-layers',
@@ -94,14 +97,14 @@ function checkStatusDoc(): CheckResult[] {
       why: 'referência à camada privada de produção',
     },
     {
-      id: 'status.content-real',
-      phrase: 'Conteúdo real curado',
-      why: 'marca que o pipeline jurídico já não é placeholder',
+      id: 'status.single-state',
+      phrase: 'docs/initiatives/PENDENCIAS.md',
+      why: 'o estado dos pendentes vive só no PENDENCIAS',
     },
     {
-      id: 'status.isolation',
-      phrase: 'isolamento',
-      why: 'pendência de isolamento de banco ainda documentada',
+      id: 'status.archive',
+      phrase: 'docs/archive/',
+      why: 'os históricos estão arquivados, não misturados com o estado',
     },
   ];
 

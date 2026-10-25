@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/architecture/MASTER-PLAN.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 # Master Plan — Estrutura completa do sistema (2026-09-18)
 
 > **HISTÓRICO (desde 2026-10-03, decisão D-EP7).** Este documento é anterior à D1 (VIA A: runtime Python; `packages/` e `apps/` TS arquivados) e às auditorias que corrigiram o `CORE-MAPPING.md`. **O plano em vigor é [`EXECUTION-PLAN.md`](./EXECUTION-PLAN.md).** Mantido sem alterações de conteúdo, como registo.

@@ -125,7 +125,7 @@ As actions estão fixadas por SHA, e o workflow passa no `actionlint` e nas regr
 
 **Linha de base medida localmente (2026-10-03), com as mesmas versões e regras do CI:**
 - **gitleaks:** 501 commits, **2 achados históricos**, mais 1 no ficheiro actual, todos da mesma linha.
-  - Era um **fragmento truncado** (prefixo + "...") da antiga `SUPABASE_SERVICE_ROLE_KEY`, citado no `docs/initiatives/STATUS.md` (S20) como "rotacionada e apagada no Supabase em 2026-09-19".
+  - Era um **fragmento truncado** (prefixo + "...") da antiga `SUPABASE_SERVICE_ROLE_KEY`, citado no `docs/archive/initiatives/STATUS.md` (S20) como "rotacionada e apagada no Supabase em 2026-09-19".
   - O fragmento foi **removido** do ficheiro actual.
   - As 2 ocorrências do histórico estão no `.gitleaksignore`, com o motivo; reescrever o histórico exigiria force-push.
   - Depois disto: **0 achados**.

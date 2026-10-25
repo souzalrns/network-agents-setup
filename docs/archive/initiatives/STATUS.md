@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/initiatives/STATUS.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 # Status — pendências consolidadas
 
 > **PAPEL DESTE FICHEIRO (2026-10-03, H-001, decisão P-6 = A).** O estado dos pendentes está **só** em `docs/initiatives/PENDENCIAS.md` (ID antigo → ID actual no §11).

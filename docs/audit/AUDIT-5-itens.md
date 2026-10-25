@@ -1,7 +1,7 @@
 # AUDIT-5 — Inventário de itens: fechado, aberto, morto
 
 > **Base:** commit `3dc3b25`. **Data:** 2026-09-29.
-> **Fontes:** `docs/initiatives/STATUS.md` (468 linhas, lido por inteiro), `docs/initiatives/OPEN-ITEMS.md` (86 linhas, lido por inteiro), títulos dos grupos G–J de `EXECUTION-PROMPTS.md`, e os achados das Fases 1–4 desta auditoria.
+> **Fontes:** `docs/archive/initiatives/STATUS.md` (468 linhas, lido por inteiro), `docs/archive/initiatives/OPEN-ITEMS.md` (86 linhas, lido por inteiro), títulos dos grupos G–J de `EXECUTION-PROMPTS.md`, e os achados das Fases 1–4 desta auditoria.
 > **Verificações de apoio feitas nesta fase:**
 > - suite Python completa (`pytest -m ""`): **195/195** em 1m45s;
 > - suite TS: **196/196** (Fase 2);

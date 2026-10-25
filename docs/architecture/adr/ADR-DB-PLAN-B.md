@@ -37,7 +37,7 @@ Os valores exactos **NÃO foram verificados** contra a página de preços nesta 
 - **Agora:** ficar no Supabase free. Conserta-se primeiro o keep-alive (J1).
 - **Plano B managed:** **Neon** (Postgres serverless com `pgvector`, sem a pausa de 7 dias que apaga o acesso).
 - **Plano B local-first:** **Postgres + pgvector em Docker na VM Oracle** (imagem `pgvector/pgvector`, a mesma que o CI já usa: `.github/workflows/ci.yml:30`).
-- **Não** se faz self-host do Supabase completo na Oracle (12 GB): é pesado demais para o que se usa. Ver "REJEITAR" em `docs/audit/PLANO-DE-ACAO.md`.
+- **Não** se faz self-host do Supabase completo na Oracle (12 GB): é pesado demais para o que se usa. Ver "REJEITAR" em `docs/archive/audit/PLANO-DE-ACAO.md`.
 
 ## 3. Gatilhos de saída do Supabase free (basta 1)
 
