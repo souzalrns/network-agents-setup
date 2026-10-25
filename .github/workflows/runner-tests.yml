@@ -12,13 +12,11 @@ on:
       # OFFICE-A1: mapa de lugares do escritório e inventário do MCP (python -m plan_runner.office)
       - 'config/office.yaml'
       - 'config/mcp-agents.yaml'
-      # H-01: inventário gerado e os documentos que citam as contagens (test_inventory.py)
-      - 'docs/generated/**'
-      - 'README.md'
-      - 'docs/ops/OFFICE.md'
-      - 'docs/PORTFOLIO.md'
+      # H-01: números gerados (test_inventory.py, test_pendencias.py) e fonte única do passado
+      # (test_fonte_unica.py: nada de docs/archive/, links relativos dos documentos vivos resolvem)
+      - 'docs/**'
+      - '*.md'
       - 'config/agents.config.ts'
-      - 'docs/initiatives/PENDENCIAS*.md'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
@@ -84,13 +82,11 @@ on:
       # OFFICE-A1: mapa de lugares do escritório e inventário do MCP (python -m plan_runner.office)
       - 'config/office.yaml'
       - 'config/mcp-agents.yaml'
-      # H-01: inventário gerado e os documentos que citam as contagens (test_inventory.py)
-      - 'docs/generated/**'
-      - 'README.md'
-      - 'docs/ops/OFFICE.md'
-      - 'docs/PORTFOLIO.md'
+      # H-01: números gerados (test_inventory.py, test_pendencias.py) e fonte única do passado
+      # (test_fonte_unica.py: nada de docs/archive/, links relativos dos documentos vivos resolvem)
+      - 'docs/**'
+      - '*.md'
       - 'config/agents.config.ts'
-      - 'docs/initiatives/PENDENCIAS*.md'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'

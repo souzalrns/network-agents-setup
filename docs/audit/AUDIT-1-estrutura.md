@@ -45,7 +45,7 @@ LOC = linhas de `.ts/.tsx/.py` excluindo `tests/` (comando `find … | xargs cat
 | `scripts/*.py` (`ingest_apply.py`, `ingest_delta.py`) | Python | 594 | **REAL** | Corre em CI: `.github/workflows/ingest-knowledge.yml` (passos "Dry-run delta" e "Apply delta") |
 | `apps/api/` | TS | 1169 | **REAL** (para dev/teste), **não construível** para produção | Entrypoint `apps/api/src/index.ts:27-131`. Build falha — ver 1.4 |
 | `packages/core/` | TS | 12689 | **REAL** (importado), conteúdo misto | Importado por `apps/api/src/index.ts:3-12`, `packages/scripts`. Conteúdo: ver `CORE-MAPPING.md` e Fase 4 |
-| `packages/mcp/` | TS | 1346 | **REAL** (ToolRegistry/tools) + **AMBÍGUO** (`MCPServer`/`MCPClient`) | Tools montadas em `apps/api/src/index.ts:44-51`. `MCPServer.createHttpHandler()` sem superfície HTTP montada (registado em `docs/archive/initiatives/STATUS.md:57`, S11) |
+| `packages/mcp/` | TS | 1346 | **REAL** (ToolRegistry/tools) + **AMBÍGUO** (`MCPServer`/`MCPClient`) | Tools montadas em `apps/api/src/index.ts:44-51`. `MCPServer.createHttpHandler()` sem superfície HTTP montada (registado em [`docs/initiatives/STATUS.md:57 (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md#L57), S11) |
 | `packages/memory/` | TS | 383 | **REAL** (importado) | `packages/core/src/orchestrator/Executor.ts:3`, `Orchestrator.ts:6`, `apps/api/src/index.ts:13` |
 | `packages/observability/` | TS | 350 | **REAL** | 51 imports no repo (grep `from '@network-agents/observability`) |
 | `packages/shared/` | TS | 234 | **REAL** | Tipos: `Planner.ts:3`, `Executor.ts:5-6`, `config/agents.config.ts:1` |

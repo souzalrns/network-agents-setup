@@ -6,7 +6,7 @@
 | **Estado** | **Aceite: opção A** (P-26 = A, maestro, 2026-10-06). O F3a está a ser implementado; o SQL de produção é corrido pelo DEV |
 | **Data** | 2026-10-06 |
 | **Decisores** | Maestro (aceita ou rejeita); redigido pelo Claude |
-| **Item** | F3 no `PENDENCIAS.md` (AMBOS, Alta) e F3 da cadeia F1–F6 (`docs/archive/initiatives/PENDENCIAS_T6.md`) |
+| **Item** | F3 no `PENDENCIAS.md` (AMBOS, Alta) e F3 da cadeia F1–F6 ([`docs/initiatives/PENDENCIAS_T6.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/PENDENCIAS_T6.md)) |
 | **Fontes** | ADR-INGESTION-PRIMITIVES §4 (`source_meta`) e §9 (T6e, F2a); `docs/ops/L5-F0-REVALIDATION.md` §1 (F0.8, provenance camada a camada); `scripts/rag_schema.sql`; `ANM:lib/knowledge.js:67-75` (`matchOnce`, a chamada ao `match_knowledge`); EXECUTION-PLAN §3 (ajuste 3) e §15.8 |
 
 ## 1. Contexto

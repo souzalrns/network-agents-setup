@@ -1,6 +1,6 @@
 # F5: validação E2E de uma capability com run real
 
-> F5 do `docs/initiatives/PENDENCIAS.md` (AMBOS, Alta) e da cadeia F1–F6 (`docs/archive/initiatives/PENDENCIAS_T6.md`).
+> F5 do `docs/initiatives/PENDENCIAS.md` (AMBOS, Alta) e da cadeia F1–F6 ([`docs/initiatives/PENDENCIAS_T6.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/PENDENCIAS_T6.md)).
 > **Só o DEV corre isto:** precisa do `GEMINI_API_KEY`, do `MCP_API_KEY` e do `VERCEL_PROTECTION_BYPASS`. O Claude preparou o comando, o recolhedor de evidência (`scripts/f5_evidence.py`, testado) e este molde.
 
 > **Estado: PASSOU (2026-10-06, 3.º run do DEV).** Evidência na §4. Os 2 primeiros runs falharam por 2 erros de configuração, que estão agora na §5.

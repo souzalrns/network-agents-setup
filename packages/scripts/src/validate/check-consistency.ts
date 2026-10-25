@@ -83,7 +83,7 @@ function checkStatusDoc(): CheckResult[] {
   });
 
   // H-01 (2026-10-25): o docs/STATUS.md passou a índice curto e actual; o conteúdo antigo
-  // (pipeline jurídico TS, isolamento de banco) está em docs/archive/STATUS-ate-2026-08-18.md.
+  // (pipeline jurídico TS, isolamento de banco) está em https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/STATUS.md.
   // As frases exigidas são as invariantes do índice novo.
   const requiredPhrases: Array<{ id: string; phrase: string; why: string }> = [
     {
@@ -102,9 +102,9 @@ function checkStatusDoc(): CheckResult[] {
       why: 'o estado dos pendentes vive só no PENDENCIAS',
     },
     {
-      id: 'status.archive',
-      phrase: 'docs/archive/',
-      why: 'os históricos estão arquivados, não misturados com o estado',
+      id: 'status.history',
+      phrase: 'PENDENCIAS-HISTORICO.md',
+      why: 'o passado vive num só documento, separado do estado',
     },
   ];
 

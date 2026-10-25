@@ -1,7 +1,8 @@
 # Documentação — o que está onde
 
 > Índice da pasta `docs/` (H-01, 2026-10-25). Regra: **um documento por papel**. O estado vive só
-> no `PENDENCIAS.md`; o que deixou de ser actual vai para `archive/` com o aviso HISTÓRICO no topo.
+> no `PENDENCIAS.md`; o passado vive só no [`PENDENCIAS-HISTORICO.md`](./initiatives/PENDENCIAS-HISTORICO.md)
+> (itens fechados, decisões tomadas e, no §13, a ficha de cada documento antigo com o link para o texto integral).
 
 ## Documentos vivos (por papel)
 
@@ -29,11 +30,13 @@
 | [`research/`](./research/) | Investigação de ferramentas externas |
 | [`portfolio/`](./portfolio/) | Evidência para portfólio |
 | [`generated/`](./generated/) | Gerado por scripts; não editar à mão |
-| [`archive/`](./archive/) | **Históricos.** Não são estado actual nem são actualizados |
 
-## O que foi arquivado (H-01, 2026-10-25)
+## Documentos antigos (H-01, 2026-10-25)
 
 `initiatives/STATUS.md` (108 KB), `ops/PROGRESS-SESSAO.md` (133 KB), `audit/PLANO-DE-ACAO.md`,
 `initiatives/OPEN-ITEMS.md`, `architecture/MASTER-PLAN.md`, `initiatives/PENDENCIAS_T6.md`,
 `ops/PENDENCIAS-CRUZADAS.md`, `STATUS-PROJETOS.md`, `STATUS-ECOSSISTEMA.md` e o `STATUS.md`
-anterior. Estão em `archive/` com o mesmo nome; nada foi apagado.
+anterior saíram da árvore. Nada se perdeu: a ficha de cada um (o que era, período, o que o substituiu)
+e o link permanente para o texto integral estão no §13 do
+[`PENDENCIAS-HISTORICO.md`](./initiatives/PENDENCIAS-HISTORICO.md). O último commit com os ficheiros
+na árvore é o `007907e`.

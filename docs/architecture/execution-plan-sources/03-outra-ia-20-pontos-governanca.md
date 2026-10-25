@@ -150,14 +150,14 @@ com:
 
 ```text
 ACTIVE SOURCE
-docs/archive/initiatives/OPEN-ITEMS.md
-docs/archive/initiatives/STATUS.md
+https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/OPEN-ITEMS.md
+https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md
 docs/architecture/BOOTSTRAP.md
 EXECUTION-PLAN.md
 
 HISTORICAL / EVIDENCE
 docs/STATUS.md
-docs/archive/STATUS-ECOSSISTEMA.md
+https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/STATUS-ECOSSISTEMA.md
 etc.
 
 AUDIT OVERRIDES

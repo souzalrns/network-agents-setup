@@ -4,7 +4,7 @@ Fontes que fundamentam `docs/architecture/EXECUTION-PLAN.md` (§17), arquivadas 
 
 **Regras do arquivo**
 - **Sem edição de conteúdo.** Única excepção: removida a primeira linha de 06, 07 e 09, que era só o nome do anexo `.txt`, truncado e repetido na linha seguinte.
-- **Não são fonte de verdade do estado.** Estas análises contêm afirmações que a verificação contra o repo corrigiu (EXECUTION-PLAN §16, V1–V28). Em caso de conflito, prevalece o EXECUTION-PLAN e, para o estado vivo, `docs/archive/initiatives/STATUS.md` / `OPEN-ITEMS.md`.
+- **Não são fonte de verdade do estado.** Estas análises contêm afirmações que a verificação contra o repo corrigiu (EXECUTION-PLAN §16, V1–V28). Em caso de conflito, prevalece o EXECUTION-PLAN e, para o estado vivo, [`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md) / `OPEN-ITEMS.md`.
 - **Conteúdo indisponível não se reconstrói** (EXECUTION-PLAN §15.11): só se regista a referência e a limitação.
 
 | # | Ficheiro | Origem | Nota |
