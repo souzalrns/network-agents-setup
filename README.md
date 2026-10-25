@@ -65,15 +65,15 @@ flowchart LR
 | Config validation | Areas, agents, councils and capabilities validated in CI | [`areas.py`](./runner/plan_runner/areas.py) |
 | Skill usage | Every `step_started` event records which skill file the step loaded, so skill usage is measured from the audit log | [`skills.py`](./runner/plan_runner/skills.py) (`skill_ref`) |
 
-**Domain packs, not special agents.** 38 agents and about 70 skills (Markdown) are organised by domain (marketing, design, engineering, security, meta…). A domain plugs in through `config/areas.yaml` and plan templates in [`docs/orchestration/`](./docs/orchestration/), without changing the engine.
+**Domain packs, not special agents.** 82 runtime agents and 117 skills (Markdown) are organised by domain (marketing, design, engineering, security, meta…). A domain plugs in through `config/areas.yaml` and plan templates in [`docs/orchestration/`](./docs/orchestration/), without changing the engine. Every count comes from the config files: [`docs/generated/INVENTORY.md`](./docs/generated/INVENTORY.md) (CI fails if a number here drifts).
 
 ## Engineering quality
 
 Everything below can be checked in the repository and its Actions history:
 
-- **830+ automated tests** (pytest; 836 on 2026-10-07), plus 195 TypeScript unit tests (vitest), including an ingest → retrieve test against a disposable Postgres + pgvector, and slow end-to-end runs of real plans. See [`runner-tests.yml`](./.github/workflows/runner-tests.yml).
+- **1000+ automated tests** (pytest; exact count: `cd runner && python -m pytest --collect-only -q`), plus TypeScript unit tests (vitest), including an ingest → retrieve test against a disposable Postgres + pgvector, and slow end-to-end runs of real plans. See [`runner-tests.yml`](./.github/workflows/runner-tests.yml).
 - **Security on every PR:** gitleaks, semgrep and CodeQL. Every GitHub Action is pinned to a commit SHA.
-- **100 merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
+- **200+ merged pull requests**, each with its evidence and test output. Architectural decisions are recorded as ADRs ([`docs/architecture/adr/`](./docs/architecture/adr/)). Every open choice is logged with options A/B/C and a recommendation ([`PENDENCIAS.md`](./docs/initiatives/PENDENCIAS.md) §10).
 
 ### Selected engineering stories
 
