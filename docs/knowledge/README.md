@@ -6,11 +6,11 @@ Prompt = comportamento · Knowledge = factos/checklists · Skills = [skills-map.
 
 ---
 
-## Import da produção (2026-09-02)
+## Conhecimento da produção
 
-Cópia de trabalho em **[imported-from-production/](./imported-from-production/)** — marketing-base, a11y/SEO, comunicações, TDD, security/DB, radar opensource, padrões de erros de IA e addendum de orquestradores.
-
-Editar **aqui**. Produção permanece operacional.
+O que estava em `imported-from-production/` (cópias de 2026-09-02 de `agent-network-mcp/ingestion/`) saiu
+no H-01 (2026-10-25): o original vive só no `agent-network-mcp` (`ingestion/`), que o ingere em produção.
+Ficha de cada cópia e link para o texto: §13 do `docs/initiatives/PENDENCIAS-HISTORICO.md`.
 
 ---
 

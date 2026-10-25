@@ -342,7 +342,7 @@ Continue using email, social, and in-app messaging to highlight improvements.
 Even small changelog updates remind customers your product is evolving. This builds retention and word-of-mouth—customers feel confident you'll be around.
 
 **Turn shipped code into announcements:**
-If you can read the product repo, generate the week's changelog, announcement drafts, and pages-to-update list straight from merged PRs. See [references/shipped-changes.md](references/shipped-changes.md).
+If you can read the product repo, generate the week's changelog, announcement drafts, and pages-to-update list straight from merged PRs. See [references/shipped-changes.md](../../../vendor/marketingskills/skills/launch/references/shipped-changes.md).
 
 ---
 
@@ -359,7 +359,7 @@ If you can read the product repo, generate the week's changelog, announcement dr
 - [ ] Launch assets created (screenshots, demo video, GIFs)
 - [ ] Onboarding flow ready
 - [ ] Analytics/tracking in place
-- [ ] Site QA done if the launch includes a new site, redesign, or migration (see [references/site-launch-qa.md](references/site-launch-qa.md))
+- [ ] Site QA done if the launch includes a new site, redesign, or migration (see [references/site-launch-qa.md](../../../vendor/marketingskills/skills/launch/references/site-launch-qa.md))
 
 ### Launch Day
 - [ ] Announcement email to list

@@ -87,7 +87,7 @@ If most customers are outside the US (LATAM, Europe, Africa, Middle East, India,
 - **Quality rating and messaging limits**: blocks and reports lower your rating and can shrink how many people you can message per day.
 - **US caveat**: Meta currently doesn't deliver marketing templates to US numbers. Keep SMS for US marketing.
 
-**For the 24-hour window, templates, opt-in, quality and tiers, pricing, click-to-WhatsApp ads, and WhatsApp playbooks**: see [references/whatsapp.md](references/whatsapp.md).
+**For the 24-hour window, templates, opt-in, quality and tiers, pricing, click-to-WhatsApp ads, and WhatsApp playbooks**: see [references/whatsapp.md](../../../vendor/marketingskills/skills/sms/references/whatsapp.md).
 
 ---
 
@@ -126,7 +126,7 @@ Application-to-Person 10-digit long codes must be registered through The Campaig
 - Implied consent allowed for existing business relationships within 24 months
 - Penalties up to CAD $10M per violation
 
-**For full compliance details, edge cases, opt-in copy templates, and STOP/HELP response templates**: see [references/compliance.md](references/compliance.md).
+**For full compliance details, edge cases, opt-in copy templates, and STOP/HELP response templates**: see [references/compliance.md](../../../vendor/marketingskills/skills/sms/references/compliance.md).
 
 ---
 
@@ -208,7 +208,7 @@ Optional Send 2 (24h later): Reminder + best-seller showcase
 - Generally OK without separate marketing consent if directly related to a transaction the user initiated
 - Still subject to A2P 10DLC registration in US
 
-**For full sequence templates with copy and timing**: see [references/sequence-templates.md](references/sequence-templates.md).
+**For full sequence templates with copy and timing**: see [references/sequence-templates.md](../../../vendor/marketingskills/skills/sms/references/sequence-templates.md).
 
 ---
 
@@ -242,7 +242,7 @@ Optional Send 2 (24h later): Reminder + best-seller showcase
 - Location-based offers (where applicable)
 - Don't fake intimacy ("Hey friend!") — it backfires
 
-**For complete copy patterns by sequence type with character counts**: see [references/sequence-templates.md](references/sequence-templates.md).
+**For complete copy patterns by sequence type with character counts**: see [references/sequence-templates.md](../../../vendor/marketingskills/skills/sms/references/sequence-templates.md).
 
 ---
 
@@ -264,7 +264,7 @@ Optional Send 2 (24h later): Reminder + best-seller showcase
 - Building custom SMS into a product → **Twilio**
 - B2B SaaS doing transactional/auth → **Twilio** or **Customer.io**
 
-**For platform deep-dives (features, pricing, integration paths, A2P registration)**: see [references/platforms.md](references/platforms.md).
+**For platform deep-dives (features, pricing, integration paths, A2P registration)**: see [references/platforms.md](../../../vendor/marketingskills/skills/sms/references/platforms.md).
 
 ---
 

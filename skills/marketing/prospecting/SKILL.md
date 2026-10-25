@@ -47,10 +47,10 @@ Prospecting motions differ enough that the workflow forks at intake. Pick **one*
 If the user describes a hybrid motion (e.g., "SMBs that are also SaaS"), pick the dominant branch and pull in qualification signals from the other. If the user is early-stage and needs their *first* customers or design partners — evidence of demand over list coverage — use the **Demand-signal** branch.
 
 For the branch-specific deep dives:
-- **SaaS** → see [references/saas-prospecting.md](references/saas-prospecting.md)
-- **B2B** → see [references/b2b-prospecting.md](references/b2b-prospecting.md)
-- **Local SMB** → see [references/local-prospecting.md](references/local-prospecting.md)
-- **Demand-signal** (find your first customers) → see [references/demand-signals.md](references/demand-signals.md)
+- **SaaS** → see [references/saas-prospecting.md](../../../vendor/marketingskills/skills/prospecting/references/saas-prospecting.md)
+- **B2B** → see [references/b2b-prospecting.md](../../../vendor/marketingskills/skills/prospecting/references/b2b-prospecting.md)
+- **Local SMB** → see [references/local-prospecting.md](../../../vendor/marketingskills/skills/prospecting/references/local-prospecting.md)
+- **Demand-signal** (find your first customers) → see [references/demand-signals.md](../../../vendor/marketingskills/skills/prospecting/references/demand-signals.md)
 
 ---
 
@@ -79,7 +79,7 @@ Source 2–3× more candidates than the user wants in the final list — qualifi
 
 If the user's list quality bar is high, smaller is better. 25 verified leads beats 250 mostly-junk ones.
 
-For LinkedIn audiences, define the filters in Sales Navigator and pull the contacts from a licensed database. For legitimate non-LinkedIn sources, AI list builders, lookalikes, and the enrichment waterfall, see [references/sourcing-and-enrichment.md](references/sourcing-and-enrichment.md). To find accounts by what just happened to them (hiring, job changes, product usage, funding), see [references/signal-plays.md](references/signal-plays.md).
+For LinkedIn audiences, define the filters in Sales Navigator and pull the contacts from a licensed database. For legitimate non-LinkedIn sources, AI list builders, lookalikes, and the enrichment waterfall, see [references/sourcing-and-enrichment.md](../../../vendor/marketingskills/skills/prospecting/references/sourcing-and-enrichment.md). To find accounts by what just happened to them (hiring, job changes, product usage, funding), see [references/signal-plays.md](../../../vendor/marketingskills/skills/prospecting/references/signal-plays.md).
 
 ### Phase 3 — Qualify each candidate
 
@@ -90,11 +90,11 @@ Score every candidate against the ICP checklist. Add **evidence** (a source URL 
 - **Medium**: one credible source plus consistent search evidence
 - **Low**: incomplete or ambiguous evidence — flag what remains uncertain
 
-For email contacts (B2B / SaaS branches), **always verify deliverability before adding to the final list**, and again within 7 days of sending if the list sat. Catch-all domains need a set policy. See [references/sourcing-and-enrichment.md](references/sourcing-and-enrichment.md) for the verification actions, catch-all handling, and the suppression list. Don't ship leads with invalid or risky emails.
+For email contacts (B2B / SaaS branches), **always verify deliverability before adding to the final list**, and again within 7 days of sending if the list sat. Catch-all domains need a set policy. See [references/sourcing-and-enrichment.md](../../../vendor/marketingskills/skills/prospecting/references/sourcing-and-enrichment.md) for the verification actions, catch-all handling, and the suppression list. Don't ship leads with invalid or risky emails.
 
 ### Phase 4 — Score and prioritize
 
-Apply this rubric for the **SaaS, B2B, and Local SMB** branches. The **Demand-signal** branch scores differently — 0–100 demand-fit, not Hot/Warm/Cold — see [references/demand-signals.md](references/demand-signals.md).
+Apply this rubric for the **SaaS, B2B, and Local SMB** branches. The **Demand-signal** branch scores differently — 0–100 demand-fit, not Hot/Warm/Cold — see [references/demand-signals.md](../../../vendor/marketingskills/skills/prospecting/references/demand-signals.md).
 
 | Score | Definition |
 |-------|------------|
@@ -105,11 +105,11 @@ Apply this rubric for the **SaaS, B2B, and Local SMB** branches. The **Demand-si
 
 Branch-specific signals refine the scoring — see each reference file. Default ratio target: ~20% Hot, ~30% Warm, rest Cold/Skip.
 
-Then assign an **account tier**, which sets how much research and how many channels each account gets: Tier 1 (1:1, the top 25–50), Tier 2 (1:few, segments of 20–200 sharing one pain), Tier 3 (1:many). Tier 1 accounts get a sourced research brief before any outreach. See [references/signal-plays.md](references/signal-plays.md) for tiers and [references/account-research.md](references/account-research.md) for the brief and the rules for agent research.
+Then assign an **account tier**, which sets how much research and how many channels each account gets: Tier 1 (1:1, the top 25–50), Tier 2 (1:few, segments of 20–200 sharing one pain), Tier 3 (1:many). Tier 1 accounts get a sourced research brief before any outreach. See [references/signal-plays.md](../../../vendor/marketingskills/skills/prospecting/references/signal-plays.md) for tiers and [references/account-research.md](../../../vendor/marketingskills/skills/prospecting/references/account-research.md) for the brief and the rules for agent research.
 
 ### Phase 5 — Output the lead sheet
 
-(SaaS / B2B / Local SMB. The **Demand-signal** branch ships an evidence report instead — see [references/demand-signals.md](references/demand-signals.md).)
+(SaaS / B2B / Local SMB. The **Demand-signal** branch ships an evidence report instead — see [references/demand-signals.md](../../../vendor/marketingskills/skills/prospecting/references/demand-signals.md).)
 
 Default to a markdown table in chat. Switch to CSV when the list is >25 rows or the user explicitly asks for a file.
 
@@ -133,7 +133,7 @@ These apply to every branch. **Read first, every engagement.**
 7. **No breached, leaked, or unprovenanced data.** Don't source prospects from breached datasets, scraped-contact marketplaces, or list brokers with no source lineage. Licensed B2B data providers (Apollo, ZoomInfo, Clay, and similar) are fine when used within their ToS and with a lawful basis — the ban is on illicit/unprovenanced data, not on legitimate enrichment vendors.
 8. **Never target or infer sensitive traits.** Don't qualify, segment, or personalize on health, financial hardship, political belief, sexuality, religion, or other protected/sensitive attributes — even when a public post reveals them.
 
-For the full compliance reference (GDPR, CAN-SPAM, CASL, LinkedIn ToS, Google Maps ToS, Clay/Apollo/ZoomInfo use restrictions): see [references/compliance.md](references/compliance.md).
+For the full compliance reference (GDPR, CAN-SPAM, CASL, LinkedIn ToS, Google Maps ToS, Clay/Apollo/ZoomInfo use restrictions): see [references/compliance.md](../../../vendor/marketingskills/skills/prospecting/references/compliance.md).
 
 ---
 
@@ -153,13 +153,13 @@ If missing, ask once, then infer reasonable defaults and continue:
 
 ## Enrichment Workflows
 
-For multi-provider lookups, cache reuse, and per-credit budgets, load [the enrichment playbook](references/enrichment-playbook.md). Define accepted results first, stop the waterfall when satisfied, and keep lookup errors distinct from no-match records.
+For multi-provider lookups, cache reuse, and per-credit budgets, load [the enrichment playbook](../../../vendor/marketingskills/skills/prospecting/references/enrichment-playbook.md). Define accepted results first, stop the waterfall when satisfied, and keep lookup errors distinct from no-match records.
 
 ---
 
 ## Tool Selection Quick Picks
 
-Full breakdown in [references/data-sources.md](references/data-sources.md). Quick picks:
+Full breakdown in [references/data-sources.md](../../../vendor/marketingskills/skills/prospecting/references/data-sources.md). Quick picks:
 
 | If the user has access to... | Use it for |
 |------------------------------|------------|
@@ -288,7 +288,7 @@ For implementation, see the tools registry. Key prospecting tools:
 
 - **cold-email**: For writing outbound sequences against the qualified list (the natural next step after prospecting)
 - **customer-research**: For understanding why current customers buy — informs the ICP definition
-- **competitor-profiling**: For researching competitors. Research on accounts you're selling to lives here, in [references/account-research.md](references/account-research.md)
+- **competitor-profiling**: For researching competitors. Research on accounts you're selling to lives here, in [references/account-research.md](../../../vendor/marketingskills/skills/prospecting/references/account-research.md)
 - **revops**: For lead routing, lifecycle, and CRM handoff after prospecting
 - **sales-enablement**: For battle cards and one-pagers used in the outreach
 - **directory-submissions**: For inbound discovery surfaces (the prospects might find you back)

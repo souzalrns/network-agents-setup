@@ -43,16 +43,16 @@ Then establish, in one batch:
 
 | You are… | Core motion | Depth |
 |---|---|---|
-| **Hosting** | Own the audience end to end — webinar, workshop, dinner, meetup, summit, user conference | This file + [webinar-funnel.md](references/webinar-funnel.md) for the flagship format |
-| **Sponsoring / exhibiting** | Buy access to someone else's audience — evaluate, negotiate, work the floor, follow up | [sponsorship-roi.md](references/sponsorship-roi.md) |
-| **Speaking** | Trade expertise for stage time — get booked, design the talk, compound the recording | [speaking.md](references/speaking.md) |
+| **Hosting** | Own the audience end to end — webinar, workshop, dinner, meetup, summit, user conference | This file + [webinar-funnel.md](../../../vendor/marketingskills/skills/events/references/webinar-funnel.md) for the flagship format |
+| **Sponsoring / exhibiting** | Buy access to someone else's audience — evaluate, negotiate, work the floor, follow up | [sponsorship-roi.md](../../../vendor/marketingskills/skills/events/references/sponsorship-roi.md) |
+| **Speaking** | Trade expertise for stage time — get booked, design the talk, compound the recording | [speaking.md](../../../vendor/marketingskills/skills/events/references/speaking.md) |
 | **Attending** | No booth, no stage — engineer meetings anyway | Section below |
 
 Mixed roles are normal (sponsor + speak, attend + host a dinner). Plan each role's motion separately; they share the follow-up system.
 
 ## Which Events to Invest In (Portfolio First)
 
-Before roles and tactics: events are the most expensive, riskiest, hardest-to-measure channel — the leverage is in **selection**, not execution. Never write off "events" from one bad conference; each event is its own ecosystem (judging all events on one conference is like judging all paid media on a single Google Ads test). Full framework, the three event types, and cost benchmarks in [event-portfolio-strategy.md](references/event-portfolio-strategy.md).
+Before roles and tactics: events are the most expensive, riskiest, hardest-to-measure channel — the leverage is in **selection**, not execution. Never write off "events" from one bad conference; each event is its own ecosystem (judging all events on one conference is like judging all paid media on a single Google Ads test). Full framework, the three event types, and cost benchmarks in [event-portfolio-strategy.md](../../../vendor/marketingskills/skills/events/references/event-portfolio-strategy.md).
 
 - **Is in-person even necessary?** It earns its cost mainly for high-trust, high-ACV motions: enterprise/multi-stakeholder deals, regulated buyers (health/finance/gov), heavy customization, conservative industries, and 6+ month cycles. If your ICP isn't there, spend on digital first.
 - **The 80/20 of selection.** A handful of events generate most event pipeline. Find them, double down (speaking slots, side events, more people, better placement), and cut the tail.
@@ -82,7 +82,7 @@ The event itself is the smallest part of event marketing. Every format follows t
 
 | Format | Best for | Effort | Notes |
 |---|---|---|---|
-| **Webinar** | Lead gen + education at scale | Low-mid | The flagship repeatable format — full funnel in [webinar-funnel.md](references/webinar-funnel.md) |
+| **Webinar** | Lead gen + education at scale | Low-mid | The flagship repeatable format — full funnel in [webinar-funnel.md](../../../vendor/marketingskills/skills/events/references/webinar-funnel.md) |
 | **Workshop** | Product-qualified leads, activation | Mid | Hands-on beats presentation for conversion; smaller and deeper than a webinar |
 | **Dinner / small gathering** | Exec relationships, ABM accounts | Mid | 8–14 seats, no pitch, curated guest mix — the highest meetings-per-dollar format in B2B |
 | **Meetup series** | Local community, recurring presence | Mid | Consistency beats production value; hand hosting duties to community members over time (→ **community-marketing**) |
@@ -100,7 +100,7 @@ The zero-budget motion, and often the best ROI in the building:
 
 1. **Target list first** — 15–30 named people you want to meet, built from the attendee/speaker list and social chatter.
 2. **Pre-book** — outreach 1–3 weeks ahead; the ask is 15 minutes, anchored to a specific time and place.
-3. **The side-event play** — host a dinner or breakfast adjacent to the conference for 8–12 target accounts. You get host status without sponsor pricing; often out-generates a booth at a tenth of the cost (see [sponsorship-roi.md](references/sponsorship-roi.md)).
+3. **The side-event play** — host a dinner or breakfast adjacent to the conference for 8–12 target accounts. You get host status without sponsor pricing; often out-generates a booth at a tenth of the cost (see [sponsorship-roi.md](../../../vendor/marketingskills/skills/events/references/sponsorship-roi.md)).
 4. **Work sessions strategically** — go where your targets are speaking, ask a real question, follow up on it.
 5. Same 24–48h follow-up discipline as every other role.
 
@@ -121,7 +121,7 @@ Events produce your highest-proof content — capture it deliberately:
 | **Real** | Qualified conversations, meetings booked, opportunities created, pipeline influenced | The actual scoreboard |
 | **Decisive** | Cost per qualified meeting, cost per opportunity, closed-won influenced | What decides whether you do it again |
 
-- Compare cost-per-qualified-meeting against your other channels (ads, outbound) — that's the go/no-go math, worked through in [sponsorship-roi.md](references/sponsorship-roi.md).
+- Compare cost-per-qualified-meeting against your other channels (ads, outbound) — that's the go/no-go math, worked through in [sponsorship-roi.md](../../../vendor/marketingskills/skills/events/references/sponsorship-roi.md).
 - Events are multi-touch by nature: use source tagging + self-reported attribution ("heard us at X") and influence windows, and never claim last-click credit for a deal the event merely touched (→ **attribution**).
 - Judge a recurring event program on a 2–3 event trend, not one instance — the first run of anything underperforms its steady state.
 

@@ -113,7 +113,7 @@ Co-marketing is one of **five partnership types**. Know the taxonomy so you rout
 
 Standout moves: **integrations** as a decision factor (83% of enterprise buyers), Calendly's staged ladder (calendar → sales → marketing); **affiliate** power law (20% of affiliates drive 80% of revenue) and buyout clauses (~12× monthly commission); **permissionless co-marketing** (Notion building templates for Airbnb/Amazon/Tesla to ride their brand — no contract needed); App Store distribution (Grammarly 0→10M).
 
-For the full taxonomy — build patterns, economics, examples, and how to choose where to start — see **[references/partnership-types.md](references/partnership-types.md)**. (Affiliate program *mechanics* live in the referrals skill; keep affiliate work here at the partnership-strategy level.)
+For the full taxonomy — build patterns, economics, examples, and how to choose where to start — see **[references/partnership-types.md](../../../vendor/marketingskills/skills/co-marketing/references/partnership-types.md)**. (Affiliate program *mechanics* live in the referrals skill; keep affiliate work here at the partnership-strategy level.)
 
 ---
 

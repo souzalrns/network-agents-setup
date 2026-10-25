@@ -64,12 +64,11 @@ def test_excluidos_existem_e_tem_razao(delta):
         assert isinstance(reason, str) and len(reason) > 20, f"{rel}: razão vazia ou curta"
 
 
-def test_duplicados_sao_mesmo_copias_do_ingestion_do_mcp(delta):
-    dups = [rel for rel, reason in delta.EXCLUDED.items() if reason == delta.EXCLUDE_DUP]
-    assert len(dups) == 7
-    for rel in dups:
-        first = (REPO_ROOT / rel).read_text(encoding="utf-8", errors="replace").splitlines()[0]
-        assert "agent-network-mcp/ingestion/" in first, f"{rel}: a 1.ª linha não diz que é cópia"
+def test_nao_ha_copias_do_mcp_em_docs_knowledge():
+    """H-01 (2026-10-25): as cópias de agent-network-mcp saíram; o original vive só lá (ficha no §13)."""
+    copies = [p.relative_to(REPO_ROOT).as_posix() for p in (REPO_ROOT / "docs" / "knowledge").rglob("*.md")
+              if p.read_text(encoding="utf-8", errors="replace").lstrip().startswith("<!-- COPIA de agent-network-mcp")]
+    assert copies == [], f"cópias do agent-network-mcp em docs/knowledge/: {copies}"
 
 
 def test_design_so_fica_de_fora_sem_consumidor(delta):

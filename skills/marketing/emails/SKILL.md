@@ -34,9 +34,9 @@ Load the matching reference before drafting or auditing the relevant part of a s
 
 | User intent | Load | Covers |
 |---|---|---|
-| Build a welcome, lead nurture, re-engagement, or product onboarding flow | [sequence-templates.md](references/sequence-templates.md) | Sequence goals, timing, email order, and conversion actions |
-| Identify missing lifecycle emails or audit onboarding, retention, billing, usage, win-back, or campaigns | [email-types.md](references/email-types.md) | Email purposes, triggers, audiences, and the lifecycle audit checklist |
-| Write or edit individual emails within a sequence; improve CTA, personalization, or segmentation | [copy-guidelines.md](references/copy-guidelines.md) | Structure, tone, length, merge fields, dynamic content, and copy testing |
+| Build a welcome, lead nurture, re-engagement, or product onboarding flow | [sequence-templates.md](../../../vendor/marketingskills/skills/emails/references/sequence-templates.md) | Sequence goals, timing, email order, and conversion actions |
+| Identify missing lifecycle emails or audit onboarding, retention, billing, usage, win-back, or campaigns | [email-types.md](../../../vendor/marketingskills/skills/emails/references/email-types.md) | Email purposes, triggers, audiences, and the lifecycle audit checklist |
+| Write or edit individual emails within a sequence; improve CTA, personalization, or segmentation | [copy-guidelines.md](../../../vendor/marketingskills/skills/emails/references/copy-guidelines.md) | Structure, tone, length, merge fields, dynamic content, and copy testing |
 
 ## Initial Assessment
 
@@ -192,7 +192,7 @@ Key emails:
 6. Advanced tip (day 10-12)
 7. Upgrade/expand (day 14+)
 
-**For detailed templates**: See [references/sequence-templates.md](references/sequence-templates.md)
+**For detailed templates**: See [references/sequence-templates.md](../../../vendor/marketingskills/skills/emails/references/sequence-templates.md)
 
 ---
 
@@ -235,7 +235,7 @@ Key emails:
 - Industry news roundup
 - Pricing updates
 
-**For detailed email type reference**: See [references/email-types.md](references/email-types.md)
+**For detailed email type reference**: See [references/email-types.md](../../../vendor/marketingskills/skills/emails/references/email-types.md)
 
 ---
 
@@ -291,7 +291,7 @@ For the full blacklist, use the **copywriting** skill's AI-tells reference.
 - One clear primary CTA per email
 - Button text: Action + outcome
 
-**For detailed copy, personalization, and testing guidelines**: See [references/copy-guidelines.md](references/copy-guidelines.md)
+**For detailed copy, personalization, and testing guidelines**: See [references/copy-guidelines.md](../../../vendor/marketingskills/skills/emails/references/copy-guidelines.md)
 
 ---
 
