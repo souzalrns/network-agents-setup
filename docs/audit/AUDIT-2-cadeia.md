@@ -122,7 +122,7 @@ Legenda de estado: **LIGADO** (corre e produz efeito), **DESLIGADO** (existe mas
 | `knowledge_chunks_t6` (escrita pelo setup) | 110 | 33 | **2026-09-29** (activa) |
 | Fontes do setup que também existem em `knowledge_chunks` | — | **1 de 33** | — |
 
-**Quebra Q7:** o C8 foi fechado como "pipeline completo markdown → chunk → embed → Supabase → retrieve" (`docs/initiatives/STATUS.md:17,237`), mas **o retrieve nunca lê o que o setup ingere**. A ingestão continua activa (escritas até hoje) sem consumidor. Achado menor: `agent_id` em `knowledge_chunks_t6` inclui o valor composto `marketing+produto-tech-transversal`, que nenhum `kb` pedido vai igualar.
+**Quebra Q7:** o C8 foi fechado como "pipeline completo markdown → chunk → embed → Supabase → retrieve" (`docs/archive/initiatives/STATUS.md:17,237`), mas **o retrieve nunca lê o que o setup ingere**. A ingestão continua activa (escritas até hoje) sem consumidor. Achado menor: `agent_id` em `knowledge_chunks_t6` inclui o valor composto `marketing+produto-tech-transversal`, que nenhum `kb` pedido vai igualar.
 
 ---
 

@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/STATUS-PROJETOS.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 # Status dos projetos — LRNSdigital
 
 > **Ficheiro único.** Se o utilizador disser “lê o status dos projetos” (ou equivalente),

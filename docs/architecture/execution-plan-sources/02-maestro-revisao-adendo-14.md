@@ -40,7 +40,7 @@ Lista canónica para o executor não inventar caminhos:
 - `docs/architecture/adr/ADR-META-AGENTS.md`
 - `docs/architecture/memory/contracts.md` / `docs/ops/MEMORY-L4.md`
 - `config/areas.yaml`, `config/security-capabilities.yaml`, `config/councils.yaml`
-- `docs/audit/PLANO-DE-ACAO.md`, `docs/initiatives/OPEN-ITEMS.md`, `STATUS.md`
+- `docs/archive/audit/PLANO-DE-ACAO.md`, `docs/archive/initiatives/OPEN-ITEMS.md`, `STATUS.md`
 - `docs/architecture/SECURITY-AGENTS.md`
 
 ### 5. SEC-1 detalhe útil
@@ -89,7 +89,7 @@ Onde cabe: `network-agents-setup` vs `agent-network-mcp` (C-2 ledger no MCP). Ev
 
 ```text
 Grava as 3 partes + o adendo abaixo em docs/architecture/EXECUTION-PLAN.md.
-Regista em docs/initiatives/OPEN-ITEMS.md os itens F0–F6 (§9.4) com dono/fase.
+Regista em docs/archive/initiatives/OPEN-ITEMS.md os itens F0–F6 (§9.4) com dono/fase.
 NÃO implements F1–F6 ainda.
 Começa APENAS pelo F0: prova L5 (security pack no pgvector) + golden set 10–20 + hit@k.
 Se F0 falhar (pack não ingerido), resolve ingest antes de qualquer MarkItDown.

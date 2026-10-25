@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/initiatives/PENDENCIAS_T6.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 # PENDENCIAS — Cadeia F1 → F6
 
 Última atualização: 2026-10-06 (F5 PASSOU; #113, #114, #115 e MCP #19 merged)

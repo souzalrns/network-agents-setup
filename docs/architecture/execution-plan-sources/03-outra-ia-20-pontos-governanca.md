@@ -150,14 +150,14 @@ com:
 
 ```text
 ACTIVE SOURCE
-docs/initiatives/OPEN-ITEMS.md
-docs/initiatives/STATUS.md
+docs/archive/initiatives/OPEN-ITEMS.md
+docs/archive/initiatives/STATUS.md
 docs/architecture/BOOTSTRAP.md
 EXECUTION-PLAN.md
 
 HISTORICAL / EVIDENCE
 docs/STATUS.md
-docs/STATUS-ECOSSISTEMA.md
+docs/archive/STATUS-ECOSSISTEMA.md
 etc.
 
 AUDIT OVERRIDES

@@ -73,7 +73,7 @@ Hoje:
 
 ## 8. Referências internas
 
-- [`docs/audit/PLANO-DE-ACAO.md`](../../audit/PLANO-DE-ACAO.md): porta de entrada da auditoria.
+- [`docs/archive/audit/PLANO-DE-ACAO.md`](../../audit/PLANO-DE-ACAO.md): porta de entrada da auditoria.
 - [`docs/audit/AUDIT-6-lacunas.md`](../../audit/AUDIT-6-lacunas.md) §6.4: repositórios e ferramentas a ligar, por área.
 - [`docs/audit/DECISAO-1-runtimes.md`](../../audit/DECISAO-1-runtimes.md) e [`docs/audit/DECISAO-2-maestro.md`](../../audit/DECISAO-2-maestro.md).
 - [`ADR-DB-PLAN-B.md`](./ADR-DB-PLAN-B.md): onde vivem os checkpoints e a memória, se o Supabase free deixar de servir.

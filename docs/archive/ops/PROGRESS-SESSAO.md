@@ -1,3 +1,7 @@
+> **HISTÓRICO — arquivado a 2026-10-25 (H-01, limpeza).** Não é estado actual nem é actualizado.
+> Estado actual: [`docs/initiatives/PENDENCIAS.md`](../../initiatives/PENDENCIAS.md) · índice: `docs/README.md`.
+> Caminho original: `docs/ops/PROGRESS-SESSAO.md` (último commit antes do arquivo: `a5efdbe`). Os links relativos abaixo podem estar desactualizados; o original está no histórico do git.
+
 # Progresso da sessão — 2026-10-03
 
 > Regra de persistência (maestro, 2026-10-03): este ficheiro é actualizado a cada item fechado ou PR aberto, para que o trabalho sobreviva a uma perda de contexto.
