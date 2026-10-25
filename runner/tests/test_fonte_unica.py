@@ -33,6 +33,12 @@ OLD_MCP = (
     "docs/PLANO_REESTRUTURACAO_AGENT_NETWORK_v1.2.md", "docs/ADDENDUM_PADROES_ORQUESTRADORES.md",
     "docs/ops/diagnostico-vm-2026.txt",
 )
+IMPORTED = (
+    "marketing-base.md", "produto-tech-a11y-seo.md", "arquitetura-agentes-planejamento-rede-docs.md",
+    "comunicacoes-atendimento-base.md", "guia-tdd-testes.md", "radar-ferramentas-opensource.md",
+    "revisor-codigo-security-database.md", "MANIFEST.md", "PADROES_ERROS_IA.md",
+    "ADDENDUM_PADROES_ORQUESTRADORES.md", "README.md",
+)
 # Documentos antigos que já não existem na árvore (o docs/STATUS.md voltou a existir, refeito).
 GONE_NAS = tuple(p for p in OLD_NAS if p != "docs/STATUS.md")
 
@@ -57,8 +63,8 @@ def _texts() -> dict[str, str]:
     return texts
 
 
-def test_nao_ha_docs_archive() -> None:
-    assert not [f for f in _tracked() if f.startswith("docs/archive/")]
+def test_nao_ha_docs_archive_nem_copias_do_mcp() -> None:
+    assert not [f for f in _tracked() if f.startswith(("docs/archive/", "docs/knowledge/imported-from-production/"))]
 
 
 def test_nenhuma_referencia_a_ficheiros_do_arquivo() -> None:
@@ -85,6 +91,8 @@ def test_paragrafo_13_tem_a_ficha_de_cada_documento_antigo() -> None:
         assert f"`{path}" in body and f"a5efdbe4e533050045f0af4c9df8032c2bb8775a/{path})" in body, path
     for path in OLD_MCP:
         assert f"`{path}" in body and f"{MCP}{MCP_SHA}/{path})" in body, path
+    for name in IMPORTED:
+        assert f"imported-from-production/{name})" in body, name
 
 
 def test_os_links_fixados_existem_nesses_commits() -> None:
@@ -103,11 +111,21 @@ def test_os_links_fixados_existem_nesses_commits() -> None:
 
 
 def test_links_relativos_dos_documentos_vivos_resolvem() -> None:
-    files = [f for f in _tracked() if f.endswith(".md") and (f.startswith("docs/") or "/" not in f)]
+    files = [f for f in _tracked() if f.endswith(".md")
+             and (f.startswith(("docs/", "skills/", ".claude/skills/")) or "/" not in f)]
     bad = []
     for rel in files:
         text = re.sub(r"```.*?```", "", (REPO_ROOT / rel).read_text(encoding="utf-8", errors="replace"), flags=re.S)
         for target in re.findall(r"\]\(([\w./%-]+)(?:#[\w%-]*)?\)", text):
-            if not ((REPO_ROOT / rel).parent / target).exists():
+            if not target.startswith("/") and not ((REPO_ROOT / rel).parent / target).exists():  # /x = caminho web de exemplo
                 bad.append(f"{rel}: {target}")
     assert bad == [], "links relativos partidos:\n" + "\n".join(bad)
+
+
+def test_indice_da_arquitectura_lista_tudo() -> None:
+    """H-01: cada documento e cada pasta de docs/architecture/ entra no README (um índice que não mente)."""
+    arch = REPO_ROOT / "docs" / "architecture"
+    readme = (arch / "README.md").read_text(encoding="utf-8")
+    items = [p.name for p in arch.glob("*.md") if p.name != "README.md"] + [p.name + "/" for p in arch.iterdir() if p.is_dir()]
+    missing = [name for name in sorted(items) if f"](./{name})" not in readme]
+    assert missing == [], f"falta no docs/architecture/README.md: {missing}"

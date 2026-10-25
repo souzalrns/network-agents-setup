@@ -81,7 +81,7 @@ Before implementing schema, understand:
 | LocalBusiness | Local business pages | name, address |
 | Event | Events, webinars | name, startDate, location |
 
-**For complete JSON-LD examples**: See [references/schema-examples.md](references/schema-examples.md)
+**For complete JSON-LD examples**: See [references/schema-examples.md](../../../vendor/marketingskills/skills/schema/references/schema-examples.md)
 
 ### Check Google Feature Support First
 

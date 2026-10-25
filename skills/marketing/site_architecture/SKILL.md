@@ -43,7 +43,7 @@ Gather this context (ask if not provided):
 - New site or restructuring an existing one?
 - If restructuring: what's broken? (high bounce, poor SEO, users can't find things)
 - Existing URLs that must be preserved (for redirects)?
-- What platform is it on, and is a platform change on the table? (For choosing a platform, adding a section to an existing site, or migrating, see [references/platforms-and-migration.md](references/platforms-and-migration.md).)
+- What platform is it on, and is a platform change on the table? (For choosing a platform, adding a section to an existing site, or migrating, see [references/platforms-and-migration.md](../../../vendor/marketingskills/skills/site-architecture/references/platforms-and-migration.md).)
 
 ### 3. Site Type
 - SaaS marketing site
@@ -71,7 +71,7 @@ Gather this context (ask if not provided):
 | Hybrid SaaS+content | 3-4 levels | Home, Product, Blog, Resources, Docs | `/product/feature`, `/blog/slug` |
 | Small business | 1-2 levels | Home, Services, About, Contact | `/services/name` |
 
-**For full page hierarchy templates**: See [references/site-type-templates.md](references/site-type-templates.md)
+**For full page hierarchy templates**: See [references/site-type-templates.md](../../../vendor/marketingskills/skills/site-architecture/references/site-type-templates.md)
 
 ---
 
@@ -169,7 +169,7 @@ Home > Blog > SEO Category > Post Title
 
 Breadcrumbs should mirror the URL hierarchy. Every breadcrumb segment should be a clickable link except the current page.
 
-**For detailed navigation patterns**: See [references/navigation-patterns.md](references/navigation-patterns.md)
+**For detailed navigation patterns**: See [references/navigation-patterns.md](../../../vendor/marketingskills/skills/site-architecture/references/navigation-patterns.md)
 
 ---
 
@@ -271,7 +271,7 @@ graph TD
     FEAT --> F2[Automation]
 ```
 
-**For more Mermaid templates**: See [references/mermaid-templates.md](references/mermaid-templates.md)
+**For more Mermaid templates**: See [references/mermaid-templates.md](../../../vendor/marketingskills/skills/site-architecture/references/mermaid-templates.md)
 
 ---
 

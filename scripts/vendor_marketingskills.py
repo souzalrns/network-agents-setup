@@ -259,11 +259,21 @@ def registry(src: Path) -> None:
     out.write_text(head + body.lstrip(), encoding="utf-8")
 
 
+def relink(body: str, name: str) -> str:
+    """Os links `references/x.md` do upstream passam a apontar para a cópia única em vendor/.
+
+    SKILL-REF-1 (H-01, 2026-10-25, B): a skill do runner fica em skills/marketing/<action>/ e as
+    referências só existem em vendor/marketingskills/skills/<name>/references/ (uma cópia, sem duplicar).
+    """
+    return re.sub(r"\]\((references/[^)\s]+)\)", lambda m: f"](../../../vendor/marketingskills/skills/{name}/{m.group(1)})", body)
+
+
 def runner_files(commit: str) -> None:
     for name, (cap, _levels, desc) in NEW.items():
         action = name.replace("-", "_")
         src_md = (VENDOR / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
         _fm, body = split_frontmatter(src_md)
+        body = relink(body, name)
         notes = [
             "Prepara; não publica, não envia e não gasta media (`act_in_production: forbidden`; gate `plan_approve`).",
             "Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.",

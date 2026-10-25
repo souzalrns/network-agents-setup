@@ -102,7 +102,7 @@ Better to have 100 great pages than 10,000 thin ones.
 | Directory | "[category] tools" | "ai copywriting tools" |
 | Profiles | "[entity name]" | "stripe ceo" |
 
-**For detailed playbook implementation**: See [references/playbooks.md](references/playbooks.md)
+**For detailed playbook implementation**: See [references/playbooks.md](../../../vendor/marketingskills/skills/programmatic-seo/references/playbooks.md)
 
 ---
 
@@ -179,7 +179,7 @@ You can layer multiple playbooks (e.g., "Best coworking spaces in San Diego").
 
 ### 6. Choose the Build Platform
 
-Check that the platform can hold the page count, refresh the data, render server-side HTML, branch on data for conditional sections, and control indexation per page. Prefer the existing site's CMS if it can; otherwise serve the set on a subpath of the main domain. Options and tradeoffs: [references/implementation-platforms.md](references/implementation-platforms.md).
+Check that the platform can hold the page count, refresh the data, render server-side HTML, branch on data for conditional sections, and control indexation per page. Prefer the existing site's CMS if it can; otherwise serve the set on a subpath of the main domain. Options and tradeoffs: [references/implementation-platforms.md](../../../vendor/marketingskills/skills/programmatic-seo/references/implementation-platforms.md).
 
 ---
 

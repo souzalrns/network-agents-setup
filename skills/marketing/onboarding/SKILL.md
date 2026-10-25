@@ -43,7 +43,7 @@ Before providing recommendations, understand:
 ## Core Principles
 
 ### 1. Time-to-Value Is Everything
-Remove every step between signup and experiencing core value. Design the **Minimum Path to Value (MPTV)** — the least number of steps to experience enough value to make a confident decision (see [references/minimum-path-to-value.md](references/minimum-path-to-value.md)).
+Remove every step between signup and experiencing core value. Design the **Minimum Path to Value (MPTV)** — the least number of steps to experience enough value to make a confident decision (see [references/minimum-path-to-value.md](../../../vendor/marketingskills/skills/onboarding/references/minimum-path-to-value.md)).
 
 ### 2. One Goal Per Session
 Focus first session on one successful outcome. Save advanced features for later.
@@ -89,7 +89,7 @@ The components you assemble an onboarding experience from. Use the fewest that r
 
 **Judge activation by lead→customer conversion + 90-day retention, not lead volume.** More signups mean nothing if they don't convert and stick.
 
-Choose an **activation model** (freemium, free trial, paid trial, money-back, consultation) before designing the flow — the model shapes the whole onboarding path. See [references/activation-models.md](references/activation-models.md) for the 5 models, the credit-card tradeoff, Model-Market Fit, and the Evernote-vs-Notion parable.
+Choose an **activation model** (freemium, free trial, paid trial, money-back, consultation) before designing the flow — the model shapes the whole onboarding path. See [references/activation-models.md](../../../vendor/marketingskills/skills/onboarding/references/activation-models.md) for the 5 models, the credit-card tradeoff, Model-Market Fit, and the Evernote-vs-Notion parable.
 
 ### Find Your Aha Moment
 
@@ -249,15 +249,15 @@ When recommending experiments, consider tests for:
 - Personalization by role or goal
 - Support and help availability
 
-**For comprehensive experiment ideas**: See [references/experiments.md](references/experiments.md)
+**For comprehensive experiment ideas**: See [references/experiments.md](../../../vendor/marketingskills/skills/onboarding/references/experiments.md)
 
 ---
 
 ## References
 
-- **[references/minimum-path-to-value.md](references/minimum-path-to-value.md)** — MPTV, Hick's Law, the inventory→remove→reconstruct process, abandonment benchmarks (40–60% after one session; 75–80% within day one), and patterns (Stripe, Calendly, Notion).
-- **[references/activation-models.md](references/activation-models.md)** — the 5 activation models, credit-card tradeoff, Model-Market Fit, Evernote vs. Notion.
-- **[references/experiments.md](references/experiments.md)** — comprehensive A/B test and experiment ideas.
+- **[references/minimum-path-to-value.md](../../../vendor/marketingskills/skills/onboarding/references/minimum-path-to-value.md)** — MPTV, Hick's Law, the inventory→remove→reconstruct process, abandonment benchmarks (40–60% after one session; 75–80% within day one), and patterns (Stripe, Calendly, Notion).
+- **[references/activation-models.md](../../../vendor/marketingskills/skills/onboarding/references/activation-models.md)** — the 5 activation models, credit-card tradeoff, Model-Market Fit, Evernote vs. Notion.
+- **[references/experiments.md](../../../vendor/marketingskills/skills/onboarding/references/experiments.md)** — comprehensive A/B test and experiment ideas.
 
 ---
 

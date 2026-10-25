@@ -108,7 +108,7 @@ Reps repeat what you write to buyers who can check it. Anything a buyer can disp
 | Economic buyer | ROI, payback period, total cost, risk | Technical details, implementation specifics |
 | Champion | Internal selling points, quick wins, peer proof | Deep technical or financial detail |
 
-**For full slide-by-slide guidance**: See [references/deck-frameworks.md](references/deck-frameworks.md)
+**For full slide-by-slide guidance**: See [references/deck-frameworks.md](../../../vendor/marketingskills/skills/sales-enablement/references/deck-frameworks.md)
 
 ---
 
@@ -135,7 +135,7 @@ Reps repeat what you write to buyers who can check it. Anything a buyer can disp
 - Include your logo, website, and a specific contact (not info@).
 - Match your brand but keep it clean — this is a sales tool, not a brand piece.
 
-**For templates by use case**: See [references/one-pager-templates.md](references/one-pager-templates.md)
+**For templates by use case**: See [references/one-pager-templates.md](../../../vendor/marketingskills/skills/sales-enablement/references/one-pager-templates.md)
 
 ---
 
@@ -167,7 +167,7 @@ For each objection, document:
 - **Quick-reference table** for live calls — objection, one-line response, proof point. Fits on one screen.
 - **Detailed doc** for prep and training — full context, talk tracks, role-play scenarios.
 
-**For the full objection library**: See [references/objection-library.md](references/objection-library.md)
+**For the full objection library**: See [references/objection-library.md](../../../vendor/marketingskills/skills/sales-enablement/references/objection-library.md)
 
 ### Live Deal Objection
 
@@ -223,7 +223,7 @@ Win-loss analysis turns CRM outcomes, call transcripts, and buyer interviews int
 5. **Report counts with sample sizes.** "6 of 9 losses to Acme cite onboarding time" beats "onboarding is a top theme." State n every time. Small slices are directional, and under ~5 deals it's a signal to watch, not a finding.
 6. **Turn findings into assets.** A deal with only a one-word CRM reason is low-confidence: confirm it with transcripts or interviews before it changes a battle card. Then update battle cards, the objection library, and discovery questions, and send product gaps to the product team.
 
-**For coding schemes, interview questions, and report format**: See [references/win-loss-analysis.md](references/win-loss-analysis.md)
+**For coding schemes, interview questions, and report format**: See [references/win-loss-analysis.md](../../../vendor/marketingskills/skills/sales-enablement/references/win-loss-analysis.md)
 
 ---
 
@@ -289,9 +289,9 @@ Win-loss analysis turns CRM outcomes, call transcripts, and buyer interviews int
 - **Customize to their use case.** Use their terminology, their data (if possible), their workflow.
 - **Leave time for questions.** A demo where the prospect doesn't talk is a demo that doesn't close.
 
-**For full script templates**: See [references/demo-scripts.md](references/demo-scripts.md)
+**For full script templates**: See [references/demo-scripts.md](../../../vendor/marketingskills/skills/sales-enablement/references/demo-scripts.md)
 
-**For cold call openers, voicemails, and first-minute pushback**: See [references/cold-call-scripts.md](references/cold-call-scripts.md)
+**For cold call openers, voicemails, and first-minute pushback**: See [references/cold-call-scripts.md](../../../vendor/marketingskills/skills/sales-enablement/references/cold-call-scripts.md)
 
 ---
 

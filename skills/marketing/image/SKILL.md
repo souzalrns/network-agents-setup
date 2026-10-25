@@ -126,7 +126,7 @@ clean commercial photography style, 16:9 aspect ratio, 4K
 - Requesting complex text — use overlays instead for anything beyond short headlines
 - No style direction — "photorealistic," "flat illustration," "3D render"
 
-For detailed prompting guides per model, see [references/ai-image-prompting.md](references/ai-image-prompting.md).
+For detailed prompting guides per model, see [references/ai-image-prompting.md](../../../vendor/marketingskills/skills/image/references/ai-image-prompting.md).
 
 ---
 
