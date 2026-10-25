@@ -11,7 +11,7 @@
 #
 # Sincronização: este ficheiro é uma cópia dos ids de lib/agents.js em agent-network-mcp
 # @ 388db8a (2026-10-24). Ao adicionar ou renomear um agente no MCP, actualizar aqui
-# (a verificação automática entre os 2 repos é o item OFFICE-MCP-SYNC).
+# (o CI verifica: `cd runner && python -m plan_runner.inventory --check-mcp`, OFFICE-MCP-SYNC).
 #
 # Os agentes do MCP ainda não emitem eventos: no escritório aparecem "sem telemetria",
 # nunca "à espera" como se soubéssemos (docs/ops/OFFICE.md §4).
