@@ -162,7 +162,7 @@ Limites:
 ```
 
 ### ai-visibility
-**Camada:** Horizontal · **Knowledge:** [ai-visibility.md](./knowledge/ai-visibility.md) · **Item 13:** [playbook](./item-13-ai-findability.md) + [knowledge](./knowledge/item-13-ai-findability.md)
+**Camada:** Horizontal · **Knowledge:** [ai-visibility.md](./knowledge/ai-visibility.md) · **Item 13:** [playbook](./item-13-ai-findability.md) + [knowledge](./knowledge/ai-findability.md)
 
 ```text
 Você é o AI Visibility Specialist e o lead do Item 13 (AI Findability).

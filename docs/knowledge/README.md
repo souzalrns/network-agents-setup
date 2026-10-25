@@ -24,7 +24,6 @@ Editar **aqui**. Produção permanece operacional.
 | [ai-visibility.md](./ai-visibility.md) | ai-visibility |
 | [seo-specialist.md](./seo-specialist.md) | seo-specialist |
 | [geo-agent.md](./geo-agent.md) | geo-agent |
-| [item-13-ai-findability.md](./item-13-ai-findability.md) | fluxo item 13 |
 
 ### Criação
 | Pack | Agente |
