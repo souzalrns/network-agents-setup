@@ -150,7 +150,7 @@ Dois motores, dois papéis:
 | **Transporte** | HTTP + WebSocket | CLI + (via MCP) stdio |
 | **Contrato** | `HitlRequest` / `HitlStatus` / `HitlPriority` / `HitlCategory` (em `@network-agents/shared`) | Pendente — o contrato v1 define o formato de ficheiro/eventos que ambos os lados partilham |
 
-**Estado actual (corrigido 2026-09-17):** o `HitlManager` Node existe e está montado na API — classificado **INCOMPLETO** em `CORE-MAPPING.md` (lógica funcional, estado em `Map` volátil). O lado Python (`runner/plan_runner/hitl.py`, contrato v1) **já existe** — é **S6a**, fechado no `docs/archive/initiatives/STATUS.md` (módulo isolado + 15 testes). O que falta é a **integração** desse módulo em `engine.py`/`langgraph_engine.py`/`cli.py` — isso é **S9**, ainda por fazer. *(Este documento dizia antes que o `hitl.py` "ainda não existe" — estava desactualizado; corrigido aqui.)*
+**Estado actual (corrigido 2026-09-17):** o `HitlManager` Node existe e está montado na API — classificado **INCOMPLETO** em `CORE-MAPPING.md` (lógica funcional, estado em `Map` volátil). O lado Python (`runner/plan_runner/hitl.py`, contrato v1) **já existe** — é **S6a**, fechado no [`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md) (módulo isolado + 15 testes). O que falta é a **integração** desse módulo em `engine.py`/`langgraph_engine.py`/`cli.py` — isso é **S9**, ainda por fazer. *(Este documento dizia antes que o `hitl.py` "ainda não existe" — estava desactualizado; corrigido aqui.)*
 
 ---
 
@@ -179,4 +179,4 @@ Dois motores, dois papéis:
 - `docs/architecture/patterns-from-mcp/` — MCP server governado (Python)
 - [`docs/architecture/CORE-MAPPING.md`](./CORE-MAPPING.md) — estado REAL/INCOMPLETO/MOCK de todos os 39 ficheiros de `packages/core/`
 - [`docs/architecture/GOVERNANCE.md`](./GOVERNANCE.md) — visão consolidada da camada de governança (7 destes módulos fazem parte dela)
-- `docs/archive/initiatives/STATUS.md` — S6a (feito, `hitl.py` existe) e S9 (por fazer, integração)
+- [`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md) — S6a (feito, `hitl.py` existe) e S9 (por fazer, integração)

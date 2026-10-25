@@ -3,7 +3,7 @@
 > Índice curto e **actual** deste repo (refeito a 2026-10-25, H-01). Não guarda listas de
 > pendentes nem números escritos à mão: o estado está num só sítio e as contagens vêm dos
 > validadores. O conteúdo anterior deste ficheiro (até 18/08/2026) está em
-> [`docs/archive/STATUS-ate-2026-08-18.md`](./archive/STATUS-ate-2026-08-18.md).
+> [`docs/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/STATUS.md).
 
 ## O que é: duas camadas
 
@@ -23,7 +23,7 @@
 | Sessão de fecho do setup | [`docs/ops/SETUP-CLOSE-SESSION.md`](./ops/SETUP-CLOSE-SESSION.md) |
 | Escritório dos agentes | [`config/office.yaml`](../config/office.yaml) · [`docs/ops/OFFICE.md`](./ops/OFFICE.md) |
 | Índice completo da documentação | [`docs/README.md`](./README.md) |
-| Documentos históricos | [`docs/archive/`](./archive/) |
+| O passado (itens fechados, decisões tomadas, documentos antigos) | [`docs/initiatives/PENDENCIAS-HISTORICO.md`](./initiatives/PENDENCIAS-HISTORICO.md) (§13: documentos antigos) |
 
 ## Números (nunca à mão)
 

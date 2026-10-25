@@ -8,8 +8,9 @@ Se disser **“lê o status dos projetos”** (ou “status dos projetos”, “
 2. Resumir o estado a partir do **`docs/initiatives/PENDENCIAS.md`** (§4, abertos e em curso).
 3. Perguntar em qual projeto trabalhar, se ainda não estiver claro.
 
-O resumo antigo do ecossistema (`STATUS-PROJETOS.md`, `STATUS-ECOSSISTEMA.md`, 19/08/2026) está
-em `docs/archive/` e é histórico: não responder a partir dele.
+O resumo antigo do ecossistema (`STATUS-PROJETOS.md`, `STATUS-ECOSSISTEMA.md`, 19/08/2026) e os
+outros documentos antigos já não estão na árvore: a ficha de cada um e o link para o texto integral
+estão no §13 do `docs/initiatives/PENDENCIAS-HISTORICO.md`. São histórico: não responder a partir deles.
 
 ## Bootstrap obrigatório (sessão de código neste repo)
 
@@ -17,7 +18,7 @@ No **início de cada sessão** ou antes da **primeira alteração de código**:
 
 1. Ler `docs/STATUS.md` (índice curto: duas camadas e onde está cada coisa).
 2. Ler `docs/initiatives/PENDENCIAS.md` (**único documento com o estado** deste repo: tabela §4,
-   decisões §10). Não ler `docs/archive/` para saber o estado: é tudo histórico.
+   decisões §10). Não ler o `PENDENCIAS-HISTORICO.md` para saber o estado: é o passado.
 3. Ler `docs/architecture/GOVERNANCE.md` (camada de governança) se a tarefa tocar em
    `packages/core/`, segurança, ou políticas.
 4. Números (agentes, lugares, capabilities): correr os validadores (`python -m plan_runner.areas`,
@@ -71,7 +72,7 @@ do `agent-network-mcp` (decisão do maestro, 2026-10-17).
 
 - Preferir alterações mínimas e verificáveis.
 - Não misturar conhecimento privado de negócios neste repo.
-- Isolamento de banco para demo pública: não há item vivo no `PENDENCIAS.md` (a nota antiga está em `docs/archive/STATUS-ate-2026-08-18.md`); se voltar a ser preciso, abre-se um item.
+- Isolamento de banco para demo pública: não há item vivo no `PENDENCIAS.md` (a nota antiga está em [`docs/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/STATUS.md)); se voltar a ser preciso, abre-se um item.
 - Commits claros; não inventar estado que o `PENDENCIAS.md` contradiz. Commits e PRs citam o ID do item (ex.: `AU-08: ...`).
 
 ## Decisões e opções (regra do maestro, 2026-10-07)

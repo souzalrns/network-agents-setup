@@ -1,6 +1,6 @@
 # Orçamento de tokens por run
 
-> **Estado (2026-10-01):** implementado e testado com o Gemini falso (15 testes em `runner/tests/test_budget.py`). Fecha a parte "aplicar orçamento" do item 4 do [PLANO-DE-ACAO](../archive/audit/PLANO-DE-ACAO.md). As outras partes do item ("somar por passo, persistir num ledger") já estavam feitas pelo ledger J6 do worker.
+> **Estado (2026-10-01):** implementado e testado com o Gemini falso (15 testes em `runner/tests/test_budget.py`). Fecha a parte "aplicar orçamento" do item 4 do [PLANO-DE-ACAO](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/audit/PLANO-DE-ACAO.md). As outras partes do item ("somar por passo, persistir num ledger") já estavam feitas pelo ledger J6 do worker.
 
 ## Regra
 
