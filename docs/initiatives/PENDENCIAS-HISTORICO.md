@@ -101,13 +101,14 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 
-## 7. Histórico (138 linhas: 117 FECHADO, 21 OBSOLETO)
+## 7. Histórico (139 linhas: 117 FECHADO, 22 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| ING-013 | Playbook do item-13 ingerido 2 vezes na kb `marketing` | 2026-10-25 | P-86 = A; PR #252 (4 SELECTs só de leitura + `test_agente_composto_nunca_devolve_o_mesmo_fragmento_duas_vezes`, job test-rag) | OBSOLETO | Não é defeito: o retrieve filtra por `agent_id` (ou `global`); 1 linha por agente é o desenho. Diagnóstico original errado: V44 |
 | H-01 | Limpeza e organização para portfólio: lixo, arquivo dos históricos, índices, README, casos de estudo, métricas e timeline | 2026-10-25 | Partes 4–6: PR #93. Partes 1–3 e fecho: #246 (históricos e índices), #247 (inventário gerado, contagens do PENDENCIAS geradas, OFFICE-MCP-SYNC), #248 + MCP #28 (fonte única do passado: §13 do histórico), #249 (2.º item-13; purga 3 → 0 chunks), #250 (cópias do MCP, índice da arquitectura); MCP #27 (S20) | FECHADO | Guardas: `test_inventory.py`, `test_pendencias.py`, `test_fonte_unica.py`, `test_knowledge_coverage.py`; segunda vaga pela regra do §9, passo 8 |
 | SKILL-REF-1 | 29 skills de marketing com links para `references/` que só existiam em `vendor/` | 2026-10-25 | PR #250: `relink()` no `scripts/vendor_marketingskills.py`; `test_fonte_unica.py` verifica os links de `skills/` | FECHADO | Opção B (uma só cópia, em `vendor/`) |
 | OFFICE-MCP-SYNC | Verificação automática entre `agent-network-mcp/lib/agents.js` e `config/mcp-agents.yaml` | 2026-10-25 | PR #247: `python -m plan_runner.inventory --check-mcp` no `runner-tests.yml`; testes em `test_inventory.py` | FECHADO | O repo do MCP é público: lê o ficheiro sem credenciais |
@@ -389,6 +390,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | P-83 | Primeiro bloco do ciclo operacional (pedido → venda → entrega → faturação → relatório) | **Comercial: propostas, follow-ups e qualificação inbound (só preparam)** | Caixa de entrada (precisa de ligação ao email e de regras de sigilo) | Finanças operacionais (precisa de banco e software de faturação) | **Decidida: A** (maestro, 2026-10-24). COM-1, `docs/ops/COMERCIAL.md` |
 | P-84 | Router do runner para os agentes do Comercial | **Juntar à área `marketing` as keywords `propost`, `follow up`, `lead` e `leads` (testadas com `score_areas`; o `follow-up` com hífen entra à parte, porque o router não troca o hífen por espaço); "orçamento" continua em `finance`** | A + a frase `pedido de orcamento` no marketing (casa nas 2 áreas; decide a margem) | Não mudar: o Comercial só se usa por planos | **Decidida: A** (maestro, 2026-10-24: "sigo as recomendações"). Feito: `propost`, `follow up`, `follow-up`, `lead`, `leads` na área `marketing`; testes em `test_com1_comercial_pack.py` (frases só comerciais vão para o marketing; com "site" ou "cliente" empatam e o router pede clarificação, como antes). Evidência: `config/areas.yaml` (área `finance`: `orcament`), `docs/ops/COMERCIAL.md` § Router |
 | P-85 | Onde vive a página do escritório (OFFICE-A3) | **Gerada a partir dos runs (`python -m plan_runner.office --html`), sem publicar; ao vivo (depois do OFFICE-A2) vai para o agent-network-mcp, com login, junto com a caixa de aprovações (OFFICE-A4)** | Publicar já como página estática (expõe nomes de agentes e estados de runs em público) | Actualizar o canvas privado do maestro a cada geração (manual; o browser do maestro não o abre) | **Decidida: A** (maestro, 2026-10-24: "sigo as recomendações"). Custo zero e nada exposto. `docs/ops/OFFICE.md` §6 |
+| P-86 | ING-013: o playbook do item-13 ingerido 2 vezes na kb `marketing` | **Aplicada (maestro, 2026-10-25):** OBSOLETO; fica o teste de regressão do PR #252 | Manter aberto e tirar o `agent_id` da chave do `dedupeRank` do MCP | Manter aberto sem acção | A: causa verificada em 4 SELECTs e num teste contra Postgres real |
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
 
