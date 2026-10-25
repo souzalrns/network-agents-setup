@@ -248,7 +248,7 @@ Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou deci
 | P1–P5 / J1–J7 (backlog) | Constitution, META Compiler, AR-000…015, A2A, UI visual, Caveman | anterior a 2026-09-29 | A5 §5.2 e §5.4 (arquivados) | OBSOLETO | J1–J7 do backlog ≠ J1–J11 das frentes do P §4 |
 
 
-## 8. Contradições resolvidas (43)
+## 8. Contradições resolvidas (44)
 
 Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidência. V1–V26 são as 26 da auditoria cruzada (PR #65, [`docs/ops/PENDENCIAS-CRUZADAS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/ops/PENDENCIAS-CRUZADAS.md) §2.1); V27 em diante são novas desta consolidação.
 
@@ -298,6 +298,7 @@ Padrão do EXECUTION-PLAN §16: onde estava o erro, o que é verdade e a evidên
 | V41 | F5 *(nova; erro meu, no #115)* | `docs/ops/F5-E2E-RUN.md` §2: `$env:MCP_URL = "https://agent-network-mcp-oddn.vercel.app/api/mcp"` | O `MCP_URL` é só a base. O runner acrescenta sempre `/api/mcp` (`runner/plan_runner/mcp_knowledge.py:59` e `:119-121`), como já dizia o `docs/ops/L5-F0-REVALIDATION.md:241`. Corrigido no runbook | 1.º run do F5 do DEV (2026-10-06) falhou por isto; `runner/tests/test_mcp_knowledge.py:269-275` |
 | V42 | F3c-DESIGN-1 *(nova; erro meu, no #119)* | `scripts/ingest_delta.py` (`EXCLUDE_DESIGN`) e `RAG-CANONICAL.md` § F3c: "as skills de design lêem o ficheiro" | Com o worker Gemini (modo external) as skills não lêem nada: o worker não executa tools (AU-20) e os passos de design não tinham `repo_files`. Só era verdade com um worker humano ou o Claude Code. Corrigido: `repo_files:` nos 4 passos de design (opção A) e a razão reescrita | `runner/plan_runner/external_worker.py:231-235` (pedido sem tools); `runner/tests/test_plan_repo_files.py` |
 | V43 | P-37 (AU-20) | §10 P-37 "**B** (proposta, 2026-10-07) … **Pendente**"; §5 lista do DEV "decisões: P-37 (AU-20)"; AU-20 "bloqueado pela decisão P-37"; `docs/architecture/AU-20-TOOL-EXECUTOR.md` "À espera da decisão" | **Decidida: B** pelo maestro numa sessão anterior (executor mínimo em Python no `plan_runner`). O AU-20 deixa de esperar por decisão e passa a esperar por implementação | Correcção do maestro, 2026-10-07 ("a P-37 JÁ ESTÁ DECIDIDA = B. Aprovada há várias sessões") |
+| V44 | ING-013 | Linha do ING-013 (PR #249): "o retrieve por kb pode devolver o mesmo texto duas vezes" | O retrieve filtra por `agent_id` (ou `global`), não pela coluna `kb`: cada agente vê cada fragmento uma vez; as 22 linhas são o desenho (1 por agente) | `f3b_authority_v3.sql:124`; SELECTs de 2026-10-25 (11 linhas / 11 fragmentos por agente); `test_agente_composto_nunca_devolve_o_mesmo_fragmento_duas_vezes` |
 
 
 ## 10. Decisões já tomadas

@@ -126,6 +126,36 @@ def test_composite_agent_retrieved_by_each_agent(connect):
         assert _retrieve(connect, agent, _vec(9))[0] == "docs/item-13-ai-findability.md"
 
 
+def test_agente_composto_nunca_devolve_o_mesmo_fragmento_duas_vezes(connect):
+    """ING-013 (2026-10-25): 'a+b' grava uma linha por agente (mesmo texto, hash e embedding),
+    mas o retrieve filtra por agent_id (ou 'global'): cada agente vê cada fragmento UMA vez.
+    E uma fonte diferente com texto quase igual continua a aparecer (sem deduplicação a mais)."""
+    chunks = [{"content": f"pilar {i} do playbook", "content_hash": f"c{i}", "chunk_index": i,
+               "embedding": _vec(20 + i)} for i in range(2)]
+    sw.replace_chunks(connect(), source_path="docs/item-13-ai-findability.md", content_hash="h",
+                      agent_id="marketing+produto-tech-transversal", kb="marketing", chunks=chunks)
+    sw.replace_chunks(connect(), source_path="docs/knowledge/ai-findability.md", content_hash="h2",
+                      agent_id="marketing", kb="marketing",
+                      chunks=[{"content": "pilar 0 do playbook (resumo)", "content_hash": "d0",
+                               "chunk_index": 0, "embedding": _vec(20)}])
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*) FROM knowledge_chunks WHERE source = 'docs/item-13-ai-findability.md'")
+        assert cur.fetchone()[0] == 4  # 2 fragmentos x 2 agentes: é o desenho, não um defeito
+    for agent in ("marketing", "produto-tech-transversal"):
+        with connect() as conn, conn.cursor() as cur:
+            cur.execute(
+                "SELECT source, content FROM match_knowledge("
+                "query_embedding => %s::vector, match_agent_id => %s, match_count => %s)",
+                (_vec(20), agent, 10),
+            )
+            rows = cur.fetchall()
+        assert len(rows) == len(set(rows)), f"{agent}: fragmento repetido no resultado {rows}"
+        playbook = [c for s, c in rows if s == "docs/item-13-ai-findability.md"]
+        assert sorted(playbook) == ["pilar 0 do playbook", "pilar 1 do playbook"]
+        resumo = [s for s, _ in rows if s == "docs/knowledge/ai-findability.md"]
+        assert resumo == (["docs/knowledge/ai-findability.md"] if agent == "marketing" else [])
+
+
 def test_reingest_does_not_touch_mcp_rows_with_same_source(connect):
     with connect() as conn, conn.cursor() as cur:
         cur.execute(
