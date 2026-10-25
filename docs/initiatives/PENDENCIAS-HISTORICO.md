@@ -101,13 +101,15 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 
-## 7. Histórico (136 linhas: 115 FECHADO, 21 OBSOLETO)
+## 7. Histórico (138 linhas: 117 FECHADO, 21 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| H-01 | Limpeza e organização para portfólio: lixo, arquivo dos históricos, índices, README, casos de estudo, métricas e timeline | 2026-10-25 | Partes 4–6: PR #93. Partes 1–3 e fecho: #246 (históricos e índices), #247 (inventário gerado, contagens do PENDENCIAS geradas, OFFICE-MCP-SYNC), #248 + MCP #28 (fonte única do passado: §13 do histórico), #249 (2.º item-13; purga 3 → 0 chunks), #250 (cópias do MCP, índice da arquitectura); MCP #27 (S20) | FECHADO | Guardas: `test_inventory.py`, `test_pendencias.py`, `test_fonte_unica.py`, `test_knowledge_coverage.py`; segunda vaga pela regra do §9, passo 8 |
+| SKILL-REF-1 | 29 skills de marketing com links para `references/` que só existiam em `vendor/` | 2026-10-25 | PR #250: `relink()` no `scripts/vendor_marketingskills.py`; `test_fonte_unica.py` verifica os links de `skills/` | FECHADO | Opção B (uma só cópia, em `vendor/`) |
 | OFFICE-MCP-SYNC | Verificação automática entre `agent-network-mcp/lib/agents.js` e `config/mcp-agents.yaml` | 2026-10-25 | PR #247: `python -m plan_runner.inventory --check-mcp` no `runner-tests.yml`; testes em `test_inventory.py` | FECHADO | O repo do MCP é público: lê o ficheiro sem credenciais |
 | AU-12 | `STATUS.md` de 95 KB e docs pesados: o bootstrap custa tokens | 2026-10-25 | PR #246 (H-01): `initiatives/STATUS.md` (108 KB) em `docs/archive/`; o bootstrap lê o `docs/STATUS.md` curto + o `PENDENCIAS.md` (~75 KB) | FECHADO | Decisão do maestro: arquivar (H-01) |
 | S20 | VM Oracle: o bridge-worker usa a chave antiga e falha com 401 | 2026-10-25 | `agent-network-mcp` PR #27 (merge `de92ab7`): `dispatch_code_task` falha fechada (`lib/codeTasks.js`, `CODE_TASKS_ENABLED`), README sem a promessa de execução remota | FECHADO | Factos do maestro: a chave SSH perdeu-se e não há capacidade na Oracle. Decisão A: desligar e documentar. Um executor novo e gratuito é decisão à parte |
