@@ -5,10 +5,10 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **136 itens vivos** (§4): ABERTO 73, EM CURSO 17, BLOQUEADO 46;
+> - **137 itens vivos** (§4): ABERTO 74, EM CURSO 17, BLOQUEADO 46;
 > - **139 linhas de histórico** (no histórico, §7): 117 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
-> - **87 decisões** A/B/C: 86 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
+> - **88 decisões** A/B/C: 87 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
 
 ## 0. Como usar este documento
 
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (136 itens vivos)
+## 4. Tabela única (137 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -222,7 +222,8 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | AU-11b | Remover os modelos Prisma da t6 (`KnowledgeSource`/`KnowledgeChunk`) num PR à parte: um só dono do DDL (`scripts/rag_schema.sql`) | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (P-11 = A, 2026-10-07). Antes de remover, confirmar que o `packages/memory` não os usa | §10 P-11; AU-11 (§7, #76: comentário de legado) | — | VERIFICADO |
 | ING-012 | Upstream `microsoft/markitdown`: issue com os 2 achados reproduzíveis (um PDF ilegível volta em bruto pelo conversor de texto; uma tabela DOCX sem `w:tblHeader` sai com o cabeçalho vazio) e os geradores das fixtures; o PR só depois da resposta dos maintainers e com o CLA da Microsoft | FALTA-CONSTRUIR | ABERTO | AMBOS | Baixa | Publicar, na conta do DEV, o comentário preparado em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §3 (acção pública; esta sessão não tem acesso ao repo upstream) | §10 P-22 = Sim (2026-10-07; opção B, issue primeiro); fixtures do T6b e do T6c; **verificado a 2026-10-07 com o MarkItDown 0.1.8:** os 2 achados reproduzem-se. O da tabela DOCX já está reportado na [#2157](https://github.com/microsoft/markitdown/issues/2157) (aberta; o PR #2160 trata só do escape, não do cabeçalho), por isso uma issue nova seria duplicada. Opções A/B/C em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §2; **RECOMENDADA B:** comentário na #2157 com a reprodução e a oferta de PR para o cabeçalho; o achado do `.pdf` em texto fica só na documentação (o adapter já se protege) | — | VERIFICADO |
 | RUNNER-WHY-1 | `plan_runner why <run> <passo>`: num só relatório, o que influenciou um passo (skill, grounding, hits do L5 com autoridade e data, `repo_files`, chamadas de tools com fontes, input do passo anterior), a partir do que o run já grava | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (ideia extraída, sem dependências novas) | EXTRAIR do `agentfootprint` (footprintjs, MIT; TypeScript, 373 versões em 6,5 meses, 1 mantenedor: não se instala). Os dados já existem: `events.jsonl`, `result.json → meta.context/meta.repo_files/meta.sources` (F3-ART-1), `knowledge_context.md`. Decisão do maestro 2026-10-23 (opção A) | — | VERIFICADO |
-| TRADER-SIM-1 | `economia-trader simulate`: Monte Carlo do resto do dia sobre o histórico do próprio motor (paper, sem rede), com a % de alvo / stop / nenhum antes de cada proposta | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (só paper; nunca live) | EXTRAIR da "Day Trader Skill" (reel @mateus.curta.ia, 2026-10-23; repositório não confirmado, nada instalado). A própria skill diz que o resultado é "quase cara ou coroa": é medição de risco, não previsão. Decisão do maestro 2026-10-23 (opção A) | — | VERIFICADO |
+| TRADER-SIM-1 | `economia-trader simulate`: Monte Carlo do resto do dia sobre o histórico do próprio motor (paper, sem rede), com a % de alvo / stop / nenhum antes de cada proposta | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (só paper; nunca live) | EXTRAIR da "Day Trader Skill": repositório confirmado e auditado a 2026-10-26 (P-88): [`Jakeschincariol/day-trader-skill` @ `3d0f4ef`](https://github.com/Jakeschincariol/day-trader-skill/tree/3d0f4ef/trader-timemachine), MIT, `trader-timemachine/timemachine.py` (Python stdlib, 10 000 sessões sobre 60 dias de barras de 5 min). Nada instalado. A própria skill diz que o resultado é "quase cara ou coroa": é medição de risco, não previsão. Decisão do maestro 2026-10-23 (opção A) | — | VERIFICADO |
+| TRADER-RISK-1 | `risk_review` (pack F6): o PASS do risco vale só para a ordem exacta (impressão digital: símbolo, lado, qtd., preço, stop, alvo) e só no próprio dia; qualquer alteração exige nova verificação | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (só paper; nunca live; reforça o gate, não dá autonomia) | Padrão de `trader-risk/check.py` + `trader-broker/ticket.py` em [`Jakeschincariol/day-trader-skill` @ `3d0f4ef`](https://github.com/Jakeschincariol/day-trader-skill/tree/3d0f4ef) (MIT), auditado a 2026-10-26 (P-88) | — | VERIFICADO |
 | OFFICE-A2 | Eventos do runner no Supabase (tabela só de acréscimo, só metadados, RLS sem políticas para `anon`/`authenticated`, Realtime) para o escritório ao vivo | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | O SQL em produção e as credenciais do runner são do maestro | Proposta em `docs/ops/OFFICE.md` §6 (não aplicada); o SQL final vai em `scripts/migrations/` com query de controlo | — | VERIFICADO |
 | OFFICE-A3 | Escritório 2D com 3 níveis (empresa → departamento → lugar) a ler o snapshot do OFFICE-A1; avatares estilo cápsula (originais) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Média | v0 com merge no #241 (`72d7a60`); falta a versão ao vivo, que depende do OFFICE-A2. **P-85 = A:** até lá a página gera-se dos runs e não se publica; ao vivo, vai para o agent-network-mcp com login, junto com o OFFICE-A4 | **v0 (2026-10-24):** `runner/plan_runner/office_html.py` + `python -m plan_runner.office --html OUT [--label] RUN_DIR...`: HTML autónomo (sem rede, sem JS), todos os agentes nos 3 níveis, estado sempre em texto, modo escuro; 3 testes em `test_office.py`. Ensaio com os 9 planos de exemplo em stub: 8 agentes "precisa de ti" (os gates), 74 à espera, 21 sem telemetria. Protótipo de desenho no canvas privado do maestro | — | VERIFICADO |
 | OFFICE-A4 | Caixa "precisa de ti": aprovar ou recusar gates a partir do escritório, com autenticação e registo de auditoria; o escritório não executa nada, a acção passa pelo router/MCP | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Média | Autenticação do escritório por decidir (decisão a propor no §10 quando o A3 existir) + OFFICE-A2 | Os gates já são eventos reais (`human_gate_requested`/`human_gate_resolved`, `plan_runner/hitl.py`) | — | VERIFICADO |
@@ -312,7 +313,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 23 | F1b, F2, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, F3c-DESIGN-1, F3-ART-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
+| CLAUDE | 24 | F1b, F2, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, F3c-DESIGN-1, F3-ART-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
 | DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
 | AMBOS | 44 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, F3b-GS-1, F5-ROUTE-1, E-004, R-008, R-009, R-010, F3b-AUTH-1, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
@@ -337,9 +338,9 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Crítica | 1 | G1.5 |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 52 | F0.6, F2, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-GS-1, F3b-VAL-1, F3-ART-1, ING-009, R-010, F3b-AUTH-1, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
-| Baixa | 72 | F0.12, F1b, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, OFFICE-3D-1, OFFICE-VOZ-1 |
+| Baixa | 73 | F0.12, F1b, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, F5-ROUTE-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 73 · EM CURSO 17 · BLOQUEADO 46.
+**Por estado:** ABERTO 74 · EM CURSO 17 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
 ## 7. Histórico (139 linhas: 117 FECHADO, 22 OBSOLETO)
@@ -372,7 +373,7 @@ Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-1
 |---|---|---|---|---|---|
 | P-81 | Conhecimento de um domínio novo no L5 (achados A-1/A-2 do F6) | **`_kb_for` genérico: kb = `agent_id` quando é o id de uma área do `config/areas.yaml` (evolução do core com nota no ADR, §11); o pack de trading sai do EXCLUDED para o MANIFEST** | A + mover MANIFEST/EXCLUDED para `config/knowledge-manifest.yaml` | Ficar só com `repo_files` (sem L5 nem golden de trading) | Por decidir. **Recomendada: A**: 1 função, sem regressão nas kbs actuais (testável), e desbloqueia o golden de trading; a B é maior e não é preciso para o F6. Evidência: `scripts/ingest_apply.py::_kb_for` (lista fixa) |
 
-> As 86 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
+> As 87 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
 
