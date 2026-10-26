@@ -8,7 +8,7 @@
 > - **136 itens vivos** (§4): ABERTO 73, EM CURSO 17, BLOQUEADO 46;
 > - **139 linhas de histórico** (no histórico, §7): 117 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
-> - **86 decisões** A/B/C: 85 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
+> - **87 decisões** A/B/C: 86 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
 
 ## 0. Como usar este documento
 
@@ -372,7 +372,7 @@ Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-1
 |---|---|---|---|---|---|
 | P-81 | Conhecimento de um domínio novo no L5 (achados A-1/A-2 do F6) | **`_kb_for` genérico: kb = `agent_id` quando é o id de uma área do `config/areas.yaml` (evolução do core com nota no ADR, §11); o pack de trading sai do EXCLUDED para o MANIFEST** | A + mover MANIFEST/EXCLUDED para `config/knowledge-manifest.yaml` | Ficar só com `repo_files` (sem L5 nem golden de trading) | Por decidir. **Recomendada: A**: 1 função, sem regressão nas kbs actuais (testável), e desbloqueia o golden de trading; a B é maior e não é preciso para o F6. Evidência: `scripts/ingest_apply.py::_kb_for` (lista fixa) |
 
-> As 85 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
+> As 86 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
 

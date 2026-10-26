@@ -46,7 +46,26 @@ O que foi feito (para referência ou para repetir):
    - Publicar é público e irreversível: uma versão no PyPI não se substitui.
 2. Diz-me "sobe o pin do fetchtron". É 1 linha em `runner/requirements.txt` (`fetchtron==0.2.0`). Os testes do runner já passam com o 0.2.0.
 
-## 4. Runs reais e evidência (F2, F3b-GS-1, F6, COM-1, F5-ROUTE-1, F3-ART-1)
+## 4. Runs reais e evidência (F2, F3b-GS-1, F6, COM-1, F5-ROUTE-1, F3-ART-1) — FEITO a 2026-10-26 (8/8 PASS)
+
+> **Registo do fecho (sessão `2026-10-26T012305Z`, corrida pelo maestro no seu computador):**
+> 8 de 8 itens em PASS, segundo o relatório do maestro.
+>
+> | Item | PENDENCIAS | O que prova | Resultado |
+> |---|---|---|---|
+> | MCP-V3 | F3b-AUTH-1 | O retrieve do MCP em produção responde com a v3 (`metadata.authority`) | PASS |
+> | F2 | F2 | `web-research-demo`: `fetch_url` com allowlist e proveniência | PASS |
+> | F3b-GS-1 | F3b-GS-1 | Golden set de marketing contra o MCP real | PASS |
+> | F6-MARKET | F6 | Trading: `market-analysis-demo` (só leitura, pára no gate) | PASS |
+> | F6-REVIEW | F6 | Trading: `post-trade-review-demo` | PASS |
+> | COM-1 | COM-1 | Comercial: `comercial-demo` (dados fictícios, pára no gate) | PASS |
+> | F5-ROUTE-1 | F5-ROUTE-1 | Um run que começa no router (`route --execute`) | PASS |
+> | F3-ART-1 | F3-ART-1 | `meta.sources` nos `result.json` dos runs acima | PASS |
+>
+> - **Relatório:** `pilots/setup-close-2026-10-26T012305Z/REPORT.md` (no computador do maestro; `pilots/` está no `.gitignore`).
+> - **Cópia versionável:** `pilots/evidence/setup-close-2026-10-26T012305Z.md`. Os itens só passam a FECHADO no `PENDENCIAS.md` quando esta cópia estiver no repositório (§9: nunca FECHADO sem evidência citada).
+> - **Allowlist:** o F2 usou o `hubspot.com` na área `marketing`, acrescentado pelo maestro para a sessão. Entra no `config/web-allowlist.yaml` com a decisão P-87 (PENDENCIAS-HISTORICO §10), para o repositório bater com a evidência. O `searchengineland.com` não entra.
+
 
 ```powershell
 python scripts/setup_close_runs.py --check   # tem de dizer "ambiente e ficheiros prontos"

@@ -38,6 +38,7 @@ areas:
     - developers.facebook.com
     - ads.google.com
     - developers.google.com
+    - hubspot.com  # P-87 (maestro, 2026-10-26): fonte do F2 no fecho do setup (web-research-demo)
   legal:
     - planalto.gov.br
     - in.gov.br
