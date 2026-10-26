@@ -7,7 +7,7 @@
 
 | Facto | Evidência |
 |---|---|
-| A tabela existe no Supabase, com 7 colunas, RLS activa e a policy `anon_deny` | `docs/initiatives/STATUS.md:107` (B12, achado do A2 a 2026-09-19); `docs/audit/AUDIT-5-itens.md:138` |
+| A tabela existe no Supabase, com 7 colunas, RLS activa e a policy `anon_deny` | [`docs/initiatives/STATUS.md:107 (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md#L107) (B12, achado do A2 a 2026-09-19); `docs/audit/AUDIT-5-itens.md:138` |
 | **Nenhum código actual a lê ou escreve**, em nenhum dos 2 repos | `grep -rn knowledge_log` em `network-agents-setup` e `agent-network-mcp` (`*.py`, `*.js`, `*.ts`, `*.sql`, `*.yml`; sem `node_modules`/`.next`): a única ocorrência fora de docs é o comentário de `scripts/migrations/enable_rls_knowledge_tables.sql:2` |
 | **Nenhum código a leu ou escreveu no passado** no repo MCP | `git log --all -S knowledge_log` no `agent-network-mcp`: 0 commits |
 | No `network-agents-setup` só aparece como referência do padrão de RLS | `git log --all -S knowledge_log -- . ':!docs'`: 1 commit, `ba47a12` (2026-09-19, RLS das tabelas do T6) |

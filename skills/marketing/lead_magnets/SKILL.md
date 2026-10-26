@@ -100,9 +100,9 @@ Gather this context (ask if not provided):
 | Resource library | Ongoing value, return visits | High | Ongoing |
 | Free trial/community access | Product experience | Varies | Varies |
 
-**For detailed creation guidance per format**: See [references/format-guide.md](references/format-guide.md)
+**For detailed creation guidance per format**: See [references/format-guide.md](../../../vendor/marketingskills/skills/lead-magnets/references/format-guide.md)
 
-**Agent skills as a lead magnet**: a course, webinar series, podcast, or newsletter archive you own can ship as an installable agent skill. See [references/content-to-skill.md](references/content-to-skill.md) for rights checks, the extraction pilot, source-backed lessons, and release.
+**Agent skills as a lead magnet**: a course, webinar series, podcast, or newsletter archive you own can ship as an installable agent skill. See [references/content-to-skill.md](../../../vendor/marketingskills/skills/lead-magnets/references/content-to-skill.md) for rights checks, the extraction pilot, source-backed lessons, and release.
 
 ---
 
@@ -254,7 +254,7 @@ Don't waste the thank you page. After they've converted:
 | **Email engagement** | Content relevance | 30-50% open, 2-5% click |
 | **Time to conversion** | Nurture effectiveness | Track by lead magnet source |
 
-**For detailed benchmarks by format and industry**: See [references/benchmarks.md](references/benchmarks.md)
+**For detailed benchmarks by format and industry**: See [references/benchmarks.md](../../../vendor/marketingskills/skills/lead-magnets/references/benchmarks.md)
 
 ### A/B Testing Ideas
 

@@ -1,4 +1,4 @@
-# Painéis de conselho, Fase 1 (deliberação interna): J5-b do docs/audit/PLANO-DE-ACAO.md
+# Painéis de conselho, Fase 1 (deliberação interna): J5-b do https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/audit/PLANO-DE-ACAO.md
 # Desenho: docs/architecture/adr/ADR-META-AGENTS.md §9–§13. Operação: docs/ops/COUNCIL.md.
 # Lido por runner/plan_runner/council_session.py e validado com o areas.yaml (E7,
 # `python -m plan_runner.areas`).

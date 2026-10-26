@@ -34,7 +34,7 @@ Há um plano de implementação aprovado, com tarefas maioritariamente independe
 O original manda executar o plano todo sem parar e decidir sozinho os conflitos. **Aqui não:**
 - **Parar e perguntar** em: decisões que são do maestro (opções A/B/C, `PENDENCIAS.md` §10), merges, escrita em produção (Supabase, Vercel, workflows que escrevem), operações irreversíveis ou destrutivas e acções sensíveis de segurança.
 - **Não reabrir** decisões fechadas; um conflito entre o plano e uma decisão do §10 resolve-se a favor da decisão, e regista-se.
-- Dentro do que já está decidido, avançar sem pedir confirmação a cada tarefa, e registar as escolhas menores (com o porquê) no diário (`docs/ops/PROGRESS-SESSAO.md`).
+- Dentro do que já está decidido, avançar sem pedir confirmação a cada tarefa, e registar as escolhas menores (com o porquê) na descrição do PR e, se mudarem o estado de um item, na linha dele no `docs/initiatives/PENDENCIAS.md` (o antigo diário `PROGRESS-SESSAO.md` é histórico).
 
 ## Enforcement Note
 

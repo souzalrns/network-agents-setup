@@ -1,4 +1,6 @@
-# MCP Mapping — 33 agentes (`agent-network-mcp`)
+# MCP Mapping — agentes do `agent-network-mcp` (mapeamento de 2026-09, com 33)
+
+> Os números de hoje vêm do inventário gerado: [`docs/generated/INVENTORY.md`](../generated/INVENTORY.md) (o MCP tem 34 agentes desde a entrada do `vianna-gestao`, 2026-10-19). Este mapeamento não foi refeito.
 
 Mapeamento dos 33 agentes de `lib/agents.js`, por 3 eixos: **amplitude** (horizontal/vertical), **privacidade** (genérico/proprietário) e **origem** (processo/conhecimento). Objectivo: decidir o que vai para o setup público, o que fica no MCP, e o que dividir.
 

@@ -2,7 +2,7 @@
 
 > Primitiva do contrato `docs/architecture/adr/ADR-INGESTION-PRIMITIVES.md` (§2–§5), com o adapter MarkItDown.
 > Código: `scripts/ingest_document.py`. Testes: `runner/tests/test_ingest_document.py`, `test_ingest_fixtures.py` e `test_ingest_security.py`.
-> Estado da cadeia: `docs/initiatives/PENDENCIAS_T6.md`.
+> Estado da cadeia: [`docs/initiatives/PENDENCIAS_T6.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/PENDENCIAS_T6.md).
 
 ## 1. O que faz
 

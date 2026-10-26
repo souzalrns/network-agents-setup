@@ -41,4 +41,4 @@ Este agente é **C3 domínio** (`kind: internal`), não chairman de conselho.
 
 ## Nota de criação
 
-Criado como B2 do backlog (`docs/initiatives/STATUS.md`) — agente de cibersegurança defensivo. Usa exclusivamente as 8 ferramentas e os 4 frameworks listados em `docs/architecture/SECURITY.md`; nenhuma ferramenta ou framework adicional foi introduzida sem estar nessa lista.
+Criado como B2 do backlog ([`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md)) — agente de cibersegurança defensivo. Usa exclusivamente as 8 ferramentas e os 4 frameworks listados em `docs/architecture/SECURITY.md`; nenhuma ferramenta ou framework adicional foi introduzida sem estar nessa lista.

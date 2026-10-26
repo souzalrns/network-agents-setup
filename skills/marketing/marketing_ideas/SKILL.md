@@ -56,16 +56,16 @@ When asked for marketing ideas:
 | Launches | 77-86 | Product Hunt, Lifetime deals, Giveaways |
 | Product-Led | 87-96 | Viral loops, Powered-by marketing, Free migrations |
 | Content Formats | 97-109 | Podcasts, Courses, Annual reports, Year wraps |
-| Unconventional | 110-122 | Awards, Challenges, [Guerrilla marketing](references/guerrilla-marketing.md) |
+| Unconventional | 110-122 | Awards, Challenges, [Guerrilla marketing](../../../vendor/marketingskills/skills/marketing-ideas/references/guerrilla-marketing.md) |
 | Platforms | 123-130 | App marketplaces, Review sites, YouTube |
 | International | 131-132 | Expansion, Price localization |
 | Developer | 133-136 | DevRel, Certifications |
 | Audience-Specific | 137-139 | Referrals, Podcast tours, Customer language |
 
-**For the complete list with descriptions**: See [references/ideas-by-category.md](references/ideas-by-category.md)
+**For the complete list with descriptions**: See [references/ideas-by-category.md](../../../vendor/marketingskills/skills/marketing-ideas/references/ideas-by-category.md)
 
 **Deep dives** (full framework + case library for a single idea):
-- **Guerrilla marketing (#121)**: [references/guerrilla-marketing.md](references/guerrilla-marketing.md) — the direct-mail 3-rule framework (relevance / relationship-building / precision targeting), ROI discipline, "think in stories, not campaigns," "test small before going big," and a named case library (WePay, Xero, Red Bull, Antimetal, Arrows, ProfitWell, Buzzsprout, Wistia).
+- **Guerrilla marketing (#121)**: [references/guerrilla-marketing.md](../../../vendor/marketingskills/skills/marketing-ideas/references/guerrilla-marketing.md) — the direct-mail 3-rule framework (relevance / relationship-building / precision targeting), ROI discipline, "think in stories, not campaigns," "test small before going big," and a named case library (WePay, Xero, Red Bull, Antimetal, Arrows, ProfitWell, Buzzsprout, Wistia).
 
 ---
 

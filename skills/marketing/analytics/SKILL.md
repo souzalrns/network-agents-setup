@@ -82,7 +82,7 @@ Event Name | Category | Properties | Trigger | Notes
 | System Events | Signup completed, purchase, subscription changed |
 | Custom Conversions | Goal completions, funnel stages |
 
-**For comprehensive event lists**: See [references/event-library.md](references/event-library.md)
+**For comprehensive event lists**: See [references/event-library.md](../../../vendor/marketingskills/skills/analytics/references/event-library.md)
 
 ---
 
@@ -128,7 +128,7 @@ checkout_payment_completed
 | purchase_completed | plan, value |
 | subscription_cancelled | reason |
 
-**For full event library by business type**: See [references/event-library.md](references/event-library.md)
+**For full event library by business type**: See [references/event-library.md](../../../vendor/marketingskills/skills/analytics/references/event-library.md)
 
 ---
 
@@ -170,7 +170,7 @@ gtag('event', 'signup_completed', {
 });
 ```
 
-**For detailed GA4 implementation**: See [references/ga4-implementation.md](references/ga4-implementation.md)
+**For detailed GA4 implementation**: See [references/ga4-implementation.md](../../../vendor/marketingskills/skills/analytics/references/ga4-implementation.md)
 
 ---
 
@@ -194,7 +194,7 @@ dataLayer.push({
 });
 ```
 
-**For detailed GTM implementation**: See [references/gtm-implementation.md](references/gtm-implementation.md)
+**For detailed GTM implementation**: See [references/gtm-implementation.md](../../../vendor/marketingskills/skills/analytics/references/gtm-implementation.md)
 
 ---
 

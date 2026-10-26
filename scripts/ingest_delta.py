@@ -31,7 +31,8 @@ ROOT = Path(__file__).resolve().parent.parent
 # path, agent_id (network), priority
 MANIFEST: list[tuple[str, str, str]] = [
     ("docs/item-13-ai-findability.md", "marketing+produto-tech-transversal", "P0"),
-    ("docs/knowledge/item-13-ai-findability.md", "marketing", "P0"),
+    # H-01 (2026-10-25): o resumo docs/knowledge/item-13-ai-findability.md saiu (repetia o playbook
+    # acima e o docs/knowledge/ai-findability.md); a fonte foi purgada do Supabase depois do merge.
     ("docs/knowledge/ai-findability.md", "marketing", "P0"),
     ("docs/knowledge/seo-specialist.md", "produto-tech-transversal", "P0"),
     # F0.4 (EXECUTION-PLAN §7; D-EP2 = A): pack da área security, consumido pelo bloco
@@ -90,11 +91,6 @@ MANIFEST: list[tuple[str, str, str]] = [
 # Todo o .md de docs/knowledge/ tem de estar no MANIFEST ou aqui
 # (runner/tests/test_knowledge_coverage.py). Tirar daqui = decisão, pack a pack (D-EP2).
 EXCLUDE_META = "meta: índice ou mapa, não é conhecimento consumível"
-EXCLUDE_DUP = (
-    "duplicado: cópia ou resumo de agent-network-mcp/ingestion/, cujo conteúdo já está "
-    "em produção pelo MCP (knowledge_chunks com project NULL)"
-)
-EXCLUDE_MCP_COPY = "cópia de um doc do agent-network-mcp; sem consumidor de kb"
 EXCLUDE_NO_CONSUMER = "sem consumidor de kb (só citado em docs de portfólio)"
 EXCLUDE_DESIGN = (
     "P-36 = A: sem consumidor de kb design no RAG. Os passos de design dos planos recebem "
@@ -109,17 +105,6 @@ EXCLUDED: dict[str, str] = {
     "docs/knowledge/README.md": EXCLUDE_META,
     "docs/knowledge/skills-map.md": EXCLUDE_META,
     "docs/knowledge/design/README.md": EXCLUDE_META,
-    "docs/knowledge/imported-from-production/README.md": EXCLUDE_META,
-    "docs/knowledge/imported-from-production/MANIFEST.md": EXCLUDE_META,
-    "docs/knowledge/imported-from-production/arquitetura-agentes-planejamento-rede-docs.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/comunicacoes-atendimento-base.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/guia-tdd-testes.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/marketing-base.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/produto-tech-a11y-seo.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/radar-ferramentas-opensource.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/revisor-codigo-security-database.md": EXCLUDE_DUP,
-    "docs/knowledge/imported-from-production/ADDENDUM_PADROES_ORQUESTRADORES.md": EXCLUDE_MCP_COPY,
-    "docs/knowledge/imported-from-production/PADROES_ERROS_IA.md": EXCLUDE_MCP_COPY,
     "docs/knowledge/imported-from-harnesses.md": EXCLUDE_NO_CONSUMER,
     "docs/knowledge/design/a11y-baseline.md": EXCLUDE_DESIGN,
     "docs/knowledge/design/cognitive-load.md": EXCLUDE_DESIGN,

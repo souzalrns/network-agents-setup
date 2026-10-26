@@ -4,32 +4,31 @@
 
 Se disser **“lê o status dos projetos”** (ou “status dos projetos”, “como estão os projetos”):
 
-1. Abrir **`docs/STATUS-PROJETOS.md`** (ficheiro único).
-2. Resumir a tabela e a pendência aberta principal.
+1. Abrir **`docs/STATUS.md`** deste repo e o `docs/STATUS.md` do `agent-network-mcp`.
+2. Resumir o estado a partir do **`docs/initiatives/PENDENCIAS.md`** (§4, abertos e em curso).
 3. Perguntar em qual projeto trabalhar, se ainda não estiver claro.
 
-Não pedir lista de paths nem ler os 13 STATUS um a um a menos que peçam detalhe.
+O resumo antigo do ecossistema (`STATUS-PROJETOS.md`, `STATUS-ECOSSISTEMA.md`, 19/08/2026) e os
+outros documentos antigos já não estão na árvore: a ficha de cada um e o link para o texto integral
+estão no §13 do `docs/initiatives/PENDENCIAS-HISTORICO.md`. São histórico: não responder a partir deles.
 
 ## Bootstrap obrigatório (sessão de código neste repo)
 
 No **início de cada sessão** ou antes da **primeira alteração de código**:
 
-1. Ler `docs/architecture/ECOSYSTEM.md` (ponto de entrada — visão geral do repo, setup vs. plugin MCP).
-2. Ler `docs/initiatives/PENDENCIAS.md` (**único documento com o estado dos pendentes** deste
-   repo, desde 2026-10-03: tabela §4, decisões §10, aliases de IDs antigos §11).
-   - `docs/initiatives/STATUS.md` fica com o estado dos sistemas (Done, infra, credenciais,
-     resumos do dia); as listas de pendentes dele são históricas.
-   - `docs/audit/PLANO-DE-ACAO.md`, `docs/initiatives/OPEN-ITEMS.md` e o estado do
-     `docs/architecture/EXECUTION-PLAN.md` são históricos (o plano em si continua válido).
-   - `docs/STATUS.md` é histórico até 18/08/2026.
+1. Ler `docs/STATUS.md` (índice curto: duas camadas e onde está cada coisa).
+2. Ler `docs/initiatives/PENDENCIAS.md` (**único documento com o estado** deste repo: tabela §4,
+   decisões §10). Não ler o `PENDENCIAS-HISTORICO.md` para saber o estado: é o passado.
 3. Ler `docs/architecture/GOVERNANCE.md` (camada de governança) se a tarefa tocar em
    `packages/core/`, segurança, ou políticas.
-4. Se a pergunta for transversal a vários repos: `docs/STATUS-PROJETOS.md` ou
-   `docs/STATUS-ECOSSISTEMA.md` (histórico, ver `docs/architecture/BOOTSTRAP.md` antes de confiar
-   nas datas).
+4. Números (agentes, lugares, capabilities): correr os validadores (`python -m plan_runner.areas`,
+   `python -m plan_runner.office`); nunca copiar números de documentos.
 5. Se existirem, consultar `docs/generated/AGENTS.md` e `docs/generated/CODE_MAP.md`.
 6. Resumir em 3–5 linhas: camada, o que está real, pendências abertas (do `PENDENCIAS.md`), restrições.
 7. Só depois propor ou executar trabalho.
+
+**Regra da documentação (H-01):** um documento por papel. Não criar documentos de estado novos;
+o estado actualiza-se no `PENDENCIAS.md`. O índice está em `docs/README.md`.
 
 **Documentos de arquitectura produzidos em 2026-09-18** (mapeamento, governança, segurança,
 memória) — consultar `docs/architecture/BOOTSTRAP.md` para o índice completo antes de assumir
@@ -73,7 +72,7 @@ do `agent-network-mcp` (decisão do maestro, 2026-10-17).
 
 - Preferir alterações mínimas e verificáveis.
 - Não misturar conhecimento privado de negócios neste repo.
-- Isolamento de banco para demo pública: ver pendência em STATUS (ainda aberta; o estado vivo dos pendentes está em `docs/initiatives/PENDENCIAS.md`).
+- Isolamento de banco para demo pública: não há item vivo no `PENDENCIAS.md` (a nota antiga está em [`docs/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/STATUS.md)); se voltar a ser preciso, abre-se um item.
 - Commits claros; não inventar estado que o `PENDENCIAS.md` contradiz. Commits e PRs citam o ID do item (ex.: `AU-08: ...`).
 
 ## Decisões e opções (regra do maestro, 2026-10-07)
@@ -90,8 +89,8 @@ Formato: A/B/C + recomendação + razão curta. Se não houver recomendação, a
 
 | Precisas de… | Vai a… |
 |--------------|--------|
-| Status de todos os projetos (1 ficheiro) | `docs/STATUS-PROJETOS.md` |
+| Status dos projetos | `docs/STATUS.md` de cada repo + `docs/initiatives/PENDENCIAS.md` |
 | Produção MCP + memória | `agent-network-mcp` |
-| Inventário operacional ao vivo | Supabase `system_inventory` / `pendencias_negocio` |
+| Inventário antigo no Supabase | `system_inventory` / `pendencias_negocio` (desactualizado desde 08/2026; não usar como estado) |
 | Produto restaurantes | `mesaflow-api` |
 | Gestão processos Vianna | `vianna-gestao` |

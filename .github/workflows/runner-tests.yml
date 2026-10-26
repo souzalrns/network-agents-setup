@@ -12,6 +12,11 @@ on:
       # OFFICE-A1: mapa de lugares do escritório e inventário do MCP (python -m plan_runner.office)
       - 'config/office.yaml'
       - 'config/mcp-agents.yaml'
+      # H-01: números gerados (test_inventory.py, test_pendencias.py) e fonte única do passado
+      # (test_fonte_unica.py: nada de docs/archive/, links relativos dos documentos vivos resolvem)
+      - 'docs/**'
+      - '*.md'
+      - 'config/agents.config.ts'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
@@ -77,6 +82,11 @@ on:
       # OFFICE-A1: mapa de lugares do escritório e inventário do MCP (python -m plan_runner.office)
       - 'config/office.yaml'
       - 'config/mcp-agents.yaml'
+      # H-01: números gerados (test_inventory.py, test_pendencias.py) e fonte única do passado
+      # (test_fonte_unica.py: nada de docs/archive/, links relativos dos documentos vivos resolvem)
+      - 'docs/**'
+      - '*.md'
+      - 'config/agents.config.ts'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
@@ -171,6 +181,15 @@ jobs:
 
       - name: Validar config/office.yaml contra as áreas e os agentes (OFFICE-A1)
         run: python -m plan_runner.office
+
+      - name: Inventário gerado actualizado (H-01; números dos documentos em test_inventory.py)
+        run: python -m plan_runner.inventory --check
+
+      - name: Agentes do MCP iguais nos 2 repos (OFFICE-MCP-SYNC; agent-network-mcp é público)
+        run: python -m plan_runner.inventory --check-mcp
+
+      - name: Contagens do PENDENCIAS.md certas (H-01)
+        run: python -m plan_runner.pendencias
 
       - name: Run tests with coverage
         run: |

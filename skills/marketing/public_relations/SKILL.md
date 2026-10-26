@@ -40,7 +40,7 @@ PR is not a substitute for distribution. It's a multiplier for it.
 
 - **Earned media doesn't drive direct conversions.** A TechCrunch hit will not give you 1,000 paying customers. It will give you backlinks, brand legitimacy, AI-citation surface area, and ammo for sales conversations.
 - **Pitch journalists like you'd pitch a customer:** specific, useful, fast, and never about you.
-- **The story is not your product. The story is the trend, the data, the conflict, or the human.** Your product is the evidence. Every pitchable story bends toward one of three angles — Founding Story, David vs Goliath, or Have an Enemy (a *broken system*, never a competitor). See [references/story-angles.md](references/story-angles.md).
+- **The story is not your product. The story is the trend, the data, the conflict, or the human.** Your product is the evidence. Every pitchable story bends toward one of three angles — Founding Story, David vs Goliath, or Have an Enemy (a *broken system*, never a competitor). See [references/story-angles.md](../../../vendor/marketingskills/skills/public-relations/references/story-angles.md).
 - **Chase press for the compound effect, not the traffic bump.** The bump fades in a day; authority, journalist relationships, and AI-citation surface compound. Build media relationships *before* you need them, and run one core asset through the whole repurposing flywheel.
 - **Speed beats polish on reactive PR.** A B+ pitch in the first hour of a story beats an A+ pitch on day three.
 
@@ -69,17 +69,17 @@ Four modes. Most teams over-index on one. Run at least three.
 | **Inbound (press requests)** | Respond to journalist queries on HARO/Qwoted/Featured | Low | Days to weeks |
 | **Owned (press page + media kit)** | Make it easy for journalists to find you | One-time setup | N/A |
 
-**For the story angle taxonomy (Founding Story / David vs Goliath / Have an Enemy), data stories, media relationship-building, and the PR repurposing flywheel** — see [references/story-angles.md](references/story-angles.md)
+**For the story angle taxonomy (Founding Story / David vs Goliath / Have an Enemy), data stories, media relationship-building, and the PR repurposing flywheel** — see [references/story-angles.md](../../../vendor/marketingskills/skills/public-relations/references/story-angles.md)
 
-**For the reactive newsjacking workflow** — see [references/newsjacking.md](references/newsjacking.md)
+**For the reactive newsjacking workflow** — see [references/newsjacking.md](../../../vendor/marketingskills/skills/public-relations/references/newsjacking.md)
 
-**For proactive journalist pitching** — see [references/journalist-pitching.md](references/journalist-pitching.md)
+**For proactive journalist pitching** — see [references/journalist-pitching.md](../../../vendor/marketingskills/skills/public-relations/references/journalist-pitching.md)
 
-**For inbound press-request platforms (HARO, Qwoted, etc.)** — see [references/press-platforms.md](references/press-platforms.md)
+**For inbound press-request platforms (HARO, Qwoted, etc.)** — see [references/press-platforms.md](../../../vendor/marketingskills/skills/public-relations/references/press-platforms.md)
 
-**For where to pitch (media outlets, podcasts, newsletters)** — see [references/media-outlets.md](references/media-outlets.md). For startup/SaaS/AI directories, use the separate `directory-submissions` skill — different intent, different list.
+**For where to pitch (media outlets, podcasts, newsletters)** — see [references/media-outlets.md](../../../vendor/marketingskills/skills/public-relations/references/media-outlets.md). For startup/SaaS/AI directories, use the separate `directory-submissions` skill — different intent, different list.
 
-**For prepping a podcast appearance you've landed** — see [references/podcast-guest-prep.md](references/podcast-guest-prep.md). Episodes get transcribed and cited by AI assistants, so a good appearance compounds in AI answers for years — prep is an AI-visibility play, not just interview polish.
+**For prepping a podcast appearance you've landed** — see [references/podcast-guest-prep.md](../../../vendor/marketingskills/skills/public-relations/references/podcast-guest-prep.md). Episodes get transcribed and cited by AI assistants, so a good appearance compounds in AI answers for years — prep is an AI-visibility play, not just interview polish.
 
 ---
 
@@ -89,9 +89,9 @@ PR also has a reactive side: breaches, outages, viral complaints, executive cont
 
 Start by assigning a severity tier, then run the first-60-minutes checklist: confirm facts, designate one spokesperson, publish a holding statement, set the next update time. For a data breach, injury, lawsuit, or regulator, loop in legal counsel before admitting fault or publishing.
 
-**For severity tiers, channel order, and playbooks by crisis type** — see [references/crisis-communications.md](references/crisis-communications.md)
+**For severity tiers, channel order, and playbooks by crisis type** — see [references/crisis-communications.md](../../../vendor/marketingskills/skills/public-relations/references/crisis-communications.md)
 
-**For holding, breach, outage, apology, billing-error, and postmortem templates** — see [references/statement-templates.md](references/statement-templates.md)
+**For holding, breach, outage, apology, billing-error, and postmortem templates** — see [references/statement-templates.md](../../../vendor/marketingskills/skills/public-relations/references/statement-templates.md)
 
 ---
 
@@ -151,22 +151,22 @@ What not to obsess over: AVE (advertising value equivalency) — it's a vanity m
 ## Common Workflows
 
 ### "Help me newsjack [trending story]"
-Go to [newsjacking.md](references/newsjacking.md), run the scoring rubric, draft 2–3 angles, pick the best, draft the pitch.
+Go to [newsjacking.md](../../../vendor/marketingskills/skills/public-relations/references/newsjacking.md), run the scoring rubric, draft 2–3 angles, pick the best, draft the pitch.
 
 ### "Find journalists who cover [beat]"
-Go to [journalist-pitching.md](references/journalist-pitching.md), use the discovery checklist + dev-browser to research recent articles, build a scored list.
+Go to [journalist-pitching.md](../../../vendor/marketingskills/skills/public-relations/references/journalist-pitching.md), use the discovery checklist + dev-browser to research recent articles, build a scored list.
 
 ### "What's worth pitching this week?"
 Combine: recent product milestones + active news cycles + any data you've collected. Score each potential story by the quality bar above.
 
 ### "What's my story angle?" / "How do I get press with no news?"
-Go to [story-angles.md](references/story-angles.md). Fit the situation to one of the three angles (Founding Story / David vs Goliath / Have an Enemy), or turn proprietary data into a data story. Remember: a milestone alone isn't a story — milestone *with narrative* is.
+Go to [story-angles.md](../../../vendor/marketingskills/skills/public-relations/references/story-angles.md). Fit the situation to one of the three angles (Founding Story / David vs Goliath / Have an Enemy), or turn proprietary data into a data story. Remember: a milestone alone isn't a story — milestone *with narrative* is.
 
 ### "Respond to this HARO query"
-Go to [press-platforms.md](references/press-platforms.md), use the response template, keep it under 200 words.
+Go to [press-platforms.md](../../../vendor/marketingskills/skills/public-relations/references/press-platforms.md), use the response template, keep it under 200 words.
 
 ### "I'm going on [podcast] next week — help me prep"
-Go to [podcast-guest-prep.md](references/podcast-guest-prep.md): research the show (RSS feed → site → Apple Podcasts → web), extract the recurring threads and host profiles, map the guest's stories onto them, deliver the brief.
+Go to [podcast-guest-prep.md](../../../vendor/marketingskills/skills/public-relations/references/podcast-guest-prep.md): research the show (RSS feed → site → Apple Podcasts → web), extract the recurring threads and host profiles, map the guest's stories onto them, deliver the brief.
 
 ### "Build my press page"
 Use the checklist above. Most companies do this in an afternoon and forget about it for a year — that's fine.

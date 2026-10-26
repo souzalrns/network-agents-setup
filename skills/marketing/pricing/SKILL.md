@@ -107,7 +107,7 @@ Pick the bucket by **who the customer is and how much value you deliver**, then 
 
 Resist the urge to price ultra-low (e.g. **$9/mo**) to reduce friction. Ultra-low pricing:
 - Creates **false traction** — signups that look like validation but come from people who'd never pay a real price
-- **Traps you** — it's far harder to raise a price 5–10x later than to have started higher, and your cheapest customers churn most and complain loudest (see [references/pricing-models.md](references/pricing-models.md) on low-price retention)
+- **Traps you** — it's far harder to raise a price 5–10x later than to have started higher, and your cheapest customers churn most and complain loudest (see [references/pricing-models.md](../../../vendor/marketingskills/skills/pricing/references/pricing-models.md) on low-price retention)
 
 Round-and-slightly-higher beats clever-and-cheap.
 
@@ -115,7 +115,7 @@ Round-and-slightly-higher beats clever-and-cheap.
 
 When early Intercom agonized over pricing, Jason Fried's advice was essentially: **just charge $50 and see what happens.** Stop modeling; get a real signal. If people pay without flinching, raise it. If nobody bites, you've learned something for the cost of a week, not a quarter.
 
-**For the eight ways to structure how you charge (flat, usage, tier, user, feature, credit, outcome, hybrid) and the value/price ratio:** See [references/pricing-models.md](references/pricing-models.md).
+**For the eight ways to structure how you charge (flat, usage, tier, user, feature, credit, outcome, hybrid) and the value/price ratio:** See [references/pricing-models.md](../../../vendor/marketingskills/skills/pricing/references/pricing-models.md).
 
 ---
 
@@ -148,7 +148,7 @@ Ask: "As a customer uses more of [metric], do they get more value?"
 - If yes → good value metric
 - If no → price doesn't align with value
 
-**The value metric picks the pricing model.** Once you know what scales with value, choose how to charge on it — flat, usage, tier, user, feature, credit, outcome, or a hybrid. See [references/pricing-models.md](references/pricing-models.md).
+**The value metric picks the pricing model.** Once you know what scales with value, choose how to charge on it — flat, usage, tier, user, feature, credit, outcome, or a hybrid. See [references/pricing-models.md](../../../vendor/marketingskills/skills/pricing/references/pricing-models.md).
 
 ---
 
@@ -167,7 +167,7 @@ Ask: "As a customer uses more of [metric], do they get more value?"
 - **Support level** — Email → Priority → Dedicated
 - **Access** — API, SSO, custom branding
 
-**For detailed tier structures and persona-based packaging**: See [references/tier-structure.md](references/tier-structure.md)
+**For detailed tier structures and persona-based packaging**: See [references/tier-structure.md](../../../vendor/marketingskills/skills/pricing/references/tier-structure.md)
 
 ---
 
@@ -190,7 +190,7 @@ Identifies which features customers value most:
 - Ask: Most important? Least important?
 - Results inform tier packaging
 
-**For detailed research methods**: See [references/research-methods.md](references/research-methods.md)
+**For detailed research methods**: See [references/research-methods.md](../../../vendor/marketingskills/skills/pricing/references/research-methods.md)
 
 ---
 
@@ -267,7 +267,7 @@ When someone wants to audit an existing pricing *page* for **clarity, transparen
 
 The AI-readiness fixes are usually high-impact, low-effort (put prices in text, add `Offer` schema). Hand implementation to **schema** (Product/Offer JSON-LD) and **ai-seo** (extractability, AI-bot access, `llms.txt`).
 
-**For the full 10-dimension rubric, scoring, and report template:** See [references/pricing-page-teardown.md](references/pricing-page-teardown.md). *(AI-agent-readiness lens adapted from Kyle Poyar / Growth Unhinged.)*
+**For the full 10-dimension rubric, scoring, and report template:** See [references/pricing-page-teardown.md](../../../vendor/marketingskills/skills/pricing/references/pricing-page-teardown.md). *(AI-agent-readiness lens adapted from Kyle Poyar / Growth Unhinged.)*
 
 ---
 

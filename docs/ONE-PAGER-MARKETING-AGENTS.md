@@ -47,7 +47,7 @@ Objetivo de negócio
 |-----------|-----------|
 | `docs/marketing-agency-agents.md` | System prompts + limites |
 | `docs/knowledge/*.md` | Packs operacionais |
-| `docs/knowledge/item-13-ai-findability.md` | Playbook AI Findability |
+| `docs/item-13-ai-findability.md` | Playbook AI Findability |
 | `docs/knowledge/skills-map.md` | Skill → agente |
 | `docs/knowledge/imported-from-harnesses.md` | Regras Ruflo / Hermes / Orca |
 | `docs/PORTFOLIO-MARKETING.md` | Narrativa completa de portfolio (marketing); a da plataforma é o `docs/PORTFOLIO.md` |

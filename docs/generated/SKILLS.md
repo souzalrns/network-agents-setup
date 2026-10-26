@@ -3,9 +3,9 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:skills`
 >
-> Gerado em: 2026-10-08
+> Gerado em: 2026-10-25
 > Fonte: `skills/**/SKILL.md`
-> Total: **72** skills
+> Total: **117** skills
 >
 > **Nota (S35):** este catálogo é só documentação — a descoberta em runtime
 > continua Advisory (`skills/meta/using-agent-skills/SKILL.md`), nada aqui
@@ -17,9 +17,10 @@
 |---------|------------:|
 | claude | 26 |
 | design | 4 |
-| marketing | 16 |
+| marketing | 58 |
 | meta | 24 |
 | security | 2 |
+| trading | 3 |
 
 ## Domínio `claude`
 
@@ -65,17 +66,59 @@
 
 | Nome | Vertical/Role | Prioridade | Descrição | Ficheiro |
 |------|---------------|:----------:|-----------|----------|
+| `ab_testing` | marketing | P2 | Desenha testes A/B e programas de experimentação: hipótese, métrica, tamanho de amostra e leitura do resultado. | `skills/marketing/ab_testing/SKILL.md` |
 | `ad_creative` | marketing | P1 | Cria criativos de anúncio pagos: 2 a 4 ângulos com um recomendado, primary text, headlines e CTA por plataforma e specs de formato, com claims com fonte ou marcados como assumption. Usar depois de media_plan ou research. | `skills/marketing/ad_creative/SKILL.md` |
+| `analytics` | marketing | P2 | Plano de medição e tracking (eventos, UTMs, GA4/GTM, dashboards); prepara a especificação, não mexe nas contas. | `skills/marketing/analytics/SKILL.md` |
+| `aso` | marketing | P2 | Auditoria e optimização de fichas na App Store e Google Play (título, keywords, screenshots, reviews). | `skills/marketing/aso/SKILL.md` |
+| `attribution` | marketing | P2 | Lê resultados de campanha e atribuição (modelos, incrementalidade, MMM leve) para decidir o próximo ciclo. | `skills/marketing/attribution/SKILL.md` |
+| `churn_prevention` | marketing | P2 | Reduz churn: fluxos de cancelamento, ofertas de retenção, recuperação de pagamentos falhados. | `skills/marketing/churn_prevention/SKILL.md` |
+| `co_marketing` | marketing | P2 | Encontra parceiros de co-marketing e planeia campanhas conjuntas. | `skills/marketing/co_marketing/SKILL.md` |
+| `cold_email` | marketing | P2 | Rascunhos de outbound B2B (emails frios e follow-ups) dentro do RGPD/LGPD; nunca envia. | `skills/marketing/cold_email/SKILL.md` |
+| `community_marketing` | marketing | P2 | Estratégia de comunidade (fóruns, Discord, grupos) para crescimento e lealdade. | `skills/marketing/community_marketing/SKILL.md` |
+| `competitor_profiling` | marketing | P2 | Perfis de concorrentes a partir dos sites deles: posicionamento, preços, mensagens, lacunas. | `skills/marketing/competitor_profiling/SKILL.md` |
+| `competitors` | marketing | P2 | Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra. | `skills/marketing/competitors/SKILL.md` |
 | `copy_answer_first` | marketing | P0 | Escreve a peça a partir do seo_brief com a resposta directa nas primeiras linhas, H2 com valor e FAQ citável, para humanos e para assistentes de IA (ChatGPT, Claude, Gemini, Perplexity). Usar depois de seo_brief; não inventa dados. | `skills/marketing/copy_answer_first/SKILL.md` |
 | `copy_social` | marketing | P1 | Escreve variantes de copy por canal (Instagram, TikTok, LinkedIn, …) a partir de uma mensagem core, com notas de formato e CTA só se pedido. Usar depois de research ou trend_hunter; nunca publica automaticamente. | `skills/marketing/copy_social/SKILL.md` |
 | `creative_review` | marketing | P0 | Avalia uma peça criativa com a rubrica de creative review (on-brief, clareza, canal-fit, …) com notas de 1 a 5, blockers e sugestões. Usar no step creative_review, antes ou entre rondas de HITL; não substitui critic_item13 em artigos SEO. | `skills/marketing/creative_review/SKILL.md` |
 | `critic` | marketing | P1 | Crítica genérica de packs sociais e peças sem foco SEO completo: scores, blockers, sugestões e publish_ready em JSON, segundo a rubrica de creative review. Usar quando o plano não pede critic_item13. | `skills/marketing/critic/SKILL.md` |
 | `critic_item13` | marketing | P0 | Avalia a citabilidade de uma peça por sistemas de IA (ChatGPT, Claude, Gemini, Perplexity, Copilot, AI overviews, RAG) com a checklist do Item 13, para além do SEO de SERP. Usar depois de copy ou brief em peças que devem ser encontradas. | `skills/marketing/critic_item13/SKILL.md` |
+| `cro` | marketing | P2 | Optimização de conversão de páginas e formulários: diagnóstico, hipóteses e alterações priorizadas. | `skills/marketing/cro/SKILL.md` |
+| `directory_submissions` | marketing | P2 | Lista e textos para submeter o produto em directórios e sites de reviews; o envio é humano. | `skills/marketing/directory_submissions/SKILL.md` |
+| `emails` | marketing | P2 | Sequências de email (boas-vindas, nurture, lifecycle, reactivação) com copy e calendário. | `skills/marketing/emails/SKILL.md` |
+| `events` | marketing | P2 | Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline. | `skills/marketing/events/SKILL.md` |
+| `follow_up` | marketing | P1 | Revê propostas e negócios parados (dias sem resposta, último contacto, próximo passo combinado) e redige follow-ups com um motivo novo e uma cadência que respeita quem pede para parar. Prepara: um humano revê e envia. | `skills/marketing/follow_up/SKILL.md` |
+| `free_tools` | marketing | P2 | Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO. | `skills/marketing/free_tools/SKILL.md` |
+| `image` | marketing | P2 | Briefs e prompts de imagens de marketing (heróis de blog, gráficos sociais, OG) e a sua optimização. | `skills/marketing/image/SKILL.md` |
 | `influencer_brief` | marketing | P1 | Prepara o brief de uma parceria com creators: objectivo e KPI, critérios de fit, deliverables, mensagens-chave, disclosure legal, compensação como intervalo e timeline com aprovação humana. Usar quando o plano inclui marketing de influência; nunca inventa acordos. | `skills/marketing/influencer_brief/SKILL.md` |
 | `internal_brief` | marketing | P0 | Escreve o brief interno de handoff para criação (copy, design, social): objectivo numa frase, audiência, mensagem e provas, deliverables e restrições. Usar no step internal_brief; não serve para propostas comerciais nem pede credenciais. | `skills/marketing/internal_brief/SKILL.md` |
+| `launch` | marketing | P2 | Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist. | `skills/marketing/launch/SKILL.md` |
+| `lead_magnets` | marketing | P2 | Cria e optimiza lead magnets (guias, templates, checklists) para captar emails. | `skills/marketing/lead_magnets/SKILL.md` |
+| `lead_qualification` | marketing | P1 | Qualifica pedidos que chegam (formulário, email, WhatsApp) contra os critérios do negócio — encaixe, necessidade, prazo, orçamento declarado, decisor — com evidência citada, e propõe a resposta e a próxima acção. Prepara: um humano responde. | `skills/marketing/lead_qualification/SKILL.md` |
+| `marketing_council` | marketing | P2 | Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação. | `skills/marketing/marketing_council/SKILL.md` |
+| `marketing_ideas` | marketing | P2 | Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio. | `skills/marketing/marketing_ideas/SKILL.md` |
+| `marketing_loops` | marketing | P2 | Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano. | `skills/marketing/marketing_loops/SKILL.md` |
+| `marketing_plan` | marketing | P2 | Plano de marketing completo (objectivos, públicos, canais, orçamento, calendário, métricas). | `skills/marketing/marketing_plan/SKILL.md` |
+| `marketing_psychology` | marketing | P2 | Aplica princípios de psicologia e economia comportamental à mensagem, oferta e página, sem manipulação. | `skills/marketing/marketing_psychology/SKILL.md` |
 | `media_plan` | marketing | P1 | Estrutura um plano de media paga: objectivo e KPI, plataforma, campanhas, ad sets e ads, bandas de budget com stop-loss, audiências, compliance e checklist de tracking. Usar no step media_plan; não executa spend nem altera contas. | `skills/marketing/media_plan/SKILL.md` |
+| `offers` | marketing | P2 | Desenha ou melhora a oferta (o que se vende): valor, bónus, garantias, escassez honesta. | `skills/marketing/offers/SKILL.md` |
+| `onboarding` | marketing | P2 | Onboarding e activação pós-registo: primeiro uso, tempo até ao valor, emails e checklists. | `skills/marketing/onboarding/SKILL.md` |
+| `paywalls` | marketing | P2 | Paywalls, ecrãs de upgrade e feature gates dentro do produto. | `skills/marketing/paywalls/SKILL.md` |
+| `popups` | marketing | P2 | Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência. | `skills/marketing/popups/SKILL.md` |
+| `pricing` | marketing | P2 | Decisões de preço, planos e monetização, com hipóteses a validar. | `skills/marketing/pricing/SKILL.md` |
+| `product_marketing` | marketing | P2 | Documento de contexto de product marketing (produto, público, posicionamento) que as outras skills leem primeiro. | `skills/marketing/product_marketing/SKILL.md` |
+| `programmatic_seo` | marketing | P2 | Páginas SEO em escala a partir de templates e dados, com controlo de qualidade e de canibalização. | `skills/marketing/programmatic_seo/SKILL.md` |
+| `proposal` | marketing | P1 | Transforma o brief de um cliente numa proposta comercial pronta a rever (âmbito incluído e excluído, entregáveis, prazos, preço só com dados fornecidos, condições) e no email de envio. Prepara: um humano revê, completa e envia. | `skills/marketing/proposal/SKILL.md` |
+| `prospecting` | marketing | P2 | Define e qualifica listas de prospects B2B (empresas e cargos) dentro do RGPD/LGPD; sem identificação de pessoas. | `skills/marketing/prospecting/SKILL.md` |
+| `public_relations` | marketing | P2 | Relações públicas: ângulos, comunicados, pitch a jornalistas e comunicação de crise. | `skills/marketing/public_relations/SKILL.md` |
+| `referrals` | marketing | P2 | Programas de referência e afiliados: incentivo, mecânica, regras e medição. | `skills/marketing/referrals/SKILL.md` |
 | `research` | marketing | P0 | Faz a pesquisa de partida de um pipeline de conteúdo ou marketing, separando factos com fonte de assumptions e marcando lacunas em vez de inventar. Usar no início do pipeline; a peça final e o seo_brief ficam para os steps seguintes. | `skills/marketing/research/SKILL.md` |
+| `revops` | marketing | P2 | RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas. | `skills/marketing/revops/SKILL.md` |
+| `sales_enablement` | marketing | P2 | Material de vendas: one-pagers, decks, objecções e guiões de demo. | `skills/marketing/sales_enablement/SKILL.md` |
+| `schema` | marketing | P2 | Schema markup e dados estruturados (JSON-LD) para páginas e rich results. | `skills/marketing/schema/SKILL.md` |
 | `seo_brief` | marketing | P0 | Prepara o brief de SEO e de Findability multi-IA (intent, queries, outline e o bloco item_13 para citabilidade em ChatGPT, Claude, Gemini, Perplexity e AI overviews). Usar antes de copy_answer_first em artigos e landing pages; não escreve o artigo. | `skills/marketing/seo_brief/SKILL.md` |
+| `signup` | marketing | P2 | Optimiza registo, criação de conta e activação do trial. | `skills/marketing/signup/SKILL.md` |
+| `site_architecture` | marketing | P2 | Arquitectura do site: hierarquia de páginas, navegação, URLs e linkagem interna. | `skills/marketing/site_architecture/SKILL.md` |
+| `sms` | marketing | P2 | Marketing por SMS e WhatsApp com opt-in explícito (RGPD/LGPD): fluxos, copy e frequência. | `skills/marketing/sms/SKILL.md` |
 | `storytelling` | marketing | P1 | Reforça o arco narrativo de um copy social ou de uma peça existente (personagem, situação, tensão, resolução) sem contradizer o research nem o brief. Usar depois do copy; nunca fabrica cases de clientes. | `skills/marketing/storytelling/SKILL.md` |
 | `transcript_analysis` | marketing | P1 | Analisa um vídeo, reel ou post: dispara o pipeline de transcrição do projecto, lê o resultado e devolve um resumo com uma recomendação objectiva (implementar ou não), confirmando nomes de ferramentas antes de os citar. Usar quando o utilizador envia um link de vídeo. | `skills/marketing/transcript_analysis/SKILL.md` |
 | `trend_hunter` | marketing | P1 | Procura tendências em várias superfícies (assistentes de IA, AI search, social e depois SEO clássico), separa tendência de ruído e propõe hooks com riscos de ToS e de claims. Usar antes de criar conteúdo social ou de campanha. | `skills/marketing/trend_hunter/SKILL.md` |
@@ -117,6 +160,14 @@
 |------|---------------|:----------:|-----------|----------|
 | `security-report` | security_technique | P1 | Consolida triage + audit defensivo num relatório estruturado (summary, findings mapeados, next_steps). Sem re-scan e sem patches. | `skills/security/reporter/SKILL.md` |
 | `security-triage` | security_technique | P1 | Triagem defensiva de pedidos de segurança: severidade, superfícies e se a auditoria completa (security_audit) é necessária. Sem scanners e sem escrita. | `skills/security/triage/SKILL.md` |
+
+## Domínio `trading`
+
+| Nome | Vertical/Role | Prioridade | Descrição | Ficheiro |
+|------|---------------|:----------:|-----------|----------|
+| `market_analysis` | trading | P1 | Analisa um mercado ou activo a partir de fontes públicas permitidas (reguladores, bolsas, bancos centrais), separando factos com fonte de hipóteses e sem nunca recomendar ordens. Usar no início de um plano de trading; a revisão de risco e a decisão humana ficam para os passos seguintes. | `skills/trading/market_analysis/SKILL.md` |
+| `post_trade_review` | trading | P1 | Lê o JSON do `economia-trader review` e escreve a revisão pós-trade da semana: processo avaliado à parte do resultado, resultado em R e em dinheiro, custos e um achado repetível por trade. Não reinterpreta os números nem recomenda ordens. | `skills/trading/post_trade_review/SKILL.md` |
+| `risk_review` | trading | P1 | Verifica uma proposta de trade ou um ficheiro de limites contra a política de risco do economia-trader (stop obrigatório, perda no stop dentro dos limites, símbolos permitidos, sem alavancagem) e lista os bloqueios. Não aprova ordens: prepara a decisão humana. | `skills/trading/risk_review/SKILL.md` |
 
 ---
 *Gerado a partir de skills/**/SKILL.md — mesmo padrão do docs:agents (F6).*

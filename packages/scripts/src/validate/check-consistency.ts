@@ -82,6 +82,9 @@ function checkStatusDoc(): CheckResult[] {
     message: 'docs/STATUS.md presente',
   });
 
+  // H-01 (2026-10-25): o docs/STATUS.md passou a índice curto e actual; o conteúdo antigo
+  // (pipeline jurídico TS, isolamento de banco) está em https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/STATUS.md.
+  // As frases exigidas são as invariantes do índice novo.
   const requiredPhrases: Array<{ id: string; phrase: string; why: string }> = [
     {
       id: 'status.two-layers',
@@ -94,14 +97,14 @@ function checkStatusDoc(): CheckResult[] {
       why: 'referência à camada privada de produção',
     },
     {
-      id: 'status.content-real',
-      phrase: 'Conteúdo real curado',
-      why: 'marca que o pipeline jurídico já não é placeholder',
+      id: 'status.single-state',
+      phrase: 'docs/initiatives/PENDENCIAS.md',
+      why: 'o estado dos pendentes vive só no PENDENCIAS',
     },
     {
-      id: 'status.isolation',
-      phrase: 'isolamento',
-      why: 'pendência de isolamento de banco ainda documentada',
+      id: 'status.history',
+      phrase: 'PENDENCIAS-HISTORICO.md',
+      why: 'o passado vive num só documento, separado do estado',
     },
   ];
 

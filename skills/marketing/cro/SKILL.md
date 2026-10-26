@@ -33,8 +33,8 @@ Load the matching reference before recommending changes in these areas. Use the 
 
 | User intent | Load | Covers |
 |---|---|---|
-| Lead, contact, demo, or quote form abandonment; fields, validation, mobile forms | [form.md](references/form.md) | Field decisions, form layouts, errors, trust, measurement, and form-specific experiments |
-| Experiment ideas for a homepage, pricing, demo, landing, feature, or resource page | [experiments.md](references/experiments.md) | Hypotheses organized by page type and cross-page tests; use **ab-testing** for test design and measurement |
+| Lead, contact, demo, or quote form abandonment; fields, validation, mobile forms | [form.md](../../../vendor/marketingskills/skills/cro/references/form.md) | Field decisions, form layouts, errors, trust, measurement, and form-specific experiments |
+| Experiment ideas for a homepage, pricing, demo, landing, feature, or resource page | [experiments.md](../../../vendor/marketingskills/skills/cro/references/experiments.md) | Hypotheses organized by page type and cross-page tests; use **ab-testing** for test design and measurement |
 
 ## Initial Assessment
 
@@ -186,7 +186,7 @@ When recommending experiments, consider tests for:
 - Form optimization
 - Navigation and UX
 
-**For comprehensive experiment ideas by page type**: See [references/experiments.md](references/experiments.md)
+**For comprehensive experiment ideas by page type**: See [references/experiments.md](../../../vendor/marketingskills/skills/cro/references/experiments.md)
 
 ---
 
@@ -213,4 +213,4 @@ When recommending experiments, consider tests for:
 
 When enrichment controls the next step after a lead form, use the [revops inbound-routing playbook](https://github.com/coreyhaines31/marketingskills/blob/main/skills/revops/references/inbound-routing.md): preserve valid submissions, bound the lookup wait, and provide a useful fallback when qualification is unknown.
 
-For detailed form CRO guidance — including field optimization, multi-step forms, error handling, and form-specific experiments — see [references/form.md](references/form.md).
+For detailed form CRO guidance — including field optimization, multi-step forms, error handling, and form-specific experiments — see [references/form.md](../../../vendor/marketingskills/skills/cro/references/form.md).

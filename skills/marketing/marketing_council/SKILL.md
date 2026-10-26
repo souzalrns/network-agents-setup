@@ -53,18 +53,18 @@ Twelve advisors, chosen so their lenses collide. Full dossiers live in `referenc
 
 | Advisor | Lens | File |
 |---------|------|------|
-| **Seth Godin** | Remarkability, permission, smallest viable audience | [seth-godin.md](references/advisors/seth-godin.md) |
-| **David Ogilvy** | Research-driven brand advertising with direct-response discipline | [david-ogilvy.md](references/advisors/david-ogilvy.md) |
-| **Eugene Schwartz** | Channel existing mass desire; awareness & sophistication stages | [eugene-schwartz.md](references/advisors/eugene-schwartz.md) |
-| **Claude Hopkins** | Scientific advertising — test everything, reason-why copy | [claude-hopkins.md](references/advisors/claude-hopkins.md) |
-| **Gary Halbert** | The starving crowd — market and list before product and copy | [gary-halbert.md](references/advisors/gary-halbert.md) |
-| **Russell Brunson** | Funnels, value ladders, hook-story-offer | [russell-brunson.md](references/advisors/russell-brunson.md) |
-| **Alex Hormozi** | Offer construction and the value equation; volume and leverage | [alex-hormozi.md](references/advisors/alex-hormozi.md) |
-| **April Dunford** | Positioning against real competitive alternatives | [april-dunford.md](references/advisors/april-dunford.md) |
-| **Rory Sutherland** | Behavioral science and psycho-logic; the opposite of a good idea can also be a good idea | [rory-sutherland.md](references/advisors/rory-sutherland.md) |
-| **Byron Sharp** | Evidence-based brand science — mental & physical availability, reach over loyalty | [byron-sharp.md](references/advisors/byron-sharp.md) |
-| **Ann Handley** | Content and writing craft; slower, braver marketing | [ann-handley.md](references/advisors/ann-handley.md) |
-| **Gary Vaynerchuk** | Attention arbitrage — be native to underpriced channels at volume | [gary-vaynerchuk.md](references/advisors/gary-vaynerchuk.md) |
+| **Seth Godin** | Remarkability, permission, smallest viable audience | [seth-godin.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/seth-godin.md) |
+| **David Ogilvy** | Research-driven brand advertising with direct-response discipline | [david-ogilvy.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/david-ogilvy.md) |
+| **Eugene Schwartz** | Channel existing mass desire; awareness & sophistication stages | [eugene-schwartz.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/eugene-schwartz.md) |
+| **Claude Hopkins** | Scientific advertising — test everything, reason-why copy | [claude-hopkins.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/claude-hopkins.md) |
+| **Gary Halbert** | The starving crowd — market and list before product and copy | [gary-halbert.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/gary-halbert.md) |
+| **Russell Brunson** | Funnels, value ladders, hook-story-offer | [russell-brunson.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/russell-brunson.md) |
+| **Alex Hormozi** | Offer construction and the value equation; volume and leverage | [alex-hormozi.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/alex-hormozi.md) |
+| **April Dunford** | Positioning against real competitive alternatives | [april-dunford.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/april-dunford.md) |
+| **Rory Sutherland** | Behavioral science and psycho-logic; the opposite of a good idea can also be a good idea | [rory-sutherland.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/rory-sutherland.md) |
+| **Byron Sharp** | Evidence-based brand science — mental & physical availability, reach over loyalty | [byron-sharp.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/byron-sharp.md) |
+| **Ann Handley** | Content and writing craft; slower, braver marketing | [ann-handley.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/ann-handley.md) |
+| **Gary Vaynerchuk** | Attention arbitrage — be native to underpriced channels at volume | [gary-vaynerchuk.md](../../../vendor/marketingskills/skills/marketing-council/references/advisors/gary-vaynerchuk.md) |
 
 ## Seating the Council
 
@@ -157,7 +157,7 @@ Fold findings into the takes with citations ("In a 2023 interview on X, Dunford 
 
 ## Adding a Custom Advisor
 
-Users can extend the bench ("add my own advisor"). Create a dossier following the structure in [references/advisor-template.md](references/advisor-template.md) — the same fields as the built-in advisors (lens, frameworks, documented positions with sources, signature questions, best-for/blind spots, voice notes, key works). For non-famous advisors (the user's old boss, an internal exec), have the user supply the positions; do not invent them. Save to `.agents/advisors/<name>.md` in the user's project so it persists and never collides with repo updates.
+Users can extend the bench ("add my own advisor"). Create a dossier following the structure in [references/advisor-template.md](../../../vendor/marketingskills/skills/marketing-council/references/advisor-template.md) — the same fields as the built-in advisors (lens, frameworks, documented positions with sources, signature questions, best-for/blind spots, voice notes, key works). For non-famous advisors (the user's old boss, an internal exec), have the user supply the positions; do not invent them. Save to `.agents/advisors/<name>.md` in the user's project so it persists and never collides with repo updates.
 
 ## Anti-Patterns
 

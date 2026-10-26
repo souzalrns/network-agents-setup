@@ -11,8 +11,9 @@ context:
     - "Não tocar viannalegal.com.br nem agent-network-mcp"
     - "Copy final exige revisão jurídica antes de qualquer publish"
   knowledge_refs:
-    - docs/knowledge/imported-from-production/marketing-base.md
-    - docs/knowledge/imported-from-production/produto-tech-a11y-seo.md
+    # H-01 (2026-10-25): a cópia local saiu; o original está no agent-network-mcp (ignorado pelo runner, AU-22)
+    - https://github.com/souzalrns/agent-network-mcp/blob/e2a12e0b3b4c2d49ca394ecc367f32cd73ba2c9f/ingestion/marketing-base.md
+    - https://github.com/souzalrns/agent-network-mcp/blob/e2a12e0b3b4c2d49ca394ecc367f32cd73ba2c9f/ingestion/produto-tech-transversal-a11y-seo.md
     - pilots/piloto-seo-copy-001/01-seo-brief.md
 
 steps:

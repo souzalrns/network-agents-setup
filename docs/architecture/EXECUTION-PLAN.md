@@ -992,7 +992,7 @@ Ver §5.18.
 - `docs/architecture/adr/ADR-META-AGENTS.md`, `docs/architecture/META-AGENTS-PHASE-2.md`
 - `docs/architecture/memory/contracts.md`, `docs/architecture/memory/rag-l5.md`, `docs/ops/MEMORY-L4.md`, `docs/ops/RAG-CANONICAL.md`, `docs/T6-INGEST-PIPELINE.md`
 - `config/areas.yaml`, `config/security-capabilities.yaml`, `config/councils.yaml`
-- `docs/audit/PLANO-DE-ACAO.md`, `docs/initiatives/OPEN-ITEMS.md`, `docs/initiatives/STATUS.md`, `docs/architecture/BOOTSTRAP.md`
+- [`docs/audit/PLANO-DE-ACAO.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/audit/PLANO-DE-ACAO.md), [`docs/initiatives/OPEN-ITEMS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/OPEN-ITEMS.md), [`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md), `docs/architecture/BOOTSTRAP.md`
 - `docs/architecture/SECURITY-AGENTS.md`, `docs/ops/COUNCIL.md`, `docs/ops/BUDGET.md`, `docs/ops/WORKER-EXTERNAL.md`, `docs/ops/ROUTER.md`
 - `docs/architecture/agents-audit/FASE3-AGENTES.md`, `docs/architecture/ingestion-audit/AUDIT-INGESTION.md`
 - `scripts/ingest_delta.py`, `scripts/ingest_apply.py`, `.github/workflows/ingest-knowledge.yml`
@@ -1025,11 +1025,11 @@ ARCHITECTURE   EXECUTION-PLAN.md         → o que deve acontecer e porquê
     ↓
 DECISIONS      ADRs (docs/architecture/adr/, docs/audit/DECISAO-*.md)
     ↓
-WORK           docs/initiatives/OPEN-ITEMS.md (+ docs/audit/PLANO-DE-ACAO.md para os itens da auditoria)
+WORK           https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/OPEN-ITEMS.md (+ https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/audit/PLANO-DE-ACAO.md para os itens da auditoria)
     ↓
 EVIDENCE       commits / testes / CI / relatórios / queries
     ↓
-CURRENT STATUS docs/initiatives/STATUS.md
+CURRENT STATUS https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md
 ```
 - **O EXECUTION-PLAN não é uma segunda fonte de verdade do estado operacional.** Os estados citados aqui são uma fotografia datada, e o estado vivo está no STATUS/OPEN-ITEMS.
 - **Índice:** o `NAS:docs/architecture/BOOTSTRAP.md` ("onde está cada fonte de verdade") passa a listar o EXECUTION-PLAN. Não se cria outro índice.
@@ -1193,4 +1193,4 @@ Pasta: `NAS:docs/architecture/execution-plan-sources/`, um ficheiro por document
 13. O registo de verificação está neste documento (§16), não é um ficheiro à parte.
 
 ---
-**FIM.** O estado vivo está em `docs/initiatives/STATUS.md` e `docs/initiatives/OPEN-ITEMS.md` (§15.1).
+**FIM.** O estado vivo está em [`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md) e [`docs/initiatives/OPEN-ITEMS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/OPEN-ITEMS.md) (§15.1).

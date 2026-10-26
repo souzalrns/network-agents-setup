@@ -5,12 +5,12 @@
 > **What it is.** A governed runtime for AI agent workflows. One Python execution engine (`plan_runner`) runs declarative YAML plans step by step. It enforces human approval gates, token and cost ceilings, and completion criteria, and writes an append-only audit log for every run. Business domains (marketing, security, engineering…) plug in as **domain packs**: agents, skills, plans and knowledge, with no change to the engine.
 >
 > **Proof you can check** (every number below has a source in [Numbers and sources](#números-e-fontes-numbers-and-sources)).
-> - 830+ automated tests in CI (Python), plus 195 TypeScript unit tests;
-> - 100 merged pull requests, each with evidence;
+> - 1000+ automated tests in CI (Python), plus TypeScript unit tests;
+> - 200+ merged pull requests, each with evidence;
 > - security scanning on every PR (gitleaks, semgrep, CodeQL), with every GitHub Action pinned to a commit SHA;
 > - token usage measured on real model runs: a multi-step SEO plan went from **13,130** to **10,136** tokens (−22%) after a measured optimisation, and one round of a multi-agent council costs **11,760**.
 >
-> **What it is not (yet).** Agents do not execute tools, and the knowledge layer's provenance is still partial. Only the marketing (SEO) pack has been measured with a real model; the security pack is tested in stub mode. Every open item is tracked publicly in [`PENDENCIAS.md`](./initiatives/PENDENCIAS.md).
+> **What it is not (yet).** Agent tools are off by default (read-only behind a flag; an `act` tool stops at the human gate), and the knowledge layer's provenance is still partial. Only the marketing (SEO) pack has been measured with a real model; the security pack is tested in stub mode. Every open item is tracked publicly in [`PENDENCIAS.md`](./initiatives/PENDENCIAS.md).
 >
 > **Try it in 5 minutes, without an API key:** [Quickstart in the README](../README.md#quickstart), with a GIF of a real run.
 
@@ -79,7 +79,7 @@ O README lista as garantias e o código de cada capacidade ([Capabilities](../RE
 
 - **Não** é uma plataforma "enterprise" completa: é um runtime orientado a produção, com as lacunas listadas.
 - **As tools dos agentes estão atrás de uma flag:** com `PLAN_RUNNER_TOOLS=1`, o worker executa `read_repo_file` e `retrieve_knowledge` (só leitura, kb limitado ao passo), e uma tool `act` pára no HITL. Provado num run real com o Gemini (`run_2382ec5b5c`: a tool leu o `docs/ops/BUDGET.md`, que não estava no prompt). Por omissão, a flag está desligada e o `tools_allowed` continua declarativo (AU-20).
-- **Nem todos os packs estão provados.** O marketing (SEO) foi medido com o modelo real; o de segurança está testado em stub. Ter 38 agentes e 72 skills não quer dizer 38 capacidades prontas.
+- **Nem todos os packs estão provados.** O marketing (SEO) foi medido com o modelo real; o de segurança está testado em stub. Ter muitos agentes e skills não quer dizer outras tantas capacidades prontas (o estado de cada uma está em `config/*-capabilities.yaml`).
 - O TypeScript em `packages/` e `apps/` está **arquivado** (decisão D1): o runtime é Python.
 - O conhecimento L5 ainda não tem provenance formal nem filtro por `kb` no retrieve (F3, R-005).
 - **Todos os pendentes** estão em [`PENDENCIAS.md`](./initiatives/PENDENCIAS.md), com dono, severidade e evidência.
@@ -112,9 +112,9 @@ Nenhum número deste portfólio vem de estimativa. Cada um tem a fonte onde se c
 | **12 998 → 10 136** tokens (**−22%**) | Mesmo plano, prompt antigo contra prompt optimizado, medidos com o modelo real | [`WORKER-EXTERNAL.md`](./ops/WORKER-EXTERNAL.md), "Medição real (B1-bis-R2)"; PRs #45 e #55 |
 | **11 760** tokens | 1 ronda real do conselho `architecture` (14,7% do tecto de 80k) | [`COUNCIL.md`](./ops/COUNCIL.md), "Custo medido (C-1)" |
 | `chunks=0 unchanged=39` | Corrida do ingest em produção quando nada mudou: nenhum embedding gasto | PR #64; corridas do workflow `ingest-knowledge` |
-| **830+** testes | `pytest` do runner: 802 rápidos + 34 lentos (836, 2026-10-07; eram 600 a 2026-10-05). Mais 195 de TypeScript (vitest) | [`runner-tests.yml`](../.github/workflows/runner-tests.yml) |
-| **100** PRs com merge | Contados pela API do GitHub (2026-10-07; eram 75+ a 2026-10-05) | Histórico de PRs do repo |
-| **38** agentes · **72** skills · **14** planos | Ficheiros `*.agent.md`, `SKILL.md` e `*.plan.yaml` no repo | [`agents/`](../agents/), [`skills/`](../skills/), [`docs/orchestration/`](./orchestration/) |
+| **1000+** testes | `pytest` do runner (contagem exacta: `cd runner && python -m pytest --collect-only -q`; eram 836 a 2026-10-07). Mais os de TypeScript (vitest) | [`runner-tests.yml`](../.github/workflows/runner-tests.yml) |
+| **200+** PRs com merge | Contados pela API do GitHub (217 a 2026-10-25; eram 100 a 2026-10-07) | Histórico de PRs do repo |
+| **82** agentes do runner · **117** skills · **19** planos | `config/areas.yaml`, `skills/**/SKILL.md` e `docs/orchestration/**/*.plan.yaml`, contados por `python -m plan_runner.inventory` (o CI falha se esta linha divergir) | [`docs/generated/INVENTORY.md`](./generated/INVENTORY.md) |
 
 ### Linha do tempo (Timeline)
 

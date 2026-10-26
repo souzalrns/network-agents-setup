@@ -1,6 +1,6 @@
 # F6: evidence pack (cadeia F1 → F6)
 
-> F6 da cadeia do prompt do maestro de 2026-10-05: **hardening + pacote de evidências + resumo de portfolio**. É o F6 do `docs/initiatives/PENDENCIAS_T6.md`. O F6 canónico do `PENDENCIAS.md` ("UM domínio de prova", D-EP8) é outro item e continua no §4 (P-23, opção A: "os 2").
+> F6 da cadeia do prompt do maestro de 2026-10-05: **hardening + pacote de evidências + resumo de portfolio**. É o F6 do [`docs/initiatives/PENDENCIAS_T6.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/PENDENCIAS_T6.md). O F6 canónico do `PENDENCIAS.md` ("UM domínio de prova", D-EP8) é outro item e continua no §4 (P-23, opção A: "os 2").
 > Estado a 2026-10-06. **Nenhuma escrita em produção foi feita para este pacote.** Não contém dumps de BD, segredos nem conteúdo de documentos.
 
 | Ficheiro | O que tem |

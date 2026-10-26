@@ -44,7 +44,7 @@ Before designing a tool strategy, understand:
 
 ## Core Principles
 
-**"Your product is my marketing opportunity."** Bezos said "your margin is my opportunity." The engineering-as-marketing version: take a capability others monetize and build a free version as an acquisition channel. Unsplash gave away the stock photos Getty sold — and Getty acquired it. See [references/tool-benchmarks.md](references/tool-benchmarks.md) for named cases and conversion numbers.
+**"Your product is my marketing opportunity."** Bezos said "your margin is my opportunity." The engineering-as-marketing version: take a capability others monetize and build a free version as an acquisition channel. Unsplash gave away the stock photos Getty sold — and Getty acquired it. See [references/tool-benchmarks.md](../../../vendor/marketingskills/skills/free-tools/references/tool-benchmarks.md) for named cases and conversion numbers.
 
 ### 1. Solve a Real Problem
 - Tool must provide genuine value
@@ -77,9 +77,9 @@ Before designing a tool strategy, understand:
 | Libraries | Icon sets, templates, snippets | Reference material |
 | Interactive | Tutorials, playgrounds, quizzes | Learning/understanding |
 
-**For detailed tool types and examples**: See [references/tool-types.md](references/tool-types.md)
+**For detailed tool types and examples**: See [references/tool-types.md](../../../vendor/marketingskills/skills/free-tools/references/tool-types.md)
 
-**For named case benchmarks (Unsplash, HubSpot Website Grader, Moz, Buffer, Shopify) with real conversion numbers**: See [references/tool-benchmarks.md](references/tool-benchmarks.md)
+**For named case benchmarks (Unsplash, HubSpot Website Grader, Moz, Buffer, Shopify) with real conversion numbers**: See [references/tool-benchmarks.md](../../../vendor/marketingskills/skills/free-tools/references/tool-benchmarks.md)
 
 ---
 

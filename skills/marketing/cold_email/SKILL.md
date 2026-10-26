@@ -59,7 +59,7 @@ Cold email is ruthlessly short. If a sentence doesn't move the reader toward rep
 
 If you remove the personalized opening and the email still makes sense, the personalization isn't working. The observation should naturally lead into why you're reaching out.
 
-See [personalization.md](references/personalization.md) for the 4-level system and research signals.
+See [personalization.md](../../../vendor/marketingskills/skills/cold-email/references/personalization.md) for the 4-level system and research signals.
 
 ### Lead with their world, not yours
 
@@ -101,7 +101,7 @@ There's no single right structure. Choose a framework that fits the situation, o
 - **Trigger → Insight → Ask** — Congrats on X. That usually creates Y challenge. We've helped similar companies with that. Curious?
 - **Story → Bridge → Ask** — [Similar company] had [problem]. They [solved it this way]. Relevant to you?
 
-For the full catalog of frameworks with examples, see [frameworks.md](references/frameworks.md).
+For the full catalog of frameworks with examples, see [frameworks.md](../../../vendor/marketingskills/skills/cold-email/references/frameworks.md).
 
 ---
 
@@ -113,7 +113,7 @@ Short, boring, internal-looking. The subject line's only job is to get the email
 - Should look like it came from a colleague ("reply rates," "hiring ops," "Q2 forecast")
 - No product pitches, no urgency, no emojis, no prospect's first name
 
-See [subject-lines.md](references/subject-lines.md) for the full data.
+See [subject-lines.md](../../../vendor/marketingskills/skills/cold-email/references/subject-lines.md) for the full data.
 
 ---
 
@@ -125,7 +125,7 @@ Each follow-up should add something new — a different angle, fresh proof, a us
 - Each email should stand alone (they may not have read the previous ones)
 - The breakup email is your last touch — honor it
 
-See [follow-up-sequences.md](references/follow-up-sequences.md) for cadence, angle rotation, and breakup email templates.
+See [follow-up-sequences.md](../../../vendor/marketingskills/skills/cold-email/references/follow-up-sequences.md) for cadence, angle rotation, and breakup email templates.
 
 ---
 
@@ -137,20 +137,20 @@ Copy only matters if it reaches the inbox. Before the first send:
 - **Turn off open and click tracking.** Measure replies.
 - Include a plain-text **opt-out line and your postal address** in every email.
 
-Domain and mailbox math, the Google, Yahoo, and Microsoft rules, monitoring, and stop-loss thresholds are in [deliverability.md](references/deliverability.md).
+Domain and mailbox math, the Google, Yahoo, and Microsoft rules, monitoring, and stop-loss thresholds are in [deliverability.md](../../../vendor/marketingskills/skills/cold-email/references/deliverability.md).
 
 ---
 
 ## Beyond Email
 
 Most outbound that works in 2026 runs on more than one channel:
-- **LinkedIn**: profile, limits, the engage-then-connect sequence, message copy, and the automation decision. See [linkedin-outreach.md](references/linkedin-outreach.md).
-- **Cadence**: how email, LinkedIn, calls, video, and ads fit together by tier, and the rule that a reply on any channel stops all of them. See [multichannel-cadence.md](references/multichannel-cadence.md). Call scripts are in the sales-enablement skill.
-- **Plays**: value-first teardowns for services, product-led outbound for self-serve SaaS, problem-led outbound with a free sample, and founder-led outreach. See [outbound-plays.md](references/outbound-plays.md).
+- **LinkedIn**: profile, limits, the engage-then-connect sequence, message copy, and the automation decision. See [linkedin-outreach.md](../../../vendor/marketingskills/skills/cold-email/references/linkedin-outreach.md).
+- **Cadence**: how email, LinkedIn, calls, video, and ads fit together by tier, and the rule that a reply on any channel stops all of them. See [multichannel-cadence.md](../../../vendor/marketingskills/skills/cold-email/references/multichannel-cadence.md). Call scripts are in the sales-enablement skill.
+- **Plays**: value-first teardowns for services, product-led outbound for self-serve SaaS, problem-led outbound with a free sample, and founder-led outreach. See [outbound-plays.md](../../../vendor/marketingskills/skills/cold-email/references/outbound-plays.md).
 
 ## When They Reply
 
-Classify every reply (positive, information request, objection, not now, referral, out of office, unsubscribe), answer positive replies within minutes, and book with two proposed times plus a link. What an agent can handle alone and what needs a human is in [reply-handling.md](references/reply-handling.md).
+Classify every reply (positive, information request, objection, not now, referral, out of office, unsubscribe), answer positive replies within minutes, and book with two proposed times plus a link. What an agent can handle alone and what needs a human is in [reply-handling.md](../../../vendor/marketingskills/skills/cold-email/references/reply-handling.md).
 
 ---
 
@@ -190,16 +190,16 @@ Before presenting, gut-check:
 
 The references contain performance data if you need to make informed choices:
 
-- [benchmarks.md](references/benchmarks.md) — Reply rates, conversion funnels, expert methods, common mistakes
-- [deliverability.md](references/deliverability.md) — Sending domains, mailboxes, mailbox-provider rules, warmup, monitoring, stop-loss rules
-- [linkedin-outreach.md](references/linkedin-outreach.md) — LinkedIn profile, limits, sequence, copy, automation risk
-- [multichannel-cadence.md](references/multichannel-cadence.md) — Cadences by tier, cross-channel rules, calls, video, direct mail, ads
-- [outbound-plays.md](references/outbound-plays.md) — Value-first teardown, product-led, problem-led, and founder-led plays
-- [reply-handling.md](references/reply-handling.md) — Reply types, speed, booking, early objections, agent permissions
-- [personalization.md](references/personalization.md) — 4-level personalization system, research signals
-- [subject-lines.md](references/subject-lines.md) — Subject line data and optimization
-- [follow-up-sequences.md](references/follow-up-sequences.md) — Cadence, angles, breakup emails
-- [frameworks.md](references/frameworks.md) — All copywriting frameworks with examples
+- [benchmarks.md](../../../vendor/marketingskills/skills/cold-email/references/benchmarks.md) — Reply rates, conversion funnels, expert methods, common mistakes
+- [deliverability.md](../../../vendor/marketingskills/skills/cold-email/references/deliverability.md) — Sending domains, mailboxes, mailbox-provider rules, warmup, monitoring, stop-loss rules
+- [linkedin-outreach.md](../../../vendor/marketingskills/skills/cold-email/references/linkedin-outreach.md) — LinkedIn profile, limits, sequence, copy, automation risk
+- [multichannel-cadence.md](../../../vendor/marketingskills/skills/cold-email/references/multichannel-cadence.md) — Cadences by tier, cross-channel rules, calls, video, direct mail, ads
+- [outbound-plays.md](../../../vendor/marketingskills/skills/cold-email/references/outbound-plays.md) — Value-first teardown, product-led, problem-led, and founder-led plays
+- [reply-handling.md](../../../vendor/marketingskills/skills/cold-email/references/reply-handling.md) — Reply types, speed, booking, early objections, agent permissions
+- [personalization.md](../../../vendor/marketingskills/skills/cold-email/references/personalization.md) — 4-level personalization system, research signals
+- [subject-lines.md](../../../vendor/marketingskills/skills/cold-email/references/subject-lines.md) — Subject line data and optimization
+- [follow-up-sequences.md](../../../vendor/marketingskills/skills/cold-email/references/follow-up-sequences.md) — Cadence, angles, breakup emails
+- [frameworks.md](../../../vendor/marketingskills/skills/cold-email/references/frameworks.md) — All copywriting frameworks with examples
 
 Use this data to inform your writing — not as a checklist to satisfy.
 

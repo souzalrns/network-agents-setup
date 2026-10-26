@@ -5,7 +5,7 @@
 | **Estado** | **Registo. NÃO implementar.** Contrato arquitectural para a evolução dos meta-agentes depois do `CouncilSession` (Fase 1) |
 | **Data** | 2026-10-03 |
 | **Origem** | Análise do GPT, entregue pelo maestro e transcrita sem alterações na secção "Análise original" |
-| **Relacionados** | [ADR-META-AGENTS](./adr/ADR-META-AGENTS.md) (Fase 1 implementada; §2.2 Fase 2 = deliberação multi-IA), [COUNCIL.md](../ops/COUNCIL.md) (`CouncilSession`), [BUDGET.md](../ops/BUDGET.md) (tecto de tokens), `docs/initiatives/OPEN-ITEMS.md` (itens da Fase 2) |
+| **Relacionados** | [ADR-META-AGENTS](./adr/ADR-META-AGENTS.md) (Fase 1 implementada; §2.2 Fase 2 = deliberação multi-IA), [COUNCIL.md](../ops/COUNCIL.md) (`CouncilSession`), [BUDGET.md](../ops/BUDGET.md) (tecto de tokens), [`docs/initiatives/OPEN-ITEMS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/OPEN-ITEMS.md) (itens da Fase 2) |
 
 ## Resumo do contrato
 

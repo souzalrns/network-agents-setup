@@ -14,7 +14,7 @@ CVEs e licenças já verificados nesse documento (secção 7): todas as licença
 
 O `README.md` do contrato tem, no próprio cabeçalho: *"Status: design. Not implemented. Last updated: 2026-09-11"* — mas isto já está **parcialmente desatualizado**: o módulo `runner/plan_runner/hitl.py` (Fase A.2 do plano faseado descrito no próprio README) **já existe e tem testes próprios** (confirmado nesta sessão e na Fase 1 da auditoria de Agentes).
 
-Confirmado por `docs/initiatives/STATUS.md` e por busca de código nesta sessão:
+Confirmado por [`docs/initiatives/STATUS.md (histórico)`](https://github.com/souzalrns/network-agents-setup/blob/a5efdbe4e533050045f0af4c9df8032c2bb8775a/docs/initiatives/STATUS.md) e por busca de código nesta sessão:
 
 | Fase do plano | Item STATUS.md | Estado real (verificado por código) |
 |---|---|---|
