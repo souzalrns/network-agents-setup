@@ -55,7 +55,7 @@ V1 = {
     "software": [],
     "marketing": ["instagram.com", "tiktok.com", "facebook.com", "linkedin.com", "youtube.com", "x.com",
                   "pinterest.com", "threads.net", "threads.com", "meta.com", "developers.facebook.com", "ads.google.com",
-                  "developers.google.com"],
+                  "developers.google.com", "hubspot.com"],  # hubspot.com: P-87 (maestro, 2026-10-26)
     "legal": ["planalto.gov.br", "in.gov.br", "stf.jus.br", "stj.jus.br", "tst.jus.br", "tse.jus.br",
               "cnj.jus.br", "senado.leg.br", "camara.leg.br", "jusbrasil.com.br", "conjur.com.br", "dre.pt",
               "diariodarepublica.pt", "pgdlisboa.pt", "oa.pt", "justica.gov.pt", "tribunalconstitucional.pt",
@@ -90,7 +90,7 @@ V1 = {
 def test_ficheiro_real_tem_a_v1_do_maestro():
     areas = wa.load(REPO_ROOT / wa.ALLOWLIST_FILE)["areas"]
     assert {a: list(d or []) for a, d in areas.items()} == V1
-    assert sum(len(d) for d in V1.values()) == 138  # 122 da v1 + 9 da P-46 - 3 nomes trocados + 10 do F6 (repetidos da finance)
+    assert sum(len(d) for d in V1.values()) == 139  # 122 da v1 + 9 da P-46 - 3 nomes trocados + 10 do F6 (repetidos da finance) + 1 da P-87
 
 
 # P-46 = A: os endereços actuais das mesmas fontes (evidência: a sonda do CI, run 37807283070).
