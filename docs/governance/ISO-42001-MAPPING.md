@@ -20,7 +20,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | Tabela | Cumpre | Parcial | Falta | N/A |
 |---|---:|---:|---:|---:|
 | Cláusulas 4–10 | 11 | 15 | 1 | 0 |
-| Anexo A | 28 | 10 | 0 | 0 |
+| Anexo A | 29 | 9 | 0 | 0 |
 
 **Leitura:**
 - Os controlos técnicos (dados, proveniência, V&V, HITL, deny-by-default) estão fortes.
@@ -89,7 +89,7 @@ As evidências `ANM:` só são verificadas quando o clone do `agent-network-mcp`
 | A.6.2.8 | Registos de eventos | Sim | Parcial | `runner/plan_runner/events.py::class EventLog`; `ANM:lib/tokenLedger.js::recordTokenUsage` (sem retenção nem detecção de adulteração) | B16 |
 | A.7.2 | Dados para desenvolvimento e melhoria | Sim | Cumpre | `config/l5-golden-security.yaml`; `config/router-golden.yaml` | — |
 | A.7.3 | Aquisição de dados | Sim | Cumpre | `docs/ops/WEB-FETCH.md`; `scripts/ingest_delta.py::MANIFEST` | — |
-| A.7.4 | Qualidade dos dados | Sim | Parcial | `runner/plan_runner/validity.py::def apply_validity`; `config/knowledge-validity.yaml` (autoridade e conflitos por fazer) | F3b-AUTH-1 |
+| A.7.4 | Qualidade dos dados | Sim | Cumpre | `runner/plan_runner/validity.py::def apply_validity`; `config/knowledge-validity.yaml`; `runner/plan_runner/authority.py::def apply_authority`; `config/knowledge-authority.yaml` (autoridade e conflitos: F3b-AUTH-1 fechado a 2026-10-27) | — |
 | A.7.5 | Proveniência dos dados | Sim | Cumpre | `runner/plan_runner/provenance.py::def load_meta`; `ANM:lib/knowledge.js::match_knowledge_v2`; `runner/plan_runner/skill_activation.py::sha256`; `runner/plan_runner/skill_scan.py::def head_commit` (commit e sha256 da SKILL.md analisados) | — |
 | A.7.6 | Preparação dos dados | Sim | Cumpre | `runner/plan_runner/chunking.py::def chunk_markdown`; `docs/ops/INGEST-DOCUMENT.md` | — |
 | A.8.2 | Documentação e informação para utilizadores | Sim | Parcial | `docs/generated/AGENTS.md` (sem limites de uso por agente para quem usa o MCP) | GOV-42001-1 |
