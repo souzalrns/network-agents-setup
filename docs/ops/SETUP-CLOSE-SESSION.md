@@ -81,7 +81,9 @@ python scripts/setup_close_runs.py           # corre tudo (~15–30 min, Gemini 
 - **COM-1 (Comercial):** no gate, confere as 3 peças em `run-com-1/`: preços só da tabela fictícia, lacunas marcadas `[[A DEFINIR]]` e o cliente C (pediu para parar) fora dos rascunhos de follow-up.
 - **No fim:** `git add pilots/evidence/setup-close-*.md`, faz commit e manda-me o `REPORT.md`. Eu fecho os itens no `PENDENCIAS.md`.
 
-## 4b. Recuperação num run real (RUNNER-RESUME-1) — por fazer
+## 4b. Recuperação num run real (RUNNER-RESUME-1) — FEITO a 2026-10-27 (PASS)
+
+> Sessão `2026-10-27T015747Z`: interrompido depois de `research`, retomado até `paused_human_gate`, cada passo terminou 1 vez. Evidência: `pilots/evidence/setup-close-2026-10-27T015747Z.md`.
 
 A matriz de prontidão (`docs/generated/PRONTIDAO.md`) mostra a Recuperação como a única capacidade só TESTADA. Este item interrompe um run real a meio e retoma-o:
 

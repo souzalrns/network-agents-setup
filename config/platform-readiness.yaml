@@ -51,7 +51,8 @@ capabilities:
       - test_engine_external.py::test_native_resume_external_completes
       - test_external_worker.py::test_erro_do_gemini_deixa_waiting_external_sem_result_e_resume_recupera
       - test_budget.py::test_resume_com_tecto_maior_continua_de_onde_parou
-    runs: []
+    runs:
+      - {doc: pilots/evidence/setup-close-2026-10-27T015747Z.md, anchor: "| RUNNER-RESUME-1 | RUNNER-RESUME-1 | **PASS** | interrompido depois de research; retomado até paused_human_gate"}
     lacunas: []
 
   - id: conhecimento
