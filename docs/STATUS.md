@@ -32,4 +32,5 @@ cd runner
 python -m plan_runner.areas    # áreas, agentes do runner e capabilities
 python -m plan_runner.office   # departamentos, lugares e todos os agentes (runner + MCP)
 python -m plan_runner.inventory  # escreve docs/generated/INVENTORY.md (todas as contagens)
+python -m plan_runner.prontidao   # docs/generated/PRONTIDAO.md: as 8 capacidades e a prova de cada uma
 ```

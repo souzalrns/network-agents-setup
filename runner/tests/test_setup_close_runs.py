@@ -135,3 +135,40 @@ def test_com1_em_stub_vai_ate_ao_gate_e_diz_o_que_conferir(sc, out_dir) -> None:
     report = (out_dir / "REPORT.md").read_text(encoding="utf-8")
     assert "| COM-1 | COM-1 | **PASS** |" in report
     assert "cliente C (pediu para parar) fora dos rascunhos" in report
+
+
+# --- RUNNER-RESUME-1 (Etapa 3: a Recuperação era a única capacidade só TESTADA) ---------------
+
+
+def _events(run_dir: Path, steps: list[str]) -> None:
+    run_dir.mkdir(parents=True, exist_ok=True)
+    lines = [json.dumps({"type": "step_finished", "payload": {"step_id": s}}) for s in steps]
+    lines.append(json.dumps({"type": "step_started", "payload": {"step_id": "x"}}))
+    lines.append("linha que não é json")
+    (run_dir / "events.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def test_resume_conta_os_step_finished(sc, tmp_path) -> None:
+    _events(tmp_path, ["research", "seo_brief", "research"])
+    assert sc.finished_counts(tmp_path) == {"research": 2, "seo_brief": 1}
+    assert sc.finished_counts(tmp_path / "nao-existe") == {}
+
+
+@pytest.mark.parametrize("before, status, counts, interrupted, esperado, texto", [
+    (["research"], {"state": "paused_human_gate", "completed": ["research", "seo_brief"]},
+     {"research": 1, "seo_brief": 1}, True, "PASS", "cada passo terminou 1 vez"),
+    (["research"], {"state": "paused_human_gate", "completed": ["research", "seo_brief"]},
+     {"research": 2, "seo_brief": 1}, True, "FAIL", "passos repetidos depois da retoma: research"),
+    (["research"], {"state": "paused_human_gate", "completed": ["seo_brief"]},
+     {"seo_brief": 1}, True, "FAIL", "perdidos na retoma: research"),
+    ([], {"state": "done", "completed": ["research"]}, {"research": 1}, False, "FAIL", "não foi possível interromper"),
+    (["research"], {"state": "failed", "completed": ["research"]}, {"research": 1}, True, "FAIL", "terminou em failed"),
+])
+def test_resume_julga_interrupcao_e_repeticao(sc, before, status, counts, interrupted, esperado, texto) -> None:
+    res = sc.Result("RUNNER-RESUME-1", "RUNNER-RESUME-1", "t")
+    sc.judge_resume(res, before, status, counts, interrupted=interrupted)
+    assert res.status == esperado and texto in res.detail, res.detail
+
+
+def test_resume_nao_corre_em_stub(sc) -> None:
+    assert "RUNNER-RESUME-1" in [k for k, _, _ in sc.ITEMS]

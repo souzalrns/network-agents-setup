@@ -17,6 +17,7 @@ on:
       - 'docs/**'
       - '*.md'
       - 'config/agents.config.ts'
+      - 'config/platform-readiness.yaml'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
@@ -87,6 +88,7 @@ on:
       - 'docs/**'
       - '*.md'
       - 'config/agents.config.ts'
+      - 'config/platform-readiness.yaml'
       - 'config/router-golden.yaml'
       # ingest real usado pelo job test-rag
       - 'scripts/ingest_apply.py'
@@ -190,6 +192,9 @@ jobs:
 
       - name: Contagens do PENDENCIAS.md certas (H-01)
         run: python -m plan_runner.pendencias
+
+      - name: Prontidão da plataforma (Etapa 3; cada prova citada existe)
+        run: python -m plan_runner.prontidao --check
 
       - name: Run tests with coverage
         run: |
