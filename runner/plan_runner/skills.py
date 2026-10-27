@@ -1,13 +1,19 @@
 from __future__ import annotations
-
 from pathlib import Path
-
 import yaml
 
 
 def repo_root_from_out(out_root: Path) -> Path:
-    """Best-effort: out is often <repo>/pilots/<run>."""
-    # out_root = .../pilots/run-x -> parents[1] = repo
+    """Best-effort: out is often <repo>/pilots/<run> or <repo>/pilots/<batch>/<run>."""
+    # Sobe até encontrar a pasta que contém config/ ou runner/
+    p = out_root.resolve()
+    for _ in range(6):
+        if (p / "config" / "web-allowlist.yaml").exists() or (p / "runner" / "plan_runner").exists():
+            return p
+        if p.parent == p:
+            break
+        p = p.parent
+    # Fallback para a lógica antiga
     if out_root.parent.name == "pilots":
         return out_root.parent.parent
     return out_root.parent
@@ -67,7 +73,6 @@ def read_text_if_exists(path: Path | None) -> str | None:
 
 def skill_ref(out_root: Path, step) -> str | None:
     """Skill que o passo carrega, relativa ao repo (para o evento step_started).
-
     Mede o uso real das skills: so os planos e o router as carregam, e sem isto
     nao havia forma de saber quais correm. None se o passo nao resolver skill
     (ex.: gates humanos).

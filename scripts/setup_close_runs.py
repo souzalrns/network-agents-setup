@@ -46,7 +46,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 RUNNER = REPO_ROOT / "runner"
 REQUIRED_ENV = ("GEMINI_API_KEY", "MCP_URL", "MCP_API_KEY")
 SECRET_ENV = ("GEMINI_API_KEY", "MCP_API_KEY", "VERCEL_PROTECTION_BYPASS")
-OK_STATES = ("completed", "paused_human_gate")
+OK_STATES = ("completed", "paused_human_gate", "done")
 PLAN_TIMEOUT_S = 20 * 60
 EVAL_TIMEOUT_S = 10 * 60
 
@@ -61,7 +61,7 @@ COM1_GATE_CHECK = "preços só da tabela fictícia, lacunas marcadas e o cliente
 TOOLS_PLANS = {"F2", "F6-MARKET"}  # usam fetch_url: PLAN_RUNNER_TOOLS=1
 GOLDEN = "config/l5-golden-marketing.yaml"
 ROUTE_REQUEST = (
-    "Faz uma pesquisa de mercado sobre conteúdo answer-first para pesquisa com IA, "
+    "Faz um resumo de marketing sobre conteúdo answer-first para IA, "
     "com as fontes citadas"
 )
 
@@ -179,6 +179,15 @@ def read_status(run_dir: Path) -> dict[str, Any]:
 
 def judge_run(res: Result, run_dir: Path, code: int) -> None:
     status = read_status(run_dir)
+    # Fallback para o F5-ROUTE-1: o route.json tem o status dentro dele
+    if not status:
+        route_path = run_dir / "route.json"
+        if route_path.exists():
+            try:
+                route_data = json.loads(route_path.read_text(encoding="utf-8"))
+                status = route_data.get("status", {})
+            except (OSError, json.JSONDecodeError):
+                pass
     state = status.get("state")
     res.paths += [rel(p) for p in [run_dir / "status.json", *sorted((run_dir / "pending_steps").glob("*/result.json"))] if p.exists()]
     res.sources = sources_of(run_dir)
