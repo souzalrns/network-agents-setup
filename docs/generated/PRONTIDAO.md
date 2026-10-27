@@ -9,7 +9,7 @@
 |---|---|---|---:|---:|---|
 | Execução de planos | Plano real concluído e artefactos validados | **PROVADA**, com lacunas | 4 | 2 | AU-22b (ABERTO, Baixa) |
 | Aprovação humana | Acção protegida bloqueada até existir aprovação válida | **PROVADA**, com lacunas | 5 | 2 | COM-1 (EM CURSO, Média), A13 (ABERTO, Média), OFFICE-A4 (BLOQUEADO, Média) |
-| Recuperação | Retoma sem repetir indevidamente acções externas | **TESTADA** | 5 | 0 | — |
+| Recuperação | Retoma sem repetir indevidamente acções externas | **PROVADA** | 5 | 1 | — |
 | Conhecimento | Resposta com fontes identificáveis e contexto correcto | **PROVADA**, com lacunas | 4 | 2 | F3b-VAL-1 (ABERTO, Média), F6 (EM CURSO, Média) |
 | Ferramentas | Selecção e execução dentro das permissões autorizadas | **PROVADA**, com lacunas | 5 | 2 | F2-DISC-1 (ABERTO, Baixa), TRADER-RISK-1 (ABERTO, Baixa) |
 | Custos e limites | Limites aplicados e consumo registado | **PROVADA**, com lacunas | 4 | 1 | T-004 (ABERTO, Média) |
@@ -37,14 +37,14 @@
 - run real: `pilots/evidence/setup-close-2026-10-27T002056Z.md` ("| COM-1 | COM-1 | **PASS** | estado paused_human_gate")
 - run real: `pilots/evidence/setup-close-2026-10-27T002056Z.md` ("| F6-MARKET | F6 | **PASS** | estado paused_human_gate")
 
-### Recuperação — TESTADA
+### Recuperação — PROVADA
 
 - teste: `runner/tests/test_crash_recovery.py::test_crash_recovery_running_state_resumes`
 - teste: `runner/tests/test_crash_recovery.py::test_crash_recovery_preserves_completed`
 - teste: `runner/tests/test_engine_external.py::test_native_resume_external_completes`
 - teste: `runner/tests/test_external_worker.py::test_erro_do_gemini_deixa_waiting_external_sem_result_e_resume_recupera`
 - teste: `runner/tests/test_budget.py::test_resume_com_tecto_maior_continua_de_onde_parou`
-- run real: **nenhum** (só testes)
+- run real: `pilots/evidence/setup-close-2026-10-27T015747Z.md` ("| RUNNER-RESUME-1 | RUNNER-RESUME-1 | **PASS** | interrompido depois de research; retomado até paused_human_gate")
 
 ### Conhecimento — PROVADA
 
