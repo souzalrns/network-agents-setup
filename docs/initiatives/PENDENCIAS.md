@@ -5,7 +5,7 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **133 itens vivos** (§4): ABERTO 74, EM CURSO 13, BLOQUEADO 46;
+> - **134 itens vivos** (§4): ABERTO 75, EM CURSO 13, BLOQUEADO 46;
 > - **144 linhas de histórico** (no histórico, §7): 122 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
 > - **88 decisões** A/B/C: 87 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (133 itens vivos)
+## 4. Tabela única (134 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -218,6 +218,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | AU-11b | Remover os modelos Prisma da t6 (`KnowledgeSource`/`KnowledgeChunk`) num PR à parte: um só dono do DDL (`scripts/rag_schema.sql`) | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (P-11 = A, 2026-10-07). Antes de remover, confirmar que o `packages/memory` não os usa | §10 P-11; AU-11 (§7, #76: comentário de legado) | — | VERIFICADO |
 | ING-012 | Upstream `microsoft/markitdown`: issue com os 2 achados reproduzíveis (um PDF ilegível volta em bruto pelo conversor de texto; uma tabela DOCX sem `w:tblHeader` sai com o cabeçalho vazio) e os geradores das fixtures; o PR só depois da resposta dos maintainers e com o CLA da Microsoft | FALTA-CONSTRUIR | ABERTO | AMBOS | Baixa | Publicar, na conta do DEV, o comentário preparado em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §3 (acção pública; esta sessão não tem acesso ao repo upstream) | §10 P-22 = Sim (2026-10-07; opção B, issue primeiro); fixtures do T6b e do T6c; **verificado a 2026-10-07 com o MarkItDown 0.1.8:** os 2 achados reproduzem-se. O da tabela DOCX já está reportado na [#2157](https://github.com/microsoft/markitdown/issues/2157) (aberta; o PR #2160 trata só do escape, não do cabeçalho), por isso uma issue nova seria duplicada. Opções A/B/C em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §2; **RECOMENDADA B:** comentário na #2157 com a reprodução e a oferta de PR para o cabeçalho; o achado do `.pdf` em texto fica só na documentação (o adapter já se protege) | — | VERIFICADO |
 | RUNNER-WHY-1 | `plan_runner why <run> <passo>`: num só relatório, o que influenciou um passo (skill, grounding, hits do L5 com autoridade e data, `repo_files`, chamadas de tools com fontes, input do passo anterior), a partir do que o run já grava | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (ideia extraída, sem dependências novas) | EXTRAIR do `agentfootprint` (footprintjs, MIT; TypeScript, 373 versões em 6,5 meses, 1 mantenedor: não se instala). Os dados já existem: `events.jsonl`, `result.json → meta.context/meta.repo_files/meta.sources` (F3-ART-1), `knowledge_context.md`. Decisão do maestro 2026-10-23 (opção A) | — | VERIFICADO |
+| RUNNER-RESUME-1 | Prova real da recuperação (Etapa 3): interromper um plano real a meio (matar o processo depois de um passo concluído) e retomar com `resume`; Done = o run termina e os `events.jsonl` mostram que nenhum passo concluído correu outra vez | FALTA-TESTE | ABERTO | AMBOS | Média | Run do DEV (credenciais). **Preparado (2026-10-27):** item `RUNNER-RESUME-1` do `scripts/setup_close_runs.py` (corre o `seo-article-demo` com o Gemini, mata o processo depois do 1.º passo concluído, `resume`, e falha se algum `step_finished` aparecer 2 vezes): `python scripts/setup_close_runs.py --only RUNNER-RESUME-1` | `docs/generated/PRONTIDAO.md`: a Recuperação é a única capacidade só TESTADA (5 testes, 0 runs reais); `test_crash_recovery.py` | — | VERIFICADO |
 | TRADER-SIM-1 | `economia-trader simulate`: Monte Carlo do resto do dia sobre o histórico do próprio motor (paper, sem rede), com a % de alvo / stop / nenhum antes de cada proposta | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (só paper; nunca live) | EXTRAIR da "Day Trader Skill": repositório confirmado e auditado a 2026-10-26 (P-88): [`Jakeschincariol/day-trader-skill` @ `3d0f4ef`](https://github.com/Jakeschincariol/day-trader-skill/tree/3d0f4ef/trader-timemachine), MIT, `trader-timemachine/timemachine.py` (Python stdlib, 10 000 sessões sobre 60 dias de barras de 5 min). Nada instalado. A própria skill diz que o resultado é "quase cara ou coroa": é medição de risco, não previsão. Decisão do maestro 2026-10-23 (opção A) | — | VERIFICADO |
 | TRADER-RISK-1 | `risk_review` (pack F6): o PASS do risco vale só para a ordem exacta (impressão digital: símbolo, lado, qtd., preço, stop, alvo) e só no próprio dia; qualquer alteração exige nova verificação | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (só paper; nunca live; reforça o gate, não dá autonomia) | Padrão de `trader-risk/check.py` + `trader-broker/ticket.py` em [`Jakeschincariol/day-trader-skill` @ `3d0f4ef`](https://github.com/Jakeschincariol/day-trader-skill/tree/3d0f4ef) (MIT), auditado a 2026-10-26 (P-88) | — | VERIFICADO |
 | OFFICE-A2 | Eventos do runner no Supabase (tabela só de acréscimo, só metadados, RLS sem políticas para `anon`/`authenticated`, Realtime) para o escritório ao vivo | FALTA-CONSTRUIR | ABERTO | AMBOS | Média | O SQL em produção e as credenciais do runner são do maestro | Proposta em `docs/ops/OFFICE.md` §6 (não aplicada); o SQL final vai em `scripts/migrations/` com query de controlo | — | VERIFICADO |
@@ -311,7 +312,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | CLAUDE | 23 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
 | DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
-| AMBOS | 41 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
+| AMBOS | 42 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, RUNNER-RESUME-1, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
 **Só do DEV, sem código** (refeito na revisão de 2026-10-07; a lista anterior citava merges e SELECTs já feitos):
 - **GOV-PRIV-2** (opcional): reescrever o histórico do MCP para tirar a transcrição antiga;
@@ -332,10 +333,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 48 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
+| Média | 49 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, RUNNER-RESUME-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 73 | F0.12, F1b, F2-DISC-1, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 74 · EM CURSO 13 · BLOQUEADO 46.
+**Por estado:** ABERTO 75 · EM CURSO 13 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
 ## 7. Histórico (144 linhas: 122 FECHADO, 22 OBSOLETO)

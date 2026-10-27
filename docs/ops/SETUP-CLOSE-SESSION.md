@@ -81,6 +81,18 @@ python scripts/setup_close_runs.py           # corre tudo (~15–30 min, Gemini 
 - **COM-1 (Comercial):** no gate, confere as 3 peças em `run-com-1/`: preços só da tabela fictícia, lacunas marcadas `[[A DEFINIR]]` e o cliente C (pediu para parar) fora dos rascunhos de follow-up.
 - **No fim:** `git add pilots/evidence/setup-close-*.md`, faz commit e manda-me o `REPORT.md`. Eu fecho os itens no `PENDENCIAS.md`.
 
+## 4b. Recuperação num run real (RUNNER-RESUME-1) — por fazer
+
+A matriz de prontidão (`docs/generated/PRONTIDAO.md`) mostra a Recuperação como a única capacidade só TESTADA. Este item interrompe um run real a meio e retoma-o:
+
+```powershell
+python scripts/setup_close_runs.py --only RUNNER-RESUME-1
+```
+
+- Pára sozinho no gate humano do `seo-article-demo`: é o previsto; não aproves nada.
+- PASS = o run foi interrompido depois de um passo concluído, retomou e nenhum passo terminou 2 vezes.
+- No fim, como no passo 4: `git add pilots/evidence/setup-close-*.md`, commit e push.
+
 ## 5. Datas reais de 2 fontes (F3b-VAL-1)
 
 Só tu sabes as datas, e não se inventam (P-28 = C). Cria 1 sidecar ao lado de cada `.md`:

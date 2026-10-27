@@ -11,6 +11,7 @@ Itens (PENDENCIAS §4):
   COM-1        COM-1       comercial: comercial-demo (lead → proposta → follow-ups; dados fictícios)
   F5-ROUTE-1   F5-ROUTE-1  um run que começa no router (route --execute)
   F3-ART-1     F3-ART-1    meta.sources nos result.json dos runs acima (derivado, sem chamadas)
+  RUNNER-RESUME-1           recuperação: interromper um run real a meio e retomar sem repetir passos
 
 Uso (na raiz do repositório, com o ambiente do runner instalado):
 
@@ -57,6 +58,7 @@ PLANS = {
     "COM-1": "docs/orchestration/marketing/templates/examples/comercial-demo.plan.yaml",
 }
 # O que o maestro confere no gate do COM-1 (não se avalia o texto do modelo por heurística).
+RESUME_PLAN = "docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml"
 COM1_GATE_CHECK = "preços só da tabela fictícia, lacunas marcadas e o cliente C (pediu para parar) fora dos rascunhos"
 TOOLS_PLANS = {"F2", "F6-MARKET"}  # usam fetch_url: PLAN_RUNNER_TOOLS=1
 GOLDEN = "config/l5-golden-marketing.yaml"
@@ -91,6 +93,7 @@ ITEMS = (
     ("COM-1", "COM-1", "Comercial: comercial-demo (lead → proposta → follow-ups)"),
     ("F5-ROUTE-1", "F5-ROUTE-1", "Run que começa no router (route --execute)"),
     ("F3-ART-1", "F3-ART-1", "meta.sources nos result.json dos runs"),
+    ("RUNNER-RESUME-1", "RUNNER-RESUME-1", "Recuperação: interromper um run real a meio e retomar"),
 )
 
 
@@ -225,6 +228,76 @@ def do_plan(res: Result, out: Path, env: dict[str, str], *, stub: bool) -> None:
             res.detail += f"; {len(web)} fonte(s) web da fetch_url"
     if res.status == "PASS" and res.key == "COM-1":
         res.detail += f"; rever no gate: {COM1_GATE_CHECK}"
+
+
+def finished_counts(run_dir: Path) -> dict[str, int]:
+    """Quantas vezes cada passo terminou (`step_finished` nos events.jsonl). Retomar não pode repetir."""
+    counts: dict[str, int] = {}
+    path = run_dir / "events.jsonl"
+    if not path.is_file():
+        return counts
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            evt = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if evt.get("type") == "step_finished":
+            step = (evt.get("payload") or {}).get("step_id")
+            if step:
+                counts[step] = counts.get(step, 0) + 1
+    return counts
+
+
+def judge_resume(res: Result, before: list[str], status: dict[str, Any], counts: dict[str, int], *,
+                 interrupted: bool) -> None:
+    """RUNNER-RESUME-1: interrompido depois de >= 1 passo, retomado até um estado bom, nada repetido."""
+    state = status.get("state")
+    repeated = sorted(step for step, n in counts.items() if n > 1)
+    lost = [step for step in before if step not in (status.get("completed") or [])]
+    if not interrupted or not before:
+        res.status, res.detail = "FAIL", "não foi possível interromper o run depois de um passo concluído"
+    elif repeated:
+        res.status, res.detail = "FAIL", f"passos repetidos depois da retoma: {', '.join(repeated)}"
+    elif lost:
+        res.status, res.detail = "FAIL", f"passos concluídos perdidos na retoma: {', '.join(lost)}"
+    elif state not in OK_STATES:
+        res.status, res.detail = "FAIL", f"a retoma terminou em {state or '(sem status.json)'}"
+    else:
+        res.status = "PASS"
+        res.detail = (f"interrompido depois de {', '.join(before)}; retomado até {state}; "
+                      f"cada passo terminou 1 vez ({', '.join(f'{k}={v}' for k, v in sorted(counts.items()))})")
+
+
+def do_resume(res: Result, out: Path, env: dict[str, str]) -> None:
+    run_dir = out / "run-resume"
+    args = [sys.executable, "-m", "plan_runner", "run", str(REPO_ROOT / RESUME_PLAN), "--out", str(run_dir),
+            "--mode", "external", "--worker", "gemini"]
+    # A 1.ª parte corre em segundo plano para poder ser interrompida; a saída não se guarda (as chaves
+    # nunca vão para um log sem redacção). Mesmo falso positivo do run_cmd: lista sem shell, valores fixos.
+    # nosemgrep: dangerous-subprocess-use-audit
+    proc = subprocess.Popen(args, cwd=RUNNER, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)  # noqa: S603
+    deadline = time.monotonic() + PLAN_TIMEOUT_S
+    while proc.poll() is None and time.monotonic() < deadline and not read_status(run_dir).get("completed"):
+        try:
+            proc.wait(timeout=1)  # espera 1 s, mas acorda logo se o processo terminar
+        except subprocess.TimeoutExpired:
+            continue
+    interrupted = proc.poll() is None
+    if interrupted:
+        proc.terminate()
+        try:
+            proc.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+    before = list(read_status(run_dir).get("completed") or [])
+    log = out / "logs" / "RUNNER-RESUME-1.log"
+    if interrupted and before:
+        run_cmd([sys.executable, "-m", "plan_runner", "resume", str(run_dir), "--worker", "gemini"],
+                log=log, env=env, timeout=PLAN_TIMEOUT_S)
+        res.paths.append(rel(log))
+    res.paths += [rel(p) for p in (run_dir / "status.json", run_dir / "events.jsonl") if p.exists()]
+    judge_resume(res, before, read_status(run_dir), finished_counts(run_dir), interrupted=interrupted)
 
 
 def do_mcp(res: Result, out: Path, env: dict[str, str]) -> None:
@@ -378,7 +451,7 @@ def main(argv: list[str] | None = None) -> int:
         if key not in wanted:
             res.detail = "fora do --only"
             continue
-        if args.stub and key in ("MCP-V3", "F3b-GS-1", "F5-ROUTE-1"):
+        if args.stub and key in ("MCP-V3", "F3b-GS-1", "F5-ROUTE-1", "RUNNER-RESUME-1"):
             res.detail = "precisa das credenciais (não corre em --stub)"
             continue
         print(f"→ {key}: {title}", flush=True)
@@ -393,6 +466,8 @@ def main(argv: list[str] | None = None) -> int:
             do_route(res, out, env)
         elif key == "F3-ART-1":
             do_artifacts(res, results, stub=args.stub)
+        elif key == "RUNNER-RESUME-1":
+            do_resume(res, out, env)
         res.seconds = time.monotonic() - t0
         # Só o resultado: o detalhe (que pode vir da saída dos subprocessos) fica no REPORT.md,
         # já redigido.

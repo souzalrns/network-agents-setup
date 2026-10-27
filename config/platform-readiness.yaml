@@ -1,0 +1,117 @@
+# Prontidão da plataforma: as 8 capacidades críticas e a prova de cada uma (Etapa 3, maestro 2026-10-27).
+#
+# Isto não é um segundo documento de estado: o estado dos itens continua só no PENDENCIAS.md.
+# Aqui cada capacidade aponta para PROVAS que existem no repositório, e o
+# `python -m plan_runner.prontidao` verifica que existem mesmo:
+#   - testes:  `ficheiro.py::funcao` em runner/tests/ (a função tem de existir);
+#   - runs:    documento de evidência de um run REAL + um excerto que tem de estar lá (`anchor`);
+#   - lacunas: IDs vivos do §4 do PENDENCIAS.md que limitam a capacidade (têm de existir lá).
+# O estado não se escreve: calcula-se (runner/plan_runner/prontidao.py):
+#   PROVADA = testes + run real; TESTADA = só testes; SEM PROVA = nenhum teste.
+#   "com lacunas" quando há IDs vivos a limitar a capacidade.
+# Saída: docs/generated/PRONTIDAO.md (o CI falha se divergir).
+
+version: 1
+evidence_run: &close27 pilots/evidence/setup-close-2026-10-27T002056Z.md
+
+capabilities:
+  - id: execucao
+    name: Execução de planos
+    criterio: Plano real concluído e artefactos validados
+    testes:
+      - test_real_plans.py::test_seo_article_demo_writes_artifacts
+      - test_done_when.py::test_exists_cumprido_termina_em_done
+      - test_done_when.py::test_exists_em_falta_falha_o_run_com_o_motivo
+      - test_canonical_composition.py::test_run_canonico_hitl_depois_orcamento_depois_done
+    runs:
+      - {doc: *close27, anchor: "| F5-ROUTE-1 | F5-ROUTE-1 | **PASS** | área marketing (keywords), outcome plan, agente None; estado done"}
+      - {doc: docs/ops/F5-E2E-RUN.md, anchor: "**Veredicto: PASSOU**"}
+    lacunas: [AU-22b]
+
+  - id: aprovacao_humana
+    name: Aprovação humana
+    criterio: Acção protegida bloqueada até existir aprovação válida
+    testes:
+      - test_tool_executor.py::test_tool_act_exige_aprovacao_e_nao_corre
+      - test_external_worker.py::test_worker_nunca_executa_um_passo_com_human_gate
+      - test_external_worker.py::test_reject_no_gate_termina_sem_mais_chamadas
+      - test_done_when.py::test_gate_nao_resolvido_falha_o_run
+      - test_real_plans.py::test_approval_rounds_full_cycle_three_hitls
+    runs:
+      - {doc: *close27, anchor: "| COM-1 | COM-1 | **PASS** | estado paused_human_gate"}
+      - {doc: *close27, anchor: "| F6-MARKET | F6 | **PASS** | estado paused_human_gate"}
+    lacunas: [COM-1, A13, OFFICE-A4]
+
+  - id: recuperacao
+    name: Recuperação
+    criterio: Retoma sem repetir indevidamente acções externas
+    testes:
+      - test_crash_recovery.py::test_crash_recovery_running_state_resumes
+      - test_crash_recovery.py::test_crash_recovery_preserves_completed
+      - test_engine_external.py::test_native_resume_external_completes
+      - test_external_worker.py::test_erro_do_gemini_deixa_waiting_external_sem_result_e_resume_recupera
+      - test_budget.py::test_resume_com_tecto_maior_continua_de_onde_parou
+    runs: []
+    lacunas: []
+
+  - id: conhecimento
+    name: Conhecimento
+    criterio: Resposta com fontes identificáveis e contexto correcto
+    testes:
+      - test_rag_canonical.py::test_agente_composto_nunca_devolve_o_mesmo_fragmento_duas_vezes
+      - test_l5_eval.py::test_metricas_contam_rank_de_chunk_fonte_mrr_e_proveniencia
+      - test_f3b_authority.py::test_config_e_sql_tem_os_mesmos_niveis_e_o_mesmo_default
+      - test_security_pipeline.py::test_audit_recebe_o_l5_de_security_com_a_fonte_citada
+    runs:
+      - {doc: *close27, anchor: "| F3b-GS-1 | F3b-GS-1 | **PASS** | chunk_hit@1 0.6; chunk_hit@4 0.9; source_hit@4 1.0"}
+      - {doc: *close27, anchor: "| MCP-V3 | F3b-AUTH-1 | **PASS** | versão do retrieve: v3; authority do 1.º hit: curado"}
+    lacunas: [F3b-VAL-1, F6]
+
+  - id: ferramentas
+    name: Ferramentas
+    criterio: Selecção e execução dentro das permissões autorizadas
+    testes:
+      - test_tool_executor.py::test_tool_nao_autorizada_nao_corre
+      - test_tool_executor.py::test_read_repo_file_le_e_recusa_segredos
+      - test_tool_executor.py::test_args_invalidos_sao_recusados_antes_de_executar
+      - test_web_allowlist.py::test_v1_deny_by_default_e_exclusoes_de_proposito
+      - test_f2_fetch_tool.py::test_plano_de_demonstracao_e_valido_e_usa_a_tool_com_area
+    runs:
+      - {doc: *close27, anchor: "| F2 | F2 | **PASS** | estado paused_human_gate; passos concluídos: research"}
+      - {doc: *close27, anchor: "\"tool\": \"fetch_url\""}
+    lacunas: [F2-DISC-1, TRADER-RISK-1]
+
+  - id: custos
+    name: Custos e limites
+    criterio: Limites aplicados e consumo registado
+    testes:
+      - test_budget.py::test_worker_para_ao_atingir_o_tecto_sem_chamar_o_gemini
+      - test_engine_external.py::test_native_run_aborts_when_budget_exceeded
+      - test_counttokens.py::test_projected_cost_unknown_price_fails_closed
+      - test_external_worker.py::test_le_request_chama_gemini_escreve_result_e_regista_tokens
+    runs:
+      - {doc: docs/ops/WORKER-EXTERNAL.md, anchor: "Primeiro run real (B1): FEITO a 2026-10-01"}
+    lacunas: [T-004]
+
+  - id: observabilidade
+    name: Observabilidade
+    criterio: Reconstrução da execução através dos eventos
+    testes:
+      - test_f5_evidence.py::test_run_completo_passou
+      - test_f5_evidence.py::test_resumo_nunca_mostra_conteudo_nem_segredos
+      - test_office.py::test_cada_evento_da_o_seu_estado
+      - test_skill_usage.py::test_native_regista_a_skill_de_cada_passo
+    runs:
+      - {doc: docs/ops/F5-E2E-RUN.md, anchor: "**Veredicto: PASSOU**"}
+    lacunas: [OFFICE-A2, RUNNER-WHY-1]
+
+  - id: mcp
+    name: MCP
+    criterio: Integração real com autenticação e comportamento seguro em caso de falha
+    testes:
+      - test_mcp_knowledge.py::test_retrieve_raises_on_tool_error
+      - test_mcp_knowledge.py::test_retrieve_raises_on_empty_response
+      - test_mcp_knowledge.py::test_retrieve_passes_kb_query_topk_and_require_citations
+    runs:
+      - {doc: *close27, anchor: "| MCP-V3 | F3b-AUTH-1 | **PASS**"}
+    lacunas: [F0.6, AU-25, S-003, W-010]
