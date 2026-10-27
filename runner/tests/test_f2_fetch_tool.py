@@ -112,3 +112,14 @@ def test_plano_de_demonstracao_e_valido_e_usa_a_tool_com_area():
     assert plan_errors(raw) == []
     step = raw["steps"][0]
     assert step["tools_allowed"] == ["fetch_url"] and step["web_area"] == "marketing" and step["action"] == "research"
+
+
+def test_repo_root_from_out_sessao_aninhada(tmp_path):
+    """O setup_close_runs usa --out pilots/<sessão>/run-x: a raiz tem de ser o repo, não pilots/<sessão>."""
+    from plan_runner.skills import repo_root_from_out
+
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "web-allowlist.yaml").write_text("version: 1\nareas: {}\n", encoding="utf-8")
+    out = tmp_path / "pilots" / "setup-close-x" / "run-f2"
+    out.mkdir(parents=True)
+    assert repo_root_from_out(out) == tmp_path.resolve()

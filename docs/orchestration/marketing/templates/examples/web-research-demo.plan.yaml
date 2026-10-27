@@ -27,6 +27,7 @@ steps:
       "sources" (lista de {url, title, retrieved_at} das páginas que usaste),
       "limitations" (o que não conseguiste confirmar ou buscar) e "artifacts" ([]).
       Não inventes fontes: só as que a tool devolveu.
+      IMPORTANTE: Usa OBRIGATORIAMENTE este URL como ponto de partida: https://blog.hubspot.com/marketing
     tools_allowed: [fetch_url]
     web_area: marketing
     tool_limits: {max_tool_calls: 3}

@@ -64,6 +64,7 @@ O que foi feito (para referência ou para repetir):
 >
 > - **Relatório:** `pilots/setup-close-2026-10-26T012305Z/REPORT.md` (no computador do maestro; `pilots/` está no `.gitignore`).
 > - **Cópia versionável:** `pilots/evidence/setup-close-2026-10-26T012305Z.md`. Os itens só passam a FECHADO no `PENDENCIAS.md` quando esta cópia estiver no repositório (§9: nunca FECHADO sem evidência citada).
+> - **Repetição (sessão `2026-10-27T002056Z`):** o F2 da sessão anterior ficou em FAIL (`blocked_by_allowlist`: o runner calculava a raiz do repo como `pilots/<sessão>`, sem `config/`). Corrigido em `runner/plan_runner/skills.py` (`repo_root_from_out`, com teste); `python scripts/setup_close_runs.py` deu 8/8 PASS. Evidência: `pilots/evidence/setup-close-2026-10-27T002056Z.md`. Fecham no `PENDENCIAS.md`: F3b-AUTH-1, F3b-GS-1, F5-ROUTE-1, F3-ART-1. Ficam EM CURSO: F2 (até ao merge), F6 (P-81) e COM-1 (o maestro confere o gate).
 > - **Allowlist:** o F2 usou o `hubspot.com` na área `marketing`, acrescentado pelo maestro para a sessão. Entra no `config/web-allowlist.yaml` com a decisão P-87 (PENDENCIAS-HISTORICO §10), para o repositório bater com a evidência. O `searchengineland.com` não entra.
 
 
