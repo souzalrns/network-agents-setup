@@ -101,13 +101,14 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 
-## 7. Histórico (143 linhas: 121 FECHADO, 22 OBSOLETO)
+## 7. Histórico (144 linhas: 122 FECHADO, 22 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| F2 | Web research universal: tool `fetch_url` no runner (área em `web_area`) + plano `web-research-demo` com proveniência | 2026-10-27 | F2a (#111), F2-ALLOW-1 (#141, #145), F2b; PR #256 (correcção da raiz da allowlist em `skills.py`, `test_repo_root_from_out_sessao_aninhada`); run real em PASS (`pilots/evidence/setup-close-2026-10-27T002056Z.md`) | FECHADO | O `discover` e o fallback JavaScript não foram construídos; o `scrape.yml` fica como legado (P-24 = A) |
 | F3b-AUTH-1 | Autoridade e conflitos do F3b: `match_knowledge_v3`, `min_authority`, `superseded_by`, anotação no bloco do runner, flag no MCP | 2026-10-27 | MCP-V3 em PASS contra a produção (v3; `authority: curado` no 1.º hit), run de 2026-10-27 (evidência `pilots/evidence/setup-close-2026-10-27T002056Z.md`); SQL e flag em produção desde 2026-10-24; testes `test_f3b_authority.py` e `test_f3b_authority_db.py` | FECHADO | Sessão de fecho do setup (8/8 PASS) |
 | F3b-GS-1 | Golden set de marketing completo (20 casos, medido contra o MCP real) | 2026-10-27 | Run real de 2026-10-27 em PASS (evidência `pilots/evidence/setup-close-2026-10-27T002056Z.md`): chunk_hit@1 0,6; chunk_hit@4 0,9; source_hit@4 1,0; mrr_chunk 0,738; no_hits 0; provenance_ok 1,0 | FECHADO | Sessão de fecho do setup (8/8 PASS) |
 | F5-ROUTE-1 | Run real que começa no `route` do runner (discover → select → execute) | 2026-10-27 | Run real de 2026-10-27 em PASS (evidência `pilots/evidence/setup-close-2026-10-27T002056Z.md`): área marketing, plano p1_research → p2_seo_brief → p3_copy_answer_first, estado done | FECHADO | Sessão de fecho do setup (8/8 PASS) |
