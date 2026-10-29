@@ -17,7 +17,7 @@
     "react-dom": "^19.3.1",
     "react-grid-layout": "^1.5.0",
     "recharts": "^2.15.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
