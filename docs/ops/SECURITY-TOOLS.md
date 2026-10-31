@@ -4,6 +4,11 @@
 > `act_in_production: forbidden`, `hitl: required`. As ferramentas defensivas correm no CI (lêem e relatam).
 > As ofensivas (pentest, red-team de LLM) só em **laboratório** (`lab`/`deferred`), em workflows manuais, nunca no runner.
 
+## 0. Rotina operacional (read-only)
+
+Checklist diário/por PR e audit profundo mensal: **[SECURITY-REVIEW-ROUTINE.md](./SECURITY-REVIEW-ROUTINE.md)**.
+Não substitui o CI da tabela abaixo; organiza a triagem humana e os batches AUDIT/PLAN/FIX/VERIFY sem testes activos em produção.
+
 ## 1. Defensivo — corre no CI
 
 | Ferramenta | Licença | Onde | Alvo | Bloqueia? |
