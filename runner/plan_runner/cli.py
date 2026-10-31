@@ -145,9 +145,42 @@ def main(argv: list[str] | None = None) -> int:
                         f"aprovacao de tool pendente ({approval.get('request_id')}: "
                         f"{', '.join(approval.get('tools') or [])}): passa --decision approve|reject"
                     )
+                # W-020: se a decisao veio do ficheiro, aplicar politica com source do pedido
+                if node is not None:
+                    req = next(
+                        (r for r in reversed(hitl._read_jsonl(args.out / hitl.REQUESTS_FILE))
+                         if r.get("id") == node.get("id")),
+                        None,
+                    )
+                    req_source = (req or {}).get("source") or node.get("source")
+                    policy_errs = hitl.validate_decision_policy(
+                        node,
+                        request_source=req_source,
+                        request_priority=(req or {}).get("priority"),
+                    )
+                    if policy_errs:
+                        raise PlanError(
+                            "decisao HITL viola a politica de actor (W-020): "
+                            + "; ".join(policy_errs)
+                        )
             else:
                 hitl_decision = hitl.read_decision(args.out)
-                decision = hitl_decision["response"] if hitl_decision else (args.decision or "approve")
+                if hitl_decision is not None:
+                    req = hitl.latest_request(args.out)
+                    req_source = (req or {}).get("source") or hitl_decision.get("source")
+                    policy_errs = hitl.validate_decision_policy(
+                        hitl_decision,
+                        request_source=req_source,
+                        request_priority=(req or {}).get("priority"),
+                    )
+                    if policy_errs:
+                        raise PlanError(
+                            "decisao HITL viola a politica de actor (W-020): "
+                            + "; ".join(policy_errs)
+                        )
+                    decision = hitl_decision["response"]
+                else:
+                    decision = args.decision or "approve"
 
             if st and st.get("engine", "").startswith("langgraph"):
                 from .langgraph_engine import resume_plan_langgraph
