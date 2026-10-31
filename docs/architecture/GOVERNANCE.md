@@ -21,6 +21,12 @@ Neste contexto, "governança" cobre 5 preocupações:
 - Não é o RAG — o RAG dá conhecimento; a governança dá controlo.
 - Não é o HITL sozinho — o `HitlManager` é **um** dos 7 módulos de governança (aprovação humana), não a camada inteira.
 
+## 1.1 Resume do `plan_runner` (contrato operacional)
+
+Qualquer pausa (`paused_human_gate`, `paused_budget`) é **retomável** sem reexecutar passos já concluídos. A decisão HITL e o novo tecto de budget são inputs explícitos do resume. O fecho do run exige `done_when` satisfeito quando o plano o declara.
+
+Ficheiros canónicos por run: `status.json`, `events.jsonl`, `token_usage.jsonl`, `hitl-requests.jsonl` / `hitl-decisions.jsonl`, `BUDGET.md` / `HITL.md`, `pending_steps/`. Detalhe de budget: [`docs/ops/BUDGET.md`](../ops/BUDGET.md). Contrato HITL: [`hitl/README.md`](./hitl/README.md).
+
 ## 2. O que já existe no setup
 
 7 módulos de `packages/core/src/` tocam directamente em governança (fonte: `CORE-MAPPING.md`):
@@ -104,3 +110,4 @@ O AGT cobre identidade, política e execução — não cobre a delegação entr
 - [`governance/ROADMAP-GOVERNANCE.md`](./governance/ROADMAP-GOVERNANCE.md) — cronograma completo, verificação externa
 - [`ECOSYSTEM.md`](./ECOSYSTEM.md) — visão geral do ecossistema (setup ↔ MCP)
 - [`plug-in-agents.md`](./plug-in-agents.md) — visão original das 3 camadas
+- [`../ops/SECURITY-REVIEW-ROUTINE.md`](../ops/SECURITY-REVIEW-ROUTINE.md) — rotina de revisão de segurança read-only
