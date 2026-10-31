@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from . import hitl
+from .abort_ops import abort_run
 from .engine import PlanError, resume_run, run_plan
 
 
@@ -54,6 +55,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_res.add_argument("--max-tokens", type=int, default=None, help="Novo tecto de tokens (retoma um run em paused_budget)")
     p_res.add_argument("--max-cost-usd", type=float, default=None, help="D6: novo tecto de custo em USD (retoma um run em paused_budget)")
+
+    p_abort = sub.add_parser("abort", help="Kill-switch: termina um run em curso (aborted_operator)")
+    p_abort.add_argument("out", type=Path, help="Run directory with status.json")
+    p_abort.add_argument("--reason", default="operator", help="Motivo gravado no evento plan_aborted")
 
     p_compile = sub.add_parser("compile-graph", help="Show LangGraph wave compilation for a plan")
     p_compile.add_argument("plan", type=Path)
@@ -107,6 +112,8 @@ def main(argv: list[str] | None = None) -> int:
             from .session_search import search
 
             result = {"hits": search(args.out, args.query)}
+        elif args.cmd == "abort":
+            result = abort_run(args.out, reason=args.reason)
         elif args.cmd == "run":
             if args.engine == "langgraph":
                 # W-005: worker inline e tectos tambem no langgraph (paridade com o native)
