@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from . import hitl
+from .abort_ops import abort_run
 from .engine import PlanError, resume_run, run_plan
 
 
@@ -54,6 +55,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_res.add_argument("--max-tokens", type=int, default=None, help="Novo tecto de tokens (retoma um run em paused_budget)")
     p_res.add_argument("--max-cost-usd", type=float, default=None, help="D6: novo tecto de custo em USD (retoma um run em paused_budget)")
+
+    p_abort = sub.add_parser("abort", help="Kill-switch: termina um run em curso (aborted_operator)")
+    p_abort.add_argument("out", type=Path, help="Run directory with status.json")
+    p_abort.add_argument("--reason", default="operator", help="Motivo gravado no evento plan_aborted")
 
     p_compile = sub.add_parser("compile-graph", help="Show LangGraph wave compilation for a plan")
     p_compile.add_argument("plan", type=Path)
@@ -107,6 +112,8 @@ def main(argv: list[str] | None = None) -> int:
             from .session_search import search
 
             result = {"hits": search(args.out, args.query)}
+        elif args.cmd == "abort":
+            result = abort_run(args.out, reason=args.reason)
         elif args.cmd == "run":
             if args.engine == "langgraph":
                 # W-005: worker inline e tectos tambem no langgraph (paridade com o native)
@@ -145,9 +152,42 @@ def main(argv: list[str] | None = None) -> int:
                         f"aprovacao de tool pendente ({approval.get('request_id')}: "
                         f"{', '.join(approval.get('tools') or [])}): passa --decision approve|reject"
                     )
+                # W-020: se a decisao veio do ficheiro, aplicar politica com source do pedido
+                if node is not None:
+                    req = next(
+                        (r for r in reversed(hitl._read_jsonl(args.out / hitl.REQUESTS_FILE))
+                         if r.get("id") == node.get("id")),
+                        None,
+                    )
+                    req_source = (req or {}).get("source") or node.get("source")
+                    policy_errs = hitl.validate_decision_policy(
+                        node,
+                        request_source=req_source,
+                        request_priority=(req or {}).get("priority"),
+                    )
+                    if policy_errs:
+                        raise PlanError(
+                            "decisao HITL viola a politica de actor (W-020): "
+                            + "; ".join(policy_errs)
+                        )
             else:
                 hitl_decision = hitl.read_decision(args.out)
-                decision = hitl_decision["response"] if hitl_decision else (args.decision or "approve")
+                if hitl_decision is not None:
+                    req = hitl.latest_request(args.out)
+                    req_source = (req or {}).get("source") or hitl_decision.get("source")
+                    policy_errs = hitl.validate_decision_policy(
+                        hitl_decision,
+                        request_source=req_source,
+                        request_priority=(req or {}).get("priority"),
+                    )
+                    if policy_errs:
+                        raise PlanError(
+                            "decisao HITL viola a politica de actor (W-020): "
+                            + "; ".join(policy_errs)
+                        )
+                    decision = hitl_decision["response"]
+                else:
+                    decision = args.decision or "approve"
 
             if st and st.get("engine", "").startswith("langgraph"):
                 from .langgraph_engine import resume_plan_langgraph

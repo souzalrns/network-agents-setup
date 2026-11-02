@@ -31,6 +31,9 @@ Design notes:
   priority="medium" and category=None. See README "What stays
   Python-specific".
 - Fields follow the schema exactly; additionalProperties is false.
+- W-020: `validate_decision_policy` aplica a politica de actor/rationale
+  (docs/architecture/hitl/README.md Actor requirements) sem endurecer o
+  schema JSON Schema required.
 """
 from __future__ import annotations
 
@@ -59,6 +62,7 @@ __all__ = [
     "build_request",
     "latest_request",
     "read_decision",
+    "validate_decision_policy",
     "write_decision",
     "write_request",
 ]
@@ -165,3 +169,50 @@ def write_request(
     )
     _append_jsonl(run_dir / REQUESTS_FILE, record)
     return record["id"]
+
+
+def validate_decision_policy(
+    decision: dict[str, Any],
+    *,
+    request_source: str | None = None,
+    request_priority: str | None = None,
+) -> list[str]:
+    """Valida a politica de actor/rationale (W-020); devolve lista de erros.
+
+    Nao levanta excepcao. Lista vazia = conforme a politica.
+
+    Regras (docs/architecture/hitl/README.md — Actor requirements):
+
+    - CLI / source plan_runner: `responder_id` pode ser omitido ou `cli:*`;
+      `response_comment` e opcional.
+    - source node_api (ou `request_source=="node_api"`):
+      - `responder_id` obrigatorio (string nao vazia);
+      - `response_comment` obrigatorio se `response` in (reject, edit);
+      - `response_comment` recomendado (nao erro) se approve + priority high/critical.
+
+    O schema JSON Schema nao e alterado; esta e politica de aplicacao.
+    """
+    errors: list[str] = []
+    if not decision:
+        return ["decision vazia"]
+
+    source = (request_source or decision.get("source") or "").strip()
+    response = (decision.get("response") or "").strip()
+    responder = decision.get("responder_id")
+    comment = decision.get("response_comment")
+    priority = (request_priority or decision.get("priority") or "medium").strip()
+
+    strict = source == "node_api"
+
+    if strict:
+        if not isinstance(responder, str) or not responder.strip():
+            errors.append("responder_id obrigatorio para decisoes node_api")
+        if response in ("reject", "edit"):
+            if not isinstance(comment, str) or not comment.strip():
+                errors.append(
+                    f"response_comment obrigatorio quando response={response!r} (node_api)"
+                )
+        # approve + high/critical: so aviso na docstring; nao bloqueia (recomendado)
+        _ = priority  # reservado para futura promocao a erro
+
+    return errors

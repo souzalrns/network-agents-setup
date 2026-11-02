@@ -3,7 +3,7 @@
 > Design note: how `plan_runner` (Python) and the Node platform (TypeScript) will share HITL state.
 >
 > **Status:** Phase A.2 (Python side) implemented and tested 2026-09-20 — see note below. Phases A.3 (TypeScript side) and A.4 (end-to-end) still pending.
-> **Last updated:** 2026-09-20
+> **Last updated:** 2026-10-31 (Actor requirements)
 
 ---
 
@@ -23,6 +23,30 @@ This document defines a **shared contract** so both sides can interoperate. The 
 ```
 docs/architecture/hitl/hitl-request-v1.json
 ```
+
+---
+
+## Actor requirements (who / when / why)
+
+The schema already carries identity and rationale fields:
+
+| Field | Role |
+|---|---|
+| `responder_id` | **Who** decided |
+| `responded_at` | **When** |
+| `response_comment` | **Why** (free text) |
+| `response` | approve \| reject \| edit |
+
+**Policy (additive; does not change the JSON Schema `required` list yet):**
+
+1. **CLI resume** (`source=plan_runner`, decision via `--decision` or local file): `responder_id` may be `cli:local` or `cli:<user>`; `response_comment` optional.
+2. **Platform / `node_api` decisions** written to `hitl-decisions.jsonl`:
+   - `responder_id` **must** be non-empty;
+   - `response_comment` **must** be non-empty when `response` is `reject` or `edit`;
+   - `response_comment` **recommended** when `priority` is `high` or `critical` and `response` is `approve`.
+3. On resume, `events.jsonl` should record `responder_id` and `response` in the payload (full comment only if the domain policy allows).
+
+Implementation of `validate_decision_policy()` in Python remains a follow-up (PENDENCIAS W-020); this section is the contract text.
 
 ---
 
@@ -246,8 +270,10 @@ For the MCP server, see `mcp/plan_runner/README.md`.
 
 **O contrato comum** está em `hitl-request-v1.json`. Base é o TypeScript (mais rico), Python adapta.
 
+**Actor:** decisões da plataforma devem trazer `responder_id` e, em reject/edit, `response_comment`.
+
 **Sincronização:** ficheiro partilhado (`hitl-requests.jsonl`) agora; Supabase quando houver multi-user.
 
-**Não-regressão:** nenhuma alteração quebra os 72 testes, o `test_client.py` ou o `HitlManager` atual. Aditivo, não substitutivo.
+**Não-regressão:** nenhuma alteração quebra os testes existentes ou o `HitlManager` atual. Aditivo, não substitutivo.
 
 **Plano:** 2.5 dias para a Fase A completa (Python + TypeScript + teste end-to-end).
