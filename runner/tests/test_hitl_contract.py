@@ -22,6 +22,7 @@ from plan_runner.hitl import (
     build_request,
     latest_request,
     read_decision,
+    validate_decision_policy,
     write_decision,
     write_request,
 )
@@ -240,3 +241,49 @@ def test_write_decision_roundtrip(tmp_path: Path):
     assert decision["responder_id"] == "cli"
     assert decision["response_comment"] == "tweak"
     assert decision["responded_at"] is not None
+
+
+# -- W-020 validate_decision_policy ---------------------------------------------
+
+def test_policy_cli_allows_missing_actor():
+    errs = validate_decision_policy(
+        {"response": "approve"},
+        request_source="plan_runner",
+    )
+    assert errs == []
+
+
+def test_policy_node_api_requires_responder_id():
+    errs = validate_decision_policy(
+        {"response": "approve"},
+        request_source="node_api",
+    )
+    assert any("responder_id" in e for e in errs)
+
+
+def test_policy_node_api_reject_requires_comment():
+    errs = validate_decision_policy(
+        {"response": "reject", "responder_id": "user:luiz"},
+        request_source="node_api",
+    )
+    assert any("response_comment" in e for e in errs)
+
+
+def test_policy_node_api_reject_ok_with_actor_and_comment():
+    errs = validate_decision_policy(
+        {
+            "response": "reject",
+            "responder_id": "user:luiz",
+            "response_comment": "fora de politica",
+        },
+        request_source="node_api",
+    )
+    assert errs == []
+
+
+def test_policy_node_api_edit_requires_comment():
+    errs = validate_decision_policy(
+        {"response": "edit", "responder_id": "user:luiz", "response_comment": ""},
+        request_source="node_api",
+    )
+    assert any("response_comment" in e for e in errs)
