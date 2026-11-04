@@ -50,6 +50,10 @@ O `calendario` decide quando; o `repurposing` faz as versões. O publicador junt
 
 `artifacts/<n>-publicacao.json`: `{"posts": [{"rede", "quando", "fuso", "legenda", "ficheiros", "alt", "hashtags", "identificacoes", "aprovado": false}], "fora": [{"peca", "motivo"}]}`.
 
+- `quando` em ISO 8601 (com offset, ou sem offset e com `fuso`, ex.: `Europe/Lisbon`); `ficheiros` com paths do run; `alt` com um texto por ficheiro.
+- Opcional por post: `settings` da rede quando ela os exige (YouTube `title` e `type`, Pinterest `board`, TikTok `privacy_level` e `title`).
+- Depois da aprovação humana e da compliance aprovada, uma pessoa envia o pacote ao Postiz com `python -m plan_runner.postiz` (`docs/ops/POSTIZ.md`). Este agente nunca o faz.
+
 ## Está pronto quando
 
 - [ ] Cada post com data, hora e fuso
