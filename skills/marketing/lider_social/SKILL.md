@@ -27,7 +27,7 @@ Fazer a marca presente onde o público conversa: comunidade, eventos, criadores 
 1. Decidir o mix: comunidade, evento (modo `events`), influenciadores, imprensa.
 2. Definir o público e os sítios onde ele está.
 3. Fixar as regras de contacto: só com consentimento ou interesse legítimo, nada enviado sem aprovação.
-4. Montar o plano com as acções independentes em paralelo.
+4. Montar o plano com as acções independentes em paralelo; o calendário organiza tudo e o publicador prepara os pacotes (nunca publica).
 5. Definir como se mede (participação, menções, contactos qualificados).
 
 ## Especialistas da área (só estes)
@@ -37,6 +37,8 @@ Fazer a marca presente onde o público conversa: comunidade, eventos, criadores 
 | `marketing.community_marketing` | `community_marketing` | `events` | estratégia de comunidade; com modo, eventos e webinars |
 | `marketing.influencer` | `influencer_brief` | — | brief para criadores e influenciadores |
 | `marketing.public_relations` | `public_relations` | — | ângulos, comunicados e pitch a jornalistas |
+| `marketing.calendario` | `editorial_calendar` | — | calendário editorial com frequência e estados |
+| `marketing.publicador` | `publish_package` | — | pacote de publicação pronto a agendar (nunca publica) |
 
 ## Decide sozinho / pede aprovação
 

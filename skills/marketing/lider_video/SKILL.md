@@ -28,7 +28,7 @@ Entregar vídeos e criativos prontos a publicar, dentro do orçamento e das regr
 2. Escolher o formato: short de 15-30 s, explicativo de 60 s, vídeo longo, UGC.
 3. Escolher o caminho de produção, do mais barato para o mais caro: material real → stock gratuito → clips gerados por IA (só nas cenas-chave).
 4. Fixar o orçamento por peça e o que fazer se for ultrapassado (parar e perguntar).
-5. Montar o plano: guião primeiro; imagem e edição a partir do guião; criativo de anúncio se houver media paga.
+5. Montar o plano: guião primeiro; produção (origem e custo de cada cena), imagem e áudio a partir do guião; edição depois; versões por rede no fim; criativo de anúncio se houver media paga.
 6. Exigir o guião revisto antes de qualquer geração paga (um guião fraco desperdiça créditos).
 
 ## Especialistas da área (só estes)
@@ -40,6 +40,9 @@ Entregar vídeos e criativos prontos a publicar, dentro do orçamento e das regr
 | `marketing.image` | `image` | — | briefs e prompts de imagem e capas |
 | `marketing.ad_creative` | `ad_creative` | — | criativos de anúncio |
 | `design.identidade-visual` | `design` | — | coerência com a identidade visual |
+| `marketing.produtor_video` | `video_production` | — | folha de produção: origem de cada cena (real, stock, IA) e custo vs. orçamento |
+| `marketing.audio_voz` | `audio_voice` | — | narração, música com licença e legendas SRT |
+| `marketing.repurposing` | `repurposing` | — | versões por rede e cortes de vídeos longos |
 
 ## Decide sozinho / pede aprovação
 

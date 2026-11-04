@@ -2,6 +2,7 @@
 #
 # O líder da área (marketing.lider_social) decide e entrega o brief; os especialistas da área
 # recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade (fase 2): critic e compliance revêem em paralelo antes da aprovação humana.
 
 id: template-area-social
 version: 1
@@ -10,7 +11,7 @@ objective: "(preencher)"
 audience: "(preencher)"
 
 budget:
-  max_steps: 5
+  max_steps: 8
 
 steps:
   - id: lider
@@ -35,25 +36,51 @@ steps:
     inputs: [artifacts/00-brief-social.md]
     output_artifact: artifacts/02-criadores.md
 
-  - id: critic
-    action: critic
+  - id: calendario
+    action: editorial_calendar
     depends_on: [comunidade, criadores]
+    task: "Calendário editorial das acções e peças"
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-social.md, artifacts/01-comunidade.md, artifacts/02-criadores.md]
-    output_artifact: artifacts/03-critic.json
+    output_artifact: artifacts/03-calendario.md
+
+  - id: publicacao
+    action: publish_package
+    depends_on: [calendario]
+    task: "Pacotes de publicação prontos a agendar (nada publicado)"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-social.md, artifacts/03-calendario.md]
+    output_artifact: artifacts/04-publicacao.json
+
+  - id: critic
+    action: critic
+    depends_on: [publicacao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-social.md, artifacts/01-comunidade.md, artifacts/02-criadores.md, artifacts/03-calendario.md, artifacts/04-publicacao.json]
+    output_artifact: artifacts/05-critic.json
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [publicacao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-social.md, artifacts/01-comunidade.md, artifacts/02-criadores.md, artifacts/03-calendario.md, artifacts/04-publicacao.json]
+    output_artifact: artifacts/06-compliance.json
 
   - id: hitl
     action: plan_approve
-    depends_on: [critic]
+    depends_on: [critic, compliance]
     human_gate:
       level: step
       kind: output_review
       allow: [approve, reject, edit]
     tools_allowed: []
-    output_artifact: artifacts/04-hitl.json
+    output_artifact: artifacts/07-hitl.json
 
 done_when:
   - artifacts/00-brief-social.md exists
   - artifacts/01-comunidade.md exists
   - artifacts/02-criadores.md exists
+  - artifacts/03-calendario.md exists
+  - artifacts/04-publicacao.json exists
+  - artifacts/06-compliance.json exists
   - human_gate_resolved on hitl

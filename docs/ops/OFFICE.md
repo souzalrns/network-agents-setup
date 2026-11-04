@@ -5,7 +5,7 @@
 > Não guarda estado próprio, não anima trabalho que não existe e não esconde nenhum agente.
 > O motor (planos, router, HITL, memória) não muda: o escritório só o lê.
 
-**Hoje:** 100 agentes (79 do runner + 21 só do MCP de produção), 18 departamentos em 2 alas, 47 lugares. Números gerados em [`docs/generated/INVENTORY.md`](../generated/INVENTORY.md); o teste `test_inventory.py` falha se esta linha divergir. O Comercial ganhou LEADS INBOUND, PROPOSTAS e FOLLOW-UPS com o COM-1 (`docs/ops/COMERCIAL.md`). Com o M-006, os lugares do Marketing passaram a seguir as áreas da agência e o Comercial ganhou CAPTAÇÃO & RELAÇÃO; 11 agentes passaram a modos de um herdeiro (P-89 = A) ([`ESTRUTURA-AREAS.md`](../orchestration/marketing/ESTRUTURA-AREAS.md)).
+**Hoje:** 109 agentes (88 do runner + 21 só do MCP de produção), 18 departamentos em 2 alas, 47 lugares. Números gerados em [`docs/generated/INVENTORY.md`](../generated/INVENTORY.md); o teste `test_inventory.py` falha se esta linha divergir. O Comercial ganhou LEADS INBOUND, PROPOSTAS e FOLLOW-UPS com o COM-1 (`docs/ops/COMERCIAL.md`). Com o M-006, os lugares do Marketing passaram a seguir as áreas da agência e o Comercial ganhou CAPTAÇÃO & RELAÇÃO; 11 agentes passaram a modos de um herdeiro (P-89 = A); a fase 2 juntou 9 agentes de execução e a verificação de compliance em todas as áreas ([`ESTRUTURA-AREAS.md`](../orchestration/marketing/ESTRUTURA-AREAS.md)).
 
 ## 1. Peças
 

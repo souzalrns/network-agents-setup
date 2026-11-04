@@ -40,6 +40,8 @@ Garantir que a agência decide com factos: perguntas certas, fontes verificávei
 | `marketing.content_analyst` | `transcript_analysis` | — | análise de um vídeo ou reel a partir do link |
 | `marketing.analytics` | `analytics` | — | plano de medição e tracking |
 | `marketing.attribution` | `attribution` | — | leitura de resultados de campanha |
+| `marketing.social_intelligence` | `social_intelligence` | — | métricas públicas das redes da concorrência (APIs oficiais ou exportações) |
+| `marketing.performance_social` | `social_performance` | — | resultados das publicações orgânicas da marca e o que mudar |
 
 ## Decide sozinho / pede aprovação
 

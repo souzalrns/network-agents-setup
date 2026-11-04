@@ -12,8 +12,8 @@
   empresas de software. Parte deles só serve quem vende uma app (paywalls, ASO, signup).
 - Estavam agrupados por tipo de tarefa, não por área de uma agência. Para quem lê o escritório,
   era difícil saber "quem faz o quê".
-- Faltam funções de execução (produzir vídeo, publicar, medir redes sociais) que nenhum agente
-  cobre hoje. Ficam para a fase 2 (§6).
+- Faltavam funções de execução (produzir vídeo, publicar, medir redes sociais) que nenhum agente
+  cobria. A fase 2 (§6) juntou-as: 9 agentes que preparam a execução.
 
 ## 2. Organização: direção + áreas + qualidade
 
@@ -71,7 +71,7 @@ e decide; o especialista executa uma especialidade a fundo.**
 
 ### Exemplo fictício: uma loja de bicicletas quer um Reel sobre a revisão de inverno
 
-**Líder de vídeo** (agente de área, fase 2)
+**Líder de vídeo** (agente de área, `marketing.lider_video`)
 
 - **Missão:** entregar vídeos prontos a publicar, dentro do orçamento, coordenando os especialistas de vídeo.
 - **Funções:** interpretar o pedido (objetivo, rede, prazo) → escolher o formato (short de 30 s) →
@@ -155,21 +155,28 @@ Os 4 pontos, para cada uma das 11, em `runner/tests/test_m006_transferencias.py`
 | `co_marketing` | `referrals` + `co_marketing` | `co_marketing` | sim |
 | `events` | `community_marketing` + `events` | `events_marketing` | sim |
 
-## 6. Fase 2 (não incluída aqui)
+## 6. Fase 2: agentes de execução (feita)
 
-Agentes novos previstos, todos com a ficha do §3:
+Os 9 agentes têm a ficha do §3 com uma secção a mais, **Fronteiras (não confundir com)**, porque
+cada um encosta a um especialista que já existia. Todos **preparam** a execução: nenhum publica,
+agenda nem gasta. Uma ferramenta paga ou uma publicação real só acontece com aprovação humana e com a
+ferramenta ligada (próximo passo, fora deste repo).
 
-| Área | Agente novo | Faz |
-|---|---|---|
-| Estratégia | guardião de marca | Mantém o contexto da marca que todos leem (evolui do `product_marketing`) |
-| Inteligência | social intelligence | Métricas públicas de redes da concorrência (APIs oficiais) |
-| Inteligência | performance social | Lê os resultados publicados e devolve o que funcionou |
-| Vídeo & criativos | produtor IA | Gera os clips (ferramentas pagas só com aprovação) |
-| Vídeo & criativos | áudio e voz | Narração, música sem direitos, legendas |
-| Vídeo & criativos | repurposing | 1 vídeo em versões por rede; vídeo longo em vários curtos |
-| Social & comunidade | calendário | Calendário editorial |
-| Social & comunidade | publicador | Agenda a publicação (só com aprovação humana) |
-| Qualidade | compliance | Regras de publicidade, identificação de IA (AI Act, art. 50), direitos de imagem e música |
+| Área | Agente | Action | Faz | Usado em |
+|---|---|---|---|---|
+| Estratégia | `marketing.guardiao_marca` | `brand_guardian` | Livro de marca que todos leem (voz, tom, claims permitidos) | `estrategia.plan.yaml` |
+| Inteligência | `marketing.social_intelligence` | `social_intelligence` | Padrões das redes da concorrência, a partir de dados fornecidos ou de APIs oficiais | `inteligencia.plan.yaml` |
+| Inteligência | `marketing.performance_social` | `social_performance` | Lê os resultados publicados e devolve o que funcionou | `inteligencia.plan.yaml` |
+| Vídeo & criativos | `marketing.produtor_video` | `video_production` | Folha de produção: origem e custo de cada cena (gerar só com aprovação) | `video.plan.yaml` |
+| Vídeo & criativos | `marketing.audio_voz` | `audio_voice` | Narração, música com licença, legendas | `video.plan.yaml` |
+| Vídeo & criativos | `marketing.repurposing` | `repurposing` | 1 vídeo em versões por rede; longo em vários curtos | `video.plan.yaml` |
+| Social & comunidade | `marketing.calendario` | `editorial_calendar` | Calendário editorial | `social.plan.yaml` |
+| Social & comunidade | `marketing.publicador` | `publish_package` | Pacote de publicação em JSON, pronto a agendar (não publica) | `social.plan.yaml` |
+| Qualidade | `marketing.compliance` | `compliance_check` | Publicidade identificada, IA identificada (AI Act, art. 50), direitos de imagem, voz e música, claims regulados, consentimento; veredicto em JSON | **todos** os templates de área |
+
+Cadeias novas: no Vídeo, `guiao → (producao ∥ imagem ∥ audio) → edicao → versoes`; no Social,
+`(comunidade ∥ criadores) → calendario → publicacao`. Em todas as áreas, `critic` e `compliance`
+revêem em paralelo e o `hitl` só abre depois dos dois. Prova: `runner/tests/test_m006_execucao.py`.
 
 Referências públicas para os desenhar (licença a confirmar antes de copiar texto):
 [`msitarzewski/agency-agents`](https://github.com/msitarzewski/agency-agents) (MIT),

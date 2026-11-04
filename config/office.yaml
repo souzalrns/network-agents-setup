@@ -63,12 +63,12 @@ departments:
         name: ESTRATÉGIA
         does: Plano, ideias, painel de especialistas, rotinas, lançamentos e psicologia
         lead: marketing.lider_estrategia  # P-90 = B: orquestra de facto no template de área
-        agents: [marketing.lider_estrategia, marketing.marketing_plan, marketing.marketing_psychology]
+        agents: [marketing.lider_estrategia, marketing.marketing_plan, marketing.marketing_psychology, marketing.guardiao_marca]
       - id: marketing-pesquisa
         name: INTELIGÊNCIA
         does: Mercado, tendências, concorrentes e leitura de resultados
         lead: marketing.lider_inteligencia  # P-90 = B: orquestra de facto no template de área
-        agents: [marketing.lider_inteligencia, marketing.research, marketing.trend_hunter, marketing.competitor_profiling, marketing.content_analyst, marketing.analytics, marketing.attribution]
+        agents: [marketing.lider_inteligencia, marketing.research, marketing.trend_hunter, marketing.competitor_profiling, marketing.content_analyst, marketing.analytics, marketing.attribution, marketing.social_intelligence, marketing.performance_social]
       - id: marketing-conteudo
         name: CONTEÚDO
         does: Textos para redes, blog e FAQ
@@ -78,12 +78,12 @@ departments:
         name: VÍDEO & CRIATIVOS
         does: Guiões, imagem, edição e criativos de anúncio
         lead: marketing.lider_video  # P-90 = B: orquestra de facto no template de área
-        agents: [marketing.lider_video, marketing.ugc, marketing.editor_video, marketing.image, marketing.ad_creative, design.identidade-visual]
+        agents: [marketing.lider_video, marketing.ugc, marketing.editor_video, marketing.image, marketing.ad_creative, design.identidade-visual, marketing.produtor_video, marketing.audio_voz, marketing.repurposing]
       - id: marketing-social
         name: SOCIAL & COMUNIDADE
         does: Comunidade e eventos, influenciadores e imprensa
         lead: marketing.lider_social  # P-90 = B: orquestra de facto no template de área
-        agents: [marketing.lider_social, marketing.community_marketing, marketing.influencer, marketing.public_relations]
+        agents: [marketing.lider_social, marketing.community_marketing, marketing.influencer, marketing.public_relations, marketing.calendario, marketing.publicador]
       - id: marketing-seo
         name: SITE & SEO
         does: Ser encontrado no Google e nas IAs e converter quem chega
@@ -97,7 +97,7 @@ departments:
       - id: marketing-qualidade
         name: QUALIDADE
         does: Revê tudo antes de sair
-        agents: [marketing.critic, marketing.critic_item13, marketing.creative_review]
+        agents: [marketing.critic, marketing.critic_item13, marketing.creative_review, marketing.compliance]
       - id: marketing-saas
         name: SAAS & APPS
         does: Pacote para quem vende software (lojas de apps, registo, retenção)

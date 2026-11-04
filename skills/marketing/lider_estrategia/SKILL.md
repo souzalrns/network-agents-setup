@@ -36,6 +36,7 @@ Transformar um pedido estratégico num brief claro que os especialistas de estra
 |---|---|---|---|
 | `marketing.marketing_plan` | `marketing_plan` | `ideas`, `council`, `launch`, `loops` | plano de marketing; com modo, ideias, painel de especialistas, lançamento ou rotina recorrente |
 | `marketing.marketing_psychology` | `marketing_psychology` | — | aplicar princípios de comportamento à mensagem e à oferta, sem manipulação |
+| `marketing.guardiao_marca` | `brand_guardian` | — | livro de marca (voz, tom, claims) e verificação de consistência |
 
 ## Decide sozinho / pede aprovação
 
