@@ -178,6 +178,10 @@ Cadeias novas: no Vídeo, `guiao → (producao ∥ imagem ∥ audio) → edicao 
 `(comunidade ∥ criadores) → calendario → publicacao`. Em todas as áreas, `critic` e `compliance`
 revêem em paralelo e o `hitl` só abre depois dos dois. Prova: `runner/tests/test_m006_execucao.py`.
 
+Primeira ferramenta ligada: o pacote do publicador vai para o Postiz (open source, grátis se alojado
+por ti) com `python -m plan_runner.postiz`, só com a aprovação humana e a compliance aprovada no run;
+rascunhos por omissão ([`docs/ops/POSTIZ.md`](../../ops/POSTIZ.md)).
+
 Referências públicas para os desenhar (licença a confirmar antes de copiar texto):
 [`msitarzewski/agency-agents`](https://github.com/msitarzewski/agency-agents) (MIT),
 [`aaron-he-zhu/aaron-marketing-skills`](https://github.com/aaron-he-zhu/aaron-marketing-skills) (Apache-2.0,
