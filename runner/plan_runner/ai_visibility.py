@@ -183,7 +183,11 @@ def ask_gemini(panel: dict[str, Any], *, api_key: str, model: str, send: Send,
     for q in panel["perguntas"]:
         text = q["texto"] + (f"\n\n(Responde em {lang}.)" if lang else "")
         body = {"contents": [{"role": "user", "parts": [{"text": text}]}], "tools": [{"google_search": {}}]}
-        code, resp = send(GEMINI_URL.format(model=model), {"x-goog-api-key": api_key}, body, timeout)
+        try:
+            code, resp = send(GEMINI_URL.format(model=model), {"x-goog-api-key": api_key}, body, timeout)
+        except Exception as e:  # noqa: BLE001 -- rede/proxy/timeout: parar e guardar o que já foi medido
+            answers[q["id"]] = {"erro": f"rede: {type(e).__name__}: parado ({str(e)[:120]})"}
+            break
         if code in STOP_CODES:
             answers[q["id"]] = {"erro": f"HTTP {code}: parado (chave ou quota)"}
             break
