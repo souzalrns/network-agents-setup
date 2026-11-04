@@ -5,7 +5,7 @@
 > Não guarda estado próprio, não anima trabalho que não existe e não esconde nenhum agente.
 > O motor (planos, router, HITL, memória) não muda: o escritório só o lê.
 
-**Hoje:** 92 agentes (71 do runner + 21 só do MCP de produção), 18 departamentos em 2 alas, 46 lugares. Números gerados em [`docs/generated/INVENTORY.md`](../generated/INVENTORY.md); o teste `test_inventory.py` falha se esta linha divergir. O Comercial ganhou LEADS INBOUND, PROPOSTAS e FOLLOW-UPS com o COM-1 (`docs/ops/COMERCIAL.md`). Com o M-006, os lugares do Marketing passaram a seguir as áreas da agência e o Comercial ganhou CAPTAÇÃO & RELAÇÃO; 11 agentes passaram a modos de um herdeiro (P-89 = A) ([`ESTRUTURA-AREAS.md`](../orchestration/marketing/ESTRUTURA-AREAS.md)).
+**Hoje:** 100 agentes (79 do runner + 21 só do MCP de produção), 18 departamentos em 2 alas, 47 lugares. Números gerados em [`docs/generated/INVENTORY.md`](../generated/INVENTORY.md); o teste `test_inventory.py` falha se esta linha divergir. O Comercial ganhou LEADS INBOUND, PROPOSTAS e FOLLOW-UPS com o COM-1 (`docs/ops/COMERCIAL.md`). Com o M-006, os lugares do Marketing passaram a seguir as áreas da agência e o Comercial ganhou CAPTAÇÃO & RELAÇÃO; 11 agentes passaram a modos de um herdeiro (P-89 = A) ([`ESTRUTURA-AREAS.md`](../orchestration/marketing/ESTRUTURA-AREAS.md)).
 
 ## 1. Peças
 
@@ -24,7 +24,8 @@
 - Duas alas: `funcoes` (Direção, Marketing, Comercial, Atendimento, Finanças, Jurídico & Compliance, Software, Segurança, Pesquisa, Trading, Jogos, Documentação) e `negocios` (Construção & Técnica, ViannaLegal, Imobiliário, Produto Digital, Formação & SST, Saúde).
 - Cada agente do runner (`areas[].agents[]`) está em **exactamente um** lugar: sem órfãos, sem duplicados, sem inventados.
 - Cada agente **só do MCP** (`runtime: null` em `config/mcp-agents.yaml`) está em exactamente um lugar, escrito `mcp:<id>`. Os 13 que existem nos dois sítios entram pelo id do runner, uma vez só (o snapshot diz `"mcp": "<id>"`).
-- `lead`: `null` ou um agente do próprio departamento. Só é Lead quem orquestra de facto (hoje só `marketing.marketing`).
+- `lead`: `null` ou um agente do próprio departamento. Só é Lead quem orquestra de facto 
+  - **P-90 (M-006):** um **lugar** também pode ter `lead` (um agente desse lugar). Um lead com skill, de lugar ou de departamento, só é aceite se houver evidência num plano do runner (`docs/orchestration/**/*.plan.yaml`): um passo de outro agente do mesmo lugar (ou departamento) depende, directa ou indirectamente, do passo do lead (`office.orchestration_evidence`). Hoje: os 7 líderes de área do Marketing (lugares) e o `marketing.lider_crm` (departamento Comercial), provados pelos templates em `docs/orchestration/marketing/templates/areas/`. O `marketing.marketing` (sem skill, dispatch pelo router) mantém a regra antiga.
 - Departamentos sem agentes (Jogos, Documentação) ficam com `seats: []`; a UI mostra "sem agentes ainda".
 - Nomes de lugar são **funções** (PESQUISA, QUALIDADE), nunca nomes humanos: quem usa o escritório tem de saber que fala com uma IA (AI Act, art. 50). A UI mostra sempre "agente IA".
 

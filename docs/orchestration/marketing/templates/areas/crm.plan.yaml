@@ -1,0 +1,68 @@
+# Template — área CRM e vendas (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_crm) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+
+id: template-area-crm
+version: 1
+deliverable_type: area_crm
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+
+steps:
+  - id: lider
+    action: lider_crm
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-crm.md
+
+  - id: qualificar
+    action: lead_qualification
+    depends_on: [lider]
+    task: "Qualificar o pedido descrito no brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md]
+    output_artifact: artifacts/01-qualificar.md
+
+  - id: oferta
+    action: offers
+    mode: pricing
+    depends_on: [lider]
+    task: "Preços e planos com a tabela do plano"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md]
+    output_artifact: artifacts/02-oferta.md
+
+  - id: proposta
+    action: proposal
+    depends_on: [qualificar, oferta]
+    task: "Proposta pronta a rever"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md]
+    output_artifact: artifacts/03-proposta.md
+
+  - id: critic
+    action: critic
+    depends_on: [proposta]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md, artifacts/03-proposta.md]
+    output_artifact: artifacts/04-critic.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl.json
+
+done_when:
+  - artifacts/00-brief-crm.md exists
+  - artifacts/01-qualificar.md exists
+  - artifacts/02-oferta.md exists
+  - artifacts/03-proposta.md exists
+  - human_gate_resolved on hitl

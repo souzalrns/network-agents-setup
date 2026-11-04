@@ -158,6 +158,72 @@ capabilities:
     skill: skills/marketing/attribution/SKILL.md
     status: partial  # skill `attribution` do marketingskills (scripts/vendor_marketingskills.py); knowledge em docs/knowledge/performance-analyst.md
 
+  # P-90 = B (M-006): líderes de área; `implemented` sustentado pelos templates de área
+  # (docs/orchestration/marketing/templates/areas/*.plan.yaml)
+  - id: area_lead_estrategia
+    description: "Líder da área Estratégia: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_estrategia
+    agent: marketing.lider_estrategia
+    skill: skills/marketing/lider_estrategia/SKILL.md
+    status: implemented
+
+  - id: area_lead_inteligencia
+    description: "Líder da área Inteligência: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_inteligencia
+    agent: marketing.lider_inteligencia
+    skill: skills/marketing/lider_inteligencia/SKILL.md
+    status: implemented
+
+  - id: area_lead_conteudo
+    description: "Líder da área Conteúdo: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_conteudo
+    agent: marketing.lider_conteudo
+    skill: skills/marketing/lider_conteudo/SKILL.md
+    status: implemented
+
+  - id: area_lead_video
+    description: "Líder da área Vídeo & criativos: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_video
+    agent: marketing.lider_video
+    skill: skills/marketing/lider_video/SKILL.md
+    status: implemented
+
+  - id: area_lead_social
+    description: "Líder da área Social & comunidade: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_social
+    agent: marketing.lider_social
+    skill: skills/marketing/lider_social/SKILL.md
+    status: implemented
+
+  - id: area_lead_site_seo
+    description: "Líder da área Site & SEO: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_site_seo
+    agent: marketing.lider_site_seo
+    skill: skills/marketing/lider_site_seo/SKILL.md
+    status: implemented
+
+  - id: area_lead_anuncios
+    description: "Líder da área Anúncios: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_anuncios
+    agent: marketing.lider_anuncios
+    skill: skills/marketing/lider_anuncios/SKILL.md
+    status: implemented
+
+  - id: area_lead_crm
+    description: "Líder da área CRM e vendas: decide âmbito, caminho e ordem e entrega o brief da área que os especialistas seguem."
+    levels: [prepare]
+    action: lider_crm
+    agent: marketing.lider_crm
+    skill: skills/marketing/lider_crm/SKILL.md
+    status: implemented
+
   # BEGIN marketingskills (gerado por scripts/vendor_marketingskills.py; não editar à mão)
   - id: ab_testing
     description: "Desenha testes A/B e programas de experimentação: hipótese, métrica, tamanho de amostra e leitura do resultado."

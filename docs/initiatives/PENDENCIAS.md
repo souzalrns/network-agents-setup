@@ -8,7 +8,7 @@
 > - **134 itens vivos** (§4): ABERTO 74, EM CURSO 14, BLOQUEADO 46;
 > - **145 linhas de histórico** (no histórico, §7): 123 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
-> - **90 decisões** A/B/C: 88 tomadas (no histórico, §10) e **2 por decidir** (§10 abaixo).
+> - **90 decisões** A/B/C: 89 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
 
 ## 0. Como usar este documento
 
@@ -141,7 +141,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | M-003 | Fase 2: Execution Package (contexto para redirect) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | M-002 | E §8.8 e §9.3 | — | VERIFICADO |
 | M-004 | Fase 2: Learning (estimado vs real no ledger) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | M-001 | E §8.11 e §9.3; O §Fase 2 | — | VERIFICADO |
 | M-005 | PMO / Project Director (decisão organizacional) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão | O:53; A5 §5.4 | F7 (O:53; colide com as fases F*) | VERIFICADO |
-| M-006 | Reestruturar a vertical de marketing como agência por áreas (direção + 8 áreas + qualidade + pacote SaaS), com inventário de funções e herdeiro de cada uma; nenhum agente sai sem a transferência provada (capability re-apontada, golden do router, done_when, relatório) | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Líderes de área: P-90 (decidida B, em execução); medir com o Gemini real os 11 pedidos `transfers:` do golden (precisa de `GEMINI_API_KEY`) | Fase 1: PR #274 (lugares por área). P-89 = A: modos de skill (`runner/plan_runner/skills.py`, `skill_activation.py`, `executor.py`, `external_worker.py`, `router.py`, `capabilities.py`) e 11 agentes fundidos nos herdeiros (`scripts/vendor_marketingskills.py` `MERGED`), provados em `runner/tests/test_m006_transferencias.py` (4 pontos × 11) e `test_skill_modes.py` | — | VERIFICADO |
+| M-006 | Reestruturar a vertical de marketing como agência por áreas (direção + 8 áreas + qualidade + pacote SaaS), com inventário de funções e herdeiro de cada uma; nenhum agente sai sem a transferência provada (capability re-apontada, golden do router, done_when, relatório) | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Fase 2: os 9 agentes de execução do §6 do `ESTRUTURA-AREAS.md` (produtor IA, áudio, repurposing, publicador, calendário, social intelligence, performance social, guardião de marca, compliance); medir com o Gemini real os 11 pedidos `transfers:` do golden e a escolha dos líderes (precisa de `GEMINI_API_KEY`) | Fase 1: PR #274 (lugares por área). P-89 = A: PR #275 (modos de skill; 11 agentes fundidos nos herdeiros, provados em `runner/tests/test_m006_transferencias.py`). P-90 = B: 8 líderes de área (`agents/marketing/lider_*.agent.md`, `skills/marketing/lider_*/`), templates em `docs/orchestration/marketing/templates/areas/`, regra de orquestração de facto em `runner/plan_runner/office.py`, provados em `runner/tests/test_m006_lideres.py` | — | VERIFICADO |
 | L4-1b | Teste real mínimo da L4 pela CLI (`remember` → `recall` → `promote` → `recall` → `forget`) | FALTA-TESTE | ABERTO | DEV | Média | `DATABASE_URL` | O:196; E:783; P §6 #9 | — | VERIFICADO |
 | L4-2 | Spike comparativo do mem0 (só padrões, não substitui a L4) | FALTA-DECIDIR | ABERTO | AMBOS | Baixa | Era "depois do F3" (E §9.2): o F3 só tem estacionados, por isso pode avançar. Só padrões do mem0, sem substituir a L4 (D3; revisão do EXECUTION-PLAN, 2026-10-07) | O:197; E:789 | J11 | VERIFICADO |
 | L4-3 | Ligar o MCP de produção à L4 | FALTA-LIGAR | ABERTO | AMBOS | Média | Era "depois do F5" (E §9.2): o F5 fechou a 2026-10-06, por isso pode avançar. Verificar o impacto no conector do Claude.ai, hoje sem tools (F0.6) (revisão do EXECUTION-PLAN, 2026-10-07) | O:198 | — | VERIFICADO |
@@ -368,9 +368,8 @@ Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-1
 | # | Decisão | A | B | C | Recomendada |
 |---|---|---|---|---|---|
 | P-81 | Conhecimento de um domínio novo no L5 (achados A-1/A-2 do F6) | **`_kb_for` genérico: kb = `agent_id` quando é o id de uma área do `config/areas.yaml` (evolução do core com nota no ADR, §11); o pack de trading sai do EXCLUDED para o MANIFEST** | A + mover MANIFEST/EXCLUDED para `config/knowledge-manifest.yaml` | Ficar só com `repo_files` (sem L5 nem golden de trading) | Por decidir. **Recomendada: A**: 1 função, sem regressão nas kbs actuais (testável), e desbloqueia o golden de trading; a B é maior e não é preciso para o F6. Evidência: `scripts/ingest_apply.py::_kb_for` (lista fixa) |
-| P-90 | Líderes por área da agência de marketing (M-006, §2 do `ESTRUTURA-AREAS.md`) | Sub-áreas no `config/areas.yaml` e o router passa a 3 níveis (área → sub-área → agente) | **Líder de área = agente coordenador como o `marketing.marketing`, que só monta planos com os agentes da sua área; o router não muda e o lugar ganha `lead` quando o líder orquestrar de facto** | Sem líderes: as áreas ficam lugares do escritório e o `marketing.marketing` coordena tudo | Por decidir. **Recomendada: B**: reaproveita o padrão que já orquestra hoje, não toca no router testado (golden de 14 casos) e cumpre a regra do escritório (só é lead quem orquestra); a A é mais limpa mas mexe no motor; a C não escala além de ~10 agentes por pedido. Evidência: `config/office.yaml` (regra do `lead`), `docs/ops/ROUTER.md` |
 
-> As 88 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
+> As 89 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
 

@@ -5,7 +5,7 @@
 >
 > Gerado em: 2026-11-04
 > Fonte: `skills/**/SKILL.md`
-> Total: **106** skills
+> Total: **114** skills
 >
 > **Nota (S35):** este catálogo é só documentação — a descoberta em runtime
 > continua Advisory (`skills/meta/using-agent-skills/SKILL.md`), nada aqui
@@ -17,7 +17,7 @@
 |---------|------------:|
 | claude | 26 |
 | design | 4 |
-| marketing | 47 |
+| marketing | 55 |
 | meta | 24 |
 | security | 2 |
 | trading | 3 |
@@ -89,6 +89,14 @@
 | `internal_brief` | marketing | P0 | Escreve o brief interno de handoff para criação (copy, design, social): objectivo numa frase, audiência, mensagem e provas, deliverables e restrições. Usar no step internal_brief; não serve para propostas comerciais nem pede credenciais. | `skills/marketing/internal_brief/SKILL.md` |
 | `lead_magnets` | marketing | P2 | Cria e optimiza lead magnets (guias, templates, checklists) para captar emails. | `skills/marketing/lead_magnets/SKILL.md` |
 | `lead_qualification` | marketing | P1 | Qualifica pedidos que chegam (formulário, email, WhatsApp) contra os critérios do negócio — encaixe, necessidade, prazo, orçamento declarado, decisor — com evidência citada, e propõe a resposta e a próxima acção. Prepara: um humano responde. | `skills/marketing/lead_qualification/SKILL.md` |
+| `lider_anuncios` | marketing | P1 | Líder da área Anúncios: usar quando o pedido é uma campanha paga; define objectivo, orçamento máximo, plataformas e testes e entrega o brief que os especialistas seguem. Nunca gasta nem mexe em contas. | `skills/marketing/lider_anuncios/SKILL.md` |
+| `lider_conteudo` | marketing | P1 | Líder da área Conteúdo: usar quando o pedido é um conjunto de textos (redes, blog, FAQ); escolhe formatos, canais e tom e entrega o brief que os redactores seguem. Não escreve as peças. | `skills/marketing/lider_conteudo/SKILL.md` |
+| `lider_crm` | marketing | P1 | Líder da área CRM e vendas (departamento Comercial): usar quando o pedido vai do contacto à proposta ou à relação com clientes (leads, ofertas, propostas, seguimento, email, WhatsApp, indicações); decide o percurso e entrega o brief que os especialistas seguem. Nunca envia nada. | `skills/marketing/lider_crm/SKILL.md` |
+| `lider_estrategia` | marketing | P1 | Líder da área Estratégia: usar quando o pedido é definir ou rever a estratégia de marketing (objectivos, posicionamento, ideias, lançamento, rotinas); decide o âmbito e entrega o brief que o plano de marketing segue. Não escreve o plano final. | `skills/marketing/lider_estrategia/SKILL.md` |
+| `lider_inteligencia` | marketing | P1 | Líder da área Inteligência: usar quando o pedido é perceber o mercado, a concorrência, as tendências ou os resultados; define as perguntas e as fontes e entrega o brief que os especialistas de pesquisa seguem. Não inventa números. | `skills/marketing/lider_inteligencia/SKILL.md` |
+| `lider_site_seo` | marketing | P1 | Líder da área Site & SEO: usar quando o pedido é ser encontrado no Google e nos assistentes de IA ou converter melhor quem chega ao site; define as páginas e prioridades e entrega o brief que os especialistas seguem. Não altera o site. | `skills/marketing/lider_site_seo/SKILL.md` |
+| `lider_social` | marketing | P1 | Líder da área Social & comunidade: usar quando o pedido envolve comunidade, eventos, influenciadores ou imprensa; decide o mix de acções e entrega o brief que os especialistas seguem. Não publica nem contacta ninguém. | `skills/marketing/lider_social/SKILL.md` |
+| `lider_video` | marketing | P1 | Líder da área Vídeo & criativos: usar quando o pedido é um projecto de vídeo ou de criativos (vários entregáveis); define formato, caminho de produção e orçamento por peça e entrega o brief que os especialistas seguem. Não produz o vídeo. | `skills/marketing/lider_video/SKILL.md` |
 | `marketing_plan` | marketing | P2 | Plano de marketing completo (objectivos, públicos, canais, orçamento, calendário, métricas). | `skills/marketing/marketing_plan/SKILL.md` |
 | `marketing_psychology` | marketing | P2 | Aplica princípios de psicologia e economia comportamental à mensagem, oferta e página, sem manipulação. | `skills/marketing/marketing_psychology/SKILL.md` |
 | `media_plan` | marketing | P1 | Estrutura um plano de media paga: objectivo e KPI, plataforma, campanhas, ad sets e ads, bandas de budget com stop-loss, audiências, compliance e checklist de tracking. Usar no step media_plan; não executa spend nem altera contas. | `skills/marketing/media_plan/SKILL.md` |

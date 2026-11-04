@@ -233,8 +233,9 @@ def render(snapshot: dict[str, Any], label: str | None = None) -> str:
         if not d["seats"]:
             out.append('<p class="empty">Sem agentes ainda.</p>')
         for s in d["seats"]:
+            seat_lead = f' · lead: {escape(_short(s["lead"]))}' if s.get("lead") else ""  # P-90
             out.append(f'<div class="seat"><div class="head"><strong>{escape(s["name"])}</strong>{_pill(s["state"])}</div>'
-                       f'<div class="muted">{escape(s["does"])}</div><div class="agents">')
+                       f'<div class="muted">{escape(s["does"])}{seat_lead}</div><div class="agents">')
             for a in s["agents"]:
                 out.append(f'<div class="agent">{avatar(color, icon, a["state"], 64, _label(a, d["name"]))}{escape(_short(a["id"]))}</div>')
             out.append('</div><details><summary>Ver estado de cada agente</summary><div class="tbl"><table>'

@@ -68,6 +68,15 @@ areas:
     keywords: [marketing, instagram, tiktok, linkedin, facebook, post, posts, campanha, anuncio, publicidade, seo, conteudo, copy, slogan, influenc, ugc, marca, branding, identidade visual, logotipo, reels, newsletter, criativo, lancamento, colecao, trend, trends, hashtag, artigo, blog, storytelling, audiencia, promov, propost, follow up, follow-up, lead, leads]  # P-84 = A: Comercial (COM-1)
     agents:
       - marketing.marketing
+      # P-90 = B (M-006): líderes de área, coordenam só com os especialistas da sua área
+      - marketing.lider_estrategia
+      - marketing.lider_inteligencia
+      - marketing.lider_conteudo
+      - marketing.lider_video
+      - marketing.lider_social
+      - marketing.lider_site_seo
+      - marketing.lider_anuncios
+      - marketing.lider_crm
       - marketing.internal_brief
       - marketing.research
       - marketing.trend_hunter

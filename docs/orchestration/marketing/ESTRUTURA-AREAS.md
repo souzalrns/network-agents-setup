@@ -18,27 +18,39 @@
 ## 2. Organização: direção + áreas + qualidade
 
 ```
-Direção de marketing (marketing.marketing: o único lead real hoje)
- ├─ Estratégia
- ├─ Inteligência
- ├─ Conteúdo
- ├─ Vídeo & criativos
- ├─ Social & comunidade
- ├─ Site & SEO
- ├─ Anúncios
- ├─ CRM e vendas  (= departamento Comercial)
- └─ Qualidade     (revê tudo antes de sair)
- + SaaS & apps    (pacote opcional, só para quem vende software)
+Direção de marketing (marketing.marketing: dispatch pelo router, sem skill)
+ ├─ Estratégia            líder: marketing.lider_estrategia
+ ├─ Inteligência          líder: marketing.lider_inteligencia
+ ├─ Conteúdo              líder: marketing.lider_conteudo
+ ├─ Vídeo & criativos     líder: marketing.lider_video
+ ├─ Social & comunidade   líder: marketing.lider_social
+ ├─ Site & SEO            líder: marketing.lider_site_seo
+ ├─ Anúncios              líder: marketing.lider_anuncios
+ ├─ CRM e vendas          líder: marketing.lider_crm   (= departamento Comercial)
+ └─ Qualidade             (revê tudo antes de sair; sem líder: é uma camada, não uma área)
+ + SaaS & apps            (pacote opcional, só para quem vende software; sem líder)
 ```
 
 No escritório ([`config/office.yaml`](../../../config/office.yaml)) cada área é um lugar do
 departamento Marketing; a área **CRM e vendas** é o departamento Comercial. O router não muda:
 continua a escolher pela área `marketing` do [`config/areas.yaml`](../../../config/areas.yaml).
 
-**Líderes de área.** A regra do escritório é que só é lead quem orquestra de facto. Hoje só o
-`marketing.marketing` distribui trabalho (planos com vários passos). Um líder por área exige que
-o router saiba descer mais um nível (área → sub-área → agente). Até lá, as áreas são lugares sem
-lead e não se criam chefes decorativos. Ver a decisão **P-90**.
+**Líderes de área (P-90 = B, decisão do maestro de 2026-11-04).** Cada líder coordena como o
+`marketing.marketing`, mas só com os especialistas da sua área: decide o âmbito, o caminho e a ordem
+e entrega o **brief da área** (`artifacts/00-brief-<área>.md`), que é o input de todos os passos dos
+especialistas. Não faz o trabalho deles nem os chama (sem mesh): quem corre os passos é o plano.
+
+- **Onde orquestram:** nos templates de área em [`templates/areas/`](./templates/areas/), um por área:
+  líder → especialistas (em paralelo quando são independentes) → `critic` → aprovação humana.
+- **Quando o router os escolhe:** a descrição de cada líder diz "usar quando o pedido é um projecto
+  completo da área". Para um entregável simples, o router continua a ir directo ao especialista.
+- **Regra do escritório:** um `lead` só é aceite se orquestrar de facto num plano real (um passo de
+  outro agente do lugar depende do passo dele). Os 8 líderes têm essa evidência nos templates; se um
+  template deixar de depender do líder, o CI falha (`plan_runner/office.py`, `tests/test_m006_lideres.py`).
+- **Testes:** cada líder tem a ficha-padrão completa; a tabela de especialistas da skill bate com o
+  lugar (ou departamento) no escritório e com os modos reais; o template só usa especialistas da área,
+  começa no líder e acaba num gate humano; e corre de ponta a ponta com o brief a chegar ao prompt de
+  cada especialista (`tests/test_m006_lideres.py`).
 
 ## 3. Ficha-padrão de um agente
 

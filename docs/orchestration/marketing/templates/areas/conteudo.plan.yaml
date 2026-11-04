@@ -1,0 +1,58 @@
+# Template — área Conteúdo (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_conteudo) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+
+id: template-area-conteudo
+version: 1
+deliverable_type: area_conteudo
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 5
+
+steps:
+  - id: lider
+    action: lider_conteudo
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-conteudo.md
+
+  - id: copy
+    action: copy_social
+    depends_on: [lider]
+    task: "Variantes de copy por canal segundo o brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md]
+    output_artifact: artifacts/01-copy.md
+
+  - id: narrativa
+    action: storytelling
+    depends_on: [copy]
+    task: "Reforçar o arco narrativo das variantes"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md]
+    output_artifact: artifacts/02-narrativa.md
+
+  - id: critic
+    action: critic
+    depends_on: [narrativa]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md, artifacts/02-narrativa.md]
+    output_artifact: artifacts/03-critic.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/00-brief-conteudo.md exists
+  - artifacts/01-copy.md exists
+  - artifacts/02-narrativa.md exists
+  - human_gate_resolved on hitl
