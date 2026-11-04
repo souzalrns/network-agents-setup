@@ -101,7 +101,7 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 
-## 7. Histórico (145 linhas: 123 FECHADO, 22 OBSOLETO)
+## 7. Histórico (146 linhas: 124 FECHADO, 22 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
@@ -139,6 +139,7 @@ Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou deci
 | GOV-PRIV-1 | O repo público do MCP versionava `transcripts/latest.json` (transcrição de um vídeo público de terceiros) | 2026-10-07 | MCP #20: `git rm --cached`, `/transcripts/` no `.gitignore`, README "Dados e privacidade", `tests/publicRepo.test.mjs`; AIMS §11.1 neste PR | FECHADO | **Resolvido: C. Transcrições no Supabase. A fica como upgrade** (GOV-PRIV-2: limpar o histórico). MCP #20 com merge (2026-10-07 12:01 UTC) |
 | GOV-IMPACT-1 | Avaliação de impacto (ISO/IEC 42001 6.1.4, 8.4, A.5.2–A.5.5) e política de privacidade (LGPD + GDPR) | 2026-10-07 | PR do branch `docs/privacy-policy`: `docs/governance/PRIVACY-POLICY.md`, AIMS §5 e §11, `config/deployment.yaml`, `runner/tests/test_privacy_separation.py` | FECHADO | #125 com merge (2026-10-07, `4c99fdd`). Estado medido: 0 dados de clientes; conteúdo público de terceiros coberto. Seguimento: GOV-RET-1, GOV-PRIV-1, S-005, P-41 |
 | SEC-1.3 | `activate_for_task` antes do worker + allow-list de scripts por skill (deny-by-default), sha256 e `pins:`, pesquisa externa opt-in | 2026-10-07 | #123 (merged 2026-10-07 10:31 UTC, `7cda6f1`); CI da `main` verde (11 checks) | FECHADO | Pré-requisito do AU-20, que continua ABERTO (P-37). SKILL-EXT-1 (SkillsCat) fica no §4 |
+| W-012 | 3 testes falhavam fora do CI: resultado vazio do filho do ingest com pouca memória (bug real: JSONDecodeError cru em vez de erro tipado); guard do `--out` depois do import do langgraph; skips do langgraph que não apanhavam uma instalação parcial | 2026-11-04 | #277 (merged 2026-11-04, `aec089c`); CI verde | FECHADO | Escrita atómica no filho e `_read_child_result` no pai, com 6 testes de regressão que falham no código antigo; suite completa sem falhas com e sem langgraph |
 | W-011 / R-006 / H-002 | Validação do `MCP_URL` e do bypass; `provenance_v2_ok` no `l5_eval`; avisos do ruff em `scripts/` | 2026-10-07 | #122 (merged 2026-10-07 10:26 UTC, `4e38801`); CI da `main` verde | FECHADO | Mesmo PR da revisão do estado contra o EXECUTION-PLAN e do F3c-DESIGN-1 opção A |
 | F4-DOC | Domain Onboarding Cost do F4 (E §15.9: "medido no F4") | 2026-10-07 | Medido a partir do diff do #114 (`git diff --stat 8c22d18 e66d1b1`): **DOC(core) = 1 ficheiro** (`runner/plan_runner/capabilities.py`, +41 linhas: a regra de maturidade que o próprio E §7 F4 pede); infraestrutura, runtime, persistência e orquestração novas = 0. O pack acrescentou 1 capability file (18 capabilities) e 32 testes | FECHADO | A alteração ao core foi a do plano (F4 item 5), não uma necessidade do domínio. Reuse Ratio fica para o F6 canónico, que o exige |
 | F6-CADEIA | F6 da cadeia F1 → F6: hardening, evidence pack e WHAT-I-CONTRIBUTED | 2026-10-06 | #121 (merged 2026-10-06 21:24 UTC, `f7e7551`); CI verde (11 checks) | FECHADO | P-23 = A: o F6 canónico (domínio de prova, D-EP8) continua no §4 |
