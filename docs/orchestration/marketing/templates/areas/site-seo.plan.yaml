@@ -1,0 +1,67 @@
+# Template — área Site & SEO (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_site_seo) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+
+id: template-area-site-seo
+version: 1
+deliverable_type: area_site_seo
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+
+steps:
+  - id: lider
+    action: lider_site_seo
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-site_seo.md
+
+  - id: brief
+    action: seo_brief
+    depends_on: [lider]
+    task: "Brief SEO/AEO das páginas do brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md]
+    output_artifact: artifacts/01-brief.md
+
+  - id: estrutura
+    action: site_architecture
+    depends_on: [lider]
+    task: "Hierarquia e links internos das páginas"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md]
+    output_artifact: artifacts/02-estrutura.md
+
+  - id: conversao
+    action: cro
+    depends_on: [brief, estrutura]
+    task: "Conversão da página principal"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md]
+    output_artifact: artifacts/03-conversao.md
+
+  - id: critic
+    action: critic
+    depends_on: [conversao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-conversao.md]
+    output_artifact: artifacts/04-critic.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl.json
+
+done_when:
+  - artifacts/00-brief-site_seo.md exists
+  - artifacts/01-brief.md exists
+  - artifacts/02-estrutura.md exists
+  - artifacts/03-conversao.md exists
+  - human_gate_resolved on hitl

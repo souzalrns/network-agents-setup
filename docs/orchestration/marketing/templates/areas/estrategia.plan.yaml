@@ -1,0 +1,68 @@
+# Template — área Estratégia (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_estrategia) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+
+id: template-area-estrategia
+version: 1
+deliverable_type: area_estrategia
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+
+steps:
+  - id: lider
+    action: lider_estrategia
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-estrategia.md
+
+  - id: ideias
+    action: marketing_plan
+    mode: ideas
+    depends_on: [lider]
+    task: "Ideias de marketing para o objectivo do brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md]
+    output_artifact: artifacts/01-ideias.md
+
+  - id: psicologia
+    action: marketing_psychology
+    depends_on: [lider]
+    task: "Princípios de comportamento para a mensagem e a oferta"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md]
+    output_artifact: artifacts/02-psicologia.md
+
+  - id: plano
+    action: marketing_plan
+    depends_on: [ideias, psicologia]
+    task: "Plano de marketing a partir das ideias escolhidas"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md, artifacts/01-ideias.md, artifacts/02-psicologia.md]
+    output_artifact: artifacts/03-plano.md
+
+  - id: critic
+    action: critic
+    depends_on: [plano]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md, artifacts/01-ideias.md, artifacts/02-psicologia.md, artifacts/03-plano.md]
+    output_artifact: artifacts/04-critic.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl.json
+
+done_when:
+  - artifacts/00-brief-estrategia.md exists
+  - artifacts/01-ideias.md exists
+  - artifacts/02-psicologia.md exists
+  - artifacts/03-plano.md exists
+  - human_gate_resolved on hitl

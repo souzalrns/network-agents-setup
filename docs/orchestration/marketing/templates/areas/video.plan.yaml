@@ -1,0 +1,67 @@
+# Template — área Vídeo & criativos (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_video) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+
+id: template-area-video
+version: 1
+deliverable_type: area_video
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+
+steps:
+  - id: lider
+    action: lider_video
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-video.md
+
+  - id: guiao
+    action: ugc_brief
+    depends_on: [lider]
+    task: "Guião do vídeo segundo o brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-video.md]
+    output_artifact: artifacts/01-guiao.md
+
+  - id: imagem
+    action: image
+    depends_on: [guiao]
+    task: "Imagens e capa para as cenas do guião"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-video.md, artifacts/01-guiao.md]
+    output_artifact: artifacts/02-imagem.md
+
+  - id: edicao
+    action: video_edit_plan
+    depends_on: [guiao]
+    task: "Plano de edição a partir do guião"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-video.md, artifacts/01-guiao.md]
+    output_artifact: artifacts/03-edicao.md
+
+  - id: critic
+    action: critic
+    depends_on: [imagem, edicao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-video.md, artifacts/01-guiao.md, artifacts/02-imagem.md, artifacts/03-edicao.md]
+    output_artifact: artifacts/04-critic.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl.json
+
+done_when:
+  - artifacts/00-brief-video.md exists
+  - artifacts/01-guiao.md exists
+  - artifacts/02-imagem.md exists
+  - artifacts/03-edicao.md exists
+  - human_gate_resolved on hitl

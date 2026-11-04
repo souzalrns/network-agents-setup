@@ -1,0 +1,58 @@
+# Template — área Anúncios (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_anuncios) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+
+id: template-area-anuncios
+version: 1
+deliverable_type: area_anuncios
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 5
+
+steps:
+  - id: lider
+    action: lider_anuncios
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-anuncios.md
+
+  - id: media
+    action: media_plan
+    depends_on: [lider]
+    task: "Plano de media segundo o brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-anuncios.md]
+    output_artifact: artifacts/01-media.md
+
+  - id: testes
+    action: ab_testing
+    depends_on: [media]
+    task: "Desenho dos testes A/B da campanha"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-anuncios.md, artifacts/01-media.md]
+    output_artifact: artifacts/02-testes.md
+
+  - id: critic
+    action: critic
+    depends_on: [testes]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-anuncios.md, artifacts/01-media.md, artifacts/02-testes.md]
+    output_artifact: artifacts/03-critic.json
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/04-hitl.json
+
+done_when:
+  - artifacts/00-brief-anuncios.md exists
+  - artifacts/01-media.md exists
+  - artifacts/02-testes.md exists
+  - human_gate_resolved on hitl

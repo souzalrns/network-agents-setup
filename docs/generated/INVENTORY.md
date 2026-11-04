@@ -8,15 +8,15 @@
 
 | O quê | Quantos | Fonte |
 |---|---:|---|
-| Agentes do runner (`plan_runner`) | 71 | `config/areas.yaml` (validado contra `agents/**/*.agent.md`) |
+| Agentes do runner (`plan_runner`) | 79 | `config/areas.yaml` (validado contra `agents/**/*.agent.md`) |
 | Áreas do router | 11 | `config/areas.yaml` |
-| Skills | 106 | `skills/**/SKILL.md` |
-| Planos de exemplo | 19 | `docs/orchestration/**/*.plan.yaml` |
+| Skills | 114 | `skills/**/SKILL.md` |
+| Planos de exemplo | 27 | `docs/orchestration/**/*.plan.yaml` |
 | Agentes do MCP de produção | 34 | `config/mcp-agents.yaml` (cópia dos ids de `agent-network-mcp/lib/agents.js`) |
 | … também no runner | 13 | `runtime:` preenchido |
 | … só no MCP | 21 | `runtime: null` |
-| Agentes no escritório (runner + só MCP) | 92 | `config/office.yaml` |
-| Departamentos / alas / lugares do escritório | 18 / 2 / 46 | `config/office.yaml` |
+| Agentes no escritório (runner + só MCP) | 100 | `config/office.yaml` |
+| Departamentos / alas / lugares do escritório | 18 / 2 / 47 | `config/office.yaml` |
 | Agentes da plataforma Node (`apps/api`) | 24 | `config/agents.config.ts` (catálogo em `docs/generated/AGENTS.md`) |
 
 Testes: não se contam aqui (mudam a cada PR). `cd runner && python -m pytest --collect-only -q`.
@@ -26,7 +26,7 @@ Testes: não se contam aqui (mudam a cada PR). `cd runner && python -m pytest --
 | Área | Agentes |
 |---|---:|
 | `software` | 10 |
-| `marketing` | 49 |
+| `marketing` | 57 |
 | `legal` | 0 |
 | `ops` | 2 |
 | `research` | 1 |
@@ -43,7 +43,7 @@ Testes: não se contam aqui (mudam a cada PR). `cd runner && python -m pytest --
 |---|---:|
 | `claude` | 26 |
 | `design` | 4 |
-| `marketing` | 47 |
+| `marketing` | 55 |
 | `meta` | 24 |
 | `security` | 2 |
 | `trading` | 3 |

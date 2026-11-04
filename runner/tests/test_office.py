@@ -86,7 +86,7 @@ def test_todos_os_agentes_aparecem_nas_2_alas() -> None:
     mk, com = _dept(data, "marketing"), _dept(data, "comercial")
     # M-006: 10 lugares = direção + as áreas da agência (docs/orchestration/marketing/ESTRUTURA-AREAS.md)
     assert len(mk["seats"]) == 10 and mk["lead"] == "marketing.marketing"
-    assert len(com["seats"]) == 7  # Comercial = área "CRM e vendas", com captação e relação
+    assert len(com["seats"]) == 8  # Comercial = área "CRM e vendas": liderança (P-90), captação e relação
     area_mk = next(a for a in office.load_areas(REPO_ROOT) if a["id"] == "marketing")
     assert _n(mk) + _n(com) == len(area_mk["agents"])  # a área marketing do router, em 2 departamentos
 

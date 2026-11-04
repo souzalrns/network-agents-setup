@@ -62,31 +62,38 @@ departments:
       - id: marketing-estrategia
         name: ESTRATÉGIA
         does: Plano, ideias, painel de especialistas, rotinas, lançamentos e psicologia
-        agents: [marketing.marketing_plan, marketing.marketing_psychology]
+        lead: marketing.lider_estrategia  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_estrategia, marketing.marketing_plan, marketing.marketing_psychology]
       - id: marketing-pesquisa
         name: INTELIGÊNCIA
         does: Mercado, tendências, concorrentes e leitura de resultados
-        agents: [marketing.research, marketing.trend_hunter, marketing.competitor_profiling, marketing.content_analyst, marketing.analytics, marketing.attribution]
+        lead: marketing.lider_inteligencia  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_inteligencia, marketing.research, marketing.trend_hunter, marketing.competitor_profiling, marketing.content_analyst, marketing.analytics, marketing.attribution]
       - id: marketing-conteudo
         name: CONTEÚDO
         does: Textos para redes, blog e FAQ
-        agents: [marketing.copy_answer_first, marketing.copy_social, marketing.storytelling]
+        lead: marketing.lider_conteudo  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_conteudo, marketing.copy_answer_first, marketing.copy_social, marketing.storytelling]
       - id: marketing-video
         name: VÍDEO & CRIATIVOS
         does: Guiões, imagem, edição e criativos de anúncio
-        agents: [marketing.ugc, marketing.editor_video, marketing.image, marketing.ad_creative, design.identidade-visual]
+        lead: marketing.lider_video  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_video, marketing.ugc, marketing.editor_video, marketing.image, marketing.ad_creative, design.identidade-visual]
       - id: marketing-social
         name: SOCIAL & COMUNIDADE
         does: Comunidade e eventos, influenciadores e imprensa
-        agents: [marketing.community_marketing, marketing.influencer, marketing.public_relations]
+        lead: marketing.lider_social  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_social, marketing.community_marketing, marketing.influencer, marketing.public_relations]
       - id: marketing-seo
         name: SITE & SEO
         does: Ser encontrado no Google e nas IAs e converter quem chega
-        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.cro]
+        lead: marketing.lider_site_seo  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_site_seo, marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.cro]
       - id: marketing-ads
         name: ANÚNCIOS
         does: Planos de media e testes
-        agents: [marketing.media_buyer, marketing.ab_testing]
+        lead: marketing.lider_anuncios  # P-90 = B: orquestra de facto no template de área
+        agents: [marketing.lider_anuncios, marketing.media_buyer, marketing.ab_testing]
       - id: marketing-qualidade
         name: QUALIDADE
         does: Revê tudo antes de sair
@@ -100,8 +107,12 @@ departments:
     wing: funcoes
     name: Comercial
     theme: {color: "#0D9488", icon: tag}
-    lead: null
+    lead: marketing.lider_crm  # P-90 = B: área "CRM e vendas"; orquestra no template de área
     seats:
+      - id: comercial-lider
+        name: LIDERANÇA COMERCIAL
+        does: Decide o percurso do contacto à proposta e distribui pelos lugares
+        agents: [marketing.lider_crm]
       - id: comercial-leads
         name: LEADS INBOUND
         does: Qualifica os pedidos que chegam (ciclo e scoring do lead) e propõe a resposta
