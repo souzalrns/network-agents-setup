@@ -5,10 +5,10 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **133 itens vivos** (§4): ABERTO 74, EM CURSO 13, BLOQUEADO 46;
+> - **134 itens vivos** (§4): ABERTO 74, EM CURSO 14, BLOQUEADO 46;
 > - **145 linhas de histórico** (no histórico, §7): 123 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
-> - **88 decisões** A/B/C: 87 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
+> - **90 decisões** A/B/C: 87 tomadas (no histórico, §10) e **3 por decidir** (§10 abaixo).
 
 ## 0. Como usar este documento
 
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (133 itens vivos)
+## 4. Tabela única (134 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -141,6 +141,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | M-003 | Fase 2: Execution Package (contexto para redirect) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | M-002 | E §8.8 e §9.3 | — | VERIFICADO |
 | M-004 | Fase 2: Learning (estimado vs real no ledger) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | M-001 | E §8.11 e §9.3; O §Fase 2 | — | VERIFICADO |
 | M-005 | PMO / Project Director (decisão organizacional) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão | O:53; A5 §5.4 | F7 (O:53; colide com as fases F*) | VERIFICADO |
+| M-006 | Reestruturar a vertical de marketing como agência por áreas (direção + 8 áreas + qualidade + pacote SaaS), com inventário de funções e herdeiro de cada uma; nenhum agente sai sem a transferência provada (capability re-apontada, golden do router, done_when, relatório) | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Fusões e líderes de área: P-89 e P-90 | Fase 1 (só agrupamento, sem mexer no router): `config/office.yaml` (lugares por área), `docs/orchestration/marketing/ESTRUTURA-AREAS.md`, `tests/test_office.py` | — | VERIFICADO |
 | L4-1b | Teste real mínimo da L4 pela CLI (`remember` → `recall` → `promote` → `recall` → `forget`) | FALTA-TESTE | ABERTO | DEV | Média | `DATABASE_URL` | O:196; E:783; P §6 #9 | — | VERIFICADO |
 | L4-2 | Spike comparativo do mem0 (só padrões, não substitui a L4) | FALTA-DECIDIR | ABERTO | AMBOS | Baixa | Era "depois do F3" (E §9.2): o F3 só tem estacionados, por isso pode avançar. Só padrões do mem0, sem substituir a L4 (D3; revisão do EXECUTION-PLAN, 2026-10-07) | O:197; E:789 | J11 | VERIFICADO |
 | L4-3 | Ligar o MCP de produção à L4 | FALTA-LIGAR | ABERTO | AMBOS | Média | Era "depois do F5" (E §9.2): o F5 fechou a 2026-10-06, por isso pode avançar. Verificar o impacto no conector do Claude.ai, hoje sem tools (F0.6) (revisão do EXECUTION-PLAN, 2026-10-07) | O:198 | — | VERIFICADO |
@@ -311,7 +312,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | CLAUDE | 23 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
 | DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
-| AMBOS | 41 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
+| AMBOS | 42 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, M-006, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
 **Só do DEV, sem código** (refeito na revisão de 2026-10-07; a lista anterior citava merges e SELECTs já feitos):
 - **GOV-PRIV-2** (opcional): reescrever o histórico do MCP para tirar a transcrição antiga;
@@ -332,10 +333,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 48 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
+| Média | 49 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 73 | F0.12, F1b, F2-DISC-1, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 74 · EM CURSO 13 · BLOQUEADO 46.
+**Por estado:** ABERTO 74 · EM CURSO 14 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
 ## 7. Histórico (145 linhas: 123 FECHADO, 22 OBSOLETO)
@@ -367,6 +368,8 @@ Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-1
 | # | Decisão | A | B | C | Recomendada |
 |---|---|---|---|---|---|
 | P-81 | Conhecimento de um domínio novo no L5 (achados A-1/A-2 do F6) | **`_kb_for` genérico: kb = `agent_id` quando é o id de uma área do `config/areas.yaml` (evolução do core com nota no ADR, §11); o pack de trading sai do EXCLUDED para o MANIFEST** | A + mover MANIFEST/EXCLUDED para `config/knowledge-manifest.yaml` | Ficar só com `repo_files` (sem L5 nem golden de trading) | Por decidir. **Recomendada: A**: 1 função, sem regressão nas kbs actuais (testável), e desbloqueia o golden de trading; a B é maior e não é preciso para o F6. Evidência: `scripts/ingest_apply.py::_kb_for` (lista fixa) |
+| P-89 | Como um agente herdeiro carrega as funções de agentes fundidos (M-006, §4 do `ESTRUTURA-AREAS.md`) | **Modos de skill por passo: o passo do plano indica `mode:` e a activação junta `skills/<vertical>/<action>/modes/<mode>.md` ao prompt só nesse passo; a capability fundida passa a apontar para o herdeiro** | Colar o texto das skills fundidas dentro da skill do herdeiro | Não fundir: manter os ~60 agentes e só reagrupar no escritório | Por decidir. **Recomendada: A**: o herdeiro só carrega o conhecimento do modo pedido, por isso o prompt não cresce (a B engorda todas as chamadas, contra o B1-bis-C) e as capabilities continuam validadas; a C deixa o router a escolher entre ~60 candidatos. Evidência: `runner/plan_runner/capabilities.py:308` (1 agente = 1 action), `runner/plan_runner/skill_activation.py` (aditivo) |
+| P-90 | Líderes por área da agência de marketing (M-006, §2 do `ESTRUTURA-AREAS.md`) | Sub-áreas no `config/areas.yaml` e o router passa a 3 níveis (área → sub-área → agente) | **Líder de área = agente coordenador como o `marketing.marketing`, que só monta planos com os agentes da sua área; o router não muda e o lugar ganha `lead` quando o líder orquestrar de facto** | Sem líderes: as áreas ficam lugares do escritório e o `marketing.marketing` coordena tudo | Por decidir. **Recomendada: B**: reaproveita o padrão que já orquestra hoje, não toca no router testado (golden de 14 casos) e cumpre a regra do escritório (só é lead quem orquestra); a A é mais limpa mas mexe no motor; a C não escala além de ~10 agentes por pedido. Evidência: `config/office.yaml` (regra do `lead`), `docs/ops/ROUTER.md` |
 
 > As 87 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
 
