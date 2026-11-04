@@ -40,6 +40,7 @@ Pôr a marca a ser encontrada (Google e assistentes de IA) e a converter quem ch
 | `marketing.programmatic_seo` | `programmatic_seo` | — | páginas em escala a partir de dados |
 | `marketing.directory_submissions` | `directory_submissions` | — | diretórios e sites de reviews (envio humano) |
 | `marketing.cro` | `cro` | `popups` | conversão de páginas e formulários; com modo, popups e banners |
+| `marketing.ai_visibility` | `ai_visibility` | — | painel de perguntas, medição e diagnóstico de visibilidade em IA (GEO/AEO) |
 
 ## Decide sozinho / pede aprovação
 

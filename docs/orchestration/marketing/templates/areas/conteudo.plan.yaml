@@ -2,7 +2,7 @@
 #
 # O líder da área (marketing.lider_conteudo) decide e entrega o brief; os especialistas da área
 # recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
-# Qualidade (fase 2): critic e compliance revêem em paralelo antes da aprovação humana.
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
 
 id: template-area-conteudo
 version: 1

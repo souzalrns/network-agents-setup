@@ -640,3 +640,11 @@ capabilities:
     agent: marketing.follow_ups
     skill: skills/marketing/follow_up/SKILL.md
     status: implemented
+
+  - id: ai_visibility
+    description: "Visibilidade em IA (GEO/AEO): define o painel de perguntas da marca, mede se a marca é mencionada e citada pelos assistentes (Gemini por comando; ChatGPT, Perplexity e Claude com respostas coladas) e diagnostica o que mudar; nunca inventa métricas."
+    levels: [prepare]
+    action: ai_visibility
+    agent: marketing.ai_visibility
+    skill: skills/marketing/ai_visibility/SKILL.md
+    status: implemented

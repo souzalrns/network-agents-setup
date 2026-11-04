@@ -27,7 +27,7 @@ AREAS = yaml.safe_load((REPO_ROOT / "config/areas.yaml").read_text(encoding="utf
 MARKETING = next(a for a in AREAS if a["id"] == "marketing")
 CAPS = {c["id"]: c for c in yaml.safe_load((REPO_ROOT / "config/marketing-capabilities.yaml").read_text(encoding="utf-8"))["capabilities"]}
 LEADERS = ["estrategia", "inteligencia", "conteudo", "video", "social", "site_seo", "anuncios", "crm"]
-QUALITY_ACTIONS = {"critic", "compliance_check", "plan_approve"}  # a camada de Qualidade revê tudo; não é especialista da área
+QUALITY_ACTIONS = {"critic", "critic_item13", "compliance_check", "plan_approve"}  # a camada de Qualidade revê tudo; não é especialista da área
 FICHA = ("## Missão", "## Recebe / entrega", "## Funções", "## Especialistas da área (só estes)",
          "## Decide sozinho / pede aprovação", "## Regras que não quebra", "## Saída: brief da área", "## Está pronto quando")
 

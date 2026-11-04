@@ -114,7 +114,7 @@ Nenhum número deste portfólio vem de estimativa. Cada um tem a fonte onde se c
 | `chunks=0 unchanged=39` | Corrida do ingest em produção quando nada mudou: nenhum embedding gasto | PR #64; corridas do workflow `ingest-knowledge` |
 | **1000+** testes | `pytest` do runner (contagem exacta: `cd runner && python -m pytest --collect-only -q`; eram 836 a 2026-10-07). Mais os de TypeScript (vitest) | [`runner-tests.yml`](../.github/workflows/runner-tests.yml) |
 | **200+** PRs com merge | Contados pela API do GitHub (217 a 2026-10-25; eram 100 a 2026-10-07) | Histórico de PRs do repo |
-| **88** agentes do runner · **123** skills · **27** planos | `config/areas.yaml`, `skills/**/SKILL.md` e `docs/orchestration/**/*.plan.yaml`, contados por `python -m plan_runner.inventory` (o CI falha se esta linha divergir) | [`docs/generated/INVENTORY.md`](./generated/INVENTORY.md) |
+| **89** agentes do runner · **124** skills · **27** planos | `config/areas.yaml`, `skills/**/SKILL.md` e `docs/orchestration/**/*.plan.yaml`, contados por `python -m plan_runner.inventory` (o CI falha se esta linha divergir) | [`docs/generated/INVENTORY.md`](./generated/INVENTORY.md) |
 
 ### Linha do tempo (Timeline)
 

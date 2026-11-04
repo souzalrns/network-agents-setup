@@ -88,7 +88,7 @@ departments:
         name: SITE & SEO
         does: Ser encontrado no Google e nas IAs e converter quem chega
         lead: marketing.lider_site_seo  # P-90 = B: orquestra de facto no template de área
-        agents: [marketing.lider_site_seo, marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.cro]
+        agents: [marketing.lider_site_seo, marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.cro, marketing.ai_visibility]
       - id: marketing-ads
         name: ANÚNCIOS
         does: Planos de media e testes
