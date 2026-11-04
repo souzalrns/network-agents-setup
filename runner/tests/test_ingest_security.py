@@ -95,6 +95,38 @@ def test_erro_tipado_do_filho_chega_ao_pai_com_o_codigo(tmp_path: Path) -> None:
     assert "nada para converter" in str(exc.value)
 
 
+@pytest.mark.parametrize("conteudo", ["", "{partido", "[1, 2]", '{"outra": 1}'])
+def test_resultado_ilegivel_do_filho_da_conversion_failed(tmp_path: Path, conteudo: str) -> None:
+    # Regressão: com pouca memória o filho criava result.json vazio e o pai rebentava com um
+    # JSONDecodeError cru. O contrato é sempre um erro tipado, nunca conteúdo parcial.
+    out = tmp_path / "result.json"
+    out.write_text(conteudo, encoding="utf-8")
+    with pytest.raises(ing.IngestError) as exc:
+        ing._read_child_result(out, str(64 * 1024 * 1024))
+    assert exc.value.code == "conversion_failed"
+
+
+def test_filho_sem_memoria_para_serializar_entrega_erro_de_memoria(tmp_path: Path) -> None:
+    # O JSON de erro de memória é preparado antes do limite: se serializar o resultado esgotar a
+    # memória, o pai recebe `memory_limit` (simulado aqui), e o ficheiro nunca fica a meio.
+    target = _target(
+        tmp_path,
+        """
+        import json
+        original = json.dumps
+        def sem_memoria(obj, *a, **k):
+            if isinstance(obj, dict) and "markdown" in obj:
+                raise MemoryError()
+            return original(obj, *a, **k)
+        json.dumps = sem_memoria
+        return SimpleNamespace(markdown='texto grande')
+        """,
+    )
+    with pytest.raises(ing.IngestError) as exc:
+        ing.isolated_converter(_pdf(tmp_path), "pdf", target=target)
+    assert exc.value.code == "memory_limit"
+
+
 def test_excepcao_qualquer_do_filho_da_conversion_failed(tmp_path: Path) -> None:
     target = _target(tmp_path, "raise ValueError('rebentou')")
     with pytest.raises(ing.IngestError) as exc:

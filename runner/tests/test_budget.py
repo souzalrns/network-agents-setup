@@ -155,7 +155,7 @@ def test_cli_run_e_resume_com_max_tokens(tmp_path, tmp_run_dir, fake, capsys):
 
 def test_cli_langgraph_com_worker_inline_aplica_o_tecto_e_retoma(tmp_path, tmp_run_dir, fake, capsys):
     """W-005: no langgraph o worker inline e o tecto funcionam como no native (antes: recusados)."""
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.cli import main
 
     assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external", "--worker", "gemini",
@@ -339,7 +339,7 @@ def test_cli_run_e_resume_com_max_cost_usd(tmp_path, tmp_run_dir, fake, prices, 
 
 def test_cli_langgraph_com_worker_inline_aplica_o_tecto_de_custo(tmp_path, tmp_run_dir, fake, prices, capsys):
     """W-005 + D6: o tecto de custo tambem vale no langgraph com o worker inline."""
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.cli import main
 
     assert main(["run", str(_plan(tmp_path)), "--engine", "langgraph", "--mode", "external", "--worker", "gemini",

@@ -88,7 +88,7 @@ def test_plan_ja_nao_expoe_os_campos_removidos():
 
 
 def test_langgraph_respeita_max_steps(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import run_plan_langgraph
 
     status = run_plan_langgraph(_plan(tmp_path, "budget:\n  max_steps: 1\n"), mode="stub", out_dir=tmp_run_dir)
@@ -99,7 +99,7 @@ def test_langgraph_respeita_max_steps(tmp_path, tmp_run_dir):
 
 
 def test_langgraph_dentro_do_max_steps_corre_normalmente(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import run_plan_langgraph
 
     status = run_plan_langgraph(_plan(tmp_path, "budget:\n  max_steps: 2\n"), mode="stub", out_dir=tmp_run_dir)

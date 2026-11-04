@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-pytest.importorskip("langgraph")
+pytest.importorskip("langgraph.graph")
 
 from plan_runner import external_worker as ew  # noqa: E402
 from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph  # noqa: E402

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from tests.conftest import RUNNER_DIR, _run_cli
 
 
@@ -110,6 +112,12 @@ def test_cli_compile_graph(plan_path):
 
 def test_cli_resume_payload_file_not_found(plan_path, tmp_run_dir):
     """--payload-file inexistente deve falhar com PlanError, nao traceback."""
+    # O run tem de ser do engine langgraph (dependencia opcional, requirements-langgraph.txt):
+    # sem ele o run nao chega a existir e o resume falha por outro motivo. Mesmo padrao dos
+    # outros testes do langgraph (test_budget.py, test_done_when.py): skip local, corre no CI.
+    # `langgraph.graph` e o que o build_graph importa: com uma instalacao parcial, `langgraph` existe
+    # como namespace package (vem do langgraph-checkpoint) e o importorskip("langgraph") nao chega.
+    pytest.importorskip("langgraph.graph")
     # Usar langgraph (default) para que o cli.py leia --payload-file.
     _run(tmp_run_dir, plan_path, mode="stub", engine="langgraph")
 
