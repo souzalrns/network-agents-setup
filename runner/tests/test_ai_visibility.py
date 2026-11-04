@@ -168,3 +168,16 @@ def test_painel_diferente_nao_se_compara(tmp_path, panel):
     other = {**panel, "perguntas": panel["perguntas"][:2]}
     av.record(other, av.score(other, {}), engine="claude", out=out)
     assert "primeira medição deste painel" in (out / "resumo.md").read_text(encoding="utf-8")
+
+
+def test_rede_bloqueada_para_com_mensagem_e_guarda_o_resto(tmp_path, monkeypatch, capsys):
+    """Proxy ou rede a recusar a ligação: não rebenta, pára e regista o que não foi medido."""
+    monkeypatch.setenv("GEMINI_API_KEY", "chave-de-teste")
+
+    def blocked(url, headers, body, timeout):
+        raise OSError("403 Forbidden do proxy")
+
+    assert av.main(["medir", str(EXAMPLE), "--out", str(tmp_path), "--run"], send=blocked) == 2
+    med = json.loads(next(tmp_path.glob("medicao-gemini-*.json")).read_text(encoding="utf-8"))
+    assert med["resumo"]["medidas"] == 0 and "rede: OSError" in med["linhas"][0]["erro"]
+    assert "chave-de-teste" not in "".join(f.read_text(encoding="utf-8") for f in tmp_path.iterdir())
