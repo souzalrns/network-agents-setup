@@ -240,7 +240,7 @@ def record(panel: dict[str, Any], rows: list[dict[str, Any]], *, engine: str, ou
         + ("" if prev else " · primeira medição deste painel neste motor"), "",
         "| Quem | Mencionada | Citada como fonte |", "|---|---|---|",
         f"| **{panel['marca']['nome']}** | {_delta(summ['marca']['mencionada_pct'], (pb.get('marca') or {}).get('mencionada_pct'))} "
-        f"| {_delta(summ['marca']['citada_pct'], (pb.get('marca') or {}).get('citada_pct'))} |",
+        + f"| {_delta(summ['marca']['citada_pct'], (pb.get('marca') or {}).get('citada_pct'))} |",
     ]
     for name, c in summ["concorrentes"].items():
         b = (pb.get("concorrentes") or {}).get(name) or {}
