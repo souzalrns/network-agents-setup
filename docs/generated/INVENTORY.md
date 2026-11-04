@@ -16,7 +16,7 @@
 | … também no runner | 13 | `runtime:` preenchido |
 | … só no MCP | 21 | `runtime: null` |
 | Agentes no escritório (runner + só MCP) | 103 | `config/office.yaml` |
-| Departamentos / alas / lugares do escritório | 18 / 2 / 44 | `config/office.yaml` |
+| Departamentos / alas / lugares do escritório | 18 / 2 / 46 | `config/office.yaml` |
 | Agentes da plataforma Node (`apps/api`) | 24 | `config/agents.config.ts` (catálogo em `docs/generated/AGENTS.md`) |
 
 Testes: não se contam aqui (mudam a cada PR). `cd runner && python -m pytest --collect-only -q`.

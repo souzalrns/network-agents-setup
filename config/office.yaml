@@ -50,43 +50,50 @@ departments:
     name: Marketing
     theme: {color: "#FF8A3D", icon: megaphone}
     lead: marketing.marketing
+    # M-006 (2026-11-04): lugares reorganizados pelas 8 áreas da agência
+    # (docs/orchestration/marketing/ESTRUTURA-AREAS.md). Só muda o agrupamento visível;
+    # o router continua a escolher pela área `marketing` do config/areas.yaml.
     seats:
       - id: marketing-lead
-        name: MARKETING LEAD
-        does: Define o plano e distribui o trabalho
-        agents: [marketing.marketing, marketing.marketing_plan, marketing.marketing_council, marketing.marketing_ideas, marketing.marketing_loops, marketing.marketing_psychology, marketing.internal_brief, marketing.launch]
+        name: DIREÇÃO DE MARKETING
+        does: Recebe o pedido, decide o plano e distribui pelas áreas
+        agents: [marketing.marketing, marketing.internal_brief, marketing.marketing_ideas, marketing.marketing_council, marketing.marketing_loops]
+      - id: marketing-estrategia
+        name: ESTRATÉGIA
+        does: Plano, posicionamento, psicologia e lançamentos
+        agents: [marketing.marketing_plan, marketing.marketing_psychology, marketing.launch]
       - id: marketing-pesquisa
-        name: PESQUISA
-        does: Mercado, tendências e concorrentes
-        agents: [marketing.research, marketing.trend_hunter, marketing.competitors, marketing.competitor_profiling, marketing.content_analyst]
-      - id: marketing-seo
-        name: SEO & IA
-        does: Ser encontrado no Google e nas IAs
-        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.aso, marketing.directory_submissions, marketing.free_tools]
+        name: INTELIGÊNCIA
+        does: Mercado, tendências, concorrentes e leitura de resultados
+        agents: [marketing.research, marketing.trend_hunter, marketing.competitor_profiling, marketing.content_analyst, marketing.analytics, marketing.attribution]
       - id: marketing-conteudo
-        name: CONTEÚDO & REDES
-        does: Textos, newsletter e redes sociais
-        agents: [marketing.copy_answer_first, marketing.copy_social, marketing.storytelling, marketing.emails, marketing.sms, marketing.ugc, marketing.influencer, marketing.community_marketing]
-      - id: marketing-criativos
-        name: CRIATIVOS
-        does: Imagem, vídeo e identidade visual
-        agents: [marketing.ad_creative, marketing.image, marketing.editor_video, design.identidade-visual]
+        name: CONTEÚDO
+        does: Textos para redes, blog e FAQ
+        agents: [marketing.copy_answer_first, marketing.copy_social, marketing.storytelling]
+      - id: marketing-video
+        name: VÍDEO & CRIATIVOS
+        does: Guiões, imagem, edição e criativos de anúncio
+        agents: [marketing.ugc, marketing.editor_video, marketing.image, marketing.ad_creative, design.identidade-visual]
+      - id: marketing-social
+        name: SOCIAL & COMUNIDADE
+        does: Comunidade, influenciadores, imprensa, parcerias e eventos
+        agents: [marketing.community_marketing, marketing.influencer, marketing.public_relations, marketing.co_marketing, marketing.events]
+      - id: marketing-seo
+        name: SITE & SEO
+        does: Ser encontrado no Google e nas IAs e converter quem chega
+        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.competitors, marketing.cro, marketing.popups, marketing.free_tools]
       - id: marketing-ads
-        name: ADS & DADOS
-        does: Campanhas, medição e testes
-        agents: [marketing.media_buyer, marketing.analytics, marketing.attribution, marketing.ab_testing, marketing.cro]
-      - id: marketing-conversao
-        name: CONVERSÃO
-        does: Transforma visitas em clientes e retém-nos
-        agents: [marketing.lead_magnets, marketing.popups, marketing.paywalls, marketing.signup, marketing.onboarding, marketing.churn_prevention, marketing.referrals]
-      - id: marketing-relacoes
-        name: RELAÇÕES & EVENTOS
-        does: Imprensa, parcerias e eventos
-        agents: [marketing.public_relations, marketing.co_marketing, marketing.events]
+        name: ANÚNCIOS
+        does: Planos de media e testes
+        agents: [marketing.media_buyer, marketing.ab_testing]
       - id: marketing-qualidade
         name: QUALIDADE
         does: Revê tudo antes de sair
         agents: [marketing.critic, marketing.critic_item13, marketing.creative_review]
+      - id: marketing-saas
+        name: SAAS & APPS
+        does: Pacote para quem vende software (lojas de apps, registo, retenção)
+        agents: [marketing.aso, marketing.signup, marketing.onboarding, marketing.paywalls, marketing.churn_prevention]
 
   - id: comercial
     wing: funcoes
@@ -118,6 +125,11 @@ departments:
         name: VENDAS
         does: Materiais de venda e funil comercial
         agents: [marketing.sales_enablement, marketing.revops]
+      # M-006: a área "CRM e vendas" da agência é este departamento; recebe a captação e a relação.
+      - id: comercial-relacao
+        name: CAPTAÇÃO & RELAÇÃO
+        does: Lead magnets, email, WhatsApp e indicações
+        agents: [marketing.lead_magnets, marketing.emails, marketing.sms, marketing.referrals]
 
   - id: atendimento
     wing: funcoes
