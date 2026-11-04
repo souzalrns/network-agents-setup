@@ -2,6 +2,7 @@
 #
 # O líder da área (marketing.lider_inteligencia) decide e entrega o brief; os especialistas da área
 # recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade (fase 2): critic e compliance revêem em paralelo antes da aprovação humana.
 
 id: template-area-inteligencia
 version: 1
@@ -10,7 +11,7 @@ objective: "(preencher)"
 audience: "(preencher)"
 
 budget:
-  max_steps: 6
+  max_steps: 9
 
 steps:
   - id: lider
@@ -42,26 +43,52 @@ steps:
     inputs: [artifacts/00-brief-inteligencia.md]
     output_artifact: artifacts/03-tendencias.md
 
+  - id: redes
+    action: social_intelligence
+    depends_on: [lider]
+    task: "Padrões das redes da concorrência a partir dos dados fornecidos"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/04-redes.md
+
+  - id: desempenho
+    action: social_performance
+    depends_on: [lider]
+    task: "O que funcionou nas publicações da marca e o que mudar"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/05-desempenho.md
+
   - id: critic
     action: critic
-    depends_on: [factos, concorrentes, tendencias]
+    depends_on: [factos, concorrentes, tendencias, redes, desempenho]
     tools_allowed: [read_repo_file]
-    inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md]
-    output_artifact: artifacts/04-critic.json
+    inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md, artifacts/04-redes.md, artifacts/05-desempenho.md]
+    output_artifact: artifacts/06-critic.json
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [factos, concorrentes, tendencias, redes, desempenho]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md, artifacts/04-redes.md, artifacts/05-desempenho.md]
+    output_artifact: artifacts/07-compliance.json
 
   - id: hitl
     action: plan_approve
-    depends_on: [critic]
+    depends_on: [critic, compliance]
     human_gate:
       level: step
       kind: output_review
       allow: [approve, reject, edit]
     tools_allowed: []
-    output_artifact: artifacts/05-hitl.json
+    output_artifact: artifacts/08-hitl.json
 
 done_when:
   - artifacts/00-brief-inteligencia.md exists
   - artifacts/01-factos.md exists
   - artifacts/02-concorrentes.md exists
   - artifacts/03-tendencias.md exists
+  - artifacts/04-redes.md exists
+  - artifacts/05-desempenho.md exists
+  - artifacts/07-compliance.json exists
   - human_gate_resolved on hitl

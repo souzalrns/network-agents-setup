@@ -224,6 +224,79 @@ capabilities:
     skill: skills/marketing/lider_crm/SKILL.md
     status: implemented
 
+  # M-006 fase 2: agentes de execução; `implemented` sustentado pelos templates de área
+  - id: video_production
+    description: "Produtor de vídeo: transforma o guião numa folha de produção (cena a cena: material real, stock gratuito ou clip gerado por IA, com prompt e custo estimado) dentro do orçamento do brief; não gera nada pago sem aprovação."
+    levels: [prepare]
+    action: video_production
+    agent: marketing.produtor_video
+    skill: skills/marketing/video_production/SKILL.md
+    status: implemented
+
+  - id: audio_voice
+    description: "Áudio e voz: prepara a narração (texto marcado para gravar ou definições de voz sintética), a música sem direitos, os efeitos e as legendas (SRT) de um vídeo, a partir do guião; não usa vozes de pessoas reais sem consentimento."
+    levels: [prepare]
+    action: audio_voice
+    agent: marketing.audio_voz
+    skill: skills/marketing/audio_voice/SKILL.md
+    status: implemented
+
+  - id: repurposing
+    description: "Repurposing: adapta uma peça a várias redes (duração, formato, hook, legenda, texto no ecrã) e corta um vídeo longo em vários curtos, com a lista de cortes; não publica."
+    levels: [prepare]
+    action: repurposing
+    agent: marketing.repurposing
+    skill: skills/marketing/repurposing/SKILL.md
+    status: implemented
+
+  - id: editorial_calendar
+    description: "Calendário editorial: organiza as peças por data, rede, formato e estado, com a frequência certa para cada rede e as datas relevantes do público; não publica."
+    levels: [prepare]
+    action: editorial_calendar
+    agent: marketing.calendario
+    skill: skills/marketing/editorial_calendar/SKILL.md
+    status: implemented
+
+  - id: publish_package
+    description: "Publicador: prepara o pacote de publicação de cada peça (rede, data e hora, legenda, ficheiros, texto alternativo, identificação de publicidade e de IA), pronto para um agendador; nunca publica nem agenda sem aprovação humana."
+    levels: [prepare]
+    action: publish_package
+    agent: marketing.publicador
+    skill: skills/marketing/publish_package/SKILL.md
+    status: implemented
+
+  - id: social_intelligence
+    description: "Inteligência social: analisa métricas públicas de redes da concorrência (fornecidas por APIs oficiais ou exportações) para mostrar que formatos, temas, hooks e frequências funcionam; não faz scraping fora dos termos de uso."
+    levels: [prepare]
+    action: social_intelligence
+    agent: marketing.social_intelligence
+    skill: skills/marketing/social_intelligence/SKILL.md
+    status: implemented
+
+  - id: social_performance
+    description: "Performance social: lê os resultados das publicações orgânicas da marca (alcance, retenção, guardados, partilhas, cliques) e devolve o que funcionou, porquê e o que mudar no próximo ciclo; resultados de campanhas pagas são do attribution."
+    levels: [prepare]
+    action: social_performance
+    agent: marketing.performance_social
+    skill: skills/marketing/social_performance/SKILL.md
+    status: implemented
+
+  - id: brand_guardian
+    description: "Guardião de marca: mantém o livro de marca (voz, tom, palavras a usar e a evitar, claims permitidos, referências visuais) e verifica peças contra ele; os factos de produto e posicionamento são do product_marketing."
+    levels: [prepare]
+    action: brand_guardian
+    agent: marketing.guardiao_marca
+    skill: skills/marketing/brand_guardian/SKILL.md
+    status: implemented
+
+  - id: compliance_check
+    description: "Compliance: verifica peças e pacotes antes da aprovação humana quanto a identificação de publicidade e de IA (AI Act, art. 50), direitos de imagem, voz e música, claims em sectores regulados e consentimento de contactos (RGPD/LGPD); bloqueia o que não cumpre."
+    levels: [prepare]
+    action: compliance_check
+    agent: marketing.compliance
+    skill: skills/marketing/compliance_check/SKILL.md
+    status: implemented
+
   # BEGIN marketingskills (gerado por scripts/vendor_marketingskills.py; não editar à mão)
   - id: ab_testing
     description: "Desenha testes A/B e programas de experimentação: hipótese, métrica, tamanho de amostra e leitura do resultado."

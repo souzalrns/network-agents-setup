@@ -77,6 +77,16 @@ areas:
       - marketing.lider_site_seo
       - marketing.lider_anuncios
       - marketing.lider_crm
+      # M-006 fase 2: agentes de execução (preparam; um humano aprova)
+      - marketing.produtor_video
+      - marketing.audio_voz
+      - marketing.repurposing
+      - marketing.calendario
+      - marketing.publicador
+      - marketing.social_intelligence
+      - marketing.performance_social
+      - marketing.guardiao_marca
+      - marketing.compliance
       - marketing.internal_brief
       - marketing.research
       - marketing.trend_hunter
