@@ -311,10 +311,11 @@ def merged_files(commit: str) -> None:
         src_md = (VENDOR / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
         _fm, body = split_frontmatter(src_md)
         body = relink(body, name, depth=4)
-        notes = _contract_notes(name) + [
+        replaces = (
             f"Este modo substitui o agente `marketing.{old}` (M-006): é carregado pelo `{heir}` só no passo com "
-            f"`mode: {mode}`. As regras da skill base do herdeiro continuam a valer.",
-        ]
+            + f"`mode: {mode}`. As regras da skill base do herdeiro continuam a valer."
+        )
+        notes = [*_contract_notes(name), replaces]
         mode_md = ROOT / Path(skill).parent / "modes" / f"{mode}.md"
         mode_md.parent.mkdir(parents=True, exist_ok=True)
         mode_md.write_text(
