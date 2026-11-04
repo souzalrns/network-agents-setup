@@ -181,3 +181,11 @@ def test_rede_bloqueada_para_com_mensagem_e_guarda_o_resto(tmp_path, monkeypatch
     med = json.loads(next(tmp_path.glob("medicao-gemini-*.json")).read_text(encoding="utf-8"))
     assert med["resumo"]["medidas"] == 0 and "rede: OSError" in med["linhas"][0]["erro"]
     assert "chave-de-teste" not in "".join(f.read_text(encoding="utf-8") for f in tmp_path.iterdir())
+
+
+def test_erro_do_google_fica_no_registo_sem_a_chave(panel):
+    def quota(url, headers, body, timeout):
+        return 429, {"error": {"code": 429, "message": "Quota exceeded for metric:\n generate_content_free_tier, limit: 0"}}
+
+    rows = av.score(panel, av.ask_gemini(panel, api_key="chave-x", model="m", send=quota))
+    assert "limit: 0" in rows[0]["erro"] and "\n" not in rows[0]["erro"] and "chave-x" not in rows[0]["erro"]

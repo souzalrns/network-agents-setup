@@ -176,6 +176,13 @@ def _gemini_answer(resp: dict[str, Any]) -> dict[str, Any]:
     return {"resposta": text, "fontes": sources, "pesquisas": list(meta.get("webSearchQueries") or [])}
 
 
+def _error_detail(resp: Any) -> str:
+    """A mensagem do Google (ex.: qual a quota que faltou), curta e numa linha; nunca contém a chave."""
+    err = resp.get("error") if isinstance(resp, dict) else None
+    msg = (err or {}).get("message") if isinstance(err, dict) else None
+    return f" — {' '.join(str(msg).split()).replace('|', '/')[:240]}" if msg else ""
+
+
 def ask_gemini(panel: dict[str, Any], *, api_key: str, model: str, send: Send,
                timeout: float = 60.0) -> dict[str, dict[str, Any]]:
     answers: dict[str, dict[str, Any]] = {}
@@ -188,11 +195,12 @@ def ask_gemini(panel: dict[str, Any], *, api_key: str, model: str, send: Send,
         except Exception as e:  # noqa: BLE001 -- rede/proxy/timeout: parar e guardar o que já foi medido
             answers[q["id"]] = {"erro": f"rede: {type(e).__name__}: parado ({str(e)[:120]})"}
             break
+        detail = _error_detail(resp)
         if code in STOP_CODES:
-            answers[q["id"]] = {"erro": f"HTTP {code}: parado (chave ou quota)"}
+            answers[q["id"]] = {"erro": f"HTTP {code}: parado (chave ou quota){detail}"}
             break
         if code != 200:
-            answers[q["id"]] = {"erro": f"HTTP {code}"}
+            answers[q["id"]] = {"erro": f"HTTP {code}{detail}"}
             continue
         answers[q["id"]] = _gemini_answer(resp)
     return answers
