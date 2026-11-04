@@ -584,7 +584,7 @@ def test_com_flag_tool_act_edit_nao_e_aceite(tmp_path, run_dir, monkeypatch):
 
 
 def test_com_flag_langgraph_tambem_pausa_e_retoma(tmp_path, run_dir, monkeypatch):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
 
     ran: list = []

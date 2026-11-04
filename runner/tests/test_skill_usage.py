@@ -60,7 +60,7 @@ def test_resume_tambem_regista_a_skill(tmp_path, tmp_run_dir):
 
 
 def test_langgraph_regista_a_skill(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import run_plan_langgraph
 
     run_plan_langgraph(_plan(tmp_path), mode="stub", out_dir=tmp_run_dir)

@@ -144,7 +144,7 @@ def test_paid_pack_real_marca_a_condicao_livre_como_nao_verificavel(tmp_path):
 
 
 def test_langgraph_exists_em_falta_falha(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import run_plan_langgraph
 
     status = run_plan_langgraph(_plan(tmp_path, ["artifacts/zz.md exists"]), mode="stub", out_dir=tmp_run_dir)
@@ -153,7 +153,7 @@ def test_langgraph_exists_em_falta_falha(tmp_path, tmp_run_dir):
 
 
 def test_langgraph_cumprido_e_nao_interpretavel_termina_em_done(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import run_plan_langgraph
 
     plan = _plan(tmp_path, ["artifacts/b.md exists", "no ad_account_mutation without approve"])
@@ -163,7 +163,7 @@ def test_langgraph_cumprido_e_nao_interpretavel_termina_em_done(tmp_path, tmp_ru
 
 
 def test_langgraph_gate_resolvido_no_resume_termina_em_done(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
 
     plan = _plan(tmp_path, ["human_gate_resolved on hitl"], GATE_STEPS)
@@ -175,7 +175,7 @@ def test_langgraph_gate_resolvido_no_resume_termina_em_done(tmp_path, tmp_run_di
 
 
 def test_langgraph_gate_nao_resolvido_no_resume_falha(tmp_path, tmp_run_dir):
-    pytest.importorskip("langgraph")
+    pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
 
     plan = _plan(tmp_path, ["human_gate_resolved on outro_gate"], GATE_STEPS)

@@ -60,6 +60,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -294,12 +295,30 @@ def isolated_converter(
                 f"o processo filho saiu com {proc.returncode} sem resultado "
                 f"(limite de memória: {limit} bytes): {' / '.join(stderr)}",
             )
-        data = json.loads(out.read_text(encoding="utf-8"))
+        data = _read_child_result(out, limit)
     if "error" in data:
         raise IngestError(data["error"], data["message"])
     return Converted(
         markdown=data["markdown"], title=data.get("title"), warnings=tuple(data["warnings"])
     )
+
+
+def _read_child_result(out: Path, limit: str) -> dict[str, Any]:
+    """Resultado do filho; um ficheiro ilegível é `conversion_failed`, nunca um erro cru.
+
+    O filho escreve de forma atómica (`_child_main`), por isso um resultado partido não devia
+    existir; esta é a segunda barreira do contrato "erro tipado, sem conteúdo parcial".
+    """
+    try:
+        data = json.loads(out.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise IngestError(
+            "conversion_failed",
+            f"o resultado do processo filho é ilegível (limite de memória: {limit} bytes): {type(exc).__name__}",
+        ) from exc
+    if not isinstance(data, dict) or not ("error" in data or "markdown" in data):
+        raise IngestError("conversion_failed", "o resultado do processo filho não tem o formato esperado")
+    return data
 
 
 def _load_target(target: str) -> Callable[[Path, str], Any]:
@@ -315,7 +334,18 @@ def _load_target(target: str) -> Callable[[Path, str], Any]:
 
 
 def _child_main(target: str, document_type: str, path: str, out: str, limit: str) -> int:
-    """Corre no processo filho: limite de memória primeiro, conversão depois."""
+    """Corre no processo filho: limite de memória primeiro, conversão depois.
+
+    Escrita atómica do resultado: o ficheiro temporário e o JSON de erro de memória são preparados
+    ANTES do limite, e no fim escreve-se com `os.write` (sem o buffer do `open`, que já não cabe
+    quando a conversão esgota a memória) e só depois se renomeia para `out`. Assim o pai nunca vê
+    um resultado vazio ou partido: ou lê o JSON completo, ou não há ficheiro.
+    """
+    fallback = json.dumps(
+        {"error": "memory_limit", "message": f"o limite de {limit} bytes foi atingido"}, ensure_ascii=False
+    ).encode("utf-8")
+    part = f"{out}.part"
+    fd = os.open(part, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     warnings = apply_memory_limit(None if limit == "none" else int(limit))
     try:
         converted = _load_target(target)(Path(path), document_type)
@@ -332,8 +362,25 @@ def _child_main(target: str, document_type: str, path: str, out: str, limit: str
             result = {"error": code, "message": getattr(exc, "detail", str(exc))}
         else:
             result = {"error": "conversion_failed", "message": f"{type(exc).__name__}: {exc}"}
-    Path(out).write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
+    try:
+        payload = json.dumps(result, ensure_ascii=False).encode("utf-8")
+    except MemoryError:
+        payload = fallback
+    try:
+        _write_all(fd, payload)
+    except MemoryError:
+        os.ftruncate(fd, 0)
+        os.lseek(fd, 0, os.SEEK_SET)
+        _write_all(fd, fallback)
+    os.close(fd)
+    os.replace(part, out)
     return 0
+
+
+def _write_all(fd: int, data: bytes) -> None:
+    view = memoryview(data)
+    while view:
+        view = view[os.write(fd, view):]
 
 
 def source_uri(path: Path, repo_root: Path = REPO_ROOT) -> tuple[str, str | None]:
