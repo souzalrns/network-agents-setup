@@ -20,7 +20,7 @@
 
 | Pasta | Conteúdo |
 |---|---|
-| [`ops/`](./ops/) | Runbooks e contratos operacionais (fecho do setup, escritório, router, orçamento, RAG, web fetch, Postiz…) |
+| [`ops/`](./ops/) | Runbooks e contratos operacionais (fecho do setup, escritório, router, orçamento, RAG, web fetch, Postiz, visibilidade em IA…) |
 | [`architecture/`](./architecture/) | Arquitectura, ADRs, auditorias técnicas e padrões estudados |
 | [`knowledge/`](./knowledge/) | Conhecimento dos domínios (entra no RAG pelo MANIFEST) |
 | [`orchestration/`](./orchestration/) | Planos e templates por domínio |

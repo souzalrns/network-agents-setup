@@ -1,0 +1,24 @@
+# Painel de exemplo (fictício) para `python -m plan_runner.ai_visibility` (docs/ops/AI-VISIBILITY.md).
+# Os painéis reais ficam fora deste repo público, com as medições em pilots/ (fora do git).
+marca:
+  nome: Bicicletas do Rio
+  aliases: [Bicicletas do Rio Braga]
+  dominios: [bicicletas-do-rio.example]
+concorrentes:
+  - nome: Oficina Pedal Norte
+    dominios: [pedal-norte.example]
+  - nome: Roda Livre
+    aliases: [Roda Livre Bikes]
+    dominios: [roda-livre.example]
+idioma: português de Portugal
+perguntas:
+  - id: revisao-braga
+    texto: Onde posso fazer a revisão da minha bicicleta em Braga?
+  - id: eletrica-minho
+    texto: Qual é a melhor oficina de bicicletas eléctricas no Minho?
+  - id: preco-revisao
+    texto: Quanto custa uma revisão completa de bicicleta em Portugal?
+  - id: inverno
+    texto: Como preparar a bicicleta para andar no inverno?
+  - id: comprar-usada
+    texto: Onde comprar uma bicicleta usada revista em Braga?

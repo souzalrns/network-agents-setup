@@ -2,7 +2,7 @@
 #
 # O líder da área (marketing.lider_site_seo) decide e entrega o brief; os especialistas da área
 # recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
-# Qualidade (fase 2): critic e compliance revêem em paralelo antes da aprovação humana.
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
 
 id: template-area-site-seo
 version: 1
@@ -11,7 +11,7 @@ objective: "(preencher)"
 audience: "(preencher)"
 
 budget:
-  max_steps: 7
+  max_steps: 9
 
 steps:
   - id: lider
@@ -35,42 +35,58 @@ steps:
     inputs: [artifacts/00-brief-site_seo.md]
     output_artifact: artifacts/02-estrutura.md
 
+  - id: visibilidade
+    action: ai_visibility
+    depends_on: [lider]
+    task: "Painel e diagnóstico de visibilidade em IA (números só de uma medição fornecida)"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md]
+    output_artifact: artifacts/03-visibilidade.md
+
   - id: conversao
     action: cro
-    depends_on: [brief, estrutura]
+    depends_on: [brief, estrutura, visibilidade]
     task: "Conversão da página principal"
     tools_allowed: [read_repo_file]
-    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md]
-    output_artifact: artifacts/03-conversao.md
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md]
+    output_artifact: artifacts/04-conversao.md
 
   - id: critic
     action: critic
     depends_on: [conversao]
     tools_allowed: [read_repo_file]
-    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-conversao.md]
-    output_artifact: artifacts/04-critic.json
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
+    output_artifact: artifacts/05-critic.json
+
+  - id: citabilidade
+    action: critic_item13
+    depends_on: [conversao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
+    output_artifact: artifacts/06-citabilidade.json
 
   - id: compliance
     action: compliance_check
     depends_on: [conversao]
     tools_allowed: [read_repo_file]
-    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-conversao.md]
-    output_artifact: artifacts/05-compliance.json
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
+    output_artifact: artifacts/07-compliance.json
 
   - id: hitl
     action: plan_approve
-    depends_on: [critic, compliance]
+    depends_on: [critic, citabilidade, compliance]
     human_gate:
       level: step
       kind: output_review
       allow: [approve, reject, edit]
     tools_allowed: []
-    output_artifact: artifacts/06-hitl.json
+    output_artifact: artifacts/08-hitl.json
 
 done_when:
   - artifacts/00-brief-site_seo.md exists
   - artifacts/01-brief.md exists
   - artifacts/02-estrutura.md exists
-  - artifacts/03-conversao.md exists
-  - artifacts/05-compliance.json exists
+  - artifacts/03-visibilidade.md exists
+  - artifacts/04-conversao.md exists
+  - artifacts/07-compliance.json exists
   - human_gate_resolved on hitl

@@ -174,6 +174,11 @@ ferramenta ligada (próximo passo, fora deste repo).
 | Social & comunidade | `marketing.publicador` | `publish_package` | Pacote de publicação em JSON, pronto a agendar (não publica) | `social.plan.yaml` |
 | Qualidade | `marketing.compliance` | `compliance_check` | Publicidade identificada, IA identificada (AI Act, art. 50), direitos de imagem, voz e música, claims regulados, consentimento; veredicto em JSON | **todos** os templates de área |
 
+Visibilidade em IA (GEO/AEO), na área Site & SEO: `marketing.ai_visibility` (`ai_visibility`) define o
+painel de perguntas, lê a medição de `python -m plan_runner.ai_visibility` e diagnostica; o template da
+área passou a ter a revisão de citabilidade (`critic_item13`) ao lado do `critic` e da compliance
+([`docs/ops/AI-VISIBILITY.md`](../../ops/AI-VISIBILITY.md)).
+
 Cadeias novas: no Vídeo, `guiao → (producao ∥ imagem ∥ audio) → edicao → versoes`; no Social,
 `(comunidade ∥ criadores) → calendario → publicacao`. Em todas as áreas, `critic` e `compliance`
 revêem em paralelo e o `hitl` só abre depois dos dois. Prova: `runner/tests/test_m006_execucao.py`.

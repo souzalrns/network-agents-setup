@@ -37,6 +37,7 @@ EXEC = {
     "social_performance": ("marketing.performance_social", "marketing-pesquisa", "inteligencia", "inteligencia"),
     "brand_guardian": ("marketing.guardiao_marca", "marketing-estrategia", "estrategia", "estrategia"),
     "compliance_check": ("marketing.compliance", "marketing-qualidade", None, None),
+    "ai_visibility": ("marketing.ai_visibility", "marketing-seo", "site_seo", "site_seo"),
 }
 FICHA = ("## Missão", "## Recebe / entrega", "## Funções", "## Fronteiras (não confundir com)",
          "## Decide sozinho / pede aprovação", "## Regras que não quebra", "## Saída", "## Está pronto quando")
@@ -128,7 +129,7 @@ def test_compliance_corre_em_todas_as_areas_antes_do_humano(path):
     comp = [s for s in plan["steps"] if s["action"] == "compliance_check"]
     assert len(comp) == 1 and comp[0]["output_artifact"].endswith(".json")
     produced = {s["output_artifact"] for s in plan["steps"] if s["action"] not in
-                {"critic", "compliance_check", "plan_approve"}}
+                {"critic", "critic_item13", "compliance_check", "plan_approve"}}
     assert produced <= set(comp[0]["inputs"]), "a compliance vê todas as peças da área"
     hitl = plan["steps"][-1]
     assert hitl["action"] == "plan_approve" and comp[0]["id"] in hitl["depends_on"]
@@ -139,7 +140,7 @@ def test_compliance_corre_em_todas_as_areas_antes_do_humano(path):
 # --------------------------------------------------------------------------- execução
 
 
-@pytest.mark.parametrize("area", ["video", "social", "inteligencia", "estrategia"])
+@pytest.mark.parametrize("area", ["video", "social", "inteligencia", "estrategia", "site-seo"])
 def test_template_corre_ate_ao_humano_com_os_agentes_de_execucao(area, tmp_path, tmp_run_dir, monkeypatch):
     fake = FakeGemini()
     monkeypatch.setattr(ew, "httpx_transport", fake)
@@ -150,7 +151,7 @@ def test_template_corre_ate_ao_humano_com_os_agentes_de_execucao(area, tmp_path,
     status = run_plan(path, mode="external", out_dir=tmp_run_dir, worker="gemini")
     assert status["state"] == "paused_human_gate" and status.get("paused_at_step") == "hitl", status
     systems = [c["body"]["systemInstruction"]["parts"][0]["text"] for c in fake.calls]
-    for action in (a for a, v in EXEC.items() if v[3] == area or a == "compliance_check"):
+    for action in (a for a, v in EXEC.items() if (v[3] or "").replace("_", "-") == area or a == "compliance_check"):
         skill = (REPO_ROOT / f"skills/marketing/{action}/SKILL.md").read_text(encoding="utf-8")
         mission = skill.split("## Missão\n\n", 1)[1].split("\n", 1)[0]
         assert any(mission in s for s in systems), action  # a skill do agente foi carregada no seu passo

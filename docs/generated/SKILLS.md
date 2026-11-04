@@ -5,7 +5,7 @@
 >
 > Gerado em: 2026-11-04
 > Fonte: `skills/**/SKILL.md`
-> Total: **123** skills
+> Total: **124** skills
 >
 > **Nota (S35):** este catálogo é só documentação — a descoberta em runtime
 > continua Advisory (`skills/meta/using-agent-skills/SKILL.md`), nada aqui
@@ -17,7 +17,7 @@
 |---------|------------:|
 | claude | 26 |
 | design | 4 |
-| marketing | 64 |
+| marketing | 65 |
 | meta | 24 |
 | security | 2 |
 | trading | 3 |
@@ -68,6 +68,7 @@
 |------|---------------|:----------:|-----------|----------|
 | `ab_testing` | marketing | P2 | Desenha testes A/B e programas de experimentação: hipótese, métrica, tamanho de amostra e leitura do resultado. | `skills/marketing/ab_testing/SKILL.md` |
 | `ad_creative` | marketing | P1 | Cria criativos de anúncio pagos: 2 a 4 ângulos com um recomendado, primary text, headlines e CTA por plataforma e specs de formato, com claims com fonte ou marcados como assumption. Usar depois de media_plan ou research. | `skills/marketing/ad_creative/SKILL.md` |
+| `ai_visibility` | marketing | P1 | Visibilidade em IA (GEO/AEO): define o painel de perguntas da marca, mede se a marca é mencionada e citada pelos assistentes (Gemini por comando; ChatGPT, Perplexity e Claude com respostas coladas) e diagnostica o que mudar; nunca inventa métricas. | `skills/marketing/ai_visibility/SKILL.md` |
 | `analytics` | marketing | P2 | Plano de medição e tracking (eventos, UTMs, GA4/GTM, dashboards); prepara a especificação, não mexe nas contas. | `skills/marketing/analytics/SKILL.md` |
 | `aso` | marketing | P2 | Auditoria e optimização de fichas na App Store e Google Play (título, keywords, screenshots, reviews). | `skills/marketing/aso/SKILL.md` |
 | `attribution` | marketing | P2 | Lê resultados de campanha e atribuição (modelos, incrementalidade, MMM leve) para decidir o próximo ciclo. | `skills/marketing/attribution/SKILL.md` |

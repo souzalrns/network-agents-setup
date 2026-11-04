@@ -65,7 +65,7 @@ flowchart LR
 | Config validation | Areas, agents, councils and capabilities validated in CI | [`areas.py`](./runner/plan_runner/areas.py) |
 | Skill usage | Every `step_started` event records which skill file the step loaded, so skill usage is measured from the audit log | [`skills.py`](./runner/plan_runner/skills.py) (`skill_ref`) |
 
-**Domain packs, not special agents.** 88 runtime agents and 123 skills (Markdown) are organised by domain (marketing, design, engineering, security, meta…). A domain plugs in through `config/areas.yaml` and plan templates in [`docs/orchestration/`](./docs/orchestration/), without changing the engine. Every count comes from the config files: [`docs/generated/INVENTORY.md`](./docs/generated/INVENTORY.md) (CI fails if a number here drifts).
+**Domain packs, not special agents.** 89 runtime agents and 124 skills (Markdown) are organised by domain (marketing, design, engineering, security, meta…). A domain plugs in through `config/areas.yaml` and plan templates in [`docs/orchestration/`](./docs/orchestration/), without changing the engine. Every count comes from the config files: [`docs/generated/INVENTORY.md`](./docs/generated/INVENTORY.md) (CI fails if a number here drifts).
 
 ## Engineering quality
 
