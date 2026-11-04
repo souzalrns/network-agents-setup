@@ -1,18 +1,15 @@
 ---
 name: launch
+mode: launch
 description: "Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist."
-action: launch
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.launch
 source: "coreyhaines31/marketingskills@1efedbc skills/launch (MIT)"
 ---
 
-# Skill — launch
+# Modo `launch` (herdado de `marketing.launch`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/launch) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/launch) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/launch (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/launch/references/`.
+- Este modo substitui o agente `marketing.launch` (M-006): é carregado pelo `marketing.marketing_plan` só no passo com `mode: launch`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 
@@ -342,7 +340,7 @@ Continue using email, social, and in-app messaging to highlight improvements.
 Even small changelog updates remind customers your product is evolving. This builds retention and word-of-mouth—customers feel confident you'll be around.
 
 **Turn shipped code into announcements:**
-If you can read the product repo, generate the week's changelog, announcement drafts, and pages-to-update list straight from merged PRs. See [references/shipped-changes.md](../../../vendor/marketingskills/skills/launch/references/shipped-changes.md).
+If you can read the product repo, generate the week's changelog, announcement drafts, and pages-to-update list straight from merged PRs. See [references/shipped-changes.md](../../../../vendor/marketingskills/skills/launch/references/shipped-changes.md).
 
 ---
 
@@ -359,7 +357,7 @@ If you can read the product repo, generate the week's changelog, announcement dr
 - [ ] Launch assets created (screenshots, demo video, GIFs)
 - [ ] Onboarding flow ready
 - [ ] Analytics/tracking in place
-- [ ] Site QA done if the launch includes a new site, redesign, or migration (see [references/site-launch-qa.md](../../../vendor/marketingskills/skills/launch/references/site-launch-qa.md))
+- [ ] Site QA done if the launch includes a new site, redesign, or migration (see [references/site-launch-qa.md](../../../../vendor/marketingskills/skills/launch/references/site-launch-qa.md))
 
 ### Launch Day
 - [ ] Announcement email to list

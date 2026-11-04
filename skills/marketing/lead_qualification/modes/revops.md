@@ -1,18 +1,15 @@
 ---
 name: revops
+mode: revops
 description: "RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas."
-action: revops
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.revops
 source: "coreyhaines31/marketingskills@1efedbc skills/revops (MIT)"
 ---
 
-# Skill — revops
+# Modo `revops` (herdado de `marketing.revops`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/revops) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/revops) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/revops (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/revops/references/`.
+- Este modo substitui o agente `marketing.revops` (M-006): é carregado pelo `marketing.inbound_qualification` só no passo com `mode: revops`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 
@@ -75,7 +73,7 @@ Marketing, sales, and customer success must agree on definitions. If marketing c
 | **Customer** | Closed-won deal | Expands, renews, or churns | CS / Account Mgmt |
 | **Evangelist** | High NPS, referral activity, case study | Ongoing program participation | CS / Marketing |
 
-Outbound contacts follow their own stages (targeted → in sequence → replied → positive → meeting booked → meeting held → opportunity), with fields for signal, tier, sequence, and channel so meetings can be attributed. See [references/lifecycle-definitions.md](../../../vendor/marketingskills/skills/revops/references/lifecycle-definitions.md#outbound-stages).
+Outbound contacts follow their own stages (targeted → in sequence → replied → positive → meeting booked → meeting held → opportunity), with fields for signal, tier, sequence, and channel so meetings can be attributed. See [references/lifecycle-definitions.md](../../../../vendor/marketingskills/skills/revops/references/lifecycle-definitions.md#outbound-stages).
 
 ### MQL Definition
 
@@ -94,7 +92,7 @@ Define response times and document them:
 - Rep qualifies or rejects within **48 hours**
 - Rejected MQLs go to recycling nurture with reason code
 
-**For complete lifecycle stage templates and SLA examples**: See [references/lifecycle-definitions.md](../../../vendor/marketingskills/skills/revops/references/lifecycle-definitions.md)
+**For complete lifecycle stage templates and SLA examples**: See [references/lifecycle-definitions.md](../../../../vendor/marketingskills/skills/revops/references/lifecycle-definitions.md)
 
 ---
 
@@ -135,7 +133,7 @@ Define response times and document them:
 - Setting and forgetting (buyer behavior changes; recalibrate quarterly)
 - Scoring all page visits equally (pricing page ≠ blog post)
 
-**For detailed scoring templates and example models**: See [references/scoring-models.md](../../../vendor/marketingskills/skills/revops/references/scoring-models.md)
+**For detailed scoring templates and example models**: See [references/scoring-models.md](../../../../vendor/marketingskills/skills/revops/references/scoring-models.md)
 
 ---
 
@@ -166,9 +164,9 @@ Response time is the single biggest factor in lead conversion:
 
 Build routing rules that prioritize speed. Alert reps immediately. Escalate if SLA is missed.
 
-For form-submit enrichment, booking branches, missing-data fallbacks, and late results, load [the inbound-routing playbook](../../../vendor/marketingskills/skills/revops/references/inbound-routing.md). Use it alongside the ownership and territory rules below.
+For form-submit enrichment, booking branches, missing-data fallbacks, and late results, load [the inbound-routing playbook](../../../../vendor/marketingskills/skills/revops/references/inbound-routing.md). Use it alongside the ownership and territory rules below.
 
-**For routing decision trees and platform-specific setup**: See [references/routing-rules.md](../../../vendor/marketingskills/skills/revops/references/routing-rules.md)
+**For routing decision trees and platform-specific setup**: See [references/routing-rules.md](../../../../vendor/marketingskills/skills/revops/references/routing-rules.md)
 
 ---
 
@@ -228,7 +226,7 @@ For form-submit enrichment, booking branches, missing-data fallbacks, and late r
 - **Pre-meeting enrichment** — Auto-populate CRM record before the call
 - **No-show workflows** — Auto-follow-up if prospect misses meeting
 
-**For platform-specific workflow recipes**: See [references/automation-playbooks.md](../../../vendor/marketingskills/skills/revops/references/automation-playbooks.md)
+**For platform-specific workflow recipes**: See [references/automation-playbooks.md](../../../../vendor/marketingskills/skills/revops/references/automation-playbooks.md)
 
 ---
 

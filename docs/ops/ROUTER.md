@@ -30,6 +30,12 @@ pedido ──► 1. ÁREA (keywords; embeddings opcionais) ──► 2. AGENTE/P
 - **Confiança < `routing.area_min_confidence` (0,6)** → **clarificação**, com uma pergunta que lista as áreas em causa. Passa a **HITL** se alguma delas tiver `hitl: required` (legal, finance, security; D2:141).
 
 ### 2. Agente ou plano (dentro da área)
+
+> **Modos (P-89 = A, M-006):** a linha de cada candidato lista também os modos do agente (funções
+> herdadas de agentes fundidos). O JSON do LLM pode trazer `skill_mode` no agente ou em cada passo;
+> um modo que o agente não tem dá `outcome: error`. O plano gerado leva `mode:` no passo (o id e o
+> artefacto ganham o sufixo `-<modo>`). O golden ganhou a lista `transfers:` (11 pedidos, um por
+> agente fundido), testada em `runner/tests/test_m006_transferencias.py`.
 - **Candidatos** = `agents[]` + `horizontals[]` da área (G2), cada um com o `description:` do frontmatter (J4). O LLM nunca vê agentes de outras áreas (R5).
 - O Gemini (`gemini-flash-lite-latest`, ou `AGENT_MODEL`) responde em JSON: `{mode: agent|plan|clarify, agent, steps[{agent, task, depends_on}], confidence, reason, question}`.
 - **Regras:**

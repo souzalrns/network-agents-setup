@@ -50,18 +50,19 @@ departments:
     name: Marketing
     theme: {color: "#FF8A3D", icon: megaphone}
     lead: marketing.marketing
-    # M-006 (2026-11-04): lugares reorganizados pelas 8 áreas da agência
+    # M-006 (2026-11-04): lugares reorganizados pelas 8 áreas da agência; 11 agentes fundidos como modos
+    # dos herdeiros (P-89 = A), ver ESTRUTURA-AREAS.md §4.
     # (docs/orchestration/marketing/ESTRUTURA-AREAS.md). Só muda o agrupamento visível;
     # o router continua a escolher pela área `marketing` do config/areas.yaml.
     seats:
       - id: marketing-lead
         name: DIREÇÃO DE MARKETING
-        does: Recebe o pedido, decide o plano e distribui pelas áreas
-        agents: [marketing.marketing, marketing.internal_brief, marketing.marketing_ideas, marketing.marketing_council, marketing.marketing_loops]
+        does: Recebe o pedido e distribui pelas áreas
+        agents: [marketing.marketing, marketing.internal_brief]
       - id: marketing-estrategia
         name: ESTRATÉGIA
-        does: Plano, posicionamento, psicologia e lançamentos
-        agents: [marketing.marketing_plan, marketing.marketing_psychology, marketing.launch]
+        does: Plano, ideias, painel de especialistas, rotinas, lançamentos e psicologia
+        agents: [marketing.marketing_plan, marketing.marketing_psychology]
       - id: marketing-pesquisa
         name: INTELIGÊNCIA
         does: Mercado, tendências, concorrentes e leitura de resultados
@@ -76,12 +77,12 @@ departments:
         agents: [marketing.ugc, marketing.editor_video, marketing.image, marketing.ad_creative, design.identidade-visual]
       - id: marketing-social
         name: SOCIAL & COMUNIDADE
-        does: Comunidade, influenciadores, imprensa, parcerias e eventos
-        agents: [marketing.community_marketing, marketing.influencer, marketing.public_relations, marketing.co_marketing, marketing.events]
+        does: Comunidade e eventos, influenciadores e imprensa
+        agents: [marketing.community_marketing, marketing.influencer, marketing.public_relations]
       - id: marketing-seo
         name: SITE & SEO
         does: Ser encontrado no Google e nas IAs e converter quem chega
-        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.competitors, marketing.cro, marketing.popups, marketing.free_tools]
+        agents: [marketing.seo_brief, marketing.programmatic_seo, marketing.schema, marketing.site_architecture, marketing.directory_submissions, marketing.cro]
       - id: marketing-ads
         name: ANÚNCIOS
         does: Planos de media e testes
@@ -103,7 +104,7 @@ departments:
     seats:
       - id: comercial-leads
         name: LEADS INBOUND
-        does: Qualifica os pedidos que chegam e propõe a resposta
+        does: Qualifica os pedidos que chegam (ciclo e scoring do lead) e propõe a resposta
         agents: [marketing.inbound_qualification]
       - id: comercial-propostas
         name: PROPOSTAS
@@ -120,15 +121,15 @@ departments:
       - id: comercial-ofertas
         name: OFERTAS & PREÇOS
         does: Desenha ofertas, preços e posicionamento
-        agents: [marketing.offers, marketing.pricing, marketing.product_marketing]
+        agents: [marketing.offers, marketing.product_marketing]
       - id: comercial-vendas
         name: VENDAS
         does: Materiais de venda e funil comercial
-        agents: [marketing.sales_enablement, marketing.revops]
+        agents: [marketing.sales_enablement]
       # M-006: a área "CRM e vendas" da agência é este departamento; recebe a captação e a relação.
       - id: comercial-relacao
         name: CAPTAÇÃO & RELAÇÃO
-        does: Lead magnets, email, WhatsApp e indicações
+        does: Lead magnets e ferramentas grátis, email, WhatsApp, indicações e parcerias
         agents: [marketing.lead_magnets, marketing.emails, marketing.sms, marketing.referrals]
 
   - id: atendimento

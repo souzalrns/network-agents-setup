@@ -38,7 +38,7 @@ continua a escolher pela área `marketing` do [`config/areas.yaml`](../../../con
 **Líderes de área.** A regra do escritório é que só é lead quem orquestra de facto. Hoje só o
 `marketing.marketing` distribui trabalho (planos com vários passos). Um líder por área exige que
 o router saiba descer mais um nível (área → sub-área → agente). Até lá, as áreas são lugares sem
-lead e não se criam chefes decorativos. Ver a decisão **P-89** no §10 do PENDENCIAS.
+lead e não se criam chefes decorativos. Ver a decisão **P-90**.
 
 ## 3. Ficha-padrão de um agente
 
@@ -81,43 +81,67 @@ e decide; o especialista executa uma especialidade a fundo.**
 ## 4. Inventário de funções e herdeiros
 
 Antes de um agente sair, a função dele tem de passar para outro que fica activo e isso tem de
-ficar **provado** (§5). Nesta fase **nenhum agente sai**: só se reagrupam os lugares. As fusões
-abaixo esperam pela decisão P-89 (como o herdeiro carrega o conhecimento sem engordar o prompt).
+ficar **provado** (§5). Com a **P-89 = A** (decisão do maestro, 2026-11-04), o herdeiro carrega a
+função como um **modo** da sua skill: `skills/marketing/<skill do herdeiro>/modes/<modo>.md`, que só
+entra no prompt do passo com `mode: <modo>` (o prompt dos outros passos não cresce).
 
-| Agente actual | Fica / herdeiro proposto | Área | Porquê |
+| Agente que saiu | Herdeiro + modo | Área | Porquê |
 |---|---|---|---|
-| `marketing_ideas` | funde-se em `marketing` | Direção | ideação é trabalho do coordenador |
-| `marketing_council` | funde-se em `marketing` | Direção | painel de especialistas como modo do coordenador |
-| `marketing_loops` | funde-se em `marketing` | Direção | rotinas recorrentes são planos do coordenador |
-| `launch` | funde-se em `marketing_plan` | Estratégia | um lançamento é um plano de campanha |
-| `pricing` | funde-se em `offers` | CRM e vendas | oferta e preço decidem-se juntos |
-| `popups` | funde-se em `cro` | Site & SEO | popups são uma táctica de conversão |
-| `free_tools` | funde-se em `lead_magnets` | CRM e vendas | ambos são iscos de captação |
-| `competitors` | funde-se em `seo_brief` | Site & SEO | páginas comparativas são páginas SEO |
-| `revops` | funde-se em `inbound_qualification` | CRM e vendas | ciclo e scoring do lead |
-| `co_marketing` | funde-se em `referrals` | CRM e vendas | parcerias e indicações |
-| `events` | funde-se em `community_marketing` | Social & comunidade | eventos servem a comunidade |
-| `aso`, `signup`, `onboarding`, `paywalls`, `churn_prevention` | ficam, no pacote **SaaS & apps** | SaaS & apps | só servem quem vende software |
-| `proposals`, `follow_ups`, `inbound_qualification` | ficam | CRM e vendas | pack COM-1, já testado |
-| `critic_item13` | fica | Qualidade | ligado aos templates do Item 13 |
-| todos os outros | ficam | a área do §2 | função própria e sem sobreposição |
+| `marketing_ideas` | `marketing_plan` + `ideas` | Estratégia | ideação é parte do plano |
+| `marketing_council` | `marketing_plan` + `council` | Estratégia | o painel de especialistas decide a estratégia |
+| `marketing_loops` | `marketing_plan` + `loops` | Estratégia | uma rotina recorrente é um plano que se repete |
+| `launch` | `marketing_plan` + `launch` | Estratégia | um lançamento é um plano de campanha |
+| `pricing` | `offers` + `pricing` | CRM e vendas | oferta e preço decidem-se juntos |
+| `popups` | `cro` + `popups` | Site & SEO | popups são uma táctica de conversão |
+| `free_tools` | `lead_magnets` + `free_tools` | CRM e vendas | ambos são iscos de captação |
+| `competitors` | `seo_brief` + `competitors` | Site & SEO | páginas comparativas são páginas SEO |
+| `revops` | `inbound_qualification` + `revops` | CRM e vendas | ciclo e scoring do lead |
+| `co_marketing` | `referrals` + `co_marketing` | CRM e vendas | parcerias e indicações |
+| `events` | `community_marketing` + `events` | Social & comunidade | eventos servem a comunidade |
 
-**Como fica o conhecimento de um agente fundido.** O texto integral de cada skill vinda do
-`marketingskills` já vive em `vendor/marketingskills/skills/<nome>/` (regenerado pelo
-`scripts/vendor_marketingskills.py`). A capability (a função) **não se apaga**: passa a apontar
-para o herdeiro. O agente fundido sai do repo e fica recuperável no histórico do git, com o
-commit indicado no PR que o retira.
+Ficam, sem fusão: `aso`, `signup`, `onboarding`, `paywalls`, `churn_prevention` (pacote **SaaS & apps**,
+só para quem vende software); `proposals`, `follow_ups`, `inbound_qualification` (pack COM-1);
+`critic_item13` (templates do Item 13); e todos os outros, cada um na sua área do §2.
 
-## 5. Prova de cada transferência (antes de retirar um agente)
+**Porquê o `marketing_plan` e não o `marketing.marketing`** (a proposta da fase 1 punha ideias, painel e
+rotinas no coordenador): o coordenador não tem skill (`skill: null`, faz o dispatch para o catálogo),
+por isso não tem onde guardar modos. O `marketing_plan` já é o agente de estratégia e tem skill.
 
-1. **Capability re-apontada:** a função continua registada em `config/marketing-capabilities.yaml`,
-   agora com o agente herdeiro (`python -m plan_runner.areas` tem de passar).
-2. **Encaminhamento:** 2 a 3 pedidos típicos do agente antigo entram no
-   `config/router-golden.yaml` e têm de cair no herdeiro (`tests/test_router.py`).
-3. **Conteúdo:** o herdeiro cumpre a checklist (`done_when`) do agente antigo num plano de teste.
-4. **Relatório:** uma linha por agente: herdeiro, testado sim/não, PR.
+**Como fica o conhecimento.** O modo é gerado pelo `scripts/vendor_marketingskills.py` (tabela
+`MERGED`) com o conhecimento upstream integral e o contrato do runner, incluindo as notas de
+conformidade. A capability **mantém o id** e passa a apontar para o herdeiro + `mode`. O agente e a
+skill antigos saem do repo e ficam recuperáveis no histórico do git (commit anterior ao PR do M-006).
 
-Só com os 4 pontos verdes o agente é retirado.
+## 5. Prova de cada transferência
+
+Os 4 pontos, para cada uma das 11, em `runner/tests/test_m006_transferencias.py` (corre no CI):
+
+1. **Capability re-apontada:** mantém o id, aponta para o herdeiro + `mode`, e o agente e a skill
+   antigos já não existem (`test_1_*`; o validador `python -m plan_runner.areas` também passa).
+2. **Conhecimento preservado:** o texto do modo é igual ao conhecimento upstream, com o contrato do
+   runner e as notas de conformidade (`test_2_*`).
+3. **Encaminhamento:** um pedido típico do agente antigo (`transfers:` do `config/router-golden.yaml`)
+   cai na área marketing pelas keywords reais e, com o LLM do router falso, no herdeiro com o modo
+   certo; o prompt do router mostra o modo ao LLM (`test_3_*`). A qualidade do Gemini real nestes
+   pedidos ainda não foi medida (a sessão não tinha chave): fica no item M-006.
+4. **Execução:** um plano com o herdeiro + modo corre de ponta a ponta com o worker falso, o modo
+   entra no prompt **só** nesse passo, o conhecimento chega ao modelo e o `done_when` passa (`test_4_*`).
+
+**Relatório:**
+
+| Agente que saiu | Herdeiro + modo | Capability | Testado (4 pontos) |
+|---|---|---|---|
+| `marketing_ideas` | `marketing_plan` + `ideas` | `marketing_ideas` | sim |
+| `marketing_council` | `marketing_plan` + `council` | `marketing_council` | sim |
+| `marketing_loops` | `marketing_plan` + `loops` | `marketing_loops` | sim |
+| `launch` | `marketing_plan` + `launch` | `launch_plan` | sim |
+| `pricing` | `offers` + `pricing` | `pricing_strategy` | sim |
+| `popups` | `cro` + `popups` | `popups_overlays` | sim |
+| `free_tools` | `lead_magnets` + `free_tools` | `free_tools` | sim |
+| `competitors` | `seo_brief` + `competitors` | `comparison_pages` | sim |
+| `revops` | `inbound_qualification` + `revops` | `revenue_operations` | sim |
+| `co_marketing` | `referrals` + `co_marketing` | `co_marketing` | sim |
+| `events` | `community_marketing` + `events` | `events_marketing` | sim |
 
 ## 6. Fase 2 (não incluída aqui)
 

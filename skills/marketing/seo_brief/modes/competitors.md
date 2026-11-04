@@ -1,18 +1,15 @@
 ---
 name: competitors
+mode: competitors
 description: "Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra."
-action: competitors
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.competitors
 source: "coreyhaines31/marketingskills@1efedbc skills/competitors (MIT)"
 ---
 
-# Skill — competitors
+# Modo `competitors` (herdado de `marketing.competitors`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/competitors) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/competitors) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/competitors (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/competitors/references/`.
+- Este modo substitui o agente `marketing.competitors` (M-006): é carregado pelo `marketing.seo_brief` só no passo com `mode: competitors`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 
@@ -194,7 +192,7 @@ Be explicit about ideal customer for each option. Honest recommendations build t
 ### Migration Section
 Cover what transfers, what needs reconfiguration, support offered, and quotes from customers who switched.
 
-**For detailed templates**: See [references/templates.md](../../../vendor/marketingskills/skills/competitors/references/templates.md)
+**For detailed templates**: See [references/templates.md](../../../../vendor/marketingskills/skills/competitors/references/templates.md)
 
 ---
 
@@ -210,7 +208,7 @@ Create a single source of truth for each competitor with:
 - Common complaints (from reviews)
 - Migration notes
 
-**For data structure and examples**: See [references/content-architecture.md](../../../vendor/marketingskills/skills/competitors/references/content-architecture.md)
+**For data structure and examples**: See [references/content-architecture.md](../../../../vendor/marketingskills/skills/competitors/references/content-architecture.md)
 
 ---
 

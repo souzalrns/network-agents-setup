@@ -79,7 +79,8 @@ def _expected_total() -> int:
 
 def test_todos_os_agentes_aparecem_nas_2_alas() -> None:
     data = office.load_office(REPO_ROOT)
-    assert sum(_n(d) for d in data["departments"]) == _expected_total() >= 100
+    # M-006: 11 agentes de marketing passaram a modos de um herdeiro (P-89 = A), por isso o piso desceu de 100
+    assert sum(_n(d) for d in data["departments"]) == _expected_total() >= 90
     negocios = [d for d in data["departments"] if d["wing"] == "negocios"]
     assert sum(_n(d) for d in negocios) == 19  # os agentes de cada negócio, só no MCP
     mk, com = _dept(data, "marketing"), _dept(data, "comercial")

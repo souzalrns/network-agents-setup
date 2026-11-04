@@ -191,14 +191,6 @@ capabilities:
     skill: skills/marketing/churn_prevention/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
-  - id: co_marketing
-    description: "Encontra parceiros de co-marketing e planeia campanhas conjuntas."
-    levels: [prepare]
-    action: co_marketing
-    agent: marketing.co_marketing
-    skill: skills/marketing/co_marketing/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
   - id: cold_outbound
     description: "Rascunhos de outbound B2B (emails frios e follow-ups) dentro do RGPD/LGPD; nunca envia."
     levels: [prepare]
@@ -221,14 +213,6 @@ capabilities:
     action: competitor_profiling
     agent: marketing.competitor_profiling
     skill: skills/marketing/competitor_profiling/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: comparison_pages
-    description: "Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra."
-    levels: [prepare]
-    action: competitors
-    agent: marketing.competitors
-    skill: skills/marketing/competitors/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
   - id: conversion_optimization
@@ -255,22 +239,6 @@ capabilities:
     skill: skills/marketing/emails/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
-  - id: events_marketing
-    description: "Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline."
-    levels: [prepare]
-    action: events
-    agent: marketing.events
-    skill: skills/marketing/events/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: free_tools
-    description: "Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO."
-    levels: [prepare]
-    action: free_tools
-    agent: marketing.free_tools
-    skill: skills/marketing/free_tools/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
   - id: marketing_images
     description: "Briefs e prompts de imagens de marketing (heróis de blog, gráficos sociais, OG) e a sua optimização."
     levels: [prepare]
@@ -279,44 +247,12 @@ capabilities:
     skill: skills/marketing/image/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
-  - id: launch_plan
-    description: "Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist."
-    levels: [prepare]
-    action: launch
-    agent: marketing.launch
-    skill: skills/marketing/launch/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
   - id: lead_magnets
     description: "Cria e optimiza lead magnets (guias, templates, checklists) para captar emails."
     levels: [prepare]
     action: lead_magnets
     agent: marketing.lead_magnets
     skill: skills/marketing/lead_magnets/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: marketing_council
-    description: "Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação."
-    levels: [prepare]
-    action: marketing_council
-    agent: marketing.marketing_council
-    skill: skills/marketing/marketing_council/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: marketing_ideas
-    description: "Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio."
-    levels: [prepare]
-    action: marketing_ideas
-    agent: marketing.marketing_ideas
-    skill: skills/marketing/marketing_ideas/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: marketing_loops
-    description: "Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano."
-    levels: [prepare]
-    action: marketing_loops
-    agent: marketing.marketing_loops
-    skill: skills/marketing/marketing_loops/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
   - id: marketing_plan
@@ -359,22 +295,6 @@ capabilities:
     skill: skills/marketing/paywalls/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
-  - id: popups_overlays
-    description: "Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência."
-    levels: [prepare]
-    action: popups
-    agent: marketing.popups
-    skill: skills/marketing/popups/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: pricing_strategy
-    description: "Decisões de preço, planos e monetização, com hipóteses a validar."
-    levels: [prepare]
-    action: pricing
-    agent: marketing.pricing
-    skill: skills/marketing/pricing/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
   - id: product_marketing_context
     description: "Documento de contexto de product marketing (produto, público, posicionamento) que as outras skills leem primeiro."
     levels: [prepare]
@@ -413,14 +333,6 @@ capabilities:
     action: referrals
     agent: marketing.referrals
     skill: skills/marketing/referrals/SKILL.md
-    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
-
-  - id: revenue_operations
-    description: "RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas."
-    levels: [prepare]
-    action: revops
-    agent: marketing.revops
-    skill: skills/marketing/revops/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
 
   - id: sales_enablement
@@ -462,6 +374,105 @@ capabilities:
     agent: marketing.sms
     skill: skills/marketing/sms/SKILL.md
     status: partial  # ligada (agente + skill); `implemented` só com um plano que a use
+
+  - id: pricing_strategy  # M-006: substitui marketing.pricing (modo do herdeiro)
+    description: "Decisões de preço, planos e monetização, com hipóteses a validar."
+    levels: [prepare]
+    action: offers
+    agent: marketing.offers
+    skill: skills/marketing/offers/SKILL.md
+    mode: pricing
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: launch_plan  # M-006: substitui marketing.launch (modo do herdeiro)
+    description: "Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist."
+    levels: [prepare]
+    action: marketing_plan
+    agent: marketing.marketing_plan
+    skill: skills/marketing/marketing_plan/SKILL.md
+    mode: launch
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: popups_overlays  # M-006: substitui marketing.popups (modo do herdeiro)
+    description: "Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência."
+    levels: [prepare]
+    action: cro
+    agent: marketing.cro
+    skill: skills/marketing/cro/SKILL.md
+    mode: popups
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: free_tools  # M-006: substitui marketing.free_tools (modo do herdeiro)
+    description: "Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO."
+    levels: [prepare]
+    action: lead_magnets
+    agent: marketing.lead_magnets
+    skill: skills/marketing/lead_magnets/SKILL.md
+    mode: free_tools
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: comparison_pages  # M-006: substitui marketing.competitors (modo do herdeiro)
+    description: "Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra."
+    levels: [prepare]
+    action: seo_brief
+    agent: marketing.seo_brief
+    skill: skills/marketing/seo_brief/SKILL.md
+    mode: competitors
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: revenue_operations  # M-006: substitui marketing.revops (modo do herdeiro)
+    description: "RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas."
+    levels: [prepare]
+    action: lead_qualification
+    agent: marketing.inbound_qualification
+    skill: skills/marketing/lead_qualification/SKILL.md
+    mode: revops
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: co_marketing  # M-006: substitui marketing.co_marketing (modo do herdeiro)
+    description: "Encontra parceiros de co-marketing e planeia campanhas conjuntas."
+    levels: [prepare]
+    action: referrals
+    agent: marketing.referrals
+    skill: skills/marketing/referrals/SKILL.md
+    mode: co_marketing
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: events_marketing  # M-006: substitui marketing.events (modo do herdeiro)
+    description: "Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline."
+    levels: [prepare]
+    action: community_marketing
+    agent: marketing.community_marketing
+    skill: skills/marketing/community_marketing/SKILL.md
+    mode: events
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: marketing_ideas  # M-006: substitui marketing.marketing_ideas (modo do herdeiro)
+    description: "Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio."
+    levels: [prepare]
+    action: marketing_plan
+    agent: marketing.marketing_plan
+    skill: skills/marketing/marketing_plan/SKILL.md
+    mode: ideas
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: marketing_council  # M-006: substitui marketing.marketing_council (modo do herdeiro)
+    description: "Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação."
+    levels: [prepare]
+    action: marketing_plan
+    agent: marketing.marketing_plan
+    skill: skills/marketing/marketing_plan/SKILL.md
+    mode: council
+    status: partial  # `implemented` só com um plano que use a action com este modo
+
+  - id: marketing_loops  # M-006: substitui marketing.marketing_loops (modo do herdeiro)
+    description: "Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano."
+    levels: [prepare]
+    action: marketing_plan
+    agent: marketing.marketing_plan
+    skill: skills/marketing/marketing_plan/SKILL.md
+    mode: loops
+    status: partial  # `implemented` só com um plano que use a action com este modo
 
   # END marketingskills
 

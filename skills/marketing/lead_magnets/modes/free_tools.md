@@ -1,18 +1,15 @@
 ---
 name: free_tools
+mode: free_tools
 description: "Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO."
-action: free_tools
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.free_tools
 source: "coreyhaines31/marketingskills@1efedbc skills/free-tools (MIT)"
 ---
 
-# Skill — free_tools
+# Modo `free_tools` (herdado de `marketing.free_tools`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/free-tools) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/free-tools) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/free-tools (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/free-tools/references/`.
+- Este modo substitui o agente `marketing.free_tools` (M-006): é carregado pelo `marketing.lead_magnets` só no passo com `mode: free_tools`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 
@@ -44,7 +42,7 @@ Before designing a tool strategy, understand:
 
 ## Core Principles
 
-**"Your product is my marketing opportunity."** Bezos said "your margin is my opportunity." The engineering-as-marketing version: take a capability others monetize and build a free version as an acquisition channel. Unsplash gave away the stock photos Getty sold — and Getty acquired it. See [references/tool-benchmarks.md](../../../vendor/marketingskills/skills/free-tools/references/tool-benchmarks.md) for named cases and conversion numbers.
+**"Your product is my marketing opportunity."** Bezos said "your margin is my opportunity." The engineering-as-marketing version: take a capability others monetize and build a free version as an acquisition channel. Unsplash gave away the stock photos Getty sold — and Getty acquired it. See [references/tool-benchmarks.md](../../../../vendor/marketingskills/skills/free-tools/references/tool-benchmarks.md) for named cases and conversion numbers.
 
 ### 1. Solve a Real Problem
 - Tool must provide genuine value
@@ -77,9 +75,9 @@ Before designing a tool strategy, understand:
 | Libraries | Icon sets, templates, snippets | Reference material |
 | Interactive | Tutorials, playgrounds, quizzes | Learning/understanding |
 
-**For detailed tool types and examples**: See [references/tool-types.md](../../../vendor/marketingskills/skills/free-tools/references/tool-types.md)
+**For detailed tool types and examples**: See [references/tool-types.md](../../../../vendor/marketingskills/skills/free-tools/references/tool-types.md)
 
-**For named case benchmarks (Unsplash, HubSpot Website Grader, Moz, Buffer, Shopify) with real conversion numbers**: See [references/tool-benchmarks.md](../../../vendor/marketingskills/skills/free-tools/references/tool-benchmarks.md)
+**For named case benchmarks (Unsplash, HubSpot Website Grader, Moz, Buffer, Shopify) with real conversion numbers**: See [references/tool-benchmarks.md](../../../../vendor/marketingskills/skills/free-tools/references/tool-benchmarks.md)
 
 ---
 
