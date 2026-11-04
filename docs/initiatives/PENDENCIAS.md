@@ -5,8 +5,8 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **135 itens vivos** (§4): ABERTO 74, EM CURSO 15, BLOQUEADO 46;
-> - **145 linhas de histórico** (no histórico, §7): 123 fechadas, 22 obsoletas;
+> - **134 itens vivos** (§4): ABERTO 74, EM CURSO 14, BLOQUEADO 46;
+> - **146 linhas de histórico** (no histórico, §7): 124 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
 > - **90 decisões** A/B/C: 89 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
 
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (135 itens vivos)
+## 4. Tabela única (134 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -142,7 +142,6 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | M-004 | Fase 2: Learning (estimado vs real no ledger) | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | M-001 | E §8.11 e §9.3; O §Fase 2 | — | VERIFICADO |
 | M-005 | PMO / Project Director (decisão organizacional) | FALTA-DECIDIR | ABERTO | DEV | Média | Decisão | O:53; A5 §5.4 | F7 (O:53; colide com as fases F*) | VERIFICADO |
 | M-006 | Reestruturar a vertical de marketing como agência por áreas (direção + 8 áreas + qualidade + pacote SaaS), com inventário de funções e herdeiro de cada uma; nenhum agente sai sem a transferência provada (capability re-apontada, golden do router, done_when, relatório) | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | Fase 2: os 9 agentes de execução do §6 do `ESTRUTURA-AREAS.md` (produtor IA, áudio, repurposing, publicador, calendário, social intelligence, performance social, guardião de marca, compliance); medir com o Gemini real os 11 pedidos `transfers:` do golden e a escolha dos líderes (precisa de `GEMINI_API_KEY`) | Fase 1: PR #274 (lugares por área). P-89 = A: PR #275 (modos de skill; 11 agentes fundidos nos herdeiros, provados em `runner/tests/test_m006_transferencias.py`). P-90 = B: 8 líderes de área (`agents/marketing/lider_*.agent.md`, `skills/marketing/lider_*/`), templates em `docs/orchestration/marketing/templates/areas/`, regra de orquestração de facto em `runner/plan_runner/office.py`, provados em `runner/tests/test_m006_lideres.py` | — | VERIFICADO |
-| W-012 | 3 testes falhavam fora do CI: o filho do ingest com pouca memória deixava `result.json` vazio e o pai rebentava com `JSONDecodeError` cru (contrato: erro tipado, sem conteúdo parcial); o guard do `--out` corria depois do import do langgraph; 13 skips com `importorskip("langgraph")` não apanhavam uma instalação parcial | BUG | EM CURSO | CLAUDE | Média | PR aberto | `scripts/ingest_document.py` (escrita atómica no filho com `os.write`, `_read_child_result` no pai), `runner/plan_runner/cli.py` (guard antes do import), testes de regressão em `runner/tests/test_ingest_security.py`; suite completa sem falhas com e sem langgraph | — | VERIFICADO |
 | L4-1b | Teste real mínimo da L4 pela CLI (`remember` → `recall` → `promote` → `recall` → `forget`) | FALTA-TESTE | ABERTO | DEV | Média | `DATABASE_URL` | O:196; E:783; P §6 #9 | — | VERIFICADO |
 | L4-2 | Spike comparativo do mem0 (só padrões, não substitui a L4) | FALTA-DECIDIR | ABERTO | AMBOS | Baixa | Era "depois do F3" (E §9.2): o F3 só tem estacionados, por isso pode avançar. Só padrões do mem0, sem substituir a L4 (D3; revisão do EXECUTION-PLAN, 2026-10-07) | O:197; E:789 | J11 | VERIFICADO |
 | L4-3 | Ligar o MCP de produção à L4 | FALTA-LIGAR | ABERTO | AMBOS | Média | Era "depois do F5" (E §9.2): o F5 fechou a 2026-10-06, por isso pode avançar. Verificar o impacto no conector do Claude.ai, hoje sem tools (F0.6) (revisão do EXECUTION-PLAN, 2026-10-07) | O:198 | — | VERIFICADO |
@@ -311,7 +310,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 24 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, W-012, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
+| CLAUDE | 23 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
 | DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
 | AMBOS | 42 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, M-006, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
@@ -334,13 +333,13 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 50 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, W-012, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
+| Média | 49 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 73 | F0.12, F1b, F2-DISC-1, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 74 · EM CURSO 15 · BLOQUEADO 46.
+**Por estado:** ABERTO 74 · EM CURSO 14 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
-## 7. Histórico (145 linhas: 123 FECHADO, 22 OBSOLETO)
+## 7. Histórico (146 linhas: 124 FECHADO, 22 OBSOLETO)
 
 Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-10-25).
 
