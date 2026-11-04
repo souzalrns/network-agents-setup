@@ -99,3 +99,21 @@ cases:
     outcome: agent
     agent: meta.planejador
     llm_reply: {mode: agent, agent: meta.planejador, confidence: 0.7, reason: "pedido genérico: planear primeiro"}
+
+# --- M-006 (P-89 = A): prova de encaminhamento das 11 funções fundidas ----------
+# Cada pedido é típico do agente que saiu; tem de cair na área marketing (keywords reais) e,
+# com o LLM falso, no herdeiro com o modo certo. O teste (test_m006_transferencias.py) prova
+# também que o prompt do router mostra o modo ao LLM. `python -m plan_runner.router eval` não
+# lê esta lista: a qualidade real do Gemini nestes casos mede-se à parte (item M-006).
+transfers:
+  - {replaces: marketing.pricing, request: "Define o preço e os pacotes da nova campanha de marketing", agent: marketing.offers, mode: pricing}
+  - {replaces: marketing.launch, request: "Prepara o lançamento do novo serviço com mensagens por canal", agent: marketing.marketing_plan, mode: launch}
+  - {replaces: marketing.popups, request: "Desenha um popup de campanha para captar leads na página de inscrição", agent: marketing.cro, mode: popups}
+  - {replaces: marketing.free_tools, request: "Cria uma calculadora grátis para gerar leads de marketing", agent: marketing.lead_magnets, mode: free_tools}
+  - {replaces: marketing.competitors, request: "Escreve a página nós vs. outra marca para SEO", agent: marketing.seo_brief, mode: competitors}
+  - {replaces: marketing.revops, request: "Define o scoring dos leads e a passagem do marketing para vendas", agent: marketing.inbound_qualification, mode: revops}
+  - {replaces: marketing.co_marketing, request: "Encontra marcas parceiras para uma campanha conjunta", agent: marketing.referrals, mode: co_marketing}
+  - {replaces: marketing.events, request: "Organiza um webinar para a comunidade da marca", agent: marketing.community_marketing, mode: events}
+  - {replaces: marketing.marketing_ideas, request: "Dá-me ideias de marketing para uma loja de bicicletas", agent: marketing.marketing_plan, mode: ideas}
+  - {replaces: marketing.marketing_council, request: "Junta um painel de especialistas para decidir o canal principal da campanha", agent: marketing.marketing_plan, mode: council}
+  - {replaces: marketing.marketing_loops, request: "Desenha uma rotina semanal de conteudo que um agente prepara todas as segundas", agent: marketing.marketing_plan, mode: loops}

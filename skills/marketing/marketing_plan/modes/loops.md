@@ -1,18 +1,15 @@
 ---
-name: marketing_loops
+name: loops
+mode: loops
 description: "Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano."
-action: marketing_loops
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.marketing_loops
 source: "coreyhaines31/marketingskills@1efedbc skills/marketing-loops (MIT)"
 ---
 
-# Skill — marketing_loops
+# Modo `loops` (herdado de `marketing.marketing_loops`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/marketing-loops) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/marketing-loops) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -21,6 +18,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/marketing-loops (MIT)"
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/marketing-loops/references/`.
 - O loop prepara peças e relatórios; publicar, enviar ou gastar media continua a exigir aprovação humana (`plan_approve`).
+- Este modo substitui o agente `marketing.marketing_loops` (M-006): é carregado pelo `marketing.marketing_plan` só no passo com `mode: loops`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 

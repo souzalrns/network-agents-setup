@@ -53,7 +53,7 @@ from typing import Any
 
 import yaml
 
-from .skills import _frontmatter, resolve_skill_path
+from .skills import _frontmatter, resolve_mode_path, resolve_skill_path
 
 LEVELS = ("read", "prepare", "act", "lab")
 STATUSES = ("implemented", "partial", "deferred", "planned")
@@ -67,6 +67,15 @@ TESTS_GLOB = "runner/tests/test_*.py"
 # Um teste "com o Gemini falso" troca o transport HTTP do worker (external_worker.httpx_transport).
 FAKE_GEMINI_MARKER = "httpx_transport"
 _PLAN_PATH = re.compile(r"docs/orchestration/[\w./-]+?\.plan\.yaml")
+
+
+def action_key(action: Any, mode: Any = None) -> Any:
+    """Chave da evidência de uma capability: `action`, ou `action#mode` quando é um modo (P-89).
+
+    Um passo com `mode:` só conta como evidência da capability desse modo, não da capability base
+    do herdeiro (o passo carrega o conhecimento do modo, não prova a função base sozinha).
+    """
+    return f"{action}#{mode}" if action and mode else action
 
 
 def capability_files(repo_root: Path) -> list[Path]:
@@ -83,14 +92,18 @@ def plan_actions(repo_root: Path) -> dict[str, list[str]]:
 
 
 def actions_by_plan(repo_root: Path) -> dict[str, list[str]]:
-    """Plano do runner (path relativo) → `action`s que usa, por ordem de aparição."""
+    """Plano do runner (path relativo) → `action`s que usa, por ordem de aparição.
+
+    Um passo com `mode:` (P-89) entra como `action#mode` (ver `action_key`).
+    """
     out: dict[str, list[str]] = {}
 
     def walk(node: Any, acc: list[str]) -> None:
         if isinstance(node, dict):
             action = node.get("action")
-            if isinstance(action, str) and action and action not in acc:
-                acc.append(action)
+            key = action_key(action, node.get("mode") if isinstance(node.get("mode"), str) else None)
+            if isinstance(action, str) and action and key not in acc:
+                acc.append(key)
             for value in node.values():
                 walk(value, acc)
         elif isinstance(node, list):
@@ -185,7 +198,8 @@ def capability_maturity(repo_root: Path, known: dict[str, Path]) -> list[dict[st
             if not isinstance(cap, dict) or not cap.get("id"):
                 continue
             action, agent, skill, status = cap.get("action"), cap.get("agent"), cap.get("skill"), cap.get("status")
-            plans = [p for p, acts in by_plan.items() if action and action in acts]
+            key = action_key(action, cap.get("mode"))
+            plans = [p for p, acts in by_plan.items() if action and key in acts]
             tests = sorted({t for p in plans for t in tested.get(p, [])})
             proven = [r["id"] for r in runs if r["plan"] in plans]
             checks = [
@@ -289,14 +303,15 @@ def validate_capabilities(repo_root: Path, known: dict[str, Path], areas: list[d
                 errors.append(f"{where}: tools_guidance tem de ser uma lista de nomes")
 
             action, agent, skill = cap.get("action"), cap.get("agent"), cap.get("skill")
+            mode = cap.get("mode")
             if status in ACTIVE:
                 for key, val in (("action", action), ("agent", agent), ("skill", skill)):
                     if not isinstance(val, str) or not val:
                         errors.append(f"{where}: `{key}` obrigatório em status `{status}`")
-            if status == "implemented" and isinstance(action, str) and action not in used_actions:
+            if status == "implemented" and isinstance(action, str) and action_key(action, mode) not in used_actions:
                 errors.append(
                     f"{where}: `implemented` exige pelo menos 1 plano em {PLAN_GLOB} com a action "
-                    f"`{action}` (maturidade, F4); sem plano, use `partial`"
+                    f"`{action}`{f' e o modo `{mode}`' if mode else ''} (maturidade, F4); sem plano, use `partial`"
                 )
             if agent is not None:
                 if agent not in known:
@@ -315,6 +330,11 @@ def validate_capabilities(repo_root: Path, known: dict[str, Path], areas: list[d
                     errors.append(f"{where}: skill `{skill}` não existe no repo")
                 elif action and _frontmatter(sp).get("action") != action:
                     errors.append(f"{where}: a skill `{skill}` tem action `{_frontmatter(sp).get('action')}`, não `{action}`")
+                elif mode is not None and resolve_mode_path(sp, mode) is None:
+                    # P-89: a função fundida vive como modo do herdeiro; sem o ficheiro, ficava inalcançável.
+                    errors.append(f"{where}: o modo `{mode}` não existe em {Path(skill).parent.as_posix()}/modes/")
+            elif mode is not None:
+                errors.append(f"{where}: `mode` exige `skill` (o modo é um ficheiro da skill do herdeiro)")
     return errors
 
 

@@ -533,6 +533,7 @@ def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) ->
                 if fm.get("description"):
                     body = f"Papel: {fm['description']}\n\n{body}"
             system_parts.append(_section(title, body))
+    mode_meta = _mode_section(pending, request, system_parts, strip=True)
     level, grounding = cp.grounding_for(repo_root, agent_fm.get("id"))
     if grounding:
         _, gbody = cp.strip_frontmatter(grounding)
@@ -605,8 +606,24 @@ def _build_prompt_opt(out_root: Path, pending: Path, request: dict[str, Any]) ->
         "wants_json": wants_json,
         "wants_summary": wants_summary,
         "meta": {"policy": "opt", "grounding": level, "inputs": used, "summary_requested": wants_summary,
-                 "dropped_sections": dropped},
+                 "dropped_sections": dropped, **mode_meta},
     }
+
+
+def _mode_section(pending: Path, request: dict[str, Any], system_parts: list[str], *, strip: bool) -> dict[str, Any]:
+    """P-89: junta `MODE.md` (o modo da skill pedido pelo passo) logo a seguir a Skill.
+
+    So existe quando o passo tem `mode:` e o modo foi resolvido (skill_activation.py); sem ele o
+    prompt fica byte a byte igual ao de antes. Devolve o que entrou, para o `meta` do prompt.
+    """
+    p = pending / "MODE.md"
+    if not p.is_file():
+        return {}
+    text = p.read_text(encoding="utf-8")
+    body = cp.strip_frontmatter(text)[1] if strip else text
+    mode = request.get("mode") or "?"
+    system_parts.append(_section(f"Modo da skill: {mode} (só neste passo)", body))
+    return {"mode": mode, "mode_path": request.get("mode_path")}
 
 
 def _build_prompt_legacy(out_root: Path, pending: Path, request: dict[str, Any]) -> tuple[str, str, bool]:
@@ -617,6 +634,7 @@ def _build_prompt_legacy(out_root: Path, pending: Path, request: dict[str, Any])
         p = pending / name
         if p.is_file():
             system_parts.append(_section(title, p.read_text(encoding="utf-8")))
+    _mode_section(pending, request, system_parts, strip=False)
     grounding = repo_root / "agents" / "_shared" / "grounding.directive.md"
     if grounding.is_file():
         system_parts.append(_section("Grounding (obrigatorio)", grounding.read_text(encoding="utf-8")))

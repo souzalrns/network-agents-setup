@@ -37,6 +37,27 @@ execute_external_request(out_root, step)
 | `external_skill_candidates` | candidatas saneadas (`installed: false`, `trusted: false`), cada uma com `scan` (SKILL-SCAN-1) |
 | `skill_activation` | `"skill_activation.json"` |
 
+## Modos de skill (P-89 = A, M-006)
+
+Um agente herdeiro carrega as funções de agentes fundidos como **modos** da sua skill:
+`skills/<vertical>/<action>/modes/<modo>.md`. O passo do plano pede o modo com `mode: <modo>`.
+
+- **Só nesse passo:** a activação copia o modo para `pending_steps/<id>/MODE.md` e o worker junta-o
+  ao prompt logo a seguir à skill, com o título `Modo da skill: <modo> (só neste passo)`. Passos sem
+  `mode:` ficam com o prompt de antes, byte a byte.
+- **Fail-closed:** um modo que não existe (ou um nome inválido, ou um symlink) faz o passo falhar com
+  `mode_missing: …` antes de chamar o modelo, também no modo stub. O erro fica em `skill_activation.json`.
+- **Rasto:** `skill_activation.json` ganha `mode {name, path, sha256, error}` e o `request.json` ganha
+  `mode`, `mode_path` e `mode_sha256`.
+- **Router:** os candidatos mostram os modos de cada agente (`description:` do frontmatter do modo); o
+  LLM indica-o em `skill_mode` e o router recusa um modo que o agente não tem.
+- **Capabilities:** uma capability de um modo declara `mode:`; o validador exige o ficheiro, e um
+  `implemented` exige um plano com a action **e** o modo.
+
+Código: `plan_runner/skills.py` (`resolve_mode_path`, `list_modes`), `skill_activation.py` (`_apply_mode`),
+`executor.py`, `external_worker.py` (`_mode_section`), `router.py`, `capabilities.py`. Testes:
+`runner/tests/test_skill_modes.py` (mecanismo) e `test_m006_transferencias.py` (as 11 fusões reais).
+
 ## SEC-1.3: allow-list de scripts
 
 Config: `config/skills.yaml`.

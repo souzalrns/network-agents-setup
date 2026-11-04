@@ -58,6 +58,11 @@
       "properties": {
         "id": {"type": "string", "minLength": 1},
         "action": {"type": "string", "minLength": 1},
+        "mode": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,39}$",
+          "description": "P-89 (M-006): modo da skill so neste passo; o worker junta skills/<vertical>/<action>/modes/<mode>.md ao prompt. Modo inexistente = o passo falha (fail-closed)"
+        },
         "vertical": {"type": "string", "description": "S34: omissao = marketing"},
         "task": {"type": "string"},
         "agent_id": {"type": "string", "description": "Router: id do agente escolhido (informativo; o worker usa o id do AGENT.md)"},

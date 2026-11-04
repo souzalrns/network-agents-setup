@@ -1,18 +1,15 @@
 ---
-name: marketing_ideas
+name: ideas
+mode: ideas
 description: "Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio."
-action: marketing_ideas
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.marketing_ideas
 source: "coreyhaines31/marketingskills@1efedbc skills/marketing-ideas (MIT)"
 ---
 
-# Skill — marketing_ideas
+# Modo `ideas` (herdado de `marketing.marketing_ideas`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/marketing-ideas) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/marketing-ideas) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/marketing-ideas (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/marketing-ideas/references/`.
+- Este modo substitui o agente `marketing.marketing_ideas` (M-006): é carregado pelo `marketing.marketing_plan` só no passo com `mode: ideas`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 
@@ -56,16 +54,16 @@ When asked for marketing ideas:
 | Launches | 77-86 | Product Hunt, Lifetime deals, Giveaways |
 | Product-Led | 87-96 | Viral loops, Powered-by marketing, Free migrations |
 | Content Formats | 97-109 | Podcasts, Courses, Annual reports, Year wraps |
-| Unconventional | 110-122 | Awards, Challenges, [Guerrilla marketing](../../../vendor/marketingskills/skills/marketing-ideas/references/guerrilla-marketing.md) |
+| Unconventional | 110-122 | Awards, Challenges, [Guerrilla marketing](../../../../vendor/marketingskills/skills/marketing-ideas/references/guerrilla-marketing.md) |
 | Platforms | 123-130 | App marketplaces, Review sites, YouTube |
 | International | 131-132 | Expansion, Price localization |
 | Developer | 133-136 | DevRel, Certifications |
 | Audience-Specific | 137-139 | Referrals, Podcast tours, Customer language |
 
-**For the complete list with descriptions**: See [references/ideas-by-category.md](../../../vendor/marketingskills/skills/marketing-ideas/references/ideas-by-category.md)
+**For the complete list with descriptions**: See [references/ideas-by-category.md](../../../../vendor/marketingskills/skills/marketing-ideas/references/ideas-by-category.md)
 
 **Deep dives** (full framework + case library for a single idea):
-- **Guerrilla marketing (#121)**: [references/guerrilla-marketing.md](../../../vendor/marketingskills/skills/marketing-ideas/references/guerrilla-marketing.md) — the direct-mail 3-rule framework (relevance / relationship-building / precision targeting), ROI discipline, "think in stories, not campaigns," "test small before going big," and a named case library (WePay, Xero, Red Bull, Antimetal, Arrows, ProfitWell, Buzzsprout, Wistia).
+- **Guerrilla marketing (#121)**: [references/guerrilla-marketing.md](../../../../vendor/marketingskills/skills/marketing-ideas/references/guerrilla-marketing.md) — the direct-mail 3-rule framework (relevance / relationship-building / precision targeting), ROI discipline, "think in stories, not campaigns," "test small before going big," and a named case library (WePay, Xero, Red Bull, Antimetal, Arrows, ProfitWell, Buzzsprout, Wistia).
 
 ---
 

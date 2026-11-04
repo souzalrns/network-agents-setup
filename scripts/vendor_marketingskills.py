@@ -13,6 +13,9 @@ Gera (e reescreve; não editar à mão):
 - ``skills/marketing/<action>/SKILL.md`` + ``agents/marketing/<action>.agent.md`` para as skills que o
   runner ainda não tinha (``NEW``), e o bloco gerado em ``config/marketing-capabilities.yaml``.
 - ``vendor/marketingskills/tools-registry.md``: o catálogo de ferramentas, sem parceiros nem guias de API.
+- ``skills/marketing/<herdeiro>/modes/<modo>.md`` para as skills ``MERGED`` (M-006, P-89 = A): a função de um
+  agente fundido passa a ser um modo da skill do herdeiro. A capability mantém o id e passa a apontar para o
+  herdeiro + ``mode``; o agente e a skill antigos são apagados por este script (ficam no histórico do git).
 
 Limpeza (decisão do maestro, 2026-10-12): fica de fora tudo o que chama APIs (``tools/clis``,
 ``tools/integrations``, ``tools/composio``, ``tools/SETUP.md``) e os parceiros pagos (Converly, Ploy e
@@ -59,40 +62,46 @@ NEW: dict[str, tuple[str, str, str]] = {
     "aso": ("app_store_optimization", "prepare", "Auditoria e optimização de fichas na App Store e Google Play (título, keywords, screenshots, reviews)."),
     "attribution": ("performance_analysis", "read", "Lê resultados de campanha e atribuição (modelos, incrementalidade, MMM leve) para decidir o próximo ciclo."),
     "churn-prevention": ("churn_prevention", "prepare", "Reduz churn: fluxos de cancelamento, ofertas de retenção, recuperação de pagamentos falhados."),
-    "co-marketing": ("co_marketing", "prepare", "Encontra parceiros de co-marketing e planeia campanhas conjuntas."),
     "cold-email": ("cold_outbound", "prepare", "Rascunhos de outbound B2B (emails frios e follow-ups) dentro do RGPD/LGPD; nunca envia."),
     "community-marketing": ("community_marketing", "prepare", "Estratégia de comunidade (fóruns, Discord, grupos) para crescimento e lealdade."),
     "competitor-profiling": ("competitor_profiling", "read", "Perfis de concorrentes a partir dos sites deles: posicionamento, preços, mensagens, lacunas."),
-    "competitors": ("comparison_pages", "prepare", "Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra."),
     "cro": ("conversion_optimization", "prepare", "Optimização de conversão de páginas e formulários: diagnóstico, hipóteses e alterações priorizadas."),
     "directory-submissions": ("directory_submissions", "prepare", "Lista e textos para submeter o produto em directórios e sites de reviews; o envio é humano."),
     "emails": ("email_sequences", "prepare", "Sequências de email (boas-vindas, nurture, lifecycle, reactivação) com copy e calendário."),
-    "events": ("events_marketing", "prepare", "Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline."),
-    "free-tools": ("free_tools", "prepare", "Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO."),
     "image": ("marketing_images", "prepare", "Briefs e prompts de imagens de marketing (heróis de blog, gráficos sociais, OG) e a sua optimização."),
-    "launch": ("launch_plan", "prepare", "Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist."),
     "lead-magnets": ("lead_magnets", "prepare", "Cria e optimiza lead magnets (guias, templates, checklists) para captar emails."),
-    "marketing-council": ("marketing_council", "prepare", "Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação."),
-    "marketing-ideas": ("marketing_ideas", "prepare", "Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio."),
-    "marketing-loops": ("marketing_loops", "prepare", "Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano."),
     "marketing-plan": ("marketing_plan", "prepare", "Plano de marketing completo (objectivos, públicos, canais, orçamento, calendário, métricas)."),
     "marketing-psychology": ("marketing_psychology", "prepare", "Aplica princípios de psicologia e economia comportamental à mensagem, oferta e página, sem manipulação."),
     "offers": ("offer_design", "prepare", "Desenha ou melhora a oferta (o que se vende): valor, bónus, garantias, escassez honesta."),
     "onboarding": ("onboarding_activation", "prepare", "Onboarding e activação pós-registo: primeiro uso, tempo até ao valor, emails e checklists."),
     "paywalls": ("paywalls_upgrades", "prepare", "Paywalls, ecrãs de upgrade e feature gates dentro do produto."),
-    "popups": ("popups_overlays", "prepare", "Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência."),
-    "pricing": ("pricing_strategy", "prepare", "Decisões de preço, planos e monetização, com hipóteses a validar."),
     "product-marketing": ("product_marketing_context", "prepare", "Documento de contexto de product marketing (produto, público, posicionamento) que as outras skills leem primeiro."),
     "programmatic-seo": ("programmatic_seo", "prepare", "Páginas SEO em escala a partir de templates e dados, com controlo de qualidade e de canibalização."),
     "prospecting": ("prospecting_lists", "prepare", "Define e qualifica listas de prospects B2B (empresas e cargos) dentro do RGPD/LGPD; sem identificação de pessoas."),
     "public-relations": ("public_relations", "prepare", "Relações públicas: ângulos, comunicados, pitch a jornalistas e comunicação de crise."),
     "referrals": ("referral_programs", "prepare", "Programas de referência e afiliados: incentivo, mecânica, regras e medição."),
-    "revops": ("revenue_operations", "prepare", "RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas."),
     "sales-enablement": ("sales_enablement", "prepare", "Material de vendas: one-pagers, decks, objecções e guiões de demo."),
     "schema": ("schema_markup", "prepare", "Schema markup e dados estruturados (JSON-LD) para páginas e rich results."),
     "signup": ("signup_flow", "prepare", "Optimiza registo, criação de conta e activação do trial."),
     "site-architecture": ("site_architecture", "prepare", "Arquitectura do site: hierarquia de páginas, navegação, URLs e linkagem interna."),
     "sms": ("sms_whatsapp", "prepare", "Marketing por SMS e WhatsApp com opt-in explícito (RGPD/LGPD): fluxos, copy e frequência."),
+}
+
+# M-006 (P-89 = A, decisão do maestro de 2026-11-04): skills cuja função passou para um agente herdeiro,
+# como modo da skill dele. action upstream -> (capability id, níveis, descrição PT, agente herdeiro, modo).
+# A capability mantém o id (a função continua registada) e aponta para o herdeiro + `mode`.
+MERGED: dict[str, tuple[str, str, str, str, str]] = {
+    "pricing": ("pricing_strategy", "prepare", "Decisões de preço, planos e monetização, com hipóteses a validar.", "marketing.offers", "pricing"),
+    "launch": ("launch_plan", "prepare", "Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist.", "marketing.marketing_plan", "launch"),
+    "popups": ("popups_overlays", "prepare", "Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência.", "marketing.cro", "popups"),
+    "free-tools": ("free_tools", "prepare", "Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO.", "marketing.lead_magnets", "free_tools"),
+    "competitors": ("comparison_pages", "prepare", "Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra.", "marketing.seo_brief", "competitors"),
+    "revops": ("revenue_operations", "prepare", "RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas.", "marketing.inbound_qualification", "revops"),
+    "co-marketing": ("co_marketing", "prepare", "Encontra parceiros de co-marketing e planeia campanhas conjuntas.", "marketing.referrals", "co_marketing"),
+    "events": ("events_marketing", "prepare", "Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline.", "marketing.community_marketing", "events"),
+    "marketing-ideas": ("marketing_ideas", "prepare", "Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio.", "marketing.marketing_plan", "ideas"),
+    "marketing-council": ("marketing_council", "prepare", "Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação.", "marketing.marketing_plan", "council"),
+    "marketing-loops": ("marketing_loops", "prepare", "Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano.", "marketing.marketing_plan", "loops"),
 }
 
 # Notas obrigatórias por skill (política do domínio: offensive forbidden, GOV-IMPACT-1, P-65).
@@ -259,13 +268,79 @@ def registry(src: Path) -> None:
     out.write_text(head + body.lstrip(), encoding="utf-8")
 
 
-def relink(body: str, name: str) -> str:
+def relink(body: str, name: str, depth: int = 3) -> str:
     """Os links `references/x.md` do upstream passam a apontar para a cópia única em vendor/.
 
     SKILL-REF-1 (H-01, 2026-10-25, B): a skill do runner fica em skills/marketing/<action>/ e as
     referências só existem em vendor/marketingskills/skills/<name>/references/ (uma cópia, sem duplicar).
     """
-    return re.sub(r"\]\((references/[^)\s]+)\)", lambda m: f"](../../../vendor/marketingskills/skills/{name}/{m.group(1)})", body)
+    up = "../" * depth  # skills/marketing/<action>/ = 3; .../<action>/modes/ = 4 (M-006)
+    return re.sub(r"\]\((references/[^)\s]+)\)", lambda m: f"]({up}vendor/marketingskills/skills/{name}/{m.group(1)})", body)
+
+
+def _contract_notes(name: str) -> list[str]:
+    notes = [
+        "Prepara; não publica, não envia e não gasta media (`act_in_production: forbidden`; gate `plan_approve`).",
+        "Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.",
+        "O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).",
+        "Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o "
+        + "`product_marketing_context`, se existir). As referências citadas estão em "
+        + f"`vendor/marketingskills/skills/{name}/references/`.",
+    ]
+    if name in COMPLIANCE:
+        notes.append(COMPLIANCE[name])
+    return notes
+
+
+def heir_skill(agent_id: str) -> tuple[str, str]:
+    """(action, skill) declarados no frontmatter do agente herdeiro (já escrito, se for um NEW)."""
+    path = ROOT / "agents" / "marketing" / f"{agent_id.split('.', 1)[1]}.agent.md"
+    fm, _ = split_frontmatter(path.read_text(encoding="utf-8"))
+    data = dict(re.findall(r"^(\w+): (.+)$", fm, re.M))
+    action, skill = data.get("action"), data.get("skill")
+    if not action or not skill or not (ROOT / skill).is_file():
+        raise SystemExit(f"herdeiro {agent_id}: falta action/skill no frontmatter ({path})")
+    return action, skill
+
+
+def merged_files(commit: str) -> None:
+    """M-006: cada skill MERGED vira `modes/<modo>.md` da skill do herdeiro; o agente antigo sai."""
+    for name, (_cap, _levels, desc, heir, mode) in MERGED.items():
+        old = name.replace("-", "_")
+        _action, skill = heir_skill(heir)
+        src_md = (VENDOR / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+        _fm, body = split_frontmatter(src_md)
+        body = relink(body, name, depth=4)
+        notes = _contract_notes(name) + [
+            f"Este modo substitui o agente `marketing.{old}` (M-006): é carregado pelo `{heir}` só no passo com "
+            f"`mode: {mode}`. As regras da skill base do herdeiro continuam a valer.",
+        ]
+        mode_md = ROOT / Path(skill).parent / "modes" / f"{mode}.md"
+        mode_md.parent.mkdir(parents=True, exist_ok=True)
+        mode_md.write_text(
+            "---\n"
+            f"name: {mode}\n"
+            f"mode: {mode}\n"
+            f'description: "{desc}"\n'
+            f"replaces: marketing.{old}\n"
+            f'source: "{UPSTREAM}@{commit[:7]} skills/{name} (MIT)"\n'
+            "---\n\n"
+            f"# Modo `{mode}` (herdado de `marketing.{old}`)\n\n"
+            f"> Incorporado de [{UPSTREAM}](https://github.com/{UPSTREAM}/tree/{commit}/skills/{name}) (MIT),\n"
+            "> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.\n\n"
+            "## Contrato do runner (obrigatório)\n\n" + "".join(f"- {n}\n" for n in notes) + "\n"
+            "## Conhecimento (upstream)\n\n" + body.lstrip(),
+            encoding="utf-8",
+        )
+        # O agente e a skill antigos saem (recuperáveis no git); a pasta só pode ter o SKILL.md gerado.
+        (ROOT / "agents" / "marketing" / f"{old}.agent.md").unlink(missing_ok=True)
+        old_dir = ROOT / "skills" / "marketing" / old
+        if old_dir.exists():
+            leftovers = sorted(p.name for p in old_dir.iterdir() if p.name != "SKILL.md")
+            if leftovers:
+                raise SystemExit(f"{old_dir}: tem ficheiros que não foram gerados por este script: {leftovers}")
+            (old_dir / "SKILL.md").unlink(missing_ok=True)
+            old_dir.rmdir()
 
 
 def runner_files(commit: str) -> None:
@@ -274,16 +349,7 @@ def runner_files(commit: str) -> None:
         src_md = (VENDOR / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
         _fm, body = split_frontmatter(src_md)
         body = relink(body, name)
-        notes = [
-            "Prepara; não publica, não envia e não gasta media (`act_in_production: forbidden`; gate `plan_approve`).",
-            "Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.",
-            "O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).",
-            "Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o "
-            + "`product_marketing_context`, se existir). As referências citadas estão em "
-            + f"`vendor/marketingskills/skills/{name}/references/`.",
-        ]
-        if name in COMPLIANCE:
-            notes.append(COMPLIANCE[name])
+        notes = _contract_notes(name)
         skill_dir = ROOT / "skills" / "marketing" / action
         skill_dir.mkdir(parents=True, exist_ok=True)
         (skill_dir / "SKILL.md").write_text(
@@ -347,6 +413,21 @@ def capabilities_block(existing: set[str]) -> str:
             "    status: partial  # ligada (agente + skill); `implemented` só com um plano que a use",
             "",
         ]
+    for name, (cap, levels, desc, heir, mode) in MERGED.items():
+        if cap in existing:
+            continue
+        action, skill = heir_skill(heir)
+        lines += [
+            f"  - id: {cap}  # M-006: substitui marketing.{name.replace('-', '_')} (modo do herdeiro)",
+            f"    description: {json.dumps(desc, ensure_ascii=False)}",
+            f"    levels: [{levels}]",
+            f"    action: {action}",
+            f"    agent: {heir}",
+            f"    skill: {skill}",
+            f"    mode: {mode}",
+            "    status: partial  # `implemented` só com um plano que use a action com este modo",
+            "",
+        ]
     return "\n".join(lines + [END])
 
 
@@ -362,9 +443,17 @@ def write_capabilities() -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _where(n: str) -> str:
+    if n in NEW:
+        return "runner: `" + n.replace("-", "_") + "`"
+    if n in MERGED:
+        return f"runner: modo `{MERGED[n][4]}` de `{MERGED[n][3]}` (M-006)"
+    return "já coberta no runner por " + OVERLAP[n]
+
+
 def provenance(commit: str, digests: dict[str, str]) -> None:
     rows = "\n".join(
-        f"| `{n}` | {'runner: `' + n.replace('-', '_') + '`' if n in NEW else 'já coberta no runner por ' + OVERLAP[n]} | `{d[:12]}` |"
+        f"| `{n}` | {_where(n)} | `{d[:12]}` |"
         for n, d in sorted(digests.items())
     )
     (VENDOR / "PROVENANCE.md").write_text(
@@ -425,15 +514,18 @@ def main(argv: list[str] | None = None) -> int:
     if not head.startswith(args.commit):
         raise SystemExit(f"o checkout está em {head}, não em {args.commit}")
     names = {p.name for p in (args.src / "skills").iterdir() if p.is_dir()}
-    if names != set(NEW) | set(OVERLAP):
-        raise SystemExit(f"skills novas ou removidas no upstream: {sorted(names ^ (set(NEW) | set(OVERLAP)))}")
+    known = set(NEW) | set(OVERLAP) | set(MERGED)
+    if names != known or set(NEW) & set(MERGED):
+        raise SystemExit(f"skills novas ou removidas no upstream: {sorted(names ^ known)}")
     digests = vendor_skills(args.src)
     registry(args.src)
     runner_files(head)
+    merged_files(head)
     write_capabilities()
     provenance(head, digests)
     install_script(head)
-    print(f"ok: {len(digests)} skills em vendor/, {len(NEW)} actions novas no runner, commit {head[:7]}")
+    print(f"ok: {len(digests)} skills em vendor/, {len(NEW)} actions novas no runner, "
+          f"{len(MERGED)} modos de herdeiros (M-006), commit {head[:7]}")
     return 0
 
 

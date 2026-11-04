@@ -1,18 +1,15 @@
 ---
 name: popups
+mode: popups
 description: "Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência."
-action: popups
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.popups
 source: "coreyhaines31/marketingskills@1efedbc skills/popups (MIT)"
 ---
 
-# Skill — popups
+# Modo `popups` (herdado de `marketing.popups`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/popups) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/popups) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/popups (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/popups/references/`.
+- Este modo substitui o agente `marketing.popups` (M-006): é carregado pelo `marketing.cro` só no passo com `mode: popups`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 

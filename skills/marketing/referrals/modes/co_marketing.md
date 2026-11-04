@@ -1,18 +1,15 @@
 ---
 name: co_marketing
+mode: co_marketing
 description: "Encontra parceiros de co-marketing e planeia campanhas conjuntas."
-action: co_marketing
-version: 1
-vertical: marketing
-priority: P2
-item_13: false
+replaces: marketing.co_marketing
 source: "coreyhaines31/marketingskills@1efedbc skills/co-marketing (MIT)"
 ---
 
-# Skill — co_marketing
+# Modo `co_marketing` (herdado de `marketing.co_marketing`)
 
-> Incorporada de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/co-marketing) (MIT),
-> sem parceiros pagos nem chamadas a APIs. Gerada por `scripts/vendor_marketingskills.py`: não editar à mão.
+> Incorporado de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills/tree/1efedbc5148b54b2f0f6c6c9fe0be62e151c7fff/skills/co-marketing) (MIT),
+> sem parceiros pagos nem chamadas a APIs. Gerado por `scripts/vendor_marketingskills.py`: não editar à mão.
 
 ## Contrato do runner (obrigatório)
 
@@ -20,6 +17,7 @@ source: "coreyhaines31/marketingskills@1efedbc skills/co-marketing (MIT)"
 - Nunca inventar dados do negócio (preços, clientes, métricas): usar o que vem no plano ou pedir.
 - O conhecimento abaixo está em inglês; a peça sai na língua do pedido (PT-PT ou PT-BR, conforme o negócio).
 - Onde o texto manda ler `.agents/product-marketing-context.md`, usar o contexto do plano (e o `product_marketing_context`, se existir). As referências citadas estão em `vendor/marketingskills/skills/co-marketing/references/`.
+- Este modo substitui o agente `marketing.co_marketing` (M-006): é carregado pelo `marketing.referrals` só no passo com `mode: co_marketing`. As regras da skill base do herdeiro continuam a valer.
 
 ## Conhecimento (upstream)
 
@@ -113,7 +111,7 @@ Co-marketing is one of **five partnership types**. Know the taxonomy so you rout
 
 Standout moves: **integrations** as a decision factor (83% of enterprise buyers), Calendly's staged ladder (calendar → sales → marketing); **affiliate** power law (20% of affiliates drive 80% of revenue) and buyout clauses (~12× monthly commission); **permissionless co-marketing** (Notion building templates for Airbnb/Amazon/Tesla to ride their brand — no contract needed); App Store distribution (Grammarly 0→10M).
 
-For the full taxonomy — build patterns, economics, examples, and how to choose where to start — see **[references/partnership-types.md](../../../vendor/marketingskills/skills/co-marketing/references/partnership-types.md)**. (Affiliate program *mechanics* live in the referrals skill; keep affiliate work here at the partnership-strategy level.)
+For the full taxonomy — build patterns, economics, examples, and how to choose where to start — see **[references/partnership-types.md](../../../../vendor/marketingskills/skills/co-marketing/references/partnership-types.md)**. (Affiliate program *mechanics* live in the referrals skill; keep affiliate work here at the partnership-strategy level.)
 
 ---
 

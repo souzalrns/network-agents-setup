@@ -6,7 +6,7 @@ from typing import Any
 
 from .models import Step
 from .skill_activation import activate_for_task, materialize_activation
-from .skills import repo_root_from_out
+from .skills import repo_root_from_out, resolve_mode_path, resolve_skill_path
 
 
 class StepResult:
@@ -64,6 +64,13 @@ def _write_stub_artifact(out_root: Path, step: Step) -> str | None:
 def execute_stub(out_root: Path, step: Step) -> StepResult:
     if step.human_gate:
         return StepResult(ok=True, detail="awaiting_human_gate", artifact=None)
+    if step.mode:
+        # P-89: o stub tambem falha com um modo inexistente, para um dry-run apanhar o erro
+        # antes de um run real (a mesma regra do execute_external_request).
+        vertical = str(step.raw.get("vertical") or "marketing") if isinstance(step.raw, dict) else "marketing"
+        skill = resolve_skill_path(repo_root_from_out(out_root), step.action, vertical)
+        if resolve_mode_path(skill, step.mode) is None:
+            return StepResult(ok=False, detail=f"mode_missing: modo `{step.mode}` nao existe para a action `{step.action}`")
     art = _write_stub_artifact(out_root, step)
     return StepResult(ok=True, detail="stub_ok", artifact=art)
 
@@ -117,6 +124,10 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     )
 
     materialize_activation(pending, activation)
+    if activation.mode_error:
+        # P-89: fail-closed. Sem o modo, o herdeiro faria o passo sem o conhecimento da funcao
+        # fundida; o erro fica no skill_activation.json e o modelo nem e chamado.
+        return StepResult(ok=False, detail=f"mode_missing: {activation.mode_error}")
     if client_memory_path.is_file():
         (pending / "CLIENT_MEMORY.md").write_text(
             client_memory_path.read_text(encoding="utf-8"), encoding="utf-8"
