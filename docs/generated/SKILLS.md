@@ -3,7 +3,7 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:skills`
 >
-> Gerado em: 2026-11-04
+> Gerado em: 2026-11-05
 > Fonte: `skills/**/SKILL.md`
 > Total: **124** skills
 >
