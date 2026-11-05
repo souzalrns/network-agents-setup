@@ -32,7 +32,8 @@ version: 1
 objective: "teste S30"
 {client_line}steps:
   - id: only
-    action: research
+    action: ui_spec
+    vertical: design
 """),
         encoding="utf-8",
     )

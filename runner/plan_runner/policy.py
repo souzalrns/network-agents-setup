@@ -101,6 +101,16 @@ def policy_kb(vertical: str, path: Path | None = None) -> str | None:
     return str(kbs[0]) if kbs else None
 
 
+def requires_knowledge(step: Step, *, policy_path: Path | None = None, repo_root: Path | None = None) -> bool:
+    """O passo tem de receber contexto da base de conhecimento (R6 da vertical dele)?"""
+    policy = load_policy(policy_path)
+    if _is_gate(step, {str(a) for a in policy["global"]["gate_actions"]}):
+        return False
+    vert = _step_vertical(step, _agent_index(str((repo_root or REPO_ROOT).resolve())))
+    prof = policy["verticals"].get(vert) if vert else None
+    return isinstance(prof, dict) and isinstance(prof.get("knowledge"), dict)
+
+
 @lru_cache(maxsize=4)
 def _agent_index(repo_root: str) -> dict[str, list[str]]:
     """action -> verticais dos agentes com essa action (frontmatter de agents/**/*.agent.md)."""

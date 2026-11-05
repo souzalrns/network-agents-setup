@@ -75,6 +75,31 @@ def execute_stub(out_root: Path, step: Step) -> StepResult:
     return StepResult(ok=True, detail="stub_ok", artifact=art)
 
 
+def knowledge_gap(out_root: Path, step: Step) -> str | None:
+    """M-009: motivo se o passo exige contexto da base de conhecimento (R6) e ele não chegou; senão None."""
+    from .artifact_sources import KNOWLEDGE_SOURCES_FILE
+    from .knowledge_wiring import CONTEXT_FILENAME
+    from .policy import requires_knowledge
+
+    if not requires_knowledge(step):
+        return None
+    pending = out_root / "pending_steps" / step.id
+    ctx = pending / CONTEXT_FILENAME
+    if not ctx.is_file():
+        return "o contexto não foi pedido (falta o bloco knowledge: ou o pedido não correu)"
+    text = ctx.read_text(encoding="utf-8")
+    if not text.startswith("[L5 CONTEXT]"):
+        first = text.splitlines()[1] if len(text.splitlines()) > 1 else text[:120]
+        return f"a base de conhecimento não devolveu contexto ({first.strip()[:200]})"
+    try:
+        sources = json.loads((pending / KNOWLEDGE_SOURCES_FILE).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        sources = []
+    if not sources:
+        return "o contexto veio sem nenhuma fonte citada"
+    return None
+
+
 def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> StepResult:
     """Write a pending request including agent+skill paths; wait for result.json.
 
@@ -92,6 +117,12 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     # skills externas (candidatas, nunca instaladas). Resultado no request.json,
     # em skill_activation.json e, se houver algo a dizer, no prompt.
     activation = activate_for_task(repo_root, step)
+    # um result.json que já existe veio de um pedido que passou nesta verificação: não se refaz
+    done = (pending / "result.json").is_file()
+    gap = None if activation.mode_error or done else knowledge_gap(out_root, step)
+    if gap:  # M-009, fail-closed: sem o conhecimento que a regra exige, nem há pedido para o worker
+        (pending / "request.json").unlink(missing_ok=True)  # um pedido antigo não pode ser servido sem contexto
+        return StepResult(ok=False, detail=f"knowledge_missing: o passo `{step.id}` exige a base de conhecimento (R6) e {gap}")
 
     req: dict[str, Any] = {
         "step_id": step.id,

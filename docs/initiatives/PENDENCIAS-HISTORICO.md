@@ -101,13 +101,14 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 
-## 7. Histórico (146 linhas: 124 FECHADO, 22 OBSOLETO)
+## 7. Histórico (147 linhas: 125 FECHADO, 22 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
+| M-008 | Os 8 templates das áreas sem `knowledge:`; o motor passa a verificar as regras do plano antes de arrancar (`config/plan-policy.yaml`, `runner/plan_runner/policy.py`) | 2026-11-05 | #288 (`e17473b`); `runner/tests/test_policy.py` (81 testes) | FECHADO | As regras apanharam e corrigiram 21 planos do repo (conhecimento, compliance antes da aprovação, `web_search` que o motor nunca teve); fase 2 no M-009 |
 | RUNNER-RESUME-1 | Prova real da recuperação: interromper um plano real a meio e retomar com `resume` | 2026-10-27 | PR #259 (item no `setup_close_runs.py`); run real em PASS (`pilots/evidence/setup-close-2026-10-27T015747Z.md`): interrompido depois de `research`, retomado até `paused_human_gate`, cada passo terminou 1 vez | FECHADO | A Recuperação passa de TESTADA a PROVADA na matriz de prontidão |
 | F2 | Web research universal: tool `fetch_url` no runner (área em `web_area`) + plano `web-research-demo` com proveniência | 2026-10-27 | F2a (#111), F2-ALLOW-1 (#141, #145), F2b; PR #256 (correcção da raiz da allowlist em `skills.py`, `test_repo_root_from_out_sessao_aninhada`); run real em PASS (`pilots/evidence/setup-close-2026-10-27T002056Z.md`) | FECHADO | O `discover` e o fallback JavaScript seguem no F2-DISC-1; o `scrape.yml` fica como legado (P-24 = A) |
 | F3b-AUTH-1 | Autoridade e conflitos do F3b: `match_knowledge_v3`, `min_authority`, `superseded_by`, anotação no bloco do runner, flag no MCP | 2026-10-27 | MCP-V3 em PASS contra a produção (v3; `authority: curado` no 1.º hit), run de 2026-10-27 (evidência `pilots/evidence/setup-close-2026-10-27T002056Z.md`); SQL e flag em produção desde 2026-10-24; testes `test_f3b_authority.py` e `test_f3b_authority_db.py` | FECHADO | Sessão de fecho do setup (8/8 PASS) |
