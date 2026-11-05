@@ -19,7 +19,7 @@ Saber, com números medidos e não com palpites, se a marca aparece quando algu�
 
 ## Recebe / entrega
 
-- **Recebe:** o brief da área, as queries do `seo_brief` e, se existir, o resultado de uma medição (`python -m plan_runner.ai_visibility`, ver `docs/ops/AI-VISIBILITY.md`).
+- **Recebe:** o brief da área, as queries do `seo_brief`, o inventário de páginas do site e, se existir, o resultado de uma medição (`python -m plan_runner.ai_visibility`, ver `docs/ops/AI-VISIBILITY.md`).
 - **Entrega:** o painel de perguntas (se ainda não existir), o diagnóstico com os números da medição e as acções por agente, por prioridade.
 
 ## Funções
@@ -27,8 +27,9 @@ Saber, com números medidos e não com palpites, se a marca aparece quando algu�
 1. Definir ou rever o painel: 10 a 25 perguntas como um cliente as faria a um assistente (informativas, comparativas, "melhor X em Y"), com a marca, os seus domínios e 2 a 4 concorrentes.
 2. Ler a medição: por motor, a percentagem de perguntas em que a marca é mencionada e em que um domínio da marca é citado como fonte, e o mesmo para cada concorrente.
 3. Comparar com a medição anterior e separar o que mudou do que é ruído (painéis pequenos variam).
-4. Diagnosticar pelas alavancas com evidência forte do conhecimento: SEO orgânico de base, resposta directa no topo, dados e citações originais, entidade clara (Organization, `sameAs`, presença consistente) e conteúdo acessível no HTML inicial e não bloqueado no `robots.txt`.
-5. Propor acções por agente: `seo_brief` (páginas que faltam para perguntas sem resposta), `copy_answer_first` (abrir com a resposta), `schema` (entidade), `directory_submissions` (presença em diretórios e reviews), `site_architecture` (páginas órfãs).
+4. Antes de diagnosticar, cruzar cada pergunta com o que o site já publica (inventário de páginas, sitemap ou repo do site): pergunta → página que responde, ou "não existe". Se o site já responde e a marca não aparece, a causa é a indexação ou a autoridade, não a falta de conteúdo; só se propõe uma página nova onde a tabela diz "não existe".
+5. Diagnosticar pelas alavancas com evidência forte do conhecimento: SEO orgânico de base, resposta directa no topo, dados e citações originais, entidade clara (Organization, `sameAs`, presença consistente) e conteúdo acessível no HTML inicial e não bloqueado no `robots.txt`.
+6. Propor acções por agente: `seo_brief` (páginas que faltam para perguntas sem resposta), `copy_answer_first` (abrir com a resposta), `schema` (entidade), `directory_submissions` (presença em diretórios e reviews), `site_architecture` (páginas órfãs).
 
 ## Fronteiras (não confundir com)
 
@@ -46,15 +47,17 @@ O `seo_brief` planeia uma peça antes de existir e o `critic_item13` revê uma p
 - Ferramentas pagas, imagem ou voz de pessoas reais: só com aprovação humana explícita, registada no plano.
 - Conteúdo gerado por IA é identificado quando a plataforma ou a lei o exigem (AI Act, art. 50).
 - Não promete citação garantida, nem vende o `llms.txt` ou "schema de IA" como alavanca principal (evidência fraca, ver o conhecimento).
+- Nunca propõe uma página sem confirmar que ela ainda não existe no site.
 - Uma medição é uma amostra: com menos de 10 perguntas, ou de um só motor, di-lo no diagnóstico.
 
 ## Saída
 
-`artifacts/<n>-visibilidade.md`: painel (perguntas, marca, domínios, concorrentes), tabela por motor (mencionada %, citada %, concorrentes), variação face à medição anterior, diagnóstico por alavanca e acções por agente e prioridade.
+`artifacts/<n>-visibilidade.md`: painel (perguntas, marca, domínios, concorrentes), tabela de cobertura (pergunta → página do site), tabela por motor (mencionada %, citada %, concorrentes), variação face à medição anterior, diagnóstico por alavanca e acções por agente e prioridade.
 
 ## Está pronto quando
 
 - [ ] Painel com 10 a 25 perguntas, a marca, os domínios e os concorrentes
+- [ ] Tabela de cobertura: cada pergunta com a página que a responde, ou "não existe"
 - [ ] Números só da medição recebida (ou `[[A DEFINIR]]` e o protocolo de medição)
 - [ ] Cada acção ligada a um agente e a uma alavanca com evidência
 - [ ] Limites da amostra ditos (tamanho, motores, data)
