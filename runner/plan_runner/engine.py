@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import yaml
 
-from . import done_when, hitl, working_memory
+from . import approval, done_when, hitl, working_memory
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
@@ -288,6 +288,7 @@ def run_plan(
                     "level": step.human_gate.level,
                     "kind": step.human_gate.kind,
                     "allow": step.human_gate.allow,
+                    **approval.request_payload(out, plan, step.id),  # M-009: o que está a ser aprovado
                 },
             )
             hitl.write_request(
@@ -377,6 +378,11 @@ def resume_run(
     log = EventLog(out_dir / "events.jsonl")
     plan = load_plan(out_dir / "plan.yaml")
     order = topo_order(plan)
+    # M-009: as aprovações já dadas têm de bater com o disco; a pendente, com o que foi pedido
+    approval.verify_past(out_dir, plan, log, run_id)
+    gate_fp: dict[str, Any] = {}
+    if state == "paused_human_gate" and not status.get("tool_approval") and status.get("paused_at_step"):
+        gate_fp = approval.check_pending(out_dir, plan, str(status["paused_at_step"]), decision, log, run_id)
     completed = set(status.get("completed") or [])
     mode = status.get("mode") or "stub"
     # --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.
@@ -420,7 +426,7 @@ def resume_run(
         log.append(
             "human_gate_resolved",
             run_id,
-            {"step_id": paused, "decision": decision},
+            {"step_id": paused, "decision": decision, **gate_fp},
             actor={"kind": "human", "id": "cli"},
         )
         if decision == "reject":
@@ -464,7 +470,7 @@ def resume_run(
             log.append(
                 "human_gate_requested",
                 run_id,
-                {"step_id": step.id, "allow": step.human_gate.allow},
+                {"step_id": step.id, "allow": step.human_gate.allow, **approval.request_payload(out_dir, plan, step.id)},
             )
             hitl.write_request(
                 out_dir,

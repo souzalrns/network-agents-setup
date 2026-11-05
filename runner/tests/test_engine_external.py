@@ -1,5 +1,8 @@
 """Testes do engine legacy em --mode external + ramos de erro.
 
+Correm num subprocesso (sem a base de conhecimento falsa do conftest): usam agentes do design,
+que nao tem a regra R6, para o passo nao parar por falta de contexto (M-009).
+
 Cobre ramos do run_plan/resume_run que os testes de fluxo nao exercitam:
 budget abort, external waiting, step failed, plan_done sem HITL.
 """
@@ -54,9 +57,11 @@ budget:
   max_steps: 1
 steps:
   - id: a
-    action: research
+    action: ui_spec
+    vertical: design
   - id: b
-    action: internal_brief
+    action: ux_flow
+    vertical: design
     depends_on: [a]
 """)
     out = tmp_run_dir
@@ -80,7 +85,8 @@ id: ext
 objective: teste external
 steps:
   - id: prep
-    action: research
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
     proc = _run(out, plan, mode="external")
@@ -106,7 +112,8 @@ id: fail
 objective: teste fail
 steps:
   - id: prep
-    action: research
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
 
@@ -141,9 +148,11 @@ id: simple
 objective: teste done
 steps:
   - id: a
-    action: research
+    action: ui_spec
+    vertical: design
   - id: b
-    action: internal_brief
+    action: ux_flow
+    vertical: design
     depends_on: [a]
 """)
     out = tmp_run_dir
@@ -167,7 +176,8 @@ id: ext2
 objective: teste resume external
 steps:
   - id: prep
-    action: research
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
 
@@ -201,7 +211,8 @@ id: reuse
 objective: teste reuse
 steps:
   - id: a
-    action: research
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
 

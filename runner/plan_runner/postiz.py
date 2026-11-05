@@ -6,7 +6,7 @@ Contrato (docs/ops/POSTIZ.md):
 - **Só com prova no run:** recusa enviar se o run não tiver (1) o passo `publish_package` e o passo
   `compliance_check` concluídos, (2) a compliance a ver o pacote e com `veredicto: aprovado`,
   (3) um `human_gate_resolved` com `approve`/`edit` num passo `plan_approve` que depende dos dois, e
-  (4) o pacote e a compliance sem alterações depois da aprovação.
+  (4) o pacote e a compliance iguais, byte a byte, ao que foi aprovado (sha256 gravado na aprovação, M-009).
 - **Simula por omissão:** sem `--send` não há rede; escreve `artifacts/postiz-envio.json` com o que
   seria enviado. Com `--send` cria **rascunhos** no Postiz (`type: draft`); só `--schedule` agenda.
   Publicar já (`type: now`) não existe aqui.
@@ -163,10 +163,6 @@ def _depends(steps: dict[str, dict[str, Any]], sid: str, target: str) -> bool:
     return target in deps or any(_depends(steps, d, target) for d in deps if d in steps)
 
 
-def _at(evt: dict[str, Any]) -> float:
-    return datetime.fromisoformat(evt["at"]).timestamp()
-
-
 def evidence(run_dir: Path) -> dict[str, Any]:
     """Confirma a prova exigida e devolve os passos e ficheiros. Levanta PostizError com o motivo."""
     status_path, plan_path = run_dir / "status.json", run_dir / "plan.yaml"
@@ -200,10 +196,14 @@ def evidence(run_dir: Path) -> dict[str, Any]:
             last = evt
     if last is None or last["payload"].get("decision") not in APPROVED:
         raise PostizError("sem aprovação humana registada (human_gate_resolved approve) depois do pacote e da compliance")
-    approved_at = _at(last)
+    # M-009: o que se envia tem de ser byte a byte o que foi aprovado (sha256 gravado na aprovação)
+    approved = ((last["payload"].get("fingerprint") or {}).get("artifacts")) or {}
     for s in (pkg, comp):
-        if (run_dir / s["output_artifact"]).stat().st_mtime > approved_at + 1:
-            raise PostizError(f"`{s['output_artifact']}` foi alterado depois da aprovação humana")
+        rel = s["output_artifact"]
+        if rel not in approved:
+            raise PostizError(f"a aprovação não regista o conteúdo de `{rel}` (aprovação sem impressão digital): aprova outra vez")
+        if hashlib.sha256((run_dir / rel).read_bytes()).hexdigest() != approved[rel]:
+            raise PostizError(f"`{rel}` foi alterado depois da aprovação humana")
     return {"run_id": run_id, "package": pkg["output_artifact"], "compliance": comp["output_artifact"],
             "gate": last["payload"]["step_id"], "approved_at": last["at"]}
 

@@ -16,6 +16,7 @@ import yaml
 
 from plan_runner import external_worker as ew
 from plan_runner import postiz
+from plan_runner.approval import ApprovalError
 from plan_runner.engine import resume_run, run_plan
 from tests.test_external_worker import FakeGemini
 
@@ -97,6 +98,10 @@ def _write(run, posts, verdict="aprovado"):
 def approved(paused):
     def make(posts, verdict="aprovado", decision="approve"):
         _write(paused, posts, verdict)
+        if decision == "approve":
+            # M-009: o pacote mudou desde o pedido; o motor renova o pedido e só a 2.ª decisão conta
+            with pytest.raises(ApprovalError, match="mudou desde o pedido"):
+                resume_run(paused, decision=decision)
         resume_run(paused, decision=decision)
         return paused
     return make
@@ -126,10 +131,18 @@ def test_compliance_bloqueada_recusa(approved):
 def test_pacote_alterado_depois_da_aprovacao_recusa(approved):
     run = approved([_post()])
     pkg = run / _plan(run)["publish_package"]["output_artifact"]
-    later = datetime.now(UTC).timestamp() + 60
-    os.utime(pkg, (later, later))
+    pkg.write_text(pkg.read_text(encoding="utf-8").replace("inverno", "outono"), encoding="utf-8")
     with pytest.raises(postiz.PostizError, match="alterado depois da aprovação"):
         postiz.dispatch(run)
+
+
+def test_so_mexer_na_data_do_ficheiro_nao_conta_como_alteracao(approved):
+    """M-009: a prova é o conteúdo (sha256), não a hora do ficheiro."""
+    run = approved([_post()])
+    pkg = run / _plan(run)["publish_package"]["output_artifact"]
+    later = datetime.now(UTC).timestamp() + 60
+    os.utime(pkg, (later, later))
+    assert postiz.dispatch(run)["modo"] == "simulacao"
 
 
 def test_pacote_invalido_recusa(approved):

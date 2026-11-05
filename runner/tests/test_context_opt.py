@@ -6,6 +6,7 @@ plan_runner/token_projection.py, calibrado no B1 real.
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -233,14 +234,28 @@ B1_INPUTS = ("description",)
 
 @pytest.fixture(scope="module")
 def projection():
-    return {ctx: {r["step"]: r for r in tp.project(context=ctx, drop_skill_keys=B1_INPUTS)}
-            for ctx in ("legacy", "opt")}
+    with _base_falsa():
+        return {ctx: {r["step"]: r for r in tp.project(context=ctx, drop_skill_keys=B1_INPUTS)}
+                for ctx in ("legacy", "opt")}
 
 
 @pytest.fixture(scope="module")
 def projection_now():
     """Com as skills como estao hoje (com a `description` do P-45)."""
-    return {ctx: {r["step"]: r for r in tp.project(context=ctx)} for ctx in ("legacy", "opt")}
+    with _base_falsa():
+        return {ctx: {r["step"]: r for r in tp.project(context=ctx)} for ctx in ("legacy", "opt")}
+
+
+@contextmanager
+def _base_falsa():
+    """As fixtures de módulo correm antes do fake_knowledge do conftest (que é por teste)."""
+    from plan_runner import knowledge_wiring
+    from tests.conftest import FakeKnowledge
+
+    with pytest.MonkeyPatch.context() as mp:
+        fake = FakeKnowledge()
+        mp.setattr(knowledge_wiring, "McpKnowledge", lambda: fake)
+        yield
 
 
 def test_legacy_reproduz_o_b1_real(projection):
