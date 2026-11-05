@@ -21,6 +21,7 @@ from plan_runner import memory_l4 as l4  # noqa: E402
 from plan_runner import memory_wiring as mw  # noqa: E402
 from plan_runner.engine import run_plan  # noqa: E402
 from plan_runner.memory_l4 import Scope  # noqa: E402
+from tests.politica import politica
 from tests.test_memory_l4 import DB_URL, fake_embed  # noqa: E402
 
 pytestmark = pytest.mark.skipif(not DB_URL, reason="RAG_TEST_DATABASE_URL nao definida (ver test_memory_l4.py)")
@@ -89,8 +90,8 @@ def fake(monkeypatch):
 
 def _plan(tmp_path: Path, step_extra: str = "", memory: str = "memory: {project: site-a}\n", art: str = "artifacts/01.md") -> Path:
     p = tmp_path / "p.yaml"
-    p.write_text(f"id: mem\nobjective: Post de lancamento\n{memory}steps:\n"
-                 f"  - {{id: post, action: copy_social, output_artifact: {art}{step_extra}}}\n", encoding="utf-8")
+    p.write_text(politica(f"id: mem\nobjective: Post de lancamento\n{memory}steps:\n"
+                          f"  - {{id: post, action: copy_social, output_artifact: {art}{step_extra}}}\n"), encoding="utf-8")
     return p
 
 
