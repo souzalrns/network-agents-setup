@@ -20,6 +20,8 @@ import yaml
 from plan_runner import external_worker as ew
 from plan_runner import tool_executor as te
 from plan_runner.engine import run_plan
+from plan_runner.policy import PolicyError
+from tests.politica import politica_dict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SECRET = "SEGREDO-NAO-PODE-SAIR-123"
@@ -73,7 +75,7 @@ def run_dir():
 
 def _plan(tmp_path: Path, steps: list[dict], **top) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text(yaml.safe_dump({"id": "teste-tools", "version": 1, "objective": "testar tools", **top, "steps": steps}), encoding="utf-8")
+    p.write_text(yaml.safe_dump(politica_dict({"id": "teste-tools", "version": 1, "objective": "testar tools", **top, "steps": steps})), encoding="utf-8")
     return p
 
 
@@ -267,7 +269,8 @@ def test_before_turn_corre_antes_de_cada_turno_extra(tmp_path):
 # --------------------------------------------------------------------------- worker (run_plan real)
 
 
-STEP = {"id": "s", "action": "research", "output_artifact": "artifacts/01.md", "tools_allowed": ["read_repo_file", "web_search"]}
+# M-008 (R1): uma tool que o motor não tem (ex.: web_search) já não chega ao run: o plano é recusado.
+STEP = {"id": "s", "action": "research", "output_artifact": "artifacts/01.md", "tools_allowed": ["read_repo_file"]}
 
 
 def test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre(tmp_path, run_dir, monkeypatch):
@@ -280,7 +283,7 @@ def test_sem_flag_o_passo_faz_a_chamada_unica_de_sempre(tmp_path, run_dir, monke
     result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
     # P-42 = A (AU-20b): a flag desligada fica escrita no resultado, não só pela ausência do campo
     assert result["meta"]["tools"] == {"enabled": False, "reason": "PLAN_RUNNER_TOOLS desligada",
-                                       "flag": "PLAN_RUNNER_TOOLS", "tools_allowed": ["read_repo_file", "web_search"]}
+                                       "flag": "PLAN_RUNNER_TOOLS", "tools_allowed": ["read_repo_file"]}
 
 
 @pytest.mark.parametrize("context", ["opt", "legacy"])
@@ -294,13 +297,13 @@ def test_com_flag_o_worker_usa_a_tool_e_audita(tmp_path, run_dir, monkeypatch, c
     first, second = script.bodies
     system = first["systemInstruction"]["parts"][0]["text"]
     assert ew.NO_TOOLS_SENTENCE not in system and "SÓ DE LEITURA" in system and te.DATA_NOTE in system
-    assert first["tools"] == [{"functionDeclarations": [te.REGISTRY["read_repo_file"].declaration()]}]  # web_search nunca é declarada
+    assert first["tools"] == [{"functionDeclarations": [te.REGISTRY["read_repo_file"].declaration()]}]
     assert "responseMimeType" not in first["generationConfig"]
     assert second["contents"][2]["parts"][0]["functionResponse"]["response"]["ok"]
 
     result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
     tools = result["meta"]["tools"]
-    assert tools["enabled"] and tools["turns"] == 2 and tools["unsupported"] == ["web_search"]
+    assert tools["enabled"] and tools["turns"] == 2 and tools["unsupported"] == []
     assert tools["calls"][0]["tool"] == "read_repo_file" and tools["calls"][0]["ok"]
     assert result["meta"]["tokens_total"] == 2 * USAGE["totalTokenCount"]  # soma dos turnos
     assert (run_dir / "artifacts/01.md").read_text(encoding="utf-8").startswith("# artefacto final")
@@ -349,16 +352,15 @@ def test_com_flag_orcamento_para_antes_do_turno_seguinte(tmp_path, run_dir, monk
     assert st["state"] == "paused_budget" and len(script.bodies) == 1  # o 2.º turno nunca é pedido
 
 
-def test_com_flag_passo_sem_tools_do_registo_fica_igual(tmp_path, run_dir, monkeypatch):
+def test_com_flag_passo_com_tool_fora_do_registo_nao_arranca(tmp_path, run_dir, monkeypatch):
+    """M-008 (R1): antes o passo corria sem a tool e sem avisar; agora o plano é recusado antes de gastar."""
     monkeypatch.setenv(te.ENV_FLAG, "1")
     step = {**STEP, "tools_allowed": ["web_search"]}
     script = Script([_text("# ok\n")])
     monkeypatch.setattr(ew, "httpx_transport", script)
-    assert run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"
-    assert "tools" not in script.bodies[0] and len(script.bodies) == 1
-    result = json.loads((run_dir / "pending_steps/s/result.json").read_text(encoding="utf-8"))
-    assert result["meta"]["tools"] == {"enabled": False, "reason": "nenhuma tool do passo esta no registo",
-                                      "unsupported": ["web_search"], "refused_level": []}
+    with pytest.raises(PolicyError, match="R1: o passo `s` declara ferramentas que o motor não tem: web_search"):
+        run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")
+    assert script.bodies == []
 
 
 def test_com_flag_artefacto_json_continua_a_ser_lido(tmp_path, run_dir, monkeypatch):
@@ -630,7 +632,8 @@ def test_com_flag_retrieve_knowledge_so_nos_kb_do_passo(tmp_path, run_dir, monke
 
 def test_com_flag_retrieve_knowledge_sem_kb_fica_de_fora(tmp_path, run_dir, monkeypatch):
     monkeypatch.setenv(te.ENV_FLAG, "1")
-    step = {**STEP, "tools_allowed": ["retrieve_knowledge"]}
+    # tool_kbs: [] tira o kb às tools do passo (o bloco knowledge: que o R6 exige continua a dar o contexto)
+    step = {**STEP, "tools_allowed": ["retrieve_knowledge"], "tool_kbs": []}
     script = Script([_text("# ok\n")])
     monkeypatch.setattr(ew, "httpx_transport", script)
     assert run_plan(_plan(tmp_path, [step]), mode="external", out_dir=run_dir, worker="gemini")["state"] == "done"

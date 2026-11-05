@@ -3,6 +3,8 @@
 id: template-influencer-pack
 version: 1
 deliverable_type: influencer_pack
+# Entrega para fora (terceiros ou publicação): brief enviado a criadores
+delivery: external
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -24,10 +26,23 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-influencer-brief.md]
     output_artifact: artifacts/02-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [brief]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-influencer-brief.md]
+    output_artifact: artifacts/09-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve
-    depends_on: [critic]
+    depends_on: [critic, compliance]
     human_gate:
       level: step
       kind: output_review

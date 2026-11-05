@@ -13,6 +13,7 @@ import pytest
 from plan_runner import cost
 from plan_runner import external_worker as ew
 from plan_runner.engine import run_plan
+from tests.politica import politica
 
 USAGE = {"promptTokenCount": 812, "candidatesTokenCount": 143, "totalTokenCount": 955}
 
@@ -127,11 +128,11 @@ def test_no_cap_is_noop(tmp_run_dir):
 
 def _plan(tmp_path: Path) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text(
+    p.write_text(politica(
         "id: proj\nobjective: x\nbudget:\n  max_tokens: 5000\nsteps:\n"
         "  - {id: s1, action: research, output_artifact: artifacts/1.md}\n"
         "  - {id: s2, action: research, depends_on: [s1], output_artifact: artifacts/2.md}\n"
-        "  - {id: s3, action: research, depends_on: [s2], output_artifact: artifacts/3.md}\n",
+        "  - {id: s3, action: research, depends_on: [s2], output_artifact: artifacts/3.md}\n"),
         encoding="utf-8",
     )
     return p

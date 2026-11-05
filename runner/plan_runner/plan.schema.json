@@ -11,6 +11,7 @@
     "id": {"type": "string", "minLength": 1},
     "version": {"type": "integer"},
     "deliverable_type": {"type": "string"},
+    "delivery": {"enum": ["internal", "external"], "description": "M-008: internal fica na equipa; external vai para terceiros ou é publicado e exige aprovação humana (config/plan-policy.yaml)"},
     "objective": {"type": "string"},
     "audience": {"type": "string"},
     "channels": {"type": "array", "items": {"type": "string"}},
@@ -22,7 +23,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "max_steps": {"type": "integer", "minimum": 1},
+        "max_steps": {"type": "integer", "minimum": 1, "maximum": 40, "description": "o tecto global vive em config/plan-policy.yaml (global.max_steps_cap)"},
         "max_tokens": {"type": "integer", "minimum": 0, "description": "docs/ops/BUDGET.md"},
         "max_cost_usd": {"type": "number", "minimum": 0, "description": "D6 (docs/ops/BUDGET.md)"}
       }

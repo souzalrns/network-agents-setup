@@ -10,6 +10,7 @@ pytest.importorskip("langgraph.graph")
 
 from plan_runner import external_worker as ew  # noqa: E402
 from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph  # noqa: E402
+from tests.politica import politica
 from tests.test_external_worker import FakeGemini  # noqa: E402
 
 
@@ -42,7 +43,7 @@ PAR = (
 
 def _plan(tmp_path: Path, steps: str = SEQ) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text("id: lg-worker\nobjective: x\n" + steps, encoding="utf-8")
+    p.write_text(politica("id: lg-worker\nobjective: x\n" + steps), encoding="utf-8")
     return p
 
 

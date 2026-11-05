@@ -7,6 +7,8 @@
 id: template-area-crm
 version: 1
 deliverable_type: area_crm
+# Entrega para fora (terceiros ou publicação): propostas e mensagens para clientes
+delivery: external
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -18,6 +20,9 @@ steps:
     action: lider_crm
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/00-brief-crm.md
+    knowledge:
+      kb: marketing
+      query: "qualificação de leads, propostas e follow-up comercial"
 
   - id: qualificar
     action: lead_qualification
@@ -26,6 +31,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-crm.md]
     output_artifact: artifacts/01-qualificar.md
+    knowledge:
+      kb: marketing
+      query: "qualificação de leads e perfil do cliente"
 
   - id: oferta
     action: offers
@@ -35,6 +43,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-crm.md]
     output_artifact: artifacts/02-oferta.md
+    knowledge:
+      kb: marketing
+      query: "construção de ofertas comerciais"
 
   - id: proposta
     action: proposal
@@ -43,6 +54,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md]
     output_artifact: artifacts/03-proposta.md
+    knowledge:
+      kb: marketing
+      query: "propostas comerciais"
 
   - id: critic
     action: critic
@@ -50,6 +64,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md, artifacts/03-proposta.md]
     output_artifact: artifacts/04-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
 
   - id: compliance
     action: compliance_check
@@ -57,6 +74,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md, artifacts/03-proposta.md]
     output_artifact: artifacts/05-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve

@@ -12,6 +12,7 @@ import pytest
 
 from plan_runner import external_worker as ew
 from plan_runner.engine import PlanError, resume_run, run_plan
+from tests.politica import politica
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SEO_DEMO = REPO_ROOT / "docs/orchestration/marketing/templates/examples/seo-article-demo.plan.yaml"
@@ -70,7 +71,7 @@ def fake(monkeypatch):
 
 def _plan(tmp_path: Path, body: str) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text(body, encoding="utf-8")
+    p.write_text(politica(body), encoding="utf-8")
     return p
 
 
@@ -380,17 +381,21 @@ def test_cli_standalone_recusa_run_em_paused_human_gate(tmp_path, tmp_run_dir, f
 def test_plano_seo_demo_do_inicio_ao_fim_com_worker(tmp_run_dir, fake):
     status = run_plan(SEO_DEMO, mode="external", out_dir=tmp_run_dir, worker="gemini")
     assert status["state"] == "paused_human_gate" and status["paused_at_step"] == "hitl_publish_decision"
-    assert status["completed"] == ["copy", "critic", "research", "seo_brief"]
+    assert status["completed"] == ["compliance", "copy", "critic", "research", "revisao", "seo_brief"]
 
     status = resume_run(tmp_run_dir, decision="approve")
     assert status["state"] == "done", status
 
-    for art in ("01-research.md", "02-seo-brief.json", "03-copy.md", "04-critic.json", "05-hitl.json"):
+    for art in ("01-research.md", "02-seo-brief.json", "03-copy.md", "04-critic.json", "05-hitl.json",
+                "06-revisao.json", "07-compliance.json"):
         assert (tmp_run_dir / "artifacts" / art).is_file(), art
     json.loads((tmp_run_dir / "artifacts/04-critic.json").read_text())  # JSON valido
     rows = _ledger(tmp_run_dir)
-    assert [r["step_id"] for r in rows] == ["research", "seo_brief", "copy", "critic"]
+    # M-008 (R4): revisão (critic) e compliance também antes da aprovação; a ordem entre os 3 revisores é a do topo
+    assert [r["step_id"] for r in rows][:3] == ["research", "seo_brief", "copy"]
+    assert sorted(r["step_id"] for r in rows[3:]) == ["compliance", "critic", "revisao"]
     assert {r["agent_id"] for r in rows} == {
         "marketing.research", "marketing.seo_brief", "marketing.copy_answer_first", "marketing.critic_item13",
+        "marketing.critic", "marketing.compliance",
     }
-    assert len({r["run_id"] for r in rows}) == 1 and sum(r["tokens_total"] for r in rows) == 4 * 955
+    assert len({r["run_id"] for r in rows}) == 1 and sum(r["tokens_total"] for r in rows) == 6 * 955

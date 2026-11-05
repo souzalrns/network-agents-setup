@@ -7,6 +7,8 @@
 id: template-area-site-seo
 version: 1
 deliverable_type: area_site_seo
+# Entrega para fora (terceiros ou publicação): páginas do site
+delivery: external
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -18,6 +20,9 @@ steps:
     action: lider_site_seo
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/00-brief-site_seo.md
+    knowledge:
+      kb: marketing
+      query: "SEO, arquitectura do site e findability em IA (Item 13)"
 
   - id: brief
     action: seo_brief
@@ -26,6 +31,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md]
     output_artifact: artifacts/01-brief.md
+    knowledge:
+      kb: marketing
+      query: "checklist SEO tecnico FAQ citavel"
 
   - id: estrutura
     action: site_architecture
@@ -34,6 +42,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md]
     output_artifact: artifacts/02-estrutura.md
+    knowledge:
+      kb: marketing
+      query: "arquitectura do site, navegação e links internos"
 
   - id: visibilidade
     action: ai_visibility
@@ -42,6 +53,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md]
     output_artifact: artifacts/03-visibilidade.md
+    knowledge:
+      kb: marketing
+      query: "visibilidade da marca em assistentes de IA (GEO/AEO, Item 13)"
 
   - id: conversao
     action: cro
@@ -50,6 +64,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md]
     output_artifact: artifacts/04-conversao.md
+    knowledge:
+      kb: marketing
+      query: "optimização de conversão e UX de páginas"
 
   - id: critic
     action: critic
@@ -57,6 +74,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
     output_artifact: artifacts/05-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
 
   - id: citabilidade
     action: critic_item13
@@ -64,6 +84,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
     output_artifact: artifacts/06-citabilidade.json
+    knowledge:
+      kb: marketing
+      query: "criterios de avaliacao AI findability"
 
   - id: compliance
     action: compliance_check
@@ -71,6 +94,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
     output_artifact: artifacts/07-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve

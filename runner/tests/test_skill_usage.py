@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from plan_runner.engine import resume_run, run_plan
+from tests.politica import politica
 
 STEPS = (
     "steps:\n"
@@ -27,7 +28,7 @@ STEPS = (
 
 def _plan(tmp_path: Path) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text("id: uso\nobjective: x\n" + STEPS, encoding="utf-8")
+    p.write_text(politica("id: uso\nobjective: x\n" + STEPS), encoding="utf-8")
     return p
 
 
@@ -47,11 +48,11 @@ def test_native_regista_a_skill_de_cada_passo(tmp_path, tmp_run_dir):
 
 def test_resume_tambem_regista_a_skill(tmp_path, tmp_run_dir):
     plan = tmp_path / "plan.yaml"
-    plan.write_text(
+    plan.write_text(politica(
         "id: uso\nobjective: x\nsteps:\n"
         "  - id: hitl\n    action: plan_approve\n"
         "    human_gate: {level: step, kind: confirmation, allow: [approve, reject]}\n"
-        "  - {id: depois, action: research, depends_on: [hitl], output_artifact: artifacts/d.md}\n",
+        "  - {id: depois, action: research, depends_on: [hitl], output_artifact: artifacts/d.md}\n"),
         encoding="utf-8",
     )
     run_plan(plan, mode="stub", out_dir=tmp_run_dir)

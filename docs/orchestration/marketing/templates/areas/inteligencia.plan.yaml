@@ -7,6 +7,8 @@
 id: template-area-inteligencia
 version: 1
 deliverable_type: area_inteligencia
+# Entrega interna: pesquisa e análise para uso interno
+delivery: internal
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -18,6 +20,9 @@ steps:
     action: lider_inteligencia
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/00-brief-inteligencia.md
+    knowledge:
+      kb: marketing
+      query: "pesquisa de mercado, concorrentes e tendências"
 
   - id: factos
     action: research
@@ -26,6 +31,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md]
     output_artifact: artifacts/01-factos.md
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: concorrentes
     action: competitor_profiling
@@ -34,6 +42,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md]
     output_artifact: artifacts/02-concorrentes.md
+    knowledge:
+      kb: marketing
+      query: "análise de concorrentes e posicionamento de marca"
 
   - id: tendencias
     action: trend_hunter
@@ -42,6 +53,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md]
     output_artifact: artifacts/03-tendencias.md
+    knowledge:
+      kb: marketing
+      query: "tendências de conteúdo e sinais de mercado"
 
   - id: redes
     action: social_intelligence
@@ -50,6 +64,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md]
     output_artifact: artifacts/04-redes.md
+    knowledge:
+      kb: marketing
+      query: "escuta social e sinais das redes sociais"
 
   - id: desempenho
     action: social_performance
@@ -58,6 +75,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md]
     output_artifact: artifacts/05-desempenho.md
+    knowledge:
+      kb: marketing
+      query: "métricas de desempenho em redes sociais"
 
   - id: critic
     action: critic
@@ -65,6 +85,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md, artifacts/04-redes.md, artifacts/05-desempenho.md]
     output_artifact: artifacts/06-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
 
   - id: compliance
     action: compliance_check
@@ -72,6 +95,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md, artifacts/04-redes.md, artifacts/05-desempenho.md]
     output_artifact: artifacts/07-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve

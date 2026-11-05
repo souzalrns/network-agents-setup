@@ -51,6 +51,7 @@ import yaml
 
 from . import external_worker as ew
 from .areas import agent_ids, load_registry, normalize, routing_config
+from .policy import policy_kb
 from .skills import _frontmatter, list_modes, resolve_skill_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -483,6 +484,8 @@ class Router:
                 "agent_confidence": decision.agent_confidence,
                 "reason": decision.reason,
             },
+            # M-008 (R2): a resposta do router vai para quem pediu, não é publicada
+            "delivery": "internal",
             "steps": [],
         }
         if decision.outcome == "hitl":
@@ -517,6 +520,9 @@ class Router:
                 step["mode"] = spec["mode"]  # P-89: o worker junta modes/<mode>.md so neste passo
             if spec.get("task"):
                 step["task"] = spec["task"]
+            kb = policy_kb(agent["vertical"])
+            if kb:  # M-008 (R6): a vertical exige que cada passo consulte a base de conhecimento
+                step["knowledge"] = {"kb": kb, "query": f"{agent['action']}: {spec.get('task') or decision.request}"[:300]}
             plan["steps"].append(step)
         if decision.hitl_required:  # area de risco: revisao humana antes de dar por feito
             depended = {d for s in plan["steps"] for d in s["depends_on"]}
@@ -531,6 +537,8 @@ class Router:
         plan_budget: dict[str, int] = {}
         if budget.get("max_steps"):
             plan_budget["max_steps"] = int(budget["max_steps"]) + (1 if decision.hitl_required else 0)
+        # M-008 (R3): limite explícito, mesmo sem budget na área (os passos do plano, mais a aprovação)
+        plan_budget.setdefault("max_steps", len(plan["steps"]))
         if budget.get("max_tokens"):
             # O tecto da area cobre o pedido todo: o que o router ja gastou sai do tecto dos passos.
             router_tokens = sum(r.get("tokens_total") or 0 for r in decision.usage)

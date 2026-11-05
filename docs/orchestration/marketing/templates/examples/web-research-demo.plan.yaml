@@ -9,6 +9,8 @@
 id: example-web-research-demo
 version: 1
 deliverable_type: market_research
+# Entrega interna: pesquisa para uso interno
+delivery: internal
 objective: >
   Resumir o que as fontes públicas da allowlist de marketing dizem sobre conteúdo
   "answer-first" para pesquisa com IA, citando cada afirmação.
@@ -32,6 +34,9 @@ steps:
     web_area: marketing
     tool_limits: {max_tool_calls: 3}
     output_artifact: artifacts/01-web-research.json
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: hitl_review
     action: plan_approve

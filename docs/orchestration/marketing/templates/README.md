@@ -23,3 +23,13 @@ Um por área da agência: o líder da área decide e entrega o brief; os especia
 | [areas/crm.plan.yaml](./areas/crm.plan.yaml) | `marketing.lider_crm` |
 
 Novos `deliverable_type`: copiar um template, ajustar steps/actions, registar em `ORCHESTRATOR.md` secção 4.
+
+### Regras que o motor verifica (M-008)
+
+Qualquer plano de marketing, deste diretório, de uma sessão ou do router, só arranca se cumprir
+[`config/plan-policy.yaml`](../../../../config/plan-policy.yaml) (o cabeçalho explica cada regra):
+`delivery: internal | external`, `budget.max_steps` declarado (até 40), um bloco `knowledge: {kb, query}`
+em cada passo que não é aprovação, ferramentas que existem no motor, o líder antes dos especialistas nos
+planos de área e, numa entrega `external`, a aprovação humana do `done_when` a depender directamente do
+`critic` e do `compliance_check` (e do `critic_item13` em `seo_article` e `area_site_seo`). Um plano que
+falhe não arranca e o erro diz qual regra falhou. Prova: `runner/tests/test_policy.py`.

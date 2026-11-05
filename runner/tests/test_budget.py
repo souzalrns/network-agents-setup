@@ -8,10 +8,12 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from plan_runner import external_worker as ew
 from plan_runner import router as rt
 from plan_runner.engine import PlanError, resume_run, run_plan
+from tests.politica import politica
 from tests.test_external_worker import FakeGemini
 from tests.test_router import FakeRouterLLM, _mini_repo
 
@@ -35,11 +37,11 @@ def fake(monkeypatch):
 def _plan(tmp_path: Path, max_tokens: int | None = None) -> Path:
     budget = f"budget:\n  max_tokens: {max_tokens}\n" if max_tokens is not None else ""
     p = tmp_path / "plan.yaml"
-    p.write_text(
+    p.write_text(politica(
         "id: orcamento-tres-passos\nobjective: x\n" + budget + "steps:\n"
         "  - {id: research, action: research, output_artifact: artifacts/01.md}\n"
         "  - {id: brief, action: internal_brief, depends_on: [research], output_artifact: artifacts/02.md}\n"
-        "  - {id: copy, action: copy_social, depends_on: [brief], output_artifact: artifacts/03.md}\n",
+        "  - {id: copy, action: copy_social, depends_on: [brief], output_artifact: artifacts/03.md}\n"),
         encoding="utf-8",
     )
     return p
@@ -237,8 +239,9 @@ def prices(tmp_path, monkeypatch):
 
 def _cost_plan(tmp_path: Path, max_cost_usd: float) -> Path:
     p = _plan(tmp_path)
-    p.write_text(p.read_text(encoding="utf-8").replace("objective: x\n", f"objective: x\nbudget:\n  max_cost_usd: {max_cost_usd}\n"),
-                 encoding="utf-8")
+    data = yaml.safe_load(p.read_text(encoding="utf-8"))
+    data["budget"]["max_cost_usd"] = max_cost_usd
+    p.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
     return p
 
 

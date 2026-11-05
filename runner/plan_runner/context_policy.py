@@ -168,6 +168,8 @@ def needs_summary(plan_raw: dict, step_id: str, artifact: str | None) -> bool:
         sid = str(s.get("id")) if isinstance(s, dict) else ""
         if not sid or sid == step_id:
             continue
+        if s.get("human_gate"):  # um gate humano não chama o modelo: um resumo para ele era só gasto
+            continue
         ins = step_inputs(plan_raw, sid)
         if artifact in ins and input_modes(plan_raw, sid, ins)[artifact] == "summary":
             return True
