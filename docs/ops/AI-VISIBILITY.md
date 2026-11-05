@@ -58,6 +58,10 @@ Código de saída: `0` se todas as perguntas foram medidas; `2` se faltou alguma
   maio de 2026 indica 5000 pedidos/mês nos modelos Gemini 3, em contas com faturação activa; acima disso
   é pago). Um painel de 25 perguntas por mês fica muito abaixo dessa quota, mas confirma na página de
   preços da API Gemini antes de medir com regularidade.
+- **Verificado a 2026-11-04:** uma chave nova do AI Studio num projecto **sem faturação** recebeu
+  `429 … exceeded your current quota` logo no 1.º pedido com pesquisa Google, ou seja quota zero. Sem
+  faturação, o caminho que funciona é o `importar` (respostas tiradas do Perplexity ou do Gemini pelo
+  browser). Com faturação, confirmar a quota grátis antes de usar o `medir`.
 - Guardas do comando: simula sem `--run`; no máximo 25 pedidos por execução; sem novas tentativas; um
   `401`, `403` ou `429` (chave ou quota) pára de imediato e guarda o que já foi medido.
 
