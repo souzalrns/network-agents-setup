@@ -27,7 +27,7 @@
     "@network-agents/mcp": "workspace:*",
     "@network-agents/observability": "workspace:*",
     "@prisma/client": "^5.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.21.0",
     "cheerio": "^1.0.0",
     "openai": "^4.0.0"
   },
