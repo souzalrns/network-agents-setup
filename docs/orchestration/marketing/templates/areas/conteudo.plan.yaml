@@ -7,6 +7,8 @@
 id: template-area-conteudo
 version: 1
 deliverable_type: area_conteudo
+# Entrega para fora (terceiros ou publicação): conteúdo para publicar
+delivery: external
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -18,6 +20,9 @@ steps:
     action: lider_conteudo
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/00-brief-conteudo.md
+    knowledge:
+      kb: marketing
+      query: "estratégia de conteúdo e calendário editorial"
 
   - id: copy
     action: copy_social
@@ -26,6 +31,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-conteudo.md]
     output_artifact: artifacts/01-copy.md
+    knowledge:
+      kb: marketing
+      query: "copywriting para redes sociais"
 
   - id: narrativa
     action: storytelling
@@ -34,6 +42,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md]
     output_artifact: artifacts/02-narrativa.md
+    knowledge:
+      kb: marketing
+      query: "storytelling e narrativa de marca"
 
   - id: critic
     action: critic
@@ -41,6 +52,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md, artifacts/02-narrativa.md]
     output_artifact: artifacts/03-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
 
   - id: compliance
     action: compliance_check
@@ -48,6 +62,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md, artifacts/02-narrativa.md]
     output_artifact: artifacts/04-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve

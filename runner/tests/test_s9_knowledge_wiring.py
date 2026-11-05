@@ -20,6 +20,7 @@ import pytest
 
 from plan_runner import engine, knowledge_wiring
 from plan_runner.mcp_knowledge import McpKnowledgeError
+from plan_runner.policy import PolicyError
 
 
 class _FakeMcpKnowledge:
@@ -40,15 +41,20 @@ def _write_plan(tmp_path: Path, *, with_knowledge: bool) -> Path:
     knowledge_block = (
         "    knowledge:\n"
         "      kb: marketing\n"
-        "      query: teste\n"
+        "      query: teste de conhecimento\n"
     ) if with_knowledge else ""
+    # M-008 (R6): um passo de marketing sem `knowledge:` já não arranca; o caso "sem bloco" usa
+    # um agente de uma vertical sem essa regra (design), onde o bloco continua opcional.
+    step = "    action: research\n" if with_knowledge else "    action: ui_spec\n    vertical: design\n"
     plan_text = (
         "id: s9-test\n"
         "version: 1\n"
         "objective: teste\n"
+        "delivery: internal\n"
+        "budget: {max_steps: 2}\n"
         "steps:\n"
         "  - id: step1\n"
-        "    action: research\n"
+        f"{step}"
         "    output_artifact: artifacts/out.md\n"
         f"{knowledge_block}"
     )
@@ -121,8 +127,8 @@ def test_knowledge_retrieval_failure_does_not_abort_plan(tmp_path, monkeypatch):
     assert "knowledge_context_failed" in events
 
 
-def test_incomplete_knowledge_block_is_skipped(tmp_path, monkeypatch):
-    """kb sem query (ou vice-versa) -- nao tenta sequer chamar o MCP."""
+def test_incomplete_knowledge_block_is_refused_before_start(tmp_path, monkeypatch):
+    """kb sem query: o plano nao arranca (M-008, R6) e nunca chama o MCP."""
     called = {"n": 0}
 
     class _ShouldNotBeCalled:
@@ -136,6 +142,8 @@ def test_incomplete_knowledge_block_is_skipped(tmp_path, monkeypatch):
         "id: s9-test-incomplete\n"
         "version: 1\n"
         "objective: teste\n"
+        "delivery: internal\n"
+        "budget: {max_steps: 2}\n"
         "steps:\n"
         "  - id: step1\n"
         "    action: research\n"
@@ -147,10 +155,10 @@ def test_incomplete_knowledge_block_is_skipped(tmp_path, monkeypatch):
     plan_path.write_text(plan_text, encoding="utf-8")
     out = tmp_path / "pilots" / "run4"
 
-    result = engine.run_plan(plan_path, mode="stub", out_dir=out)
-
-    assert result["state"] == "done"
+    with pytest.raises(PolicyError, match="R6 .*`knowledge.query` vazia"):
+        engine.run_plan(plan_path, mode="stub", out_dir=out)
     assert called["n"] == 0  # nunca chegou a chamar retrieve()
+    assert not out.exists()  # recusado antes de criar o run
 
 
 def test_request_json_unchanged_by_knowledge_wiring(tmp_path, monkeypatch):

@@ -14,9 +14,12 @@
 
 id: composicao-canonica
 version: 1
+# Entrega interna: exemplo da composição canónica; não sai para fora
+delivery: internal
 objective: "Provar a composição planwright->plan_runner com governação real."  # [+]
 
 budget:
+  max_steps: 4
   max_tokens: 1500            # [+] tecto curto de propósito: o run pausa antes de `finalize`
 
 steps:
@@ -24,6 +27,9 @@ steps:
     action: research          # [+] era `discovery` (o track); o humano/router escolhe a action real
     task: "Levantar requisitos e contexto."
     output_artifact: artifacts/01-research.md   # [+]
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: decide
     action: plan_approve      # [+] era `governance`
@@ -40,12 +46,18 @@ steps:
     task: "Redigir a proposta."
     depends_on: [decide]
     output_artifact: artifacts/03-draft.md       # [+]
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: finalize
     action: research          # [+] era `build`
     task: "Consolidar e publicar o resultado."
     depends_on: [draft]
     output_artifact: artifacts/04-final.md       # [+]
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
 done_when:                    # [+] evidência verificável, não texto livre
   - artifacts/02-decision.json exists

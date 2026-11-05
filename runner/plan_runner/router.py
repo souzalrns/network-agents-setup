@@ -51,6 +51,8 @@ import yaml
 
 from . import external_worker as ew
 from .areas import agent_ids, load_registry, normalize, routing_config
+from .models import Plan
+from .policy import PolicyError, check_plan, policy_kb
 from .skills import _frontmatter, list_modes, resolve_skill_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -230,6 +232,7 @@ class Router:
             "listados, quem executa o pedido. Nunca inventes ids.\n"
             f"{rule}\nNo maximo {max_steps} passos num plano.\n"
             "Se o pedido for vago demais para escolher com seguranca, usa `clarify` com uma pergunta curta.\n"
+            "Num plano com um agente lider_* (lider da area), ele e o passo 1 e todos os outros dependem dele.\n"
             "Alguns agentes tem modos (funcoes que herdaram). Se o pedido for exactamente uma dessas funcoes, "
             "indica o agente E o modo em `skill_mode`; senao, omite `skill_mode`.\n"
             "Responde SO com JSON: {\"mode\": \"agent\"|\"plan\"|\"clarify\", \"agent\": \"<id>\", "
@@ -483,6 +486,8 @@ class Router:
                 "agent_confidence": decision.agent_confidence,
                 "reason": decision.reason,
             },
+            # M-008 (R2): a resposta do router vai para quem pediu, não é publicada
+            "delivery": "internal",
             "steps": [],
         }
         if decision.outcome == "hitl":
@@ -517,6 +522,9 @@ class Router:
                 step["mode"] = spec["mode"]  # P-89: o worker junta modes/<mode>.md so neste passo
             if spec.get("task"):
                 step["task"] = spec["task"]
+            kb = policy_kb(agent["vertical"])
+            if kb:  # M-008 (R6): a vertical exige que cada passo consulte a base de conhecimento
+                step["knowledge"] = {"kb": kb, "query": f"{agent['action']}: {spec.get('task') or decision.request}"[:300]}
             plan["steps"].append(step)
         if decision.hitl_required:  # area de risco: revisao humana antes de dar por feito
             depended = {d for s in plan["steps"] for d in s["depends_on"]}
@@ -531,6 +539,8 @@ class Router:
         plan_budget: dict[str, int] = {}
         if budget.get("max_steps"):
             plan_budget["max_steps"] = int(budget["max_steps"]) + (1 if decision.hitl_required else 0)
+        # M-008 (R3): limite explícito, mesmo sem budget na área (os passos do plano, mais a aprovação)
+        plan_budget.setdefault("max_steps", len(plan["steps"]))
         if budget.get("max_tokens"):
             # O tecto da area cobre o pedido todo: o que o router ja gastou sai do tecto dos passos.
             router_tokens = sum(r.get("tokens_total") or 0 for r in decision.usage)
@@ -559,6 +569,11 @@ class Router:
         from .engine import run_plan
 
         plan = self.build_plan(decision)
+        try:  # M-008: um plano que as regras recusam não corre; fica como decisão com erro, não como excepção
+            check_plan(Plan.from_dict(plan))
+        except PolicyError as e:
+            decision.outcome, decision.reason = "error", f"plano recusado pelas regras do motor: {'; '.join(e.violations)}"
+            return {"executed": False, "decision": decision.to_dict(), "violations": e.violations}
         with tempfile.TemporaryDirectory() as tmp:
             plan_path = Path(tmp) / "router.plan.yaml"
             plan_path.write_text(yaml.safe_dump(plan, allow_unicode=True, sort_keys=False), encoding="utf-8")

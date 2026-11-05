@@ -14,6 +14,7 @@ from plan_runner import context_policy as cp
 from plan_runner import external_worker as ew
 from plan_runner import token_projection as tp
 from plan_runner.engine import resume_run, run_plan
+from tests.politica import politica
 
 SEO_DEMO = tp.SEO_DEMO
 
@@ -74,7 +75,8 @@ def _result(out: Path, step: str) -> dict:
 def test_resumo_gerado_na_mesma_chamada_so_onde_e_consumido(tmp_run_dir, fake):
     status = run_plan(SEO_DEMO, mode="external", out_dir=tmp_run_dir, worker="gemini")
     assert status["state"] == "paused_human_gate"  # mesmo gate de sempre (HITL intacto)
-    assert len(fake.calls) == 4  # nenhuma chamada extra para resumir
+    # 6 passos de modelo (M-008 juntou a revisão e a compliance) e nenhuma chamada extra para resumir
+    assert len(fake.calls) == 6
 
     # seo_brief: o critic consome-o como resumo -> pedido na mesma chamada
     assert "`resumo`" in fake.by_step("seo_brief")["system"]
@@ -93,12 +95,12 @@ def test_resumo_gerado_na_mesma_chamada_so_onde_e_consumido(tmp_run_dir, fake):
 
 def test_resumo_em_markdown_tambem_e_separado_do_artefacto(tmp_path, tmp_run_dir, fake):
     plan = tmp_path / "p.yaml"
-    plan.write_text(
+    plan.write_text(politica(
         "id: md\nobjective: x\nsteps:\n"
         "  - {id: research, action: research, output_artifact: artifacts/01.md}\n"
         "  - {id: brief, action: internal_brief, depends_on: [research], output_artifact: artifacts/02.md}\n"
         "  - {id: copy, action: copy_social, depends_on: [brief], inputs: [artifacts/01.md, artifacts/02.md],"
-        " output_artifact: artifacts/03.md}\n", encoding="utf-8")
+        " output_artifact: artifacts/03.md}\n"), encoding="utf-8")
     run_plan(plan, mode="external", out_dir=tmp_run_dir, worker="gemini")
     art = (tmp_run_dir / "artifacts/01.md").read_text(encoding="utf-8")
     assert cp.SUMMARY_MARKER not in art and art.startswith("# research")
@@ -157,8 +159,8 @@ def test_policy_override_no_plano_e_sem_resumo_cai_no_completo(tmp_run_dir, monk
 
 def _prompt_for(tmp_run_dir: Path, action: str, vertical: str, context: str = "opt") -> str:
     plan = tmp_run_dir.parent / f"_{tmp_run_dir.name}_{action}.yaml"
-    plan.write_text(f"id: g\nobjective: x\nsteps:\n  - {{id: s, action: {action}, vertical: {vertical}, "
-                    f"output_artifact: artifacts/s.md}}\n", encoding="utf-8")
+    plan.write_text(politica(f"id: g\nobjective: x\nsteps:\n  - {{id: s, action: {action}, vertical: {vertical}, "
+                             f"output_artifact: artifacts/s.md}}\n"), encoding="utf-8")
     try:
         run_plan(plan, mode="external", out_dir=tmp_run_dir)  # sem worker: so escreve o pedido
     finally:
@@ -242,10 +244,12 @@ def projection_now():
 
 
 def test_legacy_reproduz_o_b1_real(projection):
-    total = sum(r["total"] for r in projection["legacy"].values())
+    # O B1 teve 4 passos e nenhum contexto L5: compara-se só esses passos, sem a secção L5 (M-008, R6)
+    rows = {s: projection["legacy"][s] for s in tp.B1_REAL}
+    total = sum(r["tokens_in_sem_l5"] + r["tokens_out"] for r in rows.values())
     assert abs(total - 13130) / 13130 < 0.02  # calibracao: +-2% do B1 real
     for step, (t_in, _) in tp.B1_REAL.items():
-        assert abs(projection["legacy"][step]["tokens_in"] - t_in) / t_in < 0.03
+        assert abs(rows[step]["tokens_in_sem_l5"] - t_in) / t_in < 0.03
 
 
 def test_p45_description_nao_custa_tokens_no_modo_opt(projection, projection_now):
@@ -268,7 +272,8 @@ def test_drop_frontmatter_keys_so_mexe_no_frontmatter():
 
 
 def test_tokens_in_do_critic_cai_30_a_50_por_cento(projection):
-    before, after = projection["legacy"]["critic"]["tokens_in"], projection["opt"]["critic"]["tokens_in"]
+    # o L5 é igual nos dois modos: a política de contexto mede-se sem ele
+    before, after = projection["legacy"]["critic"]["tokens_in_sem_l5"], projection["opt"]["critic"]["tokens_in_sem_l5"]
     assert 0.30 <= (before - after) / before <= 0.50, (before, after)
 
 

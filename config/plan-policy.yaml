@@ -1,0 +1,46 @@
+# Regras que o motor (plan_runner) verifica antes de arrancar QUALQUER plano: template, plano feito
+# numa sessão, plano do router ou de um agente. Quem corre o plano não as desliga: não há campo no
+# plano nem variável de ambiente para as saltar. Código: runner/plan_runner/policy.py (M-008, fase 1).
+#
+# Fail-closed: se o motor não consegue decidir se uma regra se cumpre (ficheiro em falta ou inválido,
+# acção sem agente, valor desconhecido), recusa o plano e diz porquê.
+#
+# Regras gerais (todos os planos):
+#   R1 ferramentas: cada nome em tools_allowed existe no registo do motor. Uma tool `act` (que muda
+#      coisas) já só corre com aprovação humana chamada a chamada (tool_executor.py).
+#   R2 entrega: `delivery: external` exige um passo de aprovação humana em `done_when`
+#      (human_gate_resolved on <id>) e todos os outros passos antes dele (nada ao lado nem depois).
+#   R3 teto: budget.max_steps entre 1 e max_steps_cap.
+#   R9 acções: o plano tem passos e cada um que não é aprovação humana resolve um agente
+#      (agents/**/*.agent.md); um valor estranho neste ficheiro também recusa tudo.
+# Perfil por vertical (aplica-se se algum passo resolve um agente dessa vertical):
+#   R3 explícito: o plano declara budget.max_steps.
+#   R2 declarado: o plano declara delivery (internal | external); um passo de external_actions
+#      (preparar uma publicação) obriga a `external`.
+#   R4 revisão: numa entrega externa, cada aprovação de done_when depende directamente das acções
+#      de review_before_gate, e cada revisor recebe (por dependência) todo o trabalho que ela cobre.
+#   R5 citabilidade: numa entrega externa de um deliverable_type indexável, também da citability_action.
+#   R6 conhecimento: cada passo da vertical (menos as aprovações) tem knowledge: {kb, query}, com kb
+#      em allowed_kbs e uma query de pelo menos min_query_chars.
+#   R7 líder: com um passo `lider_*` (obrigatório nos deliverable_type `area_*`), há só um e todos os
+#      outros passos dependem dele.
+version: 1
+
+global:
+  max_steps_cap: 40
+  gate_actions: [plan_approve]
+  delivery_values: [internal, external]
+
+verticals:
+  marketing:
+    require_delivery: true
+    require_explicit_max_steps: true
+    review_before_gate: [critic, compliance_check]
+    external_actions: [publish_package]
+    indexable_deliverables: [seo_article, area_site_seo]
+    citability_action: critic_item13
+    knowledge:
+      allowed_kbs: [marketing, global]
+      min_query_chars: 12
+    leader_prefix: lider_
+    area_deliverable_prefix: area_

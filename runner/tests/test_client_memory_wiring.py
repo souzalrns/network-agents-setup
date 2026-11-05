@@ -19,20 +19,21 @@ from uuid import uuid4
 import pytest
 
 from tests.conftest import REPO_ROOT, _run_cli
+from tests.politica import politica
 
 
 def _write_plan(tmp_path: Path, *, client_id: str | None) -> Path:
     client_line = f"client_id: {client_id}\n" if client_id else ""
     plan = tmp_path / "plan.yaml"
-    plan.write_text(
+    plan.write_text(politica(
         f"""\
 id: test-client-memory
 version: 1
 objective: "teste S30"
 {client_line}steps:
   - id: only
-    action: only
-""",
+    action: research
+"""),
         encoding="utf-8",
     )
     return plan

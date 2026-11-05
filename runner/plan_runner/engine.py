@@ -23,6 +23,10 @@ def load_plan(path: Path) -> Plan:
         raise PlanError("plan root must be a mapping")
     plan = Plan.from_dict(data)
     validate_plan(plan)
+    # M-008: as regras de config/plan-policy.yaml valem para todos os planos, venham de onde vierem.
+    from .policy import check_plan
+
+    check_plan(plan)
     return plan
 
 
@@ -231,6 +235,8 @@ def run_plan(
 
     out.mkdir(parents=True, exist_ok=True)
     shutil.copy(plan_path, out / "plan.yaml")
+    plan = load_plan(out / "plan.yaml")  # M-008: o que corre é a cópia; verifica-se a cópia, não o original
+    order = topo_order(plan)
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "objective": plan.objective})
     _log_ignored_fields(plan_path, log, run_id)

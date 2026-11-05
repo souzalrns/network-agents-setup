@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from plan_runner.engine import resume_run, run_plan
+from tests.politica import politica
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -32,7 +33,7 @@ GATE_STEPS = STEPS + (
 def _plan(tmp_path: Path, done_when: list[str], steps: str = STEPS) -> Path:
     p = tmp_path / "plan.yaml"
     dw = "done_when:\n" + "".join(f"  - {json.dumps(c)}\n" for c in done_when)
-    p.write_text("id: dw\nobjective: x\n" + steps + dw, encoding="utf-8")
+    p.write_text(politica("id: dw\nobjective: x\n" + steps + dw), encoding="utf-8")
     return p
 
 
@@ -123,7 +124,7 @@ def test_condicao_nao_interpretavel_gera_evento_e_nao_falha(tmp_path, tmp_run_di
 
 def test_plano_sem_done_when_nao_regista_nada(tmp_path, tmp_run_dir):
     p = tmp_path / "plan.yaml"
-    p.write_text("id: dw\nobjective: x\n" + STEPS, encoding="utf-8")
+    p.write_text(politica("id: dw\nobjective: x\n" + STEPS), encoding="utf-8")
     assert run_plan(p, mode="stub", out_dir=tmp_run_dir)["state"] == "done"
     assert _events(tmp_run_dir, "done_when_checked") == []
 

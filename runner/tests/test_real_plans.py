@@ -166,11 +166,11 @@ def test_approval_rounds_full_cycle_three_hitls(tmp_run_dir):
     s = _load_status_safe(out)
     assert s.get("state") == "done"
 
-    # 5. Todos os 7 steps concluidos
+    # 5. Todos os 9 steps concluidos (M-008: revisao e compliance antes da aprovacao final)
     completed = set(s.get("completed") or [])
     expected = {
         "review_r1", "hitl_r1", "revise_r2", "review_r2",
-        "hitl_r2", "final_or_r3", "hitl_final",
+        "hitl_r2", "final_or_r3", "revisao", "compliance", "hitl_final",
     }
     assert completed == expected, (
         f"Steps em falta: {expected - completed} | "
@@ -193,7 +193,7 @@ def test_seo_article_demo_writes_artifacts(tmp_run_dir):
     completed = status.get("completed") or []
 
     # Para cada step completed que tem output_artifact, o ficheiro deve existir
-    # Os steps antes do HITL sao: research, seo_brief, copy, critic
+    # Os steps antes do HITL sao: research, seo_brief, copy, critic, revisao, compliance
     artifacts = out / "artifacts"
     assert artifacts.exists(), f"Diretorio artifacts/ nao criado: {artifacts}"
 
@@ -204,13 +204,15 @@ def test_seo_article_demo_writes_artifacts(tmp_run_dir):
         "02-seo-brief.json",
         "03-copy.md",
         "04-critic.json",
+        "06-revisao.json",
+        "07-compliance.json",
     ]
     for name in expected_artifacts:
         f = artifacts / name
         assert f.exists(), f"Artefacto em falta: {f}"
         assert f.stat().st_size > 0, f"Artefacto vazio: {f}"
 
-    # E os 4 steps executados antes do HITL
-    assert set(completed) == {"research", "seo_brief", "copy", "critic"}, (
+    # E os 6 steps executados antes do HITL (M-008: revisao e compliance ao lado do critic do Item 13)
+    assert set(completed) == {"research", "seo_brief", "copy", "critic", "revisao", "compliance"}, (
         f"Steps executados inesperados: {completed}"
     )

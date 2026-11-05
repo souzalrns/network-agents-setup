@@ -24,6 +24,7 @@ from plan_runner import router as rt
 from plan_runner.capabilities import validate_capabilities
 from plan_runner.engine import run_plan
 from plan_runner.plan_schema import plan_errors
+from tests.politica import politica_dict
 from tests.test_external_worker import FakeGemini
 from tests.test_router import FakeRouterLLM
 
@@ -134,14 +135,14 @@ def test_4_plano_com_o_herdeiro_e_o_modo_corre_e_cumpre_o_done_when(name, tmp_pa
     monkeypatch.setattr(ew, "httpx_transport", fake)
     art = f"artifacts/01-{mode}.md"
     plan = tmp_path / "plan.yaml"
-    plan.write_text(yaml.safe_dump({
+    plan.write_text(yaml.safe_dump(politica_dict({
         "id": f"m006-{mode}", "objective": f"Prova da transferencia de marketing.{name.replace('-', '_')}",
         "done_when": [f"{art} exists"],
         "steps": [
             {"id": "base", "action": action, "output_artifact": "artifacts/00-base.md"},
             {"id": "herdado", "action": action, "mode": mode, "depends_on": ["base"], "output_artifact": art},
         ],
-    }), encoding="utf-8")
+    })), encoding="utf-8")
     status = run_plan(plan, mode="external", out_dir=tmp_run_dir, worker="gemini")
     assert status["state"] == "done" and not status.get("done_when_failed"), status
     base_sys, mode_sys = (c["body"]["systemInstruction"]["parts"][0]["text"] for c in fake.calls)

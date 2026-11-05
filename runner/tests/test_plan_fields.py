@@ -8,6 +8,7 @@ import pytest
 
 from plan_runner.engine import run_plan
 from plan_runner.models import ignored_plan_fields
+from tests.politica import politica
 
 STEPS = (
     "steps:\n"
@@ -18,7 +19,7 @@ STEPS = (
 
 def _plan(tmp_path: Path, head: str = "", steps: str = STEPS) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text("id: campos\nobjective: x\n" + head + steps, encoding="utf-8")
+    p.write_text(politica("id: campos\nobjective: x\n" + head + steps), encoding="utf-8")
     return p
 
 

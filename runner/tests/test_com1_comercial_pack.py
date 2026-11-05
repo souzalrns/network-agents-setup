@@ -88,7 +88,8 @@ def test_plano_valido_e_so_com_dados_ficticios() -> None:
     plan = yaml.safe_load(PLAN.read_text(encoding="utf-8"))
     assert plan_errors(plan) == []
     actions = [s["action"] for s in plan["steps"]]
-    assert actions == ["lead_qualification", "proposal", "follow_up", "plan_approve"]
+    # M-008 (R4): revisão e compliance antes de a proposta sair
+    assert actions == ["lead_qualification", "proposal", "follow_up", "critic", "compliance_check", "plan_approve"]
     fixture = FIXTURE.read_text(encoding="utf-8")
     assert "FICTÍCIO" in fixture and "Tabela de referência FICTÍCIA" in fixture
     assert "@" not in fixture  # nenhum email, nem fictício, no git
@@ -101,11 +102,13 @@ def test_stub_vai_ate_ao_gate_e_o_comercial_fica_precisa_de_ti(run_dir) -> None:
         assert (run_dir / "artifacts" / name).exists(), name
     snap = office.snapshot(REPO_ROOT, [run_dir])
     assert snap["unattributed"] == []
+    # M-008 (R4): a proposta passa pela revisão e pela compliance antes do gate; o escritório mostra
+    # o "precisa de ti" no último lugar que trabalhou (a qualidade) e o comercial já terminou.
+    marketing = next(d for d in snap["departments"] if d["id"] == "marketing")
+    assert {s["id"]: s["state"] for s in marketing["seats"]}["marketing-qualidade"] == "needs"
     comercial = next(d for d in snap["departments"] if d["id"] == "comercial")
-    assert comercial["state"] == "needs"
     seats = {s["id"]: s["state"] for s in comercial["seats"]}
-    assert seats["comercial-follow-ups"] == "needs"
-    assert seats["comercial-leads"] == "idle" and seats["comercial-propostas"] == "idle"
+    assert set(seats.values()) == {"idle"}
 
 
 @pytest.mark.parametrize("request_text, only_marketing", [

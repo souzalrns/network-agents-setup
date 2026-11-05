@@ -3,6 +3,8 @@
 id: template-social-pack
 version: 1
 deliverable_type: social_pack
+# Entrega para fora (terceiros ou publicação): posts para as redes
+delivery: external
 objective: "(preencher)"
 channels: []  # ex. instagram, tiktok
 
@@ -12,7 +14,7 @@ budget:
 steps:
   - id: trends
     action: trend_hunter
-    tools_allowed: [web_search, read_repo_file]
+    tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-trends.md
     knowledge:
       kb: marketing
@@ -21,14 +23,20 @@ steps:
   - id: research
     action: research
     depends_on: [trends]
-    tools_allowed: [web_search, read_repo_file]
+    tools_allowed: [read_repo_file]
     output_artifact: artifacts/02-research.md
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: copy_social
     action: copy_social
     depends_on: [research]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/03-social-copy.md
+    knowledge:
+      kb: marketing
+      query: "copywriting para redes sociais"
 
   - id: storytelling
     action: storytelling
@@ -44,10 +52,23 @@ steps:
     depends_on: [storytelling]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/05-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [storytelling]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/03-social-copy.md, artifacts/04-story.md]
+    output_artifact: artifacts/09-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve
-    depends_on: [critic]
+    depends_on: [critic, compliance]
     human_gate:
       level: step
       kind: confirmation

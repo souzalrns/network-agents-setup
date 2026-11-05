@@ -13,6 +13,8 @@
 id: example-ship-parallel
 version: 1
 deliverable_type: ship_gate
+# Entrega interna: demonstração do paralelismo do motor; decisão interna
+delivery: internal
 objective: "Validar mudanca com reviews paralelos e decisao GO/NO-GO"
 
 budget:
@@ -25,29 +27,44 @@ steps:
     output_artifact: artifacts/01-prepare.md
 
   # Wave paralela (todos dependem so de prepare)
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
   - id: code_review
     action: research
     depends_on: [prepare]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/02-code-review.md
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: security_review
     action: research
     depends_on: [prepare]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/03-security-review.md
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: test_review
     action: research
     depends_on: [prepare]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/04-test-review.md
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
 
   - id: ship_decision
     action: critic
     depends_on: [code_review, security_review, test_review]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/05-ship-decision.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
 
   - id: hitl
     action: plan_approve

@@ -7,6 +7,8 @@
 id: template-area-anuncios
 version: 1
 deliverable_type: area_anuncios
+# Entrega para fora (terceiros ou publicação): anúncios com gasto de dinheiro
+delivery: external
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -18,6 +20,9 @@ steps:
     action: lider_anuncios
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/00-brief-anuncios.md
+    knowledge:
+      kb: marketing
+      query: "tráfego pago, plano de media e criativos de anúncios"
 
   - id: media
     action: media_plan
@@ -26,6 +31,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-anuncios.md]
     output_artifact: artifacts/01-media.md
+    knowledge:
+      kb: marketing
+      query: "media buying e plano de media"
 
   - id: testes
     action: ab_testing
@@ -34,6 +42,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-anuncios.md, artifacts/01-media.md]
     output_artifact: artifacts/02-testes.md
+    knowledge:
+      kb: marketing
+      query: "testes A/B de anúncios e métricas de desempenho"
 
   - id: critic
     action: critic
@@ -41,6 +52,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-anuncios.md, artifacts/01-media.md, artifacts/02-testes.md]
     output_artifact: artifacts/03-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
 
   - id: compliance
     action: compliance_check
@@ -48,6 +62,9 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/00-brief-anuncios.md, artifacts/01-media.md, artifacts/02-testes.md]
     output_artifact: artifacts/04-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve
