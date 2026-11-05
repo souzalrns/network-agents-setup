@@ -117,8 +117,11 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     # skills externas (candidatas, nunca instaladas). Resultado no request.json,
     # em skill_activation.json e, se houver algo a dizer, no prompt.
     activation = activate_for_task(repo_root, step)
-    gap = None if activation.mode_error else knowledge_gap(out_root, step)
+    # um result.json que já existe veio de um pedido que passou nesta verificação: não se refaz
+    done = (pending / "result.json").is_file()
+    gap = None if activation.mode_error or done else knowledge_gap(out_root, step)
     if gap:  # M-009, fail-closed: sem o conhecimento que a regra exige, nem há pedido para o worker
+        (pending / "request.json").unlink(missing_ok=True)  # um pedido antigo não pode ser servido sem contexto
         return StepResult(ok=False, detail=f"knowledge_missing: o passo `{step.id}` exige a base de conhecimento (R6) e {gap}")
 
     req: dict[str, Any] = {

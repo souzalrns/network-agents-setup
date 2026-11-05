@@ -67,8 +67,16 @@ def tmp_run_dir() -> Path:
     shutil.rmtree(root, ignore_errors=True)
 
 
+SUBPROCESS_FAKES = Path(__file__).resolve().parent / "subprocess_fakes"
+
+
 def _run_cli(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    """Executa 'python -m plan_runner ...' e devolve o resultado."""
+    """Executa 'python -m plan_runner ...' e devolve o resultado.
+
+    M-009: o subprocesso recebe a mesma base de conhecimento falsa (tests/subprocess_fakes/sitecustomize.py).
+    """
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join(
+        [str(SUBPROCESS_FAKES), str(RUNNER_DIR), *filter(None, [os.environ.get("PYTHONPATH")])])}
     return subprocess.run(
         [sys.executable, "-m", "plan_runner", *args],
         cwd=str(cwd),
@@ -76,6 +84,7 @@ def _run_cli(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
         text=True,
         encoding="utf-8",
         timeout=120,
+        env=env,
     )
 
 def _load_status_safe(out_dir: Path) -> dict:

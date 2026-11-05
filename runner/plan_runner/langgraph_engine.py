@@ -482,10 +482,17 @@ def resume_plan_langgraph(
     plan = load_plan(plan_path)
     mode = status.get("mode") or "stub"
     log = EventLog(out_dir / "events.jsonl")
-    # M-009: as aprovações já dadas têm de bater com o disco; a pendente, com o que foi pedido
-    approval.verify_past(out_dir, plan, log, run_id)
-    if state == "paused_human_gate" and not status.get("tool_approval") and status.get("paused_at_step"):
-        approval.check_pending(out_dir, plan, str(status["paused_at_step"]), decision, log, run_id)
+    # M-009: as aprovações já dadas têm de bater com o disco (um reject pode sempre parar o run).
+    if decision != "reject":
+        approval.verify_past(out_dir, plan, log, run_id)
+    # O Command(resume=...) do LangGraph responde a TODOS os gates à espera no checkpoint, não só ao
+    # do `paused_at_step` (que pode nomear outro gate, ou o run pode estar à espera de outra coisa):
+    # cada gate pedido e sem decisão tem de ter o conteúdo que foi pedido.
+    pending = approval.pending_gates(out_dir, run_id)
+    if pending and state == "paused_human_gate" and status.get("tool_approval"):
+        raise PlanError(f"há uma aprovação humana pendente ({', '.join(pending)}) ao mesmo tempo que a aprovação "
+                        "de uma tool: o LangGraph responderia às duas com a mesma decisão; resolve uma de cada vez")
+    gate_fps = {g: approval.check_pending(out_dir, plan, g, decision, log, run_id) for g in pending}
     # W-005: --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.
     worker_obj = _worker_for(mode, worker if worker is not None else status.get("worker"))
     if worker is not None:
@@ -637,7 +644,7 @@ def resume_plan_langgraph(
                         "step_id": step.id,
                         "decision": decision_str,
                         "has_payload": edited_payload is not None,
-                        "fingerprint": approval.fingerprint(out_dir, plan, step.id),  # M-009
+                        **gate_fps.get(step.id, {"fingerprint": approval.fingerprint(out_dir, plan, step.id)}),  # M-009
                     },
                     actor={"kind": "human", "id": "cli"},
                 )

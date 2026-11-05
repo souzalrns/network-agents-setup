@@ -197,7 +197,10 @@ def evidence(run_dir: Path) -> dict[str, Any]:
     if last is None or last["payload"].get("decision") not in APPROVED:
         raise PostizError("sem aprovação humana registada (human_gate_resolved approve) depois do pacote e da compliance")
     # M-009: o que se envia tem de ser byte a byte o que foi aprovado (sha256 gravado na aprovação)
-    approved = ((last["payload"].get("fingerprint") or {}).get("artifacts")) or {}
+    fp = last["payload"].get("fingerprint") or {}
+    if fp.get("plan_sha256") != hashlib.sha256(plan_path.read_bytes()).hexdigest():
+        raise PostizError("o plano do run mudou depois da aprovação humana (ou a aprovação não tem impressão digital)")
+    approved = fp.get("artifacts") or {}
     for s in (pkg, comp):
         rel = s["output_artifact"]
         if rel not in approved:

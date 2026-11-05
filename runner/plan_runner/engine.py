@@ -378,8 +378,10 @@ def resume_run(
     log = EventLog(out_dir / "events.jsonl")
     plan = load_plan(out_dir / "plan.yaml")
     order = topo_order(plan)
-    # M-009: as aprovações já dadas têm de bater com o disco; a pendente, com o que foi pedido
-    approval.verify_past(out_dir, plan, log, run_id)
+    # M-009: as aprovações já dadas têm de bater com o disco (um reject pode sempre parar o run);
+    # a pendente, com o que foi pedido
+    if decision != "reject":
+        approval.verify_past(out_dir, plan, log, run_id)
     gate_fp: dict[str, Any] = {}
     if state == "paused_human_gate" and not status.get("tool_approval") and status.get("paused_at_step"):
         gate_fp = approval.check_pending(out_dir, plan, str(status["paused_at_step"]), decision, log, run_id)

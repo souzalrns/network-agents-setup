@@ -172,3 +172,111 @@ def test_langgraph_tambem_recusa_aprovar_conteudo_mudado(tmp_path, tmp_run_dir):
     assert resume_plan_langgraph(tmp_run_dir, decision="approve")["state"] == "done"
     fp = _events(tmp_run_dir, "human_gate_resolved")[-1]["payload"]["fingerprint"]
     assert "artifacts/01-copy.md" in fp["artifacts"]
+
+
+# ------------------------------------------------------------------ revisão independente da fase 2
+
+def _resultado(run: Path, step: str, texto: str) -> None:
+    (run / "pending_steps" / step / "result.json").write_text(
+        json.dumps({"ok": True, "artifact_content": texto}), encoding="utf-8")
+
+
+def test_langgraph_gate_pendente_enquanto_espera_outro_passo_nao_aprova_conteudo_mudado(tmp_path, tmp_run_dir):
+    """B1: o resume de um passo externo respondia também ao gate em paralelo, com o conteúdo mudado."""
+    pytest.importorskip("langgraph.graph")
+    from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
+
+    plan = _plano(tmp_path, [
+        {"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"},
+        {"id": "g1", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE},
+        {"id": "img", "action": "image", "depends_on": ["copy"], "output_artifact": "artifacts/02-img.md"},
+    ])
+    assert run_plan_langgraph(plan, mode="external", out_dir=tmp_run_dir)["state"] == "waiting_external"
+    _resultado(tmp_run_dir, "copy", "texto original\n")
+    st = resume_plan_langgraph(tmp_run_dir, decision="approve")
+    assert "g1" in __import__("plan_runner.approval", fromlist=["x"]).pending_gates(tmp_run_dir, st["run_id"])
+    (tmp_run_dir / "artifacts/01-copy.md").write_text("texto mudado por fora\n", encoding="utf-8")
+    if (tmp_run_dir / "pending_steps/img").is_dir():
+        _resultado(tmp_run_dir, "img", "imagem\n")
+    with pytest.raises(ApprovalError, match=r"`g1` não foi aceite: mudou desde o pedido \(artifacts/01-copy.md\)"):
+        resume_plan_langgraph(tmp_run_dir, decision="approve")
+
+
+def test_langgraph_com_os_passos_fora_de_ordem_no_yaml_verifica_o_gate_certo(tmp_path, tmp_run_dir):
+    """B2: o paused_at_step podia nomear outro gate; agora conta o gate que foi mesmo pedido."""
+    pytest.importorskip("langgraph.graph")
+    from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
+
+    plan = _plano(tmp_path, [
+        {"id": "g2", "action": "plan_approve", "depends_on": ["mid"], "human_gate": GATE},
+        {"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"},
+        {"id": "g1", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE},
+        {"id": "mid", "action": "storytelling", "depends_on": ["g1"], "output_artifact": "artifacts/02-mid.md"},
+    ])
+    assert run_plan_langgraph(plan, mode="stub", out_dir=tmp_run_dir)["state"] == "paused_human_gate"
+    (tmp_run_dir / "artifacts/01-copy.md").write_text("mudado\n", encoding="utf-8")
+    with pytest.raises(ApprovalError, match="`g1` não foi aceite"):
+        resume_plan_langgraph(tmp_run_dir, decision="approve")
+    assert _events(tmp_run_dir, "human_gate_requested")[-1]["payload"]["step_id"] == "g1"
+    st = resume_plan_langgraph(tmp_run_dir, decision="approve")
+    assert st["state"] == "paused_human_gate"
+    g2 = [e for e in _events(tmp_run_dir, "human_gate_requested") if e["payload"]["step_id"] == "g2"]
+    assert len(g2) == 1 and "artifacts/02-mid.md" in g2[0]["payload"]["fingerprint"]["artifacts"]
+
+
+def test_impressao_cobre_todos_os_artefactos_do_run_e_os_resumos(tmp_path):
+    """Ramos em paralelo e os .summary.md (que os passos seguintes leem) também ficam presos."""
+    from plan_runner.approval import fingerprint
+    from plan_runner.models import Plan
+
+    plan = Plan.from_dict({"id": "f", "objective": "x", "steps": [
+        {"id": "a", "action": "copy_social", "output_artifact": "artifacts/a.md"},
+        {"id": "b", "action": "image", "output_artifact": "artifacts/b.md"},  # não é antecessor do gate
+        {"id": "g", "action": "plan_approve", "depends_on": ["a"], "human_gate": GATE, "output_artifact": "artifacts/g.json"},
+    ]})
+    (tmp_path / "artifacts").mkdir()
+    for rel in ("a.md", "a.summary.md", "b.md", "g.json"):
+        (tmp_path / "artifacts" / rel).write_text(rel, encoding="utf-8")
+    (tmp_path / "plan.yaml").write_text("x", encoding="utf-8")
+    assert set(fingerprint(tmp_path, plan, "g")["artifacts"]) == {"artifacts/a.md", "artifacts/a.summary.md", "artifacts/b.md"}
+
+
+def test_edit_grava_o_que_mudou(tmp_path, tmp_run_dir):
+    run_plan(_com_gate(tmp_path), mode="stub", out_dir=tmp_run_dir)
+    (tmp_run_dir / "artifacts/01-copy.md").write_text("corrigido\n", encoding="utf-8")
+    resume_run(tmp_run_dir, decision="edit")
+    assert _events(tmp_run_dir, "human_gate_resolved")[0]["payload"]["changed"] == ["artifacts/01-copy.md"]
+
+
+def test_reject_para_o_run_mesmo_com_uma_aprovacao_antiga_invalidada(tmp_run_dir):
+    run_plan(ROUNDS, mode="stub", out_dir=tmp_run_dir)
+    resume_run(tmp_run_dir, decision="approve")
+    (tmp_run_dir / "artifacts/01-review-r1.json").write_text('{"mudado": true}\n', encoding="utf-8")
+    assert resume_run(tmp_run_dir, decision="reject")["state"] == "rejected"
+
+
+def test_ficheiro_que_so_aparece_depois_da_aprovacao_nao_a_invalida(tmp_path, tmp_run_dir):
+    plan = _plano(tmp_path, [
+        {"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"},
+        {"id": "g1", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE},
+        {"id": "story", "action": "storytelling", "depends_on": ["g1"], "output_artifact": "artifacts/02-story.md"},
+        {"id": "g2", "action": "plan_approve", "depends_on": ["story"], "human_gate": GATE},
+    ])
+    run_plan(plan, mode="stub", out_dir=tmp_run_dir)
+    assert resume_run(tmp_run_dir, decision="approve")["paused_at_step"] == "g2"  # o 02-story.md nasceu depois de g1
+    assert resume_run(tmp_run_dir, decision="approve")["state"] == "done"
+
+
+def test_worker_de_fora_nao_chama_o_modelo_sem_o_contexto(tmp_path, tmp_run_dir, monkeypatch):
+    """Um request.json antigo (de antes da verificação) não é servido sem contexto."""
+    monkeypatch.setattr(knowledge_wiring, "McpKnowledge", _Falha)
+    run_plan(_plano(tmp_path, [{"id": "r", "action": "research", "output_artifact": "artifacts/r.md"}]),
+             mode="external", out_dir=tmp_run_dir)
+    pend = tmp_run_dir / "pending_steps/r"
+    (pend / "request.json").write_text("{}", encoding="utf-8")  # como se viesse de antes
+    (tmp_run_dir / "status.json").write_text(json.dumps({"run_id": "x", "state": "waiting_external"}), encoding="utf-8")
+    fake = FakeGemini()
+    monkeypatch.setattr(ew, "httpx_transport", fake)
+    with pytest.raises(ew.WorkerError, match="knowledge_missing"):
+        ew.GeminiWorker().process(tmp_run_dir, "r")
+    assert fake.calls == []

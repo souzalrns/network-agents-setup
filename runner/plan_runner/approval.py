@@ -1,17 +1,20 @@
 """M-009 (fase 2): a aprovação humana fica presa ao conteúdo que foi aprovado.
 
 Cada pedido de aprovação (`human_gate_requested` de um passo com `human_gate`) leva a impressão
-digital do que está em cima da mesa: o sha256 do `plan.yaml` do run e de cada artefacto que os passos
-antes do gate produziram. A decisão (`human_gate_resolved`) leva a impressão do momento da decisão.
+digital do que está em cima da mesa: o sha256 do `plan.yaml` do run e de cada artefacto que já existe
+no run nesse momento (de qualquer passo, não só dos que vêm antes do gate), com o resumo
+`.summary.md` de cada um quando existe (é o que os passos seguintes podem ler em vez do artefacto).
 
-- **Antes de decidir** (`check_pending`): se o plano ou um artefacto mudou desde o pedido, um `approve`
-  não é aceite (um `edit` aceita, porque é a pessoa a mudar o conteúdo, e fica preso ao que está agora); o motor regista um pedido novo, com a impressão nova, e pede para rever outra vez.
-- **Depois de aprovar** (`verify_past`): em cada retoma, todas as aprovações do run têm de bater com o
-  que está no disco. Se o plano ou um artefacto aprovado mudou, o run não continua.
+- **Antes de decidir** (`check_pending`): se o plano ou um desses ficheiros mudou desde o pedido, um
+  `approve` não é aceite: o motor regista um pedido novo, com a impressão nova, e pede para rever outra
+  vez. Um `edit` aceita (é a pessoa a mudar o conteúdo) e a decisão grava o que mudou (`changed`).
+- **Depois de aprovar** (`verify_past`): em cada retoma (menos num `reject`), os ficheiros gravados em
+  cada aprovação têm de estar iguais no disco. Se o plano ou um deles mudou, o run não continua.
+  Ficheiros que só aparecem depois da aprovação não a invalidam (não foram aprovados).
 - **Fail-closed:** um pedido sem impressão (run antigo) conta como mudado; uma aprovação sem impressão
   não deixa continuar.
 
-O publicador (postiz.py) confere os artefactos que envia contra a impressão da aprovação.
+O publicador (postiz.py) confere o plano e os artefactos que envia contra a impressão da aprovação.
 """
 from __future__ import annotations
 
@@ -31,32 +34,39 @@ class ApprovalError(PlanError):
     """A aprovação não corresponde ao que está no run (plano ou artefactos mudaram)."""
 
 
-def _sha(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def _sha(path: Path) -> str | None:
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
 
-def _ancestors(plan: Plan, sid: str) -> set[str]:
-    by_id = {s.id: s for s in plan.steps}
-    seen: set[str] = set()
-    stack = list(by_id[sid].depends_on)
-    while stack:
-        d = stack.pop()
-        if d not in seen:
-            seen.add(d)
-            stack.extend(by_id[d].depends_on)
-    return seen
+def _summary(rel: str) -> str:
+    p = Path(rel)
+    return (p.with_name(f"{p.stem}.summary.md")).as_posix()
 
 
-def fingerprint(out: Path, plan: Plan, gate_id: str) -> dict[str, Any]:
-    """sha256 do plan.yaml do run e dos artefactos (que existem) dos passos antes do gate."""
-    by_id = {s.id: s for s in plan.steps}
+def fingerprint(out: Path, plan: Plan, gate_id: str | None = None) -> dict[str, Any]:
+    """sha256 do plan.yaml do run e de cada artefacto (e resumo) que existe no run agora."""
     arts: dict[str, str] = {}
-    for sid in sorted(_ancestors(plan, gate_id)):
-        rel = by_id[sid].output_artifact
-        if rel and (out / rel).is_file():
-            arts[rel] = _sha(out / rel)
-    plan_file = out / "plan.yaml"
-    return {"plan_sha256": _sha(plan_file) if plan_file.is_file() else None, "artifacts": arts}
+    for s in plan.steps:
+        if s.human_gate is not None or not s.output_artifact:
+            continue  # o artefacto de um gate é o registo da própria decisão
+        for rel in (s.output_artifact, _summary(s.output_artifact)):
+            h = _sha(out / rel)
+            if h:
+                arts[rel] = h
+    return {"plan_sha256": _sha(out / "plan.yaml"), "artifacts": arts}
+
+
+def changed_since(out: Path, fp: Any) -> list[str]:
+    """O que mudou no disco face a uma impressão gravada (só os ficheiros que ela tem)."""
+    if not isinstance(fp, dict):
+        return ["(sem impressão digital)"]
+    out_list = []
+    if fp.get("plan_sha256") != _sha(out / "plan.yaml"):
+        out_list.append("plan.yaml")
+    for rel, h in sorted((fp.get("artifacts") or {}).items()):
+        if _sha(out / rel) != h:
+            out_list.append(rel)
+    return out_list
 
 
 def _events(out: Path) -> list[dict[str, Any]]:
@@ -72,17 +82,13 @@ def _events(out: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def _diff(old: dict[str, Any], new: dict[str, Any]) -> list[str]:
-    out = []
-    if old.get("plan_sha256") != new.get("plan_sha256"):
-        out.append("plan.yaml")
-    a, b = old.get("artifacts") or {}, new.get("artifacts") or {}
-    out += sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
-    return out
+def _is_tool(payload: dict[str, Any]) -> bool:
+    """Pedido de aprovação de uma tool `act` (AU-20), não de um gate do plano."""
+    return "request_id" in payload or "tools" in payload
 
 
 def request_payload(out: Path, plan: Plan, gate_id: str) -> dict[str, Any]:
-    """O que juntar ao payload do `human_gate_requested`."""
+    """O que juntar ao payload do `human_gate_requested` de um gate."""
     return {"fingerprint": fingerprint(out, plan, gate_id)}
 
 
@@ -91,20 +97,37 @@ def _last_request(out: Path, run_id: str, gate_id: str) -> dict[str, Any] | None
     for evt in _events(out):
         p = evt.get("payload") or {}
         if evt.get("type") == "human_gate_requested" and evt.get("run_id") == run_id \
-                and p.get("step_id") == gate_id and p.get("kind") != "tool_approval":
+                and p.get("step_id") == gate_id and not _is_tool(p):
             last = evt
     return last
 
 
+def pending_gates(out: Path, run_id: str) -> list[str]:
+    """Gates pedidos (pelo motor, ao chegar a eles) e ainda sem decisão, pela ordem do pedido."""
+    asked: list[str] = []
+    done: set[str] = set()
+    for evt in _events(out):
+        p = evt.get("payload") or {}
+        if evt.get("run_id") != run_id or _is_tool(p) or not p.get("step_id"):
+            continue
+        if evt.get("type") == "human_gate_requested" and p["step_id"] not in asked:
+            asked.append(p["step_id"])
+        elif evt.get("type") == "human_gate_resolved":
+            done.add(p["step_id"])
+    return [g for g in asked if g not in done]
+
+
 def check_pending(out: Path, plan: Plan, gate_id: str, decision: str, log: EventLog, run_id: str) -> dict[str, Any]:
-    """Antes de aceitar approve/edit: o conteúdo tem de ser o do pedido. Devolve a impressão a gravar."""
+    """Antes de aceitar a decisão de um gate. Devolve o que juntar ao `human_gate_resolved`."""
     now = fingerprint(out, plan, gate_id)
-    if decision != "approve":
-        # reject não precisa de prova; edit é a pessoa a mudar o conteúdo: o aprovado é o que está agora
+    if decision not in APPROVED:
         return {"fingerprint": now}
     req = _last_request(out, run_id, gate_id)
     old = ((req or {}).get("payload") or {}).get("fingerprint")
-    changed = _diff(old, now) if isinstance(old, dict) else ["(pedido sem impressão digital)"]
+    changed = changed_since(out, old) if isinstance(old, dict) else ["(pedido sem impressão digital)"]
+    if decision == "edit":
+        # é a pessoa a mudar o conteúdo: o aprovado é o que está agora, e fica escrito o que mudou
+        return {"fingerprint": now, "changed": changed}
     if changed:
         log.append("human_gate_requested", run_id, {"step_id": gate_id, "renewed": True, "changed": changed,
                                                     "fingerprint": now})
@@ -121,21 +144,17 @@ def check_pending(out: Path, plan: Plan, gate_id: str, decision: str, log: Event
 
 
 def verify_past(out: Path, plan: Plan, log: EventLog, run_id: str) -> None:
-    """Cada aprovação já dada no run tem de bater com o disco; senão o run não continua."""
-    gates = {s.id for s in plan.steps if s.human_gate is not None}
+    """Os ficheiros de cada aprovação já dada têm de estar iguais no disco; senão o run não continua."""
     for evt in _events(out):
         p = evt.get("payload") or {}
         if evt.get("type") != "human_gate_resolved" or evt.get("run_id") != run_id \
-                or p.get("decision") not in APPROVED or p.get("kind") == "tool_approval":
+                or p.get("decision") not in APPROVED or _is_tool(p):
             continue
-        gid = p.get("step_id")
-        if gid not in gates:
-            # o gate saiu do plano depois de aprovado: o plano mudou
-            changed = ["plan.yaml"]
-        else:
-            fp = p.get("fingerprint")
-            changed = _diff(fp, fingerprint(out, plan, gid)) if isinstance(fp, dict) else ["(aprovação sem impressão digital)"]
+        changed = changed_since(out, p.get("fingerprint"))
+        if changed == ["(sem impressão digital)"]:
+            changed = ["(aprovação sem impressão digital)"]
         if changed:
+            gid = p.get("step_id")
             log.append("approval_invalidated", run_id, {"step_id": gid, "changed": changed})
             raise ApprovalError(
                 f"a aprovação de `{gid}` deixou de valer: mudou depois de aprovado ({', '.join(changed)}). "

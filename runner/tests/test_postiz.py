@@ -283,3 +283,11 @@ def test_alt_segue_cada_ficheiro_para_o_postiz(approved):
     postiz.dispatch(run, send=True, client=_client(fake))
     image = next(c for c in fake.calls if c[1].endswith("/posts"))[2]["json"]["posts"][0]["value"][0]["image"][0]
     assert image["alt"] == "Bicicleta na oficina" and image["id"] and image["path"]
+
+
+def test_plano_alterado_depois_da_aprovacao_recusa(approved):
+    run = approved([_post()])
+    plan = run / "plan.yaml"
+    plan.write_text(plan.read_text(encoding="utf-8") + "\n# mudado\n", encoding="utf-8")
+    with pytest.raises(postiz.PostizError, match="plano do run mudou depois da aprovação"):
+        postiz.dispatch(run)

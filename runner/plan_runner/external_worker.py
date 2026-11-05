@@ -452,6 +452,18 @@ def check_budget_projected(out_root: Path, model: str, prompt_tokens: int, max_o
         raise CostBudgetExceeded(spent_usd + projected_usd, usd_cap)
 
 
+def _check_knowledge(out_root: Path, step_id: str) -> None:
+    """M-009: o worker de fora também não chama o modelo num passo sem o contexto que a regra R6 exige."""
+    from .executor import knowledge_gap
+    from .models import Plan
+
+    plan = Plan.from_dict(_load_plan_raw(out_root))
+    step = next((s for s in plan.steps if s.id == step_id), None)
+    gap = knowledge_gap(out_root, step) if step is not None else None
+    if gap:
+        raise WorkerError(f"knowledge_missing: o passo `{step_id}` exige a base de conhecimento (R6) e {gap}")
+
+
 def check_hitl(out_root: Path, step_id: str) -> None:
     """Lanca HumanGateBlocked se o passo tem gate ou o run espera decisao humana."""
     status_path = out_root / "status.json"
@@ -771,6 +783,7 @@ class GeminiWorker:
         if result_path.exists():
             return _read_json(result_path)  # idempotente: o passo ja tem resultado
         check_hitl(out_root, step_id)
+        _check_knowledge(out_root, step_id)
         # D5 + sinais: `model_tier` do passo (papel) manda; sem ele, o sinal `complexity`
         # (router.signals, da planwright) escolhe o modelo. Config: config/model-tiers.yaml.
         plan_raw = _load_plan_raw(out_root)
