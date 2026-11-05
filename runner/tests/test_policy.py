@@ -134,15 +134,46 @@ def test_publicacao_sem_aprovacao_e_recusada():
 def test_passo_fora_da_aprovacao_numa_entrega_externa_e_recusado():
     data = externo()
     data["steps"].insert(0, {"id": "solto", "action": "research", "output_artifact": "artifacts/s.md", "knowledge": k()})
-    assert violacoes(data) == ["R2: entrega externa com passos fora da aprovação humana: solto"]
+    assert violacoes(data) == ["R2: entrega externa com passos fora da aprovação humana final: solto"]
 
 
-def test_passo_depois_da_aprovacao_e_aceite():
+def test_passo_depois_da_aprovacao_final_e_recusado():
+    """Revisão externa (2026-11-05): conteúdo novo depois da aprovação final ficava sem revisão."""
     data = externo()
     data["budget"]["max_steps"] = 6
     data["steps"].append({"id": "publicar", "action": "publish_package", "depends_on": ["hitl"],
                           "output_artifact": "artifacts/p.md", "knowledge": k()})
-    assert violacoes(data) == []
+    assert violacoes(data) == ["R2: entrega externa com passos fora da aprovação humana final: publicar"]
+
+
+def test_ramo_depois_de_um_gate_intermedio_que_nao_chega_ao_final_e_recusado():
+    data = externo()
+    data["budget"]["max_steps"] = 7
+    data["steps"] += [
+        {"id": "g1", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE},
+        {"id": "lado", "action": "copy_social", "depends_on": ["g1"], "output_artifact": "artifacts/l.md",
+         "knowledge": k()},
+    ]
+    assert violacoes(data) == ["R2: entrega externa com passos fora da aprovação humana final: lado"]
+
+
+def test_declarar_internal_com_um_passo_que_prepara_publicacao_e_recusado():
+    data = {"id": "pol-falso-interno", "objective": "x", "delivery": "internal", "budget": {"max_steps": 1},
+            "steps": [{"id": "pub", "action": "publish_package", "output_artifact": "artifacts/p.md", "knowledge": k()}]}
+    v = violacoes(data)
+    assert v[0] == ("R2: o passo `pub` (`publish_package`) prepara uma publicação: "
+                    "o plano tem de declarar `delivery: external`")
+    assert any(x.startswith("R2: entrega externa sem aprovação humana") for x in v)  # e é avaliado como externo
+
+
+def test_revisor_que_nao_ve_o_trabalho_nao_conta():
+    data = externo()
+    data["steps"][1]["depends_on"] = []  # o critic corre, mas sem receber o copy
+    assert violacoes(data) == ["R4 [marketing]: o revisor `critic` (`critic`) não recebe o trabalho de: copy"]
+
+
+def test_plano_sem_passos_e_recusado():
+    assert violacoes({"id": "vazio", "objective": "x", "steps": []}) == ["R9: o plano não tem passos"]
 
 
 def test_marketing_sem_delivery_nem_budget_e_recusado():
@@ -172,7 +203,7 @@ def test_especialista_antes_do_lider_e_recusado():
     data["budget"]["max_steps"] = 6
     data["steps"].insert(0, {"id": "lider", "action": "lider_conteudo", "output_artifact": "artifacts/00.md",
                              "knowledge": k()})
-    assert violacoes(data) == ["R2: entrega externa com passos fora da aprovação humana: lider",
+    assert violacoes(data) == ["R2: entrega externa com passos fora da aprovação humana final: lider",
                                "R7 [marketing]: estes passos não dependem do líder `lider`: copy, critic, compliance, hitl"]
     data["steps"][1]["depends_on"] = ["lider"]
     assert violacoes(data) == []
@@ -219,7 +250,15 @@ def test_sem_ficheiro_de_regras_nada_arranca(tmp_path, monkeypatch):
         check_plan(Plan.from_dict(externo()))
 
 
-@pytest.mark.parametrize("conteudo", ["version: 2\nglobal: {}\nverticals: {}\n", "global: x\n", "- lista\n", "a: [\n"])
+@pytest.mark.parametrize("conteudo", [
+    "version: 2\nglobal: {}\nverticals: {}\n", "global: x\n", "- lista\n", "a: [\n",
+    # perfis com valores estranhos (revisão externa): recusam tudo, não ficam a meio
+    "version: 1\nglobal: {max_steps_cap: 9, gate_actions: [g], delivery_values: [a]}\n"
+    "verticals: {m: {knowledge: {allowed_kbs: [x], min_query_chars: muitos}}}\n",
+    "version: 1\nglobal: {max_steps_cap: 9, gate_actions: [g], delivery_values: [a]}\n"
+    "verticals: {m: {review_before_gate: critic}}\n",
+    "version: 1\nglobal: {max_steps_cap: 9, gate_actions: [g], delivery_values: [a]}\nverticals: {m: lista}\n",
+])
 def test_ficheiro_de_regras_invalido_nada_arranca(tmp_path, monkeypatch, conteudo):
     p = tmp_path / "plan-policy.yaml"
     p.write_text(conteudo, encoding="utf-8")
@@ -340,3 +379,19 @@ def test_os_testes_usam_as_regras_reais():
     outros = [p.name for p in Path(__file__).parent.glob("test_*.py")
               if p.name != Path(__file__).name and "POLICY_FILE" in p.read_text(encoding="utf-8")]
     assert outros == []
+
+
+def test_router_nao_corre_um_plano_que_as_regras_recusam(monkeypatch, tmp_run_dir):
+    """Revisão externa: o LLM do router pode propor o líder depois de um especialista; não corre."""
+    from plan_runner import router as rt
+    from tests.test_router import FakeRouterLLM
+
+    monkeypatch.setenv("GEMINI_API_KEY", "chave-de-teste")
+    router = rt.Router(transport=FakeRouterLLM())
+    d = rt.RouteDecision(request="Plano de redes para o inverno", outcome="plan", area="marketing", reason="teste",
+                         steps=[{"agent": "marketing.research", "task": "", "depends_on": []},
+                                {"agent": "marketing.lider_social", "task": "", "depends_on": [1]}])
+    out = router.execute(d, out_dir=tmp_run_dir, worker=None)
+    assert out["executed"] is False and out["decision"]["outcome"] == "error"
+    assert any(v.startswith("R7 [marketing]: estes passos não dependem do líder") for v in out["violations"])
+    assert not (tmp_run_dir / "status.json").exists()

@@ -78,6 +78,7 @@ def run_plan_langgraph(
         old_status.unlink()
 
     shutil.copy(plan_path, out / "plan.yaml")
+    plan = load_plan(out / "plan.yaml")  # M-008: verifica-se a cópia que vai correr, não o original
     (out / "langgraph_report.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"
     )

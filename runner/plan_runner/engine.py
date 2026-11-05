@@ -235,6 +235,8 @@ def run_plan(
 
     out.mkdir(parents=True, exist_ok=True)
     shutil.copy(plan_path, out / "plan.yaml")
+    plan = load_plan(out / "plan.yaml")  # M-008: o que corre é a cópia; verifica-se a cópia, não o original
+    order = topo_order(plan)
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "objective": plan.objective})
     _log_ignored_fields(plan_path, log, run_id)

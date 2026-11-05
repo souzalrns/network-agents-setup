@@ -57,9 +57,40 @@ def load_policy(path: Path | None = None) -> dict[str, Any]:
                 errors.append(f"R9: `global.{k}` tem de ser uma lista não vazia")
     if not isinstance(data.get("verticals"), dict):
         errors.append("R9: regras do motor sem bloco `verticals`")
+    else:
+        for vert, prof in data["verticals"].items():
+            errors += _profile_errors(str(vert), prof)
     if errors:
         raise PolicyError("?", errors)
     return data
+
+
+def _strs(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(x, str) and x for x in value)
+
+
+def _profile_errors(vert: str, prof: Any) -> list[str]:
+    """Tipos de um perfil de vertical: um valor estranho recusa tudo (R9), não fica a meio."""
+    tag = f"R9: `verticals.{vert}`"
+    if not isinstance(prof, dict):
+        return [f"{tag} tem de ser um mapa"]
+    errs = []
+    for k in ("require_delivery", "require_explicit_max_steps"):
+        if k in prof and not isinstance(prof[k], bool):
+            errs.append(f"{tag}.{k} tem de ser true ou false")
+    for k in ("review_before_gate", "indexable_deliverables", "external_actions"):
+        if k in prof and not _strs(prof[k]):
+            errs.append(f"{tag}.{k} tem de ser uma lista de nomes")
+    for k in ("citability_action", "leader_prefix", "area_deliverable_prefix"):
+        if k in prof and not (isinstance(prof[k], str) and prof[k]):
+            errs.append(f"{tag}.{k} tem de ser um nome")
+    if "knowledge" in prof:
+        kn = prof["knowledge"]
+        mq = kn.get("min_query_chars", 1) if isinstance(kn, dict) else None
+        if not isinstance(kn, dict) or not _strs(kn.get("allowed_kbs")) or not kn.get("allowed_kbs") \
+                or not isinstance(mq, int) or isinstance(mq, bool) or mq < 1:
+            errs.append(f"{tag}.knowledge tem de ter allowed_kbs (lista não vazia) e min_query_chars (inteiro >= 1)")
+    return errs
 
 
 def policy_kb(vertical: str, path: Path | None = None) -> str | None:
@@ -126,6 +157,8 @@ def check_plan(plan: Plan, *, policy_path: Path | None = None, repo_root: Path |
     v: list[str] = []
 
     # R9 acções e verticais em uso
+    if not plan.steps:
+        v.append("R9: o plano não tem passos")
     in_vertical: dict[str, list[Step]] = {}
     for s in plan.steps:
         if _is_gate(s, gate_actions):
@@ -155,17 +188,23 @@ def check_plan(plan: Plan, *, policy_path: Path | None = None, repo_root: Path |
     delivery = raw.get("delivery")
     if delivery is not None and delivery not in g["delivery_values"]:
         v.append(f"R2: `delivery` tem de ser {' ou '.join(g['delivery_values'])} (veio {delivery!r})")
+    # um passo que prepara uma publicação faz do plano uma entrega externa, diga o plano o que disser
+    publishing = [s for vert, ss in in_vertical.items() for s in ss
+                  if s.action in ((policy["verticals"].get(vert) or {}).get("external_actions") or [])]
+    if publishing and delivery != "external":
+        v.append(f"R2: o passo `{publishing[0].id}` (`{publishing[0].action}`) prepara uma publicação: "
+                 "o plano tem de declarar `delivery: external`")
+        delivery = "external"
     final_gates = [gid for gid in _done_when_gates(plan) if gid in by_id and by_id[gid].human_gate is not None]
     if delivery == "external":
         if not final_gates:
             v.append("R2: entrega externa sem aprovação humana em `done_when` (`human_gate_resolved on <id do passo>`)")
         else:
-            gate_ids = {s.id for s in plan.steps if s.human_gate is not None}
-            covered = set().union(*(_ancestors(by_id, gid) for gid in final_gates)) | gate_ids
-            after_gate = {s.id for s in plan.steps if _ancestors(by_id, s.id) & gate_ids}
-            loose = [s.id for s in plan.steps if s.id not in covered and s.id not in after_gate]
+            # nada fica fora da aprovação final: nem ao lado dela, nem depois dela
+            covered = set().union(*(_ancestors(by_id, gid) for gid in final_gates)) | set(final_gates)
+            loose = [s.id for s in plan.steps if s.id not in covered and s.human_gate is None]
             if loose:
-                v.append(f"R2: entrega externa com passos fora da aprovação humana: {', '.join(loose)}")
+                v.append(f"R2: entrega externa com passos fora da aprovação humana final: {', '.join(loose)}")
 
     # Perfis por vertical
     for vert, steps in sorted(in_vertical.items()):
@@ -182,16 +221,25 @@ def check_plan(plan: Plan, *, policy_path: Path | None = None, repo_root: Path |
             dtype = str(raw.get("deliverable_type") or "")
             if dtype in (prof.get("indexable_deliverables") or []) and prof.get("citability_action"):
                 needed.append(str(prof["citability_action"]))
+            reviewers = set(needed) | {str(a) for a in prof.get("review_before_gate") or []}
             for gid in final_gates:
                 direct = {by_id[d].action for d in by_id[gid].depends_on}
                 missing = [a for a in needed if a not in direct]
                 if missing:
                     rule = "R5" if missing == [prof.get("citability_action")] else "R4"
                     v.append(f"{rule} {tag}: a aprovação `{gid}` tem de depender directamente de: {', '.join(missing)}")
+                # cada revisor tem de ver o trabalho todo que a aprovação cobre (não basta existir)
+                work = {a for a in _ancestors(by_id, gid)
+                        if by_id[a].human_gate is None and by_id[a].action not in reviewers}
+                for d in by_id[gid].depends_on:
+                    if by_id[d].action in needed:
+                        unseen = sorted(work - _ancestors(by_id, d))
+                        if unseen:
+                            v.append(f"R4 {tag}: o revisor `{d}` (`{by_id[d].action}`) não recebe o trabalho de: {', '.join(unseen)}")
         kn = prof.get("knowledge")
         if isinstance(kn, dict):
             kbs = [str(k) for k in kn.get("allowed_kbs") or []]
-            min_q = int(kn.get("min_query_chars") or 1)
+            min_q = int(kn.get("min_query_chars", 1))
             for s in steps:
                 spec = s.raw.get("knowledge") if isinstance(s.raw, dict) else None
                 if not isinstance(spec, dict):
