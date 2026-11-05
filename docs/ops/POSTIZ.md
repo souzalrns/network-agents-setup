@@ -15,7 +15,7 @@ escrita à API do X pode ser pago do lado do X: se não estiver contratado, não
 |---|---|
 | o run não tem `human_gate_resolved` com `approve` (ou `edit`) num passo `plan_approve` que depende do pacote **e** da compliance | nada sai sem aprovação humana registada |
 | a compliance não viu o pacote ou não diz `"veredicto": "aprovado"` | publicidade e IA identificadas (AI Act, art. 50), direitos e consentimento verificados antes |
-| o pacote ou a compliance foram alterados depois da aprovação | aprovou-se o que lá estava, não outra coisa |
+| o pacote ou a compliance não são, byte a byte, o que foi aprovado (sha256 gravado na aprovação; M-009) | aprovou-se o que lá estava, não outra coisa |
 | o pacote não cumpre o formato (`posts[].rede/quando/legenda`, no máximo 30 posts) | o envio é determinístico: nenhum modelo reescreve o texto |
 
 Por post (o post fica `recusado` com o motivo; o resto do pacote segue):

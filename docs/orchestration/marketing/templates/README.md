@@ -33,3 +33,9 @@ em cada passo que não é aprovação, ferramentas que existem no motor, o líde
 planos de área e, numa entrega `external`, a aprovação humana do `done_when` a depender directamente do
 `critic` e do `compliance_check` (e do `critic_item13` em `seo_article` e `area_site_seo`). Um plano que
 falhe não arranca e o erro diz qual regra falhou. Prova: `runner/tests/test_policy.py`.
+
+Durante o run (M-009): um passo de marketing não chama o modelo se o contexto da base de conhecimento
+não chegou (falha, vazio ou sem fontes); o passo fica `failed` com `knowledge_missing`. A aprovação humana
+fica presa ao sha256 do `plan.yaml` e dos artefactos antes do gate: aprovar conteúdo que mudou desde o
+pedido renova o pedido em vez de aprovar, e mudar o plano ou um artefacto depois de aprovado faz o run
+parar na retoma seguinte. Prova: `runner/tests/test_approval.py`.
