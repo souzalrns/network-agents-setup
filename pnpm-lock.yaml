@@ -40,7 +40,7 @@ importers:
         version: 8.12.3
       vitest:
         specifier: ^5.0.3
-        version: 5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(vite@8.3.5)
+        version: 5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(vite@8.3.6)
 
   apps/api:
     dependencies:
@@ -249,8 +249,8 @@ importers:
         specifier: ^5.0.0
         version: 5.22.0(prisma@5.22.0)
       axios:
-        specifier: ^1.6.0
-        version: 1.20.0
+        specifier: ^1.21.0
+        version: 1.21.0
       cheerio:
         specifier: ^1.0.0
         version: 1.2.0
@@ -742,7 +742,7 @@ packages:
       obug: 2.2.1
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(vite@8.3.5)
+      vitest: 5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(vite@8.3.6)
     dev: true
 
   /@vitest/istanbul-lib-coverage@1.0.2:
@@ -757,7 +757,7 @@ packages:
       '@vitest/istanbul-lib-coverage': 1.0.2
     dev: true
 
-  /@vitest/mocker@5.0.3(vite@8.3.5):
+  /@vitest/mocker@5.0.3(vite@8.3.6):
     resolution: {integrity: sha512-T8sWAIbkSyAjkwTcaEc3Iu0o9A27X1/kdXrizhZkGuSKScRQtRzclfAMpOTcGdXCsqxeWlpGy3XjqaW8CpLORg==}
     peerDependencies:
       msw: ^2.4.9
@@ -772,7 +772,7 @@ packages:
       '@vitest/spy': 5.0.3
       estree-walker: 3.0.3
       magic-string: 1.4.2
-      vite: 8.3.5(@types/node@20.19.43)
+      vite: 8.3.6(@types/node@20.19.43)
     dev: true
 
   /@vitest/spy@5.0.3:
@@ -851,10 +851,10 @@ packages:
   /asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  /axios@1.20.0:
-    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
+  /axios@1.21.0:
+    resolution: {integrity: sha512-YCzXMB53Q9PZBsh7yN7wtapit4WepwcHS2fP8QhGsBxSz5YtgYobV7GGlWlAJi+RxfU77GQTQi2DSLUma42EYA==}
     dependencies:
-      follow-redirects: 1.16.1
+      follow-redirects: 1.16.2
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -1275,8 +1275,8 @@ packages:
       - supports-color
     dev: false
 
-  /follow-redirects@1.16.1:
-    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
+  /follow-redirects@1.16.2:
+    resolution: {integrity: sha512-/kVP2U8z596Ia0gwFrwyIeo74ta5aVmSeU1FfAUMAmcEP5EP7zydmag3SLiN64NaRKef3lxsq7i/g7ltJQDGow==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -2221,8 +2221,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: false
 
-  /vite@8.3.5(@types/node@20.19.43):
-    resolution: {integrity: sha512-z1YpjieJ9g0ebTmQpLBv/oq9E3F9EIlOe+7LahW8SrE3LTiG3udBRUXQOlYXP9b+IC2q2phHeVxj9xGlw34OEQ==}
+  /vite@8.3.6(@types/node@20.19.43):
+    resolution: {integrity: sha512-UI7dK29NnS54Fk+mmo7o+jI6U8Fp7hDl+X5Q1k45WH+d4dSlbLVUETGQ+hfkNgvLQGyoElPj837nZyv4MBc0VA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2274,7 +2274,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vitest@5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(vite@8.3.5):
+  /vitest@5.0.3(@types/node@20.19.43)(@vitest/coverage-v8@5.0.3)(vite@8.3.6):
     resolution: {integrity: sha512-xMw97S3rjdtj5dkVat7jCsqWBpvchs3RlpQctUqwJD0KkERk40vz2fJ77lDwW/Vzh/pk18eItYAzkodhSes3jQ==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
     hasBin: true
@@ -2318,7 +2318,7 @@ packages:
       '@types/chai': 5.2.3
       '@types/node': 20.19.43
       '@vitest/coverage-v8': 5.0.3(vitest@5.0.3)
-      '@vitest/mocker': 5.0.3(vite@8.3.5)
+      '@vitest/mocker': 5.0.3(vite@8.3.6)
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -2329,7 +2329,7 @@ packages:
       tinybench: 6.2.0
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
-      vite: 8.3.5(@types/node@20.19.43)
+      vite: 8.3.6(@types/node@20.19.43)
       why-is-node-running: 3.2.1
     transitivePeerDependencies:
       - msw
