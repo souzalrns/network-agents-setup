@@ -1,0 +1,75 @@
+# tenant-isolation-missing-filter
+#
+# Incorporado em 2026-11-07, origem: auditoria externa (Cloudflare security-audit skill) ao
+# repo mesaflow-api, que encontrou ~29 serviços Prisma a resolver registos só por `id`, sem
+# filtrar também pelo tenant (restaurantId), permitindo acesso cross-tenant (OWASP API1:2023 —
+# Broken Object Level Authorization / IDOR). Ver skills/meta/security-audit/SKILL.md secção 2b.
+#
+# Heurística de confiança BAIXA: casta um padrão AST exacto, não entende se o `id` já é
+# globalmente único por outra via (ex.: UUID só daquele tenant por construção) ou se o filtro
+# de tenant é aplicado antes, fora da própria chamada Prisma (ex.: middleware de query). Tratar
+# todo achado como CANDIDATO a verificar manualmente, nunca como confirmado automaticamente —
+# ver disciplina de veredicto em skills/security/reporter/SKILL.md.
+#
+# Uso: semgrep scan --config config/semgrep-rules/tenant-isolation-missing-filter.yml <alvo>
+#
+# Cobre findUnique / findFirst / update / delete do Prisma Client, filtrados por `id` com
+# nenhum dos campos de tenant/dono reconhecidos (lista abaixo) presente no mesmo `where`.
+# Para adaptar a outro projecto, acrescentar o nome do campo de tenant desse domínio à lista
+# de `pattern-not` (ex.: `clientId`, `clinicId`, `storeId`, ...).
+
+rules:
+  - id: tenant-isolation-missing-filter
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: >-
+      Esta chamada Prisma resolve um registo só por `id`, sem um campo de tenant/dono
+      reconhecido (restaurantId, tenantId, organizationId, companyId, accountId, businessId,
+      workspaceId) no mesmo `where`. Se o modelo for multi-tenant, isto permite a um actor
+      autenticado de um tenant ler/alterar/apagar dados de outro tenant só por adivinhar ou
+      enumerar o id (OWASP API1:2023 — Broken Object Level Authorization). Corrigir filtrando
+      sempre pelo tenant do token do utilizador no mesmo `where` (ou confirmar explicitamente,
+      num comentário, porque este modelo não é multi-tenant). Tratar como CANDIDATO — verificar
+      manualmente antes de reportar como achado confirmado.
+    metadata:
+      category: security
+      confidence: LOW
+      owasp:
+        - "API1:2023 - Broken Object Level Authorization"
+      references:
+        - "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/"
+      source: "Cloudflare security-audit skill run contra mesaflow-api, 2026-11-07"
+    patterns:
+      - pattern-either:
+          - pattern: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, ... } })'
+          - pattern: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, ... } })'
+          - pattern: '$PRISMA.$MODEL.update({ where: { id: $ID, ... }, ... })'
+          - pattern: '$PRISMA.$MODEL.delete({ where: { id: $ID, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, restaurantId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, restaurantId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, restaurantId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, restaurantId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, tenantId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, tenantId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, tenantId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, tenantId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, organizationId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, organizationId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, organizationId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, organizationId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, companyId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, companyId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, companyId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, companyId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, accountId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, accountId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, accountId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, accountId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, businessId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, businessId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, businessId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, businessId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findUnique({ where: { id: $ID, workspaceId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.findFirst({ where: { id: $ID, workspaceId: $T, ... } })'
+      - pattern-not: '$PRISMA.$MODEL.update({ where: { id: $ID, workspaceId: $T, ... }, ... })'
+      - pattern-not: '$PRISMA.$MODEL.delete({ where: { id: $ID, workspaceId: $T, ... } })'
