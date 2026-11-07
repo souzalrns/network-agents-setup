@@ -5,7 +5,7 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **136 itens vivos** (§4): ABERTO 76, EM CURSO 14, BLOQUEADO 46;
+> - **137 itens vivos** (§4): ABERTO 77, EM CURSO 14, BLOQUEADO 46;
 > - **148 linhas de histórico** (no histórico, §7): 126 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
 > - **90 decisões** A/B/C: 89 tomadas (no histórico, §10) e **1 por decidir** (§10 abaixo).
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (136 itens vivos)
+## 4. Tabela única (137 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -218,6 +218,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | GOV-RET-2 | Retenção dos dados de **clientes** (política de privacidade §7): no fim do contrato + 90 dias, apagar a memória do cliente (`memory/<client_id>/`), o `project_state` e a L4 (`expires_at`) do projecto. Hoje é um procedimento manual (§8 da política); automatizar quando houver contratos com data de fim | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | 1.º cliente real (hoje 0 dados de clientes: GOV-IMPACT-1) e um registo de contratos com data de fim | `docs/governance/PRIVACY-POLICY.md` §7 e §8; `runner/plan_runner/memory_l4.py` (`expires_at`, `forget`) | GOV-RET-1 (parte dos clientes) | VERIFICADO |
 | GOV-PRIV-2 | Upgrade do GOV-PRIV-1 (opção A): limpar `transcripts/latest.json` também do **histórico** do git do `agent-network-mcp` (commit `fe3cc90`, 2026-08-10, com a transcrição de um vídeo público de terceiros) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão do DEV: reescrever a `main` do MCP (`git filter-repo` + force push) obriga quem tem um clone a clonar de novo. Até lá, o ficheiro já não está na árvore actual (GOV-PRIV-1, opção C) | `git log -- transcripts/latest.json` no MCP; MCP #20; AIMS §11.1 | GOV-PRIV-1 (opção A) | VERIFICADO |
 | S-005 | Tabela `_prisma_migrations` no esquema `public` do Supabase sem RLS (as restantes 23 tabelas têm). Não tem dados pessoais, mas fica legível pela API se as permissões do `anon` o permitirem | FALTA-CONSTRUIR | ABERTO | DEV | Baixa | SQL versionado (activar RLS sem políticas, ou mover para outro esquema); o DEV aplica | SELECT ao `pg_class` (2026-10-07, só leitura): `relrowsecurity = false` só nesta tabela | — | VERIFICADO |
+| S-006 | Triar os 15 achados da regra própria `tenant-isolation-missing-filter` (Prisma find/update/delete por id sem campo de tenant) no `main` deste repo, antes de promover a regra a bloqueante no step PR do semgrep; hoje corre só report-only no step main/manual | FALTA-DECIDIR | ABERTO | CLAUDE | Média | Nenhum — a regra já corre report-only; falta só a triagem (achado real vs. falso positivo, ex.: modelo global sem tenant por desenho) | `config/semgrep-rules/tenant-isolation-missing-filter.yml`; `.github/workflows/security-scan.yml` (step "semgrep (main / manual...)"); origem: auditoria Cloudflare security-audit ao mesaflow-api, 2026-11-07, 55 candidatos, maioria BOLA por id sem filtro de tenant; `semgrep scan --config config/semgrep-rules/tenant-isolation-missing-filter.yml .` → 15 achados nesta sessão | — | VERIFICADO |
 | AU-11b | Remover os modelos Prisma da t6 (`KnowledgeSource`/`KnowledgeChunk`) num PR à parte: um só dono do DDL (`scripts/rag_schema.sql`) | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (P-11 = A, 2026-10-07). Antes de remover, confirmar que o `packages/memory` não os usa | §10 P-11; AU-11 (§7, #76: comentário de legado) | — | VERIFICADO |
 | ING-012 | Upstream `microsoft/markitdown`: issue com os 2 achados reproduzíveis (um PDF ilegível volta em bruto pelo conversor de texto; uma tabela DOCX sem `w:tblHeader` sai com o cabeçalho vazio) e os geradores das fixtures; o PR só depois da resposta dos maintainers e com o CLA da Microsoft | FALTA-CONSTRUIR | ABERTO | AMBOS | Baixa | Publicar, na conta do DEV, o comentário preparado em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §3 (acção pública; esta sessão não tem acesso ao repo upstream) | §10 P-22 = Sim (2026-10-07; opção B, issue primeiro); fixtures do T6b e do T6c; **verificado a 2026-10-07 com o MarkItDown 0.1.8:** os 2 achados reproduzem-se. O da tabela DOCX já está reportado na [#2157](https://github.com/microsoft/markitdown/issues/2157) (aberta; o PR #2160 trata só do escape, não do cabeçalho), por isso uma issue nova seria duplicada. Opções A/B/C em `docs/ops/upstream/MARKITDOWN-UPSTREAM.md` §2; **RECOMENDADA B:** comentário na #2157 com a reprodução e a oferta de PR para o cabeçalho; o achado do `.pdf` em texto fica só na documentação (o adapter já se protege) | — | VERIFICADO |
 | RUNNER-WHY-1 | `plan_runner why <run> <passo>`: num só relatório, o que influenciou um passo (skill, grounding, hits do L5 com autoridade e data, `repo_files`, chamadas de tools com fontes, input do passo anterior), a partir do que o run já grava | FALTA-CONSTRUIR | ABERTO | CLAUDE | Baixa | — (ideia extraída, sem dependências novas) | EXTRAIR do `agentfootprint` (footprintjs, MIT; TypeScript, 373 versões em 6,5 meses, 1 mantenedor: não se instala). Os dados já existem: `events.jsonl`, `result.json → meta.context/meta.repo_files/meta.sources` (F3-ART-1), `knowledge_context.md`. Decisão do maestro 2026-10-23 (opção A) | — | VERIFICADO |
@@ -312,7 +313,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 25 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, M-007, M-010, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
+| CLAUDE | 26 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, M-007, M-010, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, S-006, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
 | DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
 | AMBOS | 42 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, M-006, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
@@ -335,10 +336,10 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 51 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, M-007, M-010, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
+| Média | 52 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, M-007, M-010, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, S-006, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 73 | F0.12, F1b, F2-DISC-1, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 76 · EM CURSO 14 · BLOQUEADO 46.
+**Por estado:** ABERTO 77 · EM CURSO 14 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
 ## 7. Histórico (148 linhas: 126 FECHADO, 22 OBSOLETO)
