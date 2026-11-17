@@ -179,6 +179,12 @@ try {
   await shot("05-site-artigo");
   await page.goto(`${BASE}/pesquisa?q=${tag}`);
   check("a pesquisa encontra a peça", (await page.locator(".teaser").count()) >= 1);
+  const feed = await (await page.request.get(`${BASE}/feed.xml`)).text();
+  check("o feed RSS traz a peça publicada", feed.includes("<rss") && feed.includes(storyTitle.slice(0, 20).replace(/&/g, "&amp;")));
+  const sitemap = await (await page.request.get(`${BASE}/sitemap.xml`)).text();
+  check("em pré-lançamento o mapa do site está vazio (nada para indexar)", sitemap.includes("<urlset") && !sitemap.includes("/artigo/"));
+  const robots = await (await page.request.get(`${BASE}/robots.txt`)).text();
+  check("em pré-lançamento o robots.txt fecha o site e a redação", /Disallow: \/(\s|$)/.test(robots) || robots.includes("Disallow: /redacao"), robots.split("\n").slice(0, 4).join(" / "));
   const ideas = await page.goto(`${BASE}/artigo/nao-existe-${tag}`);
   check("um artigo inexistente dá 404", ideas.status() === 404);
   const draft = await page.goto(`${BASE}/redacao/pautas`);

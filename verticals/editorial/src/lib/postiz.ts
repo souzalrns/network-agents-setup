@@ -62,7 +62,8 @@ export async function dispatchApproved(ctx: Ctx, opts: { transport?: PostizTrans
   return withCtx(ctx, async (tx) => {
     const items = await tx<{ id: string; channel: string; content: Record<string, unknown>; external_ref: string; approved_by: string | null; story_state: string }[]>`
       select d.id, d.channel, d.content, d.external_ref, d.approved_by, s.state as story_state
-      from distribution_items d join stories s on s.id = d.story_id where d.state = 'approved' order by d.created_at`;
+      from distribution_items d join stories s on s.id = d.story_id
+      where d.state = 'approved' and d.approved_hash = editorial.distribution_hash(d.channel, d.content) order by d.created_at`;
     const integrations = transport ? await transport.integrations() : [];
     const out: DispatchItem[] = [];
     for (const it of items) {
@@ -81,8 +82,13 @@ export async function dispatchApproved(ctx: Ctx, opts: { transport?: PostizTrans
       try {
         const res = await transport.createPost(buildPayload(it, match[0]!.id, siteUrl)) as { id?: string } | { id?: string }[];
         const ref = Array.isArray(res) ? res[0]?.id : res?.id;
-        await tx`update distribution_items set state = 'handed_off', external_ref = ${`sha256:${sha} postiz:${ref ?? "?"}`} where id = ${it.id}`;
-        out.push({ id: it.id, channel: it.channel, status: "enviado", ref: ref ?? undefined });
+        // ponto de gravação: se a base de dados recusar este item, os outros (já aceites pelo Postiz) ficam registados
+        try {
+          await tx.savepoint((sp) => sp`update distribution_items set state = 'handed_off', external_ref = ${`sha256:${sha} postiz:${ref ?? "?"}`} where id = ${it.id}`);
+          out.push({ id: it.id, channel: it.channel, status: "enviado", ref: ref ?? undefined });
+        } catch (e) {
+          out.push({ id: it.id, channel: it.channel, status: "erro", ref: ref ?? undefined, reason: `enviado ao Postiz mas não registado: ${(e as Error).message}` });
+        }
       } catch (e) {
         out.push({ id: it.id, channel: it.channel, status: "erro", reason: (e as Error).message });
       }

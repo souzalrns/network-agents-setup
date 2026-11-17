@@ -12,11 +12,18 @@ O estado e as decisões por tomar estão no `PENDENCIAS.md` (item **E-005**, dec
 |---|---|---|
 | Base de dados com isolamento por publicação | `db/migrations/0001_init.sql`, `0002_security.sql` | `tests/isolation.test.ts` |
 | Fluxo de 11 estados com regras na base de dados | `src/lib/workflow.ts`, `stories.ts`, trigger `stories_guard` | `tests/workflow.test.ts` |
+| Aprovação presa ao conteúdo aprovado, afirmações revalidadas, distribuição protegida, quatro olhos na verificação | `db/migrations/0003_integrity.sql` | `tests/integrity.test.ts` (R1–R8 da revisão técnica) |
+| Rascunhos no servidor, autosave, conflitos, versões com comparação e restauro | `0004_drafts.sql`, `src/lib/drafts.ts`, `src/app/redacao/rascunho/`, `pecas/[id]/article-editor.tsx`, `pecas/[id]/versoes/` | `tests/drafts.test.ts`, `tests/e2e/editor.mjs` |
+| Editor com barra de formatação, figuras com legenda e crédito, vídeo, pré-visualização ao lado e fiel ao site | `article-editor.tsx`, `src/lib/markdown.ts`, `src/components/article-view.tsx`, `/redacao/pre-visualizar/` | `tests/markdown.test.ts`, `tests/e2e/editor.mjs` |
+| Quadro de pautas com movimentação segura (arrastar só para destinos permitidos; «Mover para…») | `pautas/board.tsx` | `tests/e2e/board.mjs` |
+| Atividade, filtros e paginação | `/redacao/atividade`, `pautas/page.tsx`, `listActivity`, `countStoriesTx` | `tests/queries.test.ts` |
+| Telemóvel: menu em `<dialog>`, sem transbordo, equipa numa linha por pessoa | `src/components/nav.tsx`, `globals.css`, `equipa/[id]` | `tests/e2e/mobile.mjs` |
+| Validação da configuração inicial | `db/validate-seed.mjs` (`npm run db:validate`) | `tests/seed.test.ts` |
 | Redação (painel, pautas, ficha da peça, calendário, radar, fontes, equipa, distribuição, configuração) | `src/app/redacao/` | `tests/e2e/run.mjs` |
 | Site público (início, editorias, artigo, autor, pesquisa, páginas, sitemap, robots, RSS) | `src/app/(site)/`, `src/app/sitemap.ts`, `robots.ts`, `feed.xml/` | `tests/e2e/run.mjs` |
 | Radar de fontes (RSS/Atom, allowlist, SSRF, deduplicação, relevância) | `src/lib/radar/` | `tests/radar.test.ts` |
 | Agentes `editorial.radar`, `.research`, `.factcheck`, `.editor` | `src/lib/agents/` | `tests/agents.test.ts` |
-| Envio para o Postiz (rascunhos, só aprovados) | `src/lib/postiz.ts` | `tests/e2e/run.mjs` (modo simulado) |
+| Envio para o Postiz (rascunhos, só aprovados, sem reenvios) | `src/lib/postiz.ts` | `tests/postiz.test.ts` (transporte simulado), `tests/e2e/run.mjs` (sem credenciais) |
 | Publicação agendada e radar automáticos | `src/app/api/cron/` | `tests/workflow.test.ts` (`publishDue`) |
 
 Os agentes estão também no catálogo da plataforma: `agents/editorial/*.agent.md`, `skills/editorial/*/SKILL.md`,
@@ -30,12 +37,23 @@ transacção declara a publicação e quem actua (`withCtx`, em `src/lib/db.ts`)
 - Uma publicação nunca vê nem altera dados de outra.
 - Só edição, direção ou administração aprovam pautas e artigos, agendam e publicam.
 - Quem escreveu uma peça não a aprova (a direção pode desligar a regra para uma redação de uma pessoa).
-- Não se aprova com informação não confirmada no artigo ou com factos por verificar.
-- Uma afirmação só fica verificada com evidência e por uma pessoa, que fica registada.
-- Mexer no texto de uma peça aprovada retira a aprovação.
-- O sistema só publica o que uma pessoa agendou, à hora marcada, sem tocar no texto.
+- Não se aprova com informação não confirmada no artigo ou com factos por verificar; agendar e publicar voltam a
+  verificar (uma afirmação acrescentada depois da aprovação também bloqueia).
+- Uma afirmação só fica verificada com evidência e por uma pessoa, que fica registada. Com os quatro olhos, quem
+  escreveu a peça ou registou a afirmação não a verifica. Mudar o texto, o tipo, a atribuição ou a evidência volta a
+  pô-la «por verificar».
+- A aprovação fica presa ao conteúdo: uma impressão digital (sha256) de título, textos, endereço, editoria,
+  autoria, imagem, legenda, crédito, etiquetas, SEO e tipo. Agendar e publicar exigem o conteúdo exactamente aprovado.
+  Mexer numa peça aprovada ou agendada devolve-a a revisão; mudar conteúdo e estado na mesma operação é recusado;
+  os campos da aprovação só mudam pelo fluxo; uma peça arquivada não se reescreve.
+- Editar uma peça publicada: só a edição, com nota obrigatória; conta como nova aprovação e fica no histórico.
+- Imagem principal e figuras do texto precisam de crédito para aprovar.
+- O sistema só publica o que uma pessoa agendou, à hora marcada, sem tocar no texto; cada peça é tentada à parte.
 - Agentes só criam ideias, propostas, afirmações pendentes e notas. Não lêem fontes, contactos nem comentários.
-- Distribuição: só segue para o agendador conteúdo aprovado por uma pessoa da edição.
+- Distribuição: só segue para o agendador o conteúdo exactamente aprovado por uma pessoa da edição; o que seguiu já
+  não se altera.
+- Rascunhos: só quem pode alterar a peça tem rascunho dela; guardar uma versão sobre uma versão que mudou entretanto
+  é recusado (a última gravação não ganha em silêncio) e o texto fica no rascunho.
 - Cada mudança de estado, cada versão do texto e cada execução de agente ficam registadas.
 
 ## Correr localmente
@@ -67,10 +85,11 @@ repositório público.
 ```bash
 # Postgres de teste em 127.0.0.1:55432 (postgres/postgres); cada corrida cria a sua base
 docker run -d --name editorial-pg -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:55432:5432 postgres:16-alpine
-npm test                 # 72 testes: isolamento, fluxo, radar, agentes
+npm test                 # 108 testes: isolamento, fluxo, integridade (R1–R8), rascunhos, radar, agentes, Postiz…
 npm run typecheck
-# ponta a ponta no browser, com a aplicação a correr em :3100 sobre uma base semeada
-node tests/e2e/run.mjs   # 26 verificações
+# no browser, numa base PRÓPRIA e descartável (editorial_e2e): migra, semeia o exemplo, arranca next start
+npm run build && npm run test:e2e   # fluxo 30, telemóvel 12, editor com duas pessoas 19, quadro 9
+npm run db:validate      # valida a configuração inicial antes de semear
 ```
 
 ## Variáveis de ambiente
@@ -113,6 +132,11 @@ node tests/e2e/run.mjs   # 26 verificações
   opção de exportar para um CMS headless se o volume o justificar.
 - **Postiz pela API pública, mesmo contrato do `runner/plan_runner/postiz.py`:** só rascunhos, idempotente, sem
   publicação imediata. PostSider e OpenPost não foram instalados (duplicariam o Postiz).
+- **Markdown com dialecto próprio (D2)** em vez de um editor rico: figura `![Legenda](https://… "Crédito")` e
+  vídeo (endereço do YouTube ou Vimeo sozinho numa linha). O mesmo `renderMarkdown` serve a pré-visualização e o site.
+- **Autosave no servidor (D4)**: o browser só guarda uma cópia enquanto o servidor não confirma; as versões nascem
+  em «Guardar versão»; restaurar cria uma versão nova.
+- **Menu móvel em `<dialog>` nativo (D1)** e arrastar e largar nativo (D3): sem bibliotecas.
 - **Agentes determinísticos primeiro.** Cada agente produz trabalho útil sem modelo e testado; o modelo, quando há
   chave, acrescenta sugestões validadas contra o contrato e com tecto de custo.
 - **Radar só com metadados.** Título, excerto até 300 caracteres e ligação; nunca o artigo de outro meio.
@@ -122,7 +146,10 @@ node tests/e2e/run.mjs   # 26 verificações
 - Nenhum feed do radar foi verificado nesta sessão: o proxy do ambiente recusou todos os domínios (P-93).
 - O radar verifica o DNS antes de cada pedido, mas o `fetch` volta a resolver o nome ao ligar (janela de
   DNS rebinding); fechá-la exige um conector próprio.
-- Imagens e anexos entram por endereço (URL); não há carregamento de ficheiros.
+- Imagens e anexos entram por endereço (URL); não há carregamento de ficheiros (precisa de um armazenamento,
+  por exemplo Supabase Storage, com credenciais que esta sessão não tem).
+- O aviso de quem está a editar é informativo (2 minutos depois da última gravação), não um bloqueio.
+- Os agentes correm dentro da vertical (D7): a integração com o motor universal está registada como dívida (E-006).
 - Sem notificações por email; o painel mostra o que espera por cada pessoa.
 - Podcast e vídeo: há rascunhos de guião e descrição pelo agente de edição; transcrição e cortes ficaram de fora
   (o Podguy foi avaliado: MIT, criado em maio de 2026, sem versões publicadas).
