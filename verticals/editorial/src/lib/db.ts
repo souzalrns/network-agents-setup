@@ -1,4 +1,6 @@
 import postgres from "postgres";
+// @ts-expect-error módulo JavaScript partilhado com db/provision.mjs, sem tipos
+import { appDatabaseUrl } from "../../db/app-url.mjs";
 import type { Ctx } from "./context";
 
 /**
@@ -13,7 +15,8 @@ let client: Sql | undefined;
 
 export function db(): Sql {
   if (!client) {
-    const url = process.env.EDITORIAL_DATABASE_URL;
+    // EDITORIAL_DATABASE_URL, ou derivada da ligação do dono criada pela integração Neon (db/app-url.mjs)
+    const url = appDatabaseUrl();
     if (!url) throw new Error("Falta EDITORIAL_DATABASE_URL (ligação do papel editorial_app).");
     client = postgres(url, {
       max: Number(process.env.EDITORIAL_DB_POOL ?? 5),

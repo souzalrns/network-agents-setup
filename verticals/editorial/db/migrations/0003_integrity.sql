@@ -291,13 +291,21 @@ end $$;
 
 -- ---------------------------------------------------------------- dados existentes
 -- As peças já aprovadas ficam presas ao conteúdo que têm hoje; as versões antigas ganham o retrato completo
--- possível (só o texto era guardado). Sem triggers: é a própria migração, como dono do esquema.
-set local session_replication_role = replica;
+-- possível (só o texto era guardado). Sem triggers nem RLS forçado durante este passo: é a própria migração,
+-- como dono das tabelas. Só usa o que o DONO pode fazer (alter table), não `session_replication_role`, que exige
+-- superutilizador e não existe em Postgres geridos como o Neon. Tudo dentro da transacção da migração.
+alter table stories disable trigger user;
+alter table stories no force row level security;
+alter table distribution_items disable trigger user;
+alter table distribution_items no force row level security;
 update stories s set approved_fingerprint = story_fingerprint(s), approved_version = s.version
   where s.approved_by is not null and s.approved_fingerprint is null;
 update distribution_items d set approved_hash = distribution_hash(d.channel, d.content)
   where d.approved_by is not null and d.approved_hash is null;
-set local session_replication_role = origin;
+alter table stories enable trigger user;
+alter table stories force row level security;
+alter table distribution_items enable trigger user;
+alter table distribution_items force row level security;
 
 grant execute on all functions in schema editorial to editorial_app;
 revoke all on function editorial.story_claims_block(uuid), editorial.four_eyes(uuid), editorial.story_author(uuid) from public;

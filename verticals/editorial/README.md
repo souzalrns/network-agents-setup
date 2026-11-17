@@ -117,6 +117,21 @@ npm run db:validate      # valida a configuração inicial antes de semear
 5. Lançamento: com o registo na ERC feito, ligar «Site lançado» na configuração. Até lá o site mostra um aviso,
    o `robots.txt` bloqueia tudo e as páginas pedem para não ser indexadas.
 
+### Vercel com a integração Neon (sem passos manuais na base)
+
+A integração Neon cria `DATABASE_URL` (pooler) e `DATABASE_URL_UNPOOLED` (dono). Com `EDITORIAL_PROVISION=1`, o
+script `vercel-build` corre `db/provision.mjs` antes do `next build`: aplica as migrações em falta, deixa entrar o
+papel `editorial_app` e semeia a publicação a partir de `EDITORIAL_SEED_JSON` (o conteúdo do ficheiro de
+sementeira), com a conta de `EDITORIAL_ADMIN_EMAIL`/`EDITORIAL_ADMIN_PASSWORD`. É idempotente.
+
+- A aplicação liga-se como `editorial_app` ao pooler; a palavra-passe é derivada da do dono (`db/app-url.mjs`),
+  por isso não há segredo novo. `EDITORIAL_DATABASE_URL`, se existir, continua a mandar.
+- O dono, num Postgres gerido, não é superutilizador: a migração `0005_owner_policies.sql` dá-lhe uma política
+  própria para as funções SECURITY DEFINER (entrar, sessões, domínio) continuarem a ver os dados; a aplicação não
+  ganha nenhum acesso com isso. Verificado com um Postgres 16 limpo e um dono sem superutilizador (migrações,
+  sementeira, entrada e os quatro testes no browser).
+- No plano Hobby do Vercel, as tarefas agendadas correm no máximo uma vez por dia.
+
 ## Decisões técnicas tomadas (reversíveis)
 
 - **Uma peça, 11 estados.** Pauta e artigo são a mesma linha (`stories`): a ideia vira pauta, a pauta vira artigo,
