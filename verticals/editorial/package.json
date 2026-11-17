@@ -12,7 +12,7 @@
     "db:migrate": "node db/migrate.mjs",
     "db:seed": "node db/seed.mjs",
     "test": "vitest run",
-    "test:e2e": "node tests/e2e/run.mjs"
+    "test:e2e": "node tests/e2e/all.mjs"
   },
   "dependencies": {
     "fast-xml-parser": "^5.2.5",

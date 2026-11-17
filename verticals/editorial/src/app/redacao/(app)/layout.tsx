@@ -29,11 +29,10 @@ export default async function NewsroomLayout({ children }: { children: React.Rea
           <Link href="/redacao" className="nr-brand">
             {rest.length ? <><b>{first}</b>{rest.join(" ")}</> : <b>{pub.name}</b>}
           </Link>
-          <NewsroomNav items={items} />
-          <div className="nr-user">
+          <NewsroomNav items={items} account={<>
             <Link href="/redacao/conta" style={{ textDecoration: "none" }}>{user.name} · {ROLE_LABEL[user.role]}</Link>
             <form action={logoutAction}><button className="btn link" type="submit">Sair</button></form>
-          </div>
+          </>} />
         </div>
       </header>
       <main className="wrap nr-main">{children}</main>

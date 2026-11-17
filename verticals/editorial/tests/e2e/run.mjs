@@ -114,7 +114,7 @@ try {
   check("o agente de edição deixa uma proposta", (await flash()).includes("proposta"), await flash());
   check("o agente não altera o texto", (await page.inputValue("#a-body")) === before);
   await act(page.locator('#agentes form:has(input[name=agent][value=factcheck]) button'));
-  const claims = await page.locator("#verificacao .list > form").count();
+  const claims = await page.locator("#verificacao .list > .claim").count();
   check("o agente de verificação regista afirmações por verificar", claims > 0, `${claims} afirmações`);
   // as propostas do agente entram fora do artigo; a jornalista regista uma informação ainda não confirmada
   await page.locator("#verificacao summary", { hasText: "Registar afirmação" }).click();
@@ -123,6 +123,9 @@ try {
   await act(page.locator("#verificacao form:has(#c-text) button[type=submit]"));
   check("a jornalista regista uma informação não confirmada", (await flash()).includes("Afirmação registada"), await flash());
   await shot("03-peca-agentes");
+  check("a autora não tem como verificar as afirmações da sua peça (quatro olhos)",
+    (await page.locator("#verificacao button", { hasText: "Registar verificação" }).count()) === 0
+    && (await page.locator("#verificacao", { hasText: "a verificação é de outra pessoa" }).count()) === 1);
 
   await stepButton("Enviar para revisão");
   check("a peça vai para revisão", (await page.locator(".nr-head .pill").first().textContent()).includes("Em revisão"));
@@ -135,17 +138,18 @@ try {
   check("não se aprova com afirmações por verificar", blocked.includes("afirmações por verificar"), blocked);
 
   // verifica cada afirmação (com evidência) ou retira-a do artigo
-  const forms = page.locator("#verificacao .list > form");
-  const n = await forms.count();
+  const n = await page.locator("#verificacao .list > .claim").count();
   for (let i = 0; i < n; i++) {
-    const f = page.locator("#verificacao .list > form").nth(i);
-    if ((await f.locator("b").first().textContent()).includes("Não confirmada")) {
-      await f.locator("input[name=in_article]").uncheck(); // informação não confirmada sai do artigo
+    const c = () => page.locator("#verificacao .list > .claim").nth(i);
+    if ((await c().locator("b").first().textContent()).includes("Não confirmada")) {
+      await c().locator("input[name=in_article]").uncheck(); // informação não confirmada sai do artigo
+      await act(c().locator("form:has(input[name=in_article]) button[type=submit]"));
     } else {
-      await f.locator("select[name=verification]").selectOption("verified");
-      await f.locator("input[name=evidence_url]").fill("https://www.ine.pt/");
+      await c().locator("input[name=evidence_url]").fill("https://www.ine.pt/");
+      await act(c().locator("form:has(input[name=evidence_url]) button[type=submit]"));
+      await c().locator("select[name=verification]").selectOption("verified");
+      await act(c().locator("form:has(select[name=verification]) button[type=submit]"));
     }
-    await act(f.locator("button[type=submit]"));
   }
   check("a edição verifica as afirmações e retira a não confirmada", (await page.locator("#verificacao .flash.erro").count()) === 0);
   await stepButton("Aprovar");

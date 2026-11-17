@@ -109,7 +109,8 @@ table.t th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; 
 .tabs a { padding: 8px 12px; text-decoration: none; font-weight: 600; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
 .tabs a[aria-current="page"] { color: var(--ink); border-color: var(--accent); }
 .story-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
-@media (max-width: 980px) { .story-layout { grid-template-columns: 1fr; } }
+/* minmax(0,…): sem o 0, a coluna alarga até ao conteúdo mais largo e a página transborda no telemóvel */
+@media (max-width: 980px) { .story-layout { grid-template-columns: minmax(0, 1fr); } }
 .side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 72px; }
 @media (max-width: 980px) { .side { position: static; } }
 .timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
@@ -182,3 +183,27 @@ details.box > summary { cursor: pointer; font-weight: 600; }
 .pill.v-pending { --c: var(--s-review, #b7791f); }
 .pill.v-disputed, .pill.v-unsupported { --c: var(--danger, #c53030); }
 .claim + .claim { border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* ---------------------------------------------------------------- menu da redacção no telemóvel (D1) */
+.nr-menu-btn, .nr-dialog { display: none; }
+.nr-menu-btn { margin-left: auto; align-items: center; gap: 8px; background: #ffffff1f; color: #fff; border: 0; border-radius: 8px;
+  padding: 9px 12px; min-height: 40px; font: 600 14px var(--sans, inherit); cursor: pointer; }
+.nr-dialog[open] { display: flex; flex-direction: column; gap: 12px; margin: 0 0 0 auto; height: 100dvh; max-height: 100dvh;
+  width: min(320px, 86vw); border: 0; padding: 16px; background: var(--surface); color: var(--ink); }
+.nr-dialog::backdrop { background: #0008; }
+.nr-dialog-head { display: flex; justify-content: space-between; align-items: center; }
+.nr-dialog nav { display: flex; flex-direction: column; gap: 2px; }
+.nr-dialog nav a { text-decoration: none; padding: 12px 10px; border-radius: 8px; font-weight: 600; color: var(--ink); }
+.nr-dialog nav a[aria-current="page"] { background: var(--sunken); }
+.nr-dialog-account { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px;
+  border-top: 1px solid var(--line); padding-top: 12px; }
+@media (max-width: 860px) {
+  .nr-nav, .nr-desktop { display: none; }
+  .nr-menu-btn { display: inline-flex; }
+  .nr-top .wrap { flex-wrap: nowrap; min-height: 56px; }
+  .nr-head h1 { font-size: 23px; }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .btn, select, input:not([type=checkbox]):not([type=radio]) { min-height: 40px; }
+}
+.show-sm { display: none; }
+@media (max-width: 640px) { .hide-sm { display: none; } .show-sm { display: block; } }
