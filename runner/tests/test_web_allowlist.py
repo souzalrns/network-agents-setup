@@ -53,6 +53,7 @@ def test_ficheiro_real_existe_cobre_as_areas_e_passa_no_e7():
 # decisão + linha no PENDENCIAS §10; este teste apanha uma edição silenciosa do ficheiro.
 V1 = {
     "software": [],
+    "editorial": [],  # E-005: área nova, vazia até à decisão P-91 (nenhum domínio acrescentado)
     "marketing": ["instagram.com", "tiktok.com", "facebook.com", "linkedin.com", "youtube.com", "x.com",
                   "pinterest.com", "threads.net", "threads.com", "meta.com", "developers.facebook.com", "ads.google.com",
                   "developers.google.com", "hubspot.com"],  # hubspot.com: P-87 (maestro, 2026-10-26)

@@ -235,6 +235,18 @@ areas:
     budget: {max_tokens: 40000}   # B5-bis fase 1 (folgado), rever depois do B1-bis-C
     hitl: required   # achados de segurança não são aceites sem sinalizar
 
+  - id: editorial
+    description: Redacção jornalística (vertical editorial) - radar de fontes, investigação de pautas, verificação de afirmações e revisão de artigos. Propõe, nunca publica.
+    keywords: [pauta, reportagem, jornalis, redacao, noticia, artigo jornal, verificacao de factos, fact-check, factcheck, dossie, fontes primarias, radar editorial]
+    agents:
+      - editorial.radar
+      - editorial.research
+      - editorial.factcheck
+      - editorial.editor
+    horizontals: [meta.planejador]
+    budget: {max_tokens: 60000}   # EDITORIAL-1: a execução real tem tecto em USD por agente na vertical (EDITORIAL_AGENT_MAX_USD)
+    hitl: required   # nada sai sem uma pessoa da redacção (estados aprovado/agendado/publicado só por humanos)
+
   - id: docs
     description: Documentação, ADRs, relatórios. Sem agente .agent.md dedicado na v1.
     keywords: [documentac, adr, readme, relatorio, manual, wiki, changelog]

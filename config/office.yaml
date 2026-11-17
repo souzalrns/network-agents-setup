@@ -248,6 +248,29 @@ departments:
         does: Revê a semana de operações em papel
         agents: [trading.post_trade_review]
 
+  - id: redacao
+    wing: funcoes
+    name: Redação
+    theme: {color: "#B4232E", icon: page}
+    lead: null
+    seats:
+      - id: redacao-radar
+        name: RADAR
+        does: Lê as fontes públicas e propõe pautas sem duplicados
+        agents: [editorial.radar]
+      - id: redacao-investigacao
+        name: INVESTIGAÇÃO
+        does: Dossiê de cada pauta com material rastreável
+        agents: [editorial.research]
+      - id: redacao-verificacao
+        name: VERIFICAÇÃO
+        does: Afirmações por verificar, nunca dadas por confirmadas
+        agents: [editorial.factcheck]
+      - id: redacao-edicao
+        name: EDIÇÃO ASSISTIDA
+        does: Revisão do texto e rascunhos para as redes, sem alterar o artigo
+        agents: [editorial.editor]
+
   - id: jogos
     wing: funcoes
     name: Jogos

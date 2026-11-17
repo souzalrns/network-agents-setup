@@ -3,9 +3,9 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:skills`
 >
-> Gerado em: 2026-11-05
+> Gerado em: 2026-11-17
 > Fonte: `skills/**/SKILL.md`
-> Total: **124** skills
+> Total: **128** skills
 >
 > **Nota (S35):** este catálogo é só documentação — a descoberta em runtime
 > continua Advisory (`skills/meta/using-agent-skills/SKILL.md`), nada aqui
@@ -17,6 +17,7 @@
 |---------|------------:|
 | claude | 26 |
 | design | 4 |
+| editorial | 4 |
 | marketing | 65 |
 | meta | 24 |
 | security | 2 |
@@ -61,6 +62,15 @@
 | `ui_spec` | design | P0 | Especifica a UI a partir do UX flow: hierarquia visual por ecrã, tokens em 3 camadas, componentes com matriz de estados, baseline de acessibilidade e handoff para dev. Usar depois de ux_flow; não redefine a jornada nem gera código de produção. | `skills/design/ui_spec/SKILL.md` |
 | `ux_flow` | design | P0 | Desenha a jornada antes da UI: problema, utilizador, jobs-to-be-done, fluxo principal com decisões, estados (empty, loading, error, success) e tabela de ecrãs sem visual. Usar após o brief ou research de produto; cores, tipografia e copy de marketing ficam fora. | `skills/design/ux_flow/SKILL.md` |
 | `ux_writing` | design | P0 | Escreve a microcopy do produto: labels, CTAs, erros sem culpa, empty e loading states, tooltips e onboarding, com voz clara e honesta. Usar depois de ux_flow (idealmente com ui_spec); artigos, ads e posts são do vertical marketing. | `skills/design/ux_writing/SKILL.md` |
+
+## Domínio `editorial`
+
+| Nome | Vertical/Role | Prioridade | Descrição | Ficheiro |
+|------|---------------|:----------:|-----------|----------|
+| `editor` | editorial | P0 | Revê um artigo e aponta problemas de título, estrutura, clareza, linguagem carregada, citações sem atribuição e números sem fonte; propõe adaptações para Instagram, YouTube e podcast como rascunho; nunca altera o texto. | `skills/editorial/editor/SKILL.md` |
+| `factcheck` | editorial | P0 | Extrai do texto as afirmações verificáveis (números, datas, valores, instituições, citações), classifica-as em facto, declaração, inferência ou não confirmada e regista-as como pendentes; nunca marca nada como verificado. | `skills/editorial/factcheck/SKILL.md` |
+| `radar` | editorial | P0 | Agrupa as entradas novas do radar de fontes (RSS de fontes primárias, institucionais e da comunicação social) e propõe pautas com o porquê e as ligações; não cria peças sem pedido e não publica. | `skills/editorial/radar/SKILL.md` |
+| `research` | editorial | P0 | Monta o dossiê de investigação de uma pauta: contexto com ligações, cronologia, fontes primárias a consultar, perguntas em aberto e perguntas para entrevista; não escreve o artigo nem dá nada por confirmado. | `skills/editorial/research/SKILL.md` |
 
 ## Domínio `marketing`
 

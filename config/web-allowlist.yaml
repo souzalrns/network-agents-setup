@@ -24,6 +24,9 @@
 version: 1
 areas:
   software: []
+  # EDITORIAL-1: deny-by-default até o maestro escolher os domínios (decisão P-91 no PENDENCIAS §10).
+  # O radar da vertical lê feeds com a sua própria allowlist (verticals/editorial/config/radar-allowlist.json).
+  editorial: []
   marketing:
     - instagram.com
     - tiktok.com
