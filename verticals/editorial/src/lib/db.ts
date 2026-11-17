@@ -22,7 +22,6 @@ export function db(): Sql {
       max: Number(process.env.EDITORIAL_DB_POOL ?? 5),
       prepare: false, // compatível com poolers em modo transacção
       onnotice: () => {},
-      connection: { search_path: "editorial, public" },
       transform: { undefined: null },
     });
   }
@@ -39,7 +38,9 @@ export async function closeDb(): Promise<void> {
 /** Corre `fn` numa transacção com o contexto do actor. O contexto morre com a transacção. */
 export async function withCtx<T>(ctx: Ctx, fn: (tx: Tx) => Promise<T>, note = ""): Promise<T> {
   return db().begin(async (tx) => {
+    // search_path dentro da transacção: os poolers (PgBouncer, Neon) ignoram o parâmetro enviado ao ligar
     await tx`select
+      set_config('search_path', 'editorial, public', true),
       set_config('app.publication_id', ${ctx.publicationId}, true),
       set_config('app.actor_kind', ${ctx.kind}, true),
       set_config('app.user_id', ${ctx.userId ?? ""}, true),

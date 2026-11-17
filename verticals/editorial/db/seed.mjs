@@ -44,6 +44,8 @@ function angleOf(s) {
 const sql = postgres(url, { max: 1, onnotice: () => {}, connection: { search_path: "editorial, public" } });
 try {
   await sql.begin(async (tx) => {
+    // o Neon (e os poolers) ignoram o search_path enviado ao ligar: define-se na transacção
+    await tx`set local search_path = editorial, public`;
     const p = seed.publication;
     const [pub] = await tx`insert into publications ${tx({
       slug: p.slug, name: p.name, tagline: p.tagline ?? "", description: p.description ?? "",
