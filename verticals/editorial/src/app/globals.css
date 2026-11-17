@@ -220,7 +220,7 @@ details.box > summary { cursor: pointer; font-weight: 600; }
 .toolbar + div > textarea.body, .toolbar + .editor-split > textarea.body { border-top-left-radius: 0; border-top-right-radius: 0; }
 .editor-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .editor-split textarea.body { min-height: 520px; }
-.preview-live { border: 1px solid var(--line); border-radius: 8px; padding: 4px 18px; max-height: 620px; overflow: auto; background: var(--surface); }
+.preview-live { margin: 0; max-width: none; min-height: 520px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 18px; max-height: 620px; overflow: auto; background: var(--surface); }
 @media (max-width: 1100px) { .editor-split { grid-template-columns: minmax(0, 1fr); } .preview-live { max-height: none; } }
 .notice-box { border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: 8px; padding: 10px 12px; background: var(--surface); font-size: 14px; }
 .notice-box.warn { border-left-color: #c05621; }
