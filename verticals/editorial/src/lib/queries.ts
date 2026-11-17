@@ -90,7 +90,7 @@ export interface StoryDetail {
   events: { id: number; type: string; from_state: State | null; to_state: State | null; actor_kind: string; actor_label: string; note: string; at: Date }[];
   versions: { version: number; saved_kind: string; saved_at: Date; name: string | null; words: number }[];
   comments: { id: string; author_label: string; author_kind: string; name: string | null; body: string; kind: string; created_at: Date; resolved_at: Date | null }[];
-  claims: { id: string; text: string; kind: string; attributed_to: string; evidence: { url: string; title?: string }[]; verification: string; in_article: boolean; origin: string; verified_name: string | null }[];
+  claims: { id: string; text: string; kind: string; attributed_to: string; evidence: { url: string; title?: string }[]; verification: string; in_article: boolean; origin: string; verified_name: string | null; created_by: string | null }[];
   refs: { id: string; kind: string; url: string; title: string; credit: string; note: string; added_kind: string }[];
   sources: { id: string; name: string; organization: string; usage: string; confidentiality: string; contact: string }[];
   outputs: { id: string; agent_id: string; kind: string; payload: Record<string, unknown>; status: string; created_at: Date }[];
@@ -113,7 +113,7 @@ export async function storyDetail(ctx: Ctx, id: string): Promise<StoryDetail | n
       c.created_at, c.resolved_at from comments c left join memberships m on m.user_id = c.author_id and m.publication_id = c.publication_id
       where c.story_id = ${id} order by c.created_at`;
     const claims = await tx<StoryDetail["claims"]>`select c.id, c.text, c.kind, c.attributed_to, c.evidence, c.verification, c.in_article,
-      c.origin, m.display_name as verified_name from claims c
+      c.origin, m.display_name as verified_name, c.created_by from claims c
       left join memberships m on m.user_id = c.verified_by and m.publication_id = c.publication_id
       where c.story_id = ${id} order by c.created_at`;
     const refs = await tx<StoryDetail["refs"]>`select id, kind, url, title, credit, note, added_kind from story_refs where story_id = ${id} order by created_at`;

@@ -180,25 +180,41 @@ export async function addClaimAction(form: FormData) {
   back(`${path}#verificacao`, "ok", "Afirmação registada.");
 }
 
+/** Muda o que a afirmação diz no artigo (incluída ou não) e acrescenta evidência. Não verifica: isso é outra acção. */
 export async function updateClaimAction(form: FormData) {
   const { ctx } = await requireUser();
   const id = str(form, "id", 40), claim = str(form, "claim", 40);
   const path = `/redacao/pecas/${id}`;
-  const verification = str(form, "verification", 20);
-  if (!isUuid(id) || !isUuid(claim) || !VERIFICATIONS.includes(verification)) back(`${path}#verificacao`, "erro", "Pedido inválido.");
+  if (!isUuid(id) || !isUuid(claim)) back(`${path}#verificacao`, "erro", "Pedido inválido.");
   const url = str(form, "evidence_url", 1000);
   if (url && !isHttpUrl(url)) back(`${path}#verificacao`, "erro", "A evidência tem de ser um endereço http(s).");
+  let reset = false;
   await attempt(path, () => withCtx(ctx, async (tx) => {
-    if (url) {
-      await tx`update claims set evidence = evidence || ${tx.json([{ url, title: str(form, "evidence_title", 300), accessed_at: new Date().toISOString() }])}
-        where id = ${claim}`;
-    }
-    const rows = await tx`update claims set verification = ${verification}, in_article = ${form.get("in_article") === "1"}
-      where id = ${claim} returning id`;
+    const [before] = await tx<{ verification: string }[]>`select verification from claims where id = ${claim}`;
+    const rows = url
+      ? await tx<{ verification: string }[]>`update claims set in_article = ${form.get("in_article") === "1"},
+          evidence = evidence || ${tx.json([{ url, title: str(form, "evidence_title", 300), accessed_at: new Date().toISOString() }])}
+          where id = ${claim} returning verification`
+      : await tx<{ verification: string }[]>`update claims set in_article = ${form.get("in_article") === "1"} where id = ${claim} returning verification`;
     if (!rows.length) throw new EditorialError("Não tens permissão para alterar esta afirmação.");
+    reset = before?.verification === "verified" && rows[0]!.verification !== "verified";
   }));
   revalidatePath(path);
-  back(`${path}#verificacao`, "ok", "Verificação actualizada.");
+  back(`${path}#verificacao`, "ok", reset ? "Guardado. A evidência mudou, por isso a afirmação voltou a «por verificar»." : "Afirmação actualizada.");
+}
+
+/** Verificação: acção própria, feita por quem não escreveu a peça nem registou a afirmação (quatro olhos). */
+export async function verifyClaimAction(form: FormData) {
+  const { ctx } = await requireUser();
+  const id = str(form, "id", 40), claim = str(form, "claim", 40), verification = str(form, "verification", 20);
+  const path = `/redacao/pecas/${id}`;
+  if (!isUuid(id) || !isUuid(claim) || !VERIFICATIONS.includes(verification)) back(`${path}#verificacao`, "erro", "Pedido inválido.");
+  await attempt(path, () => withCtx(ctx, async (tx) => {
+    const rows = await tx`update claims set verification = ${verification} where id = ${claim} returning id`;
+    if (!rows.length) throw new EditorialError("Não tens permissão para verificar esta afirmação.");
+  }));
+  revalidatePath(path);
+  back(`${path}#verificacao`, "ok", "Verificação registada.");
 }
 
 export async function addRefAction(form: FormData) {

@@ -177,3 +177,8 @@ details.box > summary { cursor: pointer; font-weight: 600; }
 .site-foot { border-top: 3px solid var(--brand); background: var(--surface); padding-block: 26px; font-size: 14px; }
 .site-foot .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
 .site-foot a { color: var(--muted); }
+/* estado da verificação de cada afirmação */
+.pill.v-verified { --c: var(--s-published, #2f855a); }
+.pill.v-pending { --c: var(--s-review, #b7791f); }
+.pill.v-disputed, .pill.v-unsupported { --c: var(--danger, #c53030); }
+.claim + .claim { border-top: 1px solid var(--line); padding-top: 10px; }

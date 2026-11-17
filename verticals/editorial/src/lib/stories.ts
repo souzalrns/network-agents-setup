@@ -119,12 +119,24 @@ async function freeSlug(tx: Tx, title: string): Promise<string> {
   return `${base}-${Date.now()}`;
 }
 
-/** Publica as peças agendadas cuja hora chegou. Corre como `system`: só executa o que uma pessoa agendou. */
+/**
+ * Publica as peças agendadas cuja hora chegou. Corre como `system`: só executa o que uma pessoa agendou.
+ * Cada peça é tentada à parte (ponto de gravação): se uma for recusada pela base de dados (conteúdo que já
+ * não é o aprovado, afirmação por verificar), fica agendada e as outras publicam-se na mesma.
+ */
 export async function publishDue(ctx: Ctx): Promise<string[]> {
   if (ctx.kind !== "system") throw new EditorialError("A publicação agendada é uma tarefa do sistema.");
   return withCtx(ctx, async (tx) => {
-    const rows = await tx<{ id: string }[]>`
-      update stories set state = 'published' where state = 'scheduled' and scheduled_at <= now() returning id`;
-    return rows.map((r) => r.id);
+    const due = await tx<{ id: string }[]>`select id from stories where state = 'scheduled' and scheduled_at <= now() order by scheduled_at`;
+    const done: string[] = [];
+    for (const { id } of due) {
+      try {
+        await tx.savepoint(async (sp) => { await sp`update stories set state = 'published' where id = ${id}`; });
+        done.push(id);
+      } catch (e) {
+        console.warn("[publicação agendada] recusada", id, (e as Error).message);
+      }
+    }
+    return done;
   }, "publicação agendada");
 }

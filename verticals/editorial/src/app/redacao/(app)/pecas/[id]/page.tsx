@@ -15,7 +15,7 @@ import { isOwner, nextSteps, STATE_LABEL } from "@/lib/workflow";
 import {
   addClaimAction, addCorrectionAction, addRefAction, commentAction, distributionStateAction, linkSourceAction, removeRefAction,
   resolveCommentAction, reviewOutputAction, saveDistributionAction, saveSourceAction, transitionAction, unlinkSourceAction,
-  updateArticleAction, updateClaimAction, updatePitchAction,
+  updateArticleAction, updateClaimAction, updatePitchAction, verifyClaimAction,
 } from "../../../actions";
 import { AgentPanel } from "./agent-panel";
 
@@ -38,9 +38,10 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
   const actors = { assigneeId: s.assignee_id, authorId: s.author_id, createdBy: s.created_by };
   const steps = nextSteps(s.state, user.role, user.userId, actors);
   const editable = canWrite(user.role) && (isDesk(user.role) || isOwner(user.userId, actors))
-    && (!["approved", "scheduled", "published"].includes(s.state) || isDesk(user.role));
+    && (!["approved", "scheduled", "published"].includes(s.state) || isDesk(user.role)) && s.state !== "archived";
   const section = sections.find((x) => x.id === s.section_id);
   const nameOf = (uid: string | null) => team.find((m) => m.user_id === uid)?.name ?? null;
+  const fourEyes = pub.settings?.require_second_reviewer !== false;
   const blockers = d.claims.filter((c) => c.in_article && (c.kind === "unconfirmed" || (c.kind === "fact" && c.verification !== "verified")));
   const linked = new Set(d.sources.map((x) => x.id));
   const showArticle = !["idea", "pitch_proposed"].includes(s.state) || s.body.length > 0;
@@ -135,9 +136,13 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
                       <label className="field"><span>Descrição</span><textarea id="a-meta" name="meta_description" defaultValue={s.meta_description} style={{ minHeight: 60 }} maxLength={320} /><small>Até 155 caracteres. Vazio usa o resumo.</small></label>
                     </div>
                   </details>
-                  <label className="field"><span>Nota desta versão</span><input id="a-note" name="note" placeholder="Ex.: acrescentei a reação da câmara" maxLength={300} /></label>
+                  {s.state === "published"
+                    ? <label className="field"><span>Nota da alteração (obrigatória)</span><input id="a-note" name="note" required placeholder="O que mudou no artigo publicado e porquê" maxLength={300} /><small>A alteração conta como nova aprovação tua e fica no histórico.</small></label>
+                    : <label className="field"><span>Nota desta versão</span><input id="a-note" name="note" placeholder="Ex.: acrescentei a reação da câmara" maxLength={300} /></label>}
                   {editable && <div><button className="btn primary" type="submit">Guardar texto</button></div>}
                   {!editable && ["approved", "scheduled", "published"].includes(s.state) && <p className="muted">Peça aprovada: só a edição altera o texto (e alterar retira a aprovação).</p>}
+                  {editable && ["approved", "scheduled"].includes(s.state) && <p className="muted">Guardar alterações a esta peça retira a aprovação: volta a «em revisão».</p>}
+                  {s.state === "archived" && <p className="muted">Peça arquivada: para a alterar, reabre-a como ideia.</p>}
                 </fieldset>
               </form>
               {s.body && <details className="box" style={{ marginTop: 12 }}><summary>Pré-visualização</summary>
@@ -148,21 +153,33 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
           <section className="card" id="verificacao">
             <h2>Verificação <span className="label">{d.claims.length} afirmações</span></h2>
             {blockers.length > 0 && <p className="flash erro" style={{ marginTop: 0 }}>{blockers.length} {blockers.length === 1 ? "afirmação impede" : "afirmações impedem"} a aprovação: factos por verificar ou informação não confirmada no artigo.</p>}
-            <div className="list">{d.claims.length ? d.claims.map((c) => (
-              <form key={c.id} action={updateClaimAction} className="stack" style={{ gap: 6 }}>
-                <input type="hidden" name="id" value={s.id} /><input type="hidden" name="claim" value={c.id} />
-                <div><b>{CLAIM_KIND_LABEL[c.kind]}</b>{c.attributed_to && <> · {c.attributed_to}</>} {c.origin === "agent" && <span className="label">proposta pelo agente</span>}</div>
+            <div className="list">{d.claims.length ? d.claims.map((c) => {
+              const own = fourEyes && (c.created_by === user.userId || s.author_id === user.userId);
+              const canVerify = (canWrite(user.role) || user.role === "reviewer") && !own;
+              return (
+              <div key={c.id} className="stack claim" style={{ gap: 6 }}>
+                <div><b>{CLAIM_KIND_LABEL[c.kind]}</b>{c.attributed_to && <> · {c.attributed_to}</>} {c.origin === "agent" && <span className="label">proposta pelo agente</span>}
+                  {" "}<span className={`pill v-${c.verification}`}>{VERIFICATION_LABEL[c.verification]}</span>{!c.in_article && <span className="label"> fora do artigo</span>}</div>
                 <div style={{ overflowWrap: "anywhere" }}>{c.text}</div>
                 {c.evidence.length > 0 && <div className="meta">Evidência: {c.evidence.map((e, i) => <a key={i} href={e.url} target="_blank" rel="noreferrer">{e.title || e.url}</a>)}</div>}
-                <div className="row">
-                  <select name="verification" defaultValue={c.verification} aria-label="Estado da verificação" style={{ width: "auto" }}>
-                    {Object.entries(VERIFICATION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
-                  <label className="check"><input type="checkbox" name="in_article" value="1" defaultChecked={c.in_article} /> No artigo</label>
-                  <input name="evidence_url" type="url" placeholder="Acrescentar evidência (https://…)" style={{ flex: "1 1 200px", width: "auto" }} aria-label="Evidência" />
-                  <button className="btn small" type="submit">Guardar</button>
-                </div>
                 {c.verification === "verified" && <div className="meta">Verificada por {c.verified_name}</div>}
-              </form>)) : <Empty>Ainda não há afirmações registadas. Regista os números, datas e citações que o artigo usa.</Empty>}</div>
+                {canWrite(user.role) && (
+                  <form action={updateClaimAction} className="row">
+                    <input type="hidden" name="id" value={s.id} /><input type="hidden" name="claim" value={c.id} />
+                    <label className="check"><input type="checkbox" name="in_article" value="1" defaultChecked={c.in_article} /> No artigo</label>
+                    <input name="evidence_url" type="url" placeholder="Acrescentar evidência (https://…)" style={{ flex: "1 1 200px", width: "auto" }} aria-label="Evidência" />
+                    <button className="btn small" type="submit">Guardar</button>
+                  </form>
+                )}
+                {canVerify ? (
+                  <form action={verifyClaimAction} className="row">
+                    <input type="hidden" name="id" value={s.id} /><input type="hidden" name="claim" value={c.id} />
+                    <select name="verification" defaultValue={c.verification} aria-label="Estado da verificação" style={{ width: "auto" }}>
+                      {Object.entries(VERIFICATION_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+                    <button className="btn small primary" type="submit">Registar verificação</button>
+                  </form>
+                ) : own && <p className="meta" style={{ margin: 0 }}>Escreveste a peça ou registaste a afirmação: a verificação é de outra pessoa.</p>}
+              </div>); }) : <Empty>Ainda não há afirmações registadas. Regista os números, datas e citações que o artigo usa.</Empty>}</div>
             {canWrite(user.role) && (
               <details className="box" style={{ marginTop: 12 }}><summary>Registar afirmação</summary>
                 <form action={addClaimAction} className="stack" style={{ marginTop: 10 }}>
