@@ -2,7 +2,7 @@
 // sem isso não faz nada, e o build segue normalmente.
 // 1. aplica as migrações em falta (db/migrate.mjs) com a ligação do DONO;
 // 2. deixa o papel editorial_app entrar, com a palavra-passe derivada (db/app-url.mjs);
-// 3. semeia a publicação a partir de EDITORIAL_SEED_JSON (o conteúdo do ficheiro) ou EDITORIAL_SEED_FILE,
+// 3. semeia a publicação a partir de EDITORIAL_SEED_JSON (o conteúdo), EDITORIAL_SEED_URL (https) ou EDITORIAL_SEED_FILE,
 //    validado antes (db/validate-seed.mjs), com a conta de administração de EDITORIAL_ADMIN_EMAIL/PASSWORD.
 // Idempotente: pode correr em todos os builds. Nunca imprime ligações nem palavras-passe.
 import { spawnSync } from "node:child_process";
@@ -41,9 +41,20 @@ try {
 }
 
 let seedFile = process.env.EDITORIAL_SEED_FILE;
-if (process.env.EDITORIAL_SEED_JSON) {
+let seedText = process.env.EDITORIAL_SEED_JSON;
+// EDITORIAL_SEED_URL: o ficheiro de sementeira publicado noutro sítio (ex.: o raw do repositório onde vive a marca),
+// só por https; assim a configuração da publicação tem um único sítio e não se copia para variáveis.
+if (!seedText && process.env.EDITORIAL_SEED_URL) {
+  const u = new URL(process.env.EDITORIAL_SEED_URL);
+  if (u.protocol !== "https:") { console.error("[preparação] EDITORIAL_SEED_URL tem de ser https."); process.exit(1); }
+  const r = await fetch(u, { signal: AbortSignal.timeout(20_000) });
+  if (!r.ok) { console.error(`[preparação] não consegui obter a sementeira (${r.status}).`); process.exit(1); }
+  seedText = await r.text();
+  console.log(`[preparação] sementeira obtida de ${u.host}${u.pathname}`);
+}
+if (seedText) {
   seedFile = join(mkdtempSync(join(tmpdir(), "seed-")), "seed.json");
-  writeFileSync(seedFile, process.env.EDITORIAL_SEED_JSON);
+  writeFileSync(seedFile, seedText);
 }
 if (seedFile) run("seed.mjs", { EDITORIAL_MIGRATION_URL: owner, EDITORIAL_SEED_FILE: seedFile });
 else console.log("[preparação] sem EDITORIAL_SEED_JSON nem EDITORIAL_SEED_FILE: sem sementeira.");
