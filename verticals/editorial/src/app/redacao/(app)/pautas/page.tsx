@@ -3,7 +3,9 @@ import { Empty, Flash, STATE_COLOR, StoryLine } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { withCtx } from "@/lib/db";
 import { countStoriesTx, listSections, listStoriesTx, listTeam, type StoryFilter, type StoryRow } from "@/lib/queries";
-import { DESK_STATES, isState, PITCH_STATES, STATE_LABEL, STATES, type State, WORK_STATES } from "@/lib/workflow";
+import { DESK_STATES, isState, nextSteps, PITCH_STATES, STATE_LABEL, STATES, type State, WORK_STATES } from "@/lib/workflow";
+import { transitionAction } from "../../actions";
+import { Board } from "./board";
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : "");
@@ -90,17 +92,15 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<S
           )}
         </section>
       ) : (
-        <div className="board">
-          {COLUMNS.map((col) => {
-            const items = rows.filter((r: StoryRow) => col.states.includes(r.state));
-            return (
-              <section className="col" key={col.title} style={{ "--c": STATE_COLOR[col.states[0]!] } as React.CSSProperties}>
-                <h3>{col.title} <span className="muted num">{items.length}</span></h3>
-                {items.length ? items.map((s) => <div className="tile" key={s.id}><StoryLine s={s} /></div>) : <p className="empty">Nada aqui.</p>}
-              </section>
-            );
-          })}
-        </div>
+        <Board back={qs({})} action={transitionAction} columns={COLUMNS.map((col) => ({
+          title: col.title, states: col.states, color: STATE_COLOR[col.states[0]!],
+          items: rows.filter((r: StoryRow) => col.states.includes(r.state)).map((r) => ({
+            id: r.id, title: r.title, state: r.state, priority: r.priority, section_name: r.section_name, section_color: r.section_color,
+            assignee_name: r.assignee_name, due_date: r.due_date, origin: r.origin,
+            targets: nextSteps(r.state, user.role, user.userId, { assigneeId: r.assignee_id, authorId: r.author_id, createdBy: r.created_by })
+              .filter((t) => t.to !== "scheduled").map((t) => ({ to: t.to, label: t.label })),
+          })),
+        }))} />
       )}
     </>
   );

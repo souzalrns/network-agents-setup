@@ -96,6 +96,12 @@ export async function transition(ctx: Ctx, id: string, to: State, opts: Transiti
         throw new EditorialError(`Não podes passar esta peça de «${STATE_LABEL[story.state]}» para «${STATE_LABEL[to]}».`);
       }
     }
+    // imagem sem crédito não se aprova (direito de autor e transparência); figuras no texto seguem a mesma regra
+    if (to === "approved") {
+      if (story.hero_image_url && !story.hero_credit.trim()) throw new EditorialError("A imagem principal precisa de crédito antes da aprovação.");
+      const semCredito = [...story.body.matchAll(/^\s*!\[[^\]]*\]\((\S+?)(?:\s+"([^"]*)")?\)\s*$/gm)].filter((m) => !m[2]?.trim());
+      if (semCredito.length) throw new EditorialError(`${semCredito.length === 1 ? "Uma figura do texto não tem" : `${semCredito.length} figuras do texto não têm`} crédito: ![legenda](endereço "crédito").`);
+    }
     const extra: string[] = [];
     const values: unknown[] = [id, to];
     if (to === "scheduled") {

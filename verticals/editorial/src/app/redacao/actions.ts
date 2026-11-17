@@ -13,7 +13,7 @@ import { hashPassword } from "@/lib/password";
 import { ConflictError, discardDraft, parseArticle, restoreVersion, saveDraft, saveVersion } from "@/lib/drafts";
 import { createStory, EditorialError, getStory, transition, updateStory } from "@/lib/stories";
 import { slugify } from "@/lib/text";
-import { isState } from "@/lib/workflow";
+import { isState, STATE_LABEL, type State } from "@/lib/workflow";
 
 /** Volta à página com uma mensagem (erro ou confirmação), sem depender de JavaScript no browser. */
 function back(path: string, kind: "erro" | "ok", msg: string): never {
@@ -157,15 +157,16 @@ export async function discardDraftAction(form: FormData) {
 export async function transitionAction(form: FormData) {
   const { ctx } = await requireUser();
   const id = str(form, "id", 40), to = str(form, "to", 30);
-  const path = `/redacao/pecas/${id}`;
+  // o quadro de pautas volta ao quadro; a página da peça volta à peça
+  const path = safePath(str(form, "back", 300), `/redacao/pecas/${id}`);
   if (!isUuid(id) || !isState(to)) back("/redacao/pautas", "erro", "Pedido inválido.");
   await attempt(path, async () => {
     const when = to === "scheduled" ? fromLocalInput(str(form, "scheduled_at", 20)) : null;
     await transition(ctx, id, to, { note: str(form, "note", 500), scheduledAt: when ?? undefined });
   });
-  revalidatePath(path);
+  revalidatePath(`/redacao/pecas/${id}`);
   revalidatePath("/", "layout");
-  back(path, "ok", "Estado actualizado.");
+  back(path, "ok", path.startsWith("/redacao/pautas") ? `«${str(form, "title", 120) || "Peça"}» passou a ${STATE_LABEL[to as State]}.` : "Estado actualizado.");
 }
 
 export async function commentAction(form: FormData) {

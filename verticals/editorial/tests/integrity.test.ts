@@ -209,3 +209,20 @@ describe("D5: editar uma peça publicada", () => {
     expect(v).toEqual({ note: "Corrigido o valor do contrato", body: "Texto corrigido." });
   });
 });
+
+describe("imagens: crédito obrigatório para aprovar", () => {
+  it("a imagem principal e as figuras do texto precisam de crédito", async () => {
+    const j = N.as("journalist");
+    const s = await createStory(j, { title: "Imagem sem crédito", sectionId: N.sectionId, propose: true });
+    await transition(N.as("editor"), s.id, "pitch_approved");
+    await updateStory(N.as("editor"), s.id, { assignee_id: N.users.journalist!.id });
+    await transition(j, s.id, "writing");
+    await updateStory(j, s.id, { body: "Texto.\n\n![Ponte](https://exemplo.invalid/p.jpg)\n", hero_image_url: "https://exemplo.invalid/h.jpg" });
+    await transition(j, s.id, "in_review");
+    await expect(transition(N.as("editor"), s.id, "approved")).rejects.toThrow(/imagem principal precisa de crédito/);
+    await updateStory(N.as("editor"), s.id, { hero_credit: "Ana Silva" });
+    await expect(transition(N.as("editor"), s.id, "approved")).rejects.toThrow(/figura do texto não tem crédito/);
+    await updateStory(N.as("editor"), s.id, { body: 'Texto.\n\n![Ponte](https://exemplo.invalid/p.jpg "Rui Costa")\n' });
+    expect((await transition(N.as("editor"), s.id, "approved")).state).toBe("approved");
+  });
+});

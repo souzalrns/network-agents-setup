@@ -6,13 +6,13 @@ import type { State } from "./workflow";
 export interface StoryRow {
   id: string; title: string; state: State; priority: number; format: string; origin: string;
   section_id: string | null; section_name: string | null; section_color: string | null;
-  assignee_id: string | null; assignee_name: string | null; author_name: string | null;
+  assignee_id: string | null; assignee_name: string | null; author_name: string | null; author_id: string | null; created_by: string | null;
   due_date: string | null; scheduled_at: Date | null; published_at: Date | null; updated_at: Date; slug: string | null;
 }
 
 const ROW = `s.id, s.title, s.state, s.priority, s.format, s.origin, s.section_id, sec.name as section_name, sec.color as section_color,
   s.assignee_id, ma.display_name as assignee_name, mu.display_name as author_name, s.due_date::text as due_date,
-  s.scheduled_at, s.published_at, s.updated_at, s.slug`;
+  s.scheduled_at, s.published_at, s.updated_at, s.slug, s.author_id, s.created_by`;
 const FROM = `from stories s
   left join sections sec on sec.id = s.section_id
   left join memberships ma on ma.user_id = s.assignee_id and ma.publication_id = s.publication_id

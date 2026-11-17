@@ -45,7 +45,7 @@ try {
     await new Promise((r) => setTimeout(r, 500));
   }
   const env = { E2E_BASE_URL: base, E2E_ADMIN_EMAIL: admin.email, E2E_ADMIN_PASSWORD: admin.password };
-  for (const script of process.argv.slice(2).length ? process.argv.slice(2) : ["run.mjs", "mobile.mjs", "editor.mjs"]) {
+  for (const script of process.argv.slice(2).length ? process.argv.slice(2) : ["run.mjs", "mobile.mjs", "editor.mjs", "board.mjs"]) {
     console.log(`\n=== ${script} ===`);
     const r = spawnSync("node", [join("tests", "e2e", script)], { cwd: root, stdio: "inherit", env: { ...process.env, ...env } });
     if (r.status !== 0) failed = true;

@@ -66,6 +66,7 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
         </div>
       </div>
       <Flash sp={sp} />
+      {steps.length > 0 && <a className="btn jump show-md" href="#passo">Próximo passo: {steps.map((x) => x.label).slice(0, 2).join(" · ")}{steps.length > 2 ? "…" : ""} ↓</a>}
 
       <div className="story-layout">
         <div className="stack">
@@ -308,7 +309,7 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
         </div>
 
         <aside className="side">
-          <section className="card">
+          <section className="card" id="passo">
             <h2>Próximo passo</h2>
             {steps.length ? (
               <div className="stack" style={{ gap: 8 }}>
