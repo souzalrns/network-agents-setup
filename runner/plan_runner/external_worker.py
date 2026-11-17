@@ -1146,7 +1146,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             from .engine import resume_run
 
-            summary["status"] = resume_run(out, decision="approve", worker="gemini")
+            summary["status"] = resume_run(out, worker="gemini")  # M-010: continua, não decide gates
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 

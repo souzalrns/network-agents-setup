@@ -36,6 +36,24 @@ def parallel_groups(plan: Plan) -> list[list[Step]]:
     return waves
 
 
+def add_dependency_edges(builder: Any, waves: list[list[Step]], start: Any, end: Any) -> None:
+    """Arestas do grafo: cada passo espera por TODAS as suas dependências (M-011).
+
+    Duas arestas separadas para o mesmo destino (`add_edge(a, c)` e `add_edge(b, c)`) fazem o `c` correr
+    quando a PRIMEIRA origem acaba: um gate humano era pedido antes de a revisão e a compliance de que
+    depende terem acabado, com a impressão digital sem esses artefactos. Uma lista de origens
+    (`add_edge([a, b], c)`) é a junção do LangGraph que espera por todas.
+    """
+    for step in waves[0]:
+        builder.add_edge(start, step.id)
+    for i, wave in enumerate(waves[:-1]):
+        for b in waves[i + 1]:
+            preds = list(dict.fromkeys(b.depends_on or [s.id for s in wave]))
+            builder.add_edge(preds if len(preds) > 1 else preds[0], b.id)
+    for step in waves[-1]:
+        builder.add_edge(step.id, end)
+
+
 def build_graph(plan: Plan, *, node_runner: Any):
     """Build compiled LangGraph. node_runner(step_id: str, state: dict) -> dict updates."""
     try:
@@ -71,43 +89,7 @@ def build_graph(plan: Plan, *, node_runner: Any):
         builder.add_edge(START, END)
         return builder.compile(), waves
 
-    # START -> first wave (parallel if multiple)
-    for step in waves[0]:
-        builder.add_edge(START, step.id)
-
-    for i, wave in enumerate(waves[:-1]):
-        nxt = waves[i + 1]
-        for a in wave:
-            for b in nxt:
-                # only if b depends only on completed set including a's wave
-                # simpler: connect every wave[i] node to every wave[i+1] node
-                # LangGraph waits for all predecessors — but multiple edges TO b from all a
-                # means b runs when all a complete if we use the right pattern.
-                # For linear deps, each b may not depend on all a.
-                deps = set(b.depends_on)
-                if not deps or any(a.id in deps or a.id in {s.id for s in waves[i]} for a in wave):
-                    if not deps:
-                        builder.add_edge(a.id, b.id)
-                    elif any(d == a.id for d in deps) or all(
-                        d in {s.id for w in waves[: i + 1] for s in w} for d in deps
-                    ):
-                        if all(d in {s.id for w in waves[: i + 1] for s in w} for d in deps):
-                            # edge from each dependency in previous waves is enough;
-                            # connect from a if a is a direct dep or we're joining wave
-                            if a.id in deps or (
-                                i == len(waves) - 2 and a.id in {s.id for s in wave}
-                            ):
-                                pass
-        # Correct approach: for each step in nxt, add edges from each of its depends_on
-        for b in nxt:
-            preds = b.depends_on or [s.id for s in wave]
-            for p in preds:
-                if p in {s.id for s in plan.steps}:
-                    builder.add_edge(p, b.id)
-
-    # last wave -> END
-    for step in waves[-1]:
-        builder.add_edge(step.id, END)
+    add_dependency_edges(builder, waves, START, END)
 
     # human_gate nodes: interrupt_before
     interrupt_before = [s.id for s in plan.steps if s.human_gate]

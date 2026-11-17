@@ -50,9 +50,17 @@ def main() -> int:
         )
 
     @mcp.tool()
-    def resume_plan(out_dir: str, decision: str = "approve") -> str:
-        """Resume paused run (approve|reject|edit). Requires resume scope."""
-        return json.dumps(tools_impl.resume_plan(out_dir, decision=decision), ensure_ascii=False)
+    def resume_plan(out_dir: str, decision: str = "", gate: str = "") -> str:
+        """Resume a paused run. Requires resume scope.
+
+        A human gate is decided only with an explicit decision (approve|reject|edit); pass `gate`
+        (the step id) when more than one approval is pending. Without a decision the run only
+        continues work that does not wait for a person: a gate is never approved by default (M-010).
+        """
+        return json.dumps(
+            tools_impl.resume_plan(out_dir, decision=decision or None, gate=gate or None),
+            ensure_ascii=False,
+        )
 
     mcp.run(transport="stdio")
     return 0

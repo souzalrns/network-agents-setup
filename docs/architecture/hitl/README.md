@@ -153,7 +153,10 @@ Three options, in order of complexity:
 - `plan_runner` appends when it pauses
 - `HitlManager` reads it when the API is queried
 - Both write decisions to a separate `hitl-decisions.jsonl`
-- `plan_runner resume` reads the decision from there
+- `plan_runner resume` reads the decision from there, **only the one written for the pending
+  request's `id`** and answered after that request (M-010). It never reuses "the last decision in
+  the file" for another gate, and a request renewed by M-009 needs a new decision. With no such
+  record and no explicit `--decision`, the gate stays pending: nothing is approved by default.
 
 **Pros:** zero infra, easy to test, single-user
 **Cons:** not multi-user, not real-time

@@ -182,7 +182,10 @@ def _resultado(run: Path, step: str, texto: str) -> None:
 
 
 def test_langgraph_gate_pendente_enquanto_espera_outro_passo_nao_aprova_conteudo_mudado(tmp_path, tmp_run_dir):
-    """B1: o resume de um passo externo respondia também ao gate em paralelo, com o conteúdo mudado."""
+    """B1: o resume de um passo externo respondia também ao gate em paralelo, com o conteúdo mudado.
+
+    M-010: esse resume já não decide o gate (fica à espera); a aprovação, dada à parte, continua presa
+    ao conteúdo do pedido."""
     pytest.importorskip("langgraph.graph")
     from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
 
@@ -198,8 +201,11 @@ def test_langgraph_gate_pendente_enquanto_espera_outro_passo_nao_aprova_conteudo
     (tmp_run_dir / "artifacts/01-copy.md").write_text("texto mudado por fora\n", encoding="utf-8")
     if (tmp_run_dir / "pending_steps/img").is_dir():
         _resultado(tmp_run_dir, "img", "imagem\n")
+    st = resume_plan_langgraph(tmp_run_dir, decision="approve")  # retoma o passo externo: não toca no gate
+    assert st["state"] == "paused_human_gate" and st["paused_at_step"] == "g1"
+    assert not _events(tmp_run_dir, "human_gate_resolved")
     with pytest.raises(ApprovalError, match=r"`g1` não foi aceite: mudou desde o pedido \(artifacts/01-copy.md\)"):
-        resume_plan_langgraph(tmp_run_dir, decision="approve")
+        resume_plan_langgraph(tmp_run_dir, decision="approve", gate="g1")
 
 
 def test_langgraph_com_os_passos_fora_de_ordem_no_yaml_verifica_o_gate_certo(tmp_path, tmp_run_dir):

@@ -15,11 +15,24 @@ no run nesse momento (de qualquer passo, não só dos que vêm antes do gate), c
   não deixa continuar.
 
 O publicador (postiz.py) confere o plano e os artefactos que envia contra a impressão da aprovação.
+
+M-010: a decisão de um gate é sempre explícita e dirigida a um pedido concreto.
+
+- **Nunca por omissão** (`check_decision`): sem decisão, com um valor que não é `approve|reject|edit`
+  ou com uma decisão que o `allow` do gate não prevê, o gate fica como estava. Um `reject` é sempre
+  aceite (parar é sempre seguro).
+- **Um gate de cada vez** (`target_gate`): a decisão vai para o gate nomeado; sem nome só é aceite
+  quando há exactamente um pedido à espera. Um nome que não está à espera (já decidido, de outro run,
+  inventado) é recusado e não toca em nenhum outro gate.
+- **Decisão do contrato HITL presa ao pedido** (`bound_decision`): só conta a decisão escrita para o
+  `id` do pedido deste gate e depois do último pedido (um pedido renovado pelo M-009 pede uma decisão
+  nova); a "última decisão do ficheiro" nunca é reaproveitada para outro gate.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +41,7 @@ from .graph import PlanError
 from .models import Plan
 
 APPROVED = ("approve", "edit")
+VALID = ("approve", "reject", "edit")
 
 
 class ApprovalError(PlanError):
@@ -134,7 +148,7 @@ def check_pending(out: Path, plan: Plan, gate_id: str, decision: str, log: Event
         (out / "HITL.md").write_text(
             f"# HITL\n\nRun `{run_id}`: o pedido de aprovação do passo `{gate_id}` foi renovado porque mudou "
             f"desde o pedido: {', '.join(changed)}.\n\nRevê outra vez e decide:\n```\n"
-            f"python -m plan_runner resume {out} --decision approve\n```\n",
+            f"python -m plan_runner resume {out} --gate {gate_id} --decision approve\n```\n",
             encoding="utf-8",
         )
         raise ApprovalError(
@@ -159,3 +173,76 @@ def verify_past(out: Path, plan: Plan, log: EventLog, run_id: str) -> None:
             raise ApprovalError(
                 f"a aprovação de `{gid}` deixou de valer: mudou depois de aprovado ({', '.join(changed)}). "
                 "O run não continua; repõe o conteúdo aprovado ou começa um run novo.")
+
+
+# ------------------------------------------------------------------ M-010: decisão explícita e dirigida
+
+def allowed_decisions(step: Any) -> set[str]:
+    """Decisões que o gate aceita: o `allow` do plano (omissão approve|reject) e sempre `reject`."""
+    gate = getattr(step, "human_gate", None)
+    allow = [a for a in (getattr(gate, "allow", None) or []) if a in VALID] or ["approve", "reject"]
+    return set(allow) | {"reject"}
+
+
+def check_decision(step: Any, decision: Any) -> str:
+    """A decisão de um gate tem de ser explícita, válida e prevista no `allow`; senão não decide nada."""
+    gid = getattr(step, "id", None)
+    if decision is None or decision == "":
+        raise ApprovalError(
+            f"aprovação humana pendente em `{gid}`: falta a decisão (approve|reject|edit). "
+            "Um gate nunca é aprovado por omissão.")
+    if not isinstance(decision, str) or decision not in VALID:
+        raise PlanError("decision must be approve|reject|edit")
+    allowed = allowed_decisions(step)
+    if decision not in allowed:
+        raise ApprovalError(
+            f"a decisão `{decision}` não é permitida no gate `{gid}` (allow: {', '.join(sorted(allowed))})")
+    return decision
+
+
+def target_gate(pending: list[str], gate: str | None) -> str:
+    """O gate a que a decisão se dirige. Nunca escolhe entre vários nem aceita um que não está à espera."""
+    if gate is not None:
+        if gate not in pending:
+            espera = ", ".join(pending) if pending else "nenhum"
+            raise ApprovalError(
+                f"não há pedido de aprovação à espera para `{gate}` (à espera: {espera}); nada foi decidido")
+        return gate
+    if not pending:
+        raise ApprovalError("não há nenhum pedido de aprovação à espera; nada foi decidido")
+    if len(pending) > 1:
+        raise ApprovalError(
+            f"há {len(pending)} pedidos de aprovação à espera ({', '.join(pending)}): "
+            "indica qual decides (--gate <passo>); a mesma decisão nunca vale para vários")
+    return pending[0]
+
+
+def _ts(value: Any) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+
+
+def bound_decision(out: Path, run_id: str, gate_id: str) -> dict[str, Any] | None:
+    """A decisão do contrato HITL (hitl-decisions.jsonl) escrita para o pedido DESTE gate, ou None.
+
+    Conta só a decisão com o `id` do último pedido do gate e respondida depois do último
+    `human_gate_requested` dele (um pedido renovado exige decisão nova). Sem data legível: não conta.
+    """
+    from . import hitl  # import tardio: o hitl não depende deste módulo
+
+    req = next((r for r in reversed(hitl._read_jsonl(out / hitl.REQUESTS_FILE))
+                if r.get("step_id") == gate_id and r.get("run_id") in (run_id, None)), None)
+    if req is None:
+        return None
+    last = _last_request(out, run_id, gate_id)
+    asked_at = _ts((last or {}).get("at"))
+    for rec in reversed(hitl._read_jsonl(out / hitl.DECISIONS_FILE)):
+        if rec.get("id") != req.get("id") or rec.get("response") not in VALID:
+            continue
+        answered = _ts(rec.get("responded_at"))
+        if asked_at is None or answered is None or answered < asked_at:
+            return None  # decisão anterior ao pedido em vigor (ou sem data): não vale para ele
+        return rec
+    return None

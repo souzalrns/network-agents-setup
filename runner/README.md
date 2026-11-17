@@ -81,7 +81,17 @@ After the run, look at:
     python -m plan_runner run <plan.yaml> [--engine native|langgraph] [--mode dry-run|stub|external] [--worker none|gemini] [--max-tokens N] [--out <dir>]
 
     # Resume a paused run (after HITL or external wait)
-    python -m plan_runner resume <out_dir> [--decision approve|reject|edit] [--payload-file <file.json>] [--worker none|gemini] [--max-tokens N]
+    python -m plan_runner resume <out_dir> [--decision approve|reject|edit] [--gate <passo>] [--payload-file <file.json>] [--worker none|gemini] [--max-tokens N]
+
+Decisão de um gate humano (M-010), igual nos dois motores:
+
+- A decisão é sempre explícita: sem `--decision` (ou sem decisão escrita no contrato HITL para o
+  pedido desse gate) um run parado num gate fica como está. Não há aprovação por omissão.
+- `--gate <passo>` diz que gate se decide. É obrigatório quando há mais de um pedido à espera
+  (LangGraph, gates em paralelo) e recusado se esse gate não estiver à espera.
+- Só se aceita uma decisão prevista no `allow` do gate; `reject` é sempre aceite.
+- Retomar por outro motivo (passo externo, `--max-tokens`, interrupção, aprovação de uma tool) nunca
+  decide um gate: fica à espera da sua própria decisão (evento `human_gate_left_pending`).
 
     # Run the pending external step of a stopped run with Gemini (any engine)
     python -m plan_runner.external_worker <out_dir> [--resume]

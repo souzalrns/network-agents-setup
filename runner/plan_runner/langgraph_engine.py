@@ -30,7 +30,7 @@ from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError
 from .knowledge_wiring import inject_knowledge_context
-from .langgraph_compile import build_graph, compile_report, parallel_groups
+from .langgraph_compile import add_dependency_edges, build_graph, compile_report, parallel_groups
 from .models import Plan, Step
 from .skills import skill_ref
 
@@ -39,6 +39,133 @@ def merge_artifacts(left: dict | None, right: dict | None) -> dict:
     merged = dict(left or {})
     merged.update(right or {})
     return merged
+
+def _gate_node(
+    out: Path,
+    plan: Plan,
+    step: Step,
+    run_id: str,
+    log: EventLog,
+    completed: list[str],
+    mode: str,
+    gate_fps: dict[str, dict[str, Any]],
+) -> dict:
+    """Nó de um gate humano, igual no run e no resume.
+
+    M-010: a decisão só entra por uma resposta dirigida a ESTA interrupção
+    (`Command(resume={id_da_interrupção: {...}})`). O valor tem de nomear o gate e trazer uma decisão
+    explícita, válida e prevista no `allow`; qualquer outra coisa não decide nada (nunca `approve`
+    por omissão).
+    """
+    from langgraph.types import interrupt
+
+    if not log.has_event("human_gate_requested", run_id, step_id=step.id):
+        log.append(
+            "human_gate_requested",
+            run_id,
+            {
+                "step_id": step.id,
+                "allow": step.human_gate.allow,
+                **approval.request_payload(out, plan, step.id),  # M-009
+            },
+        )
+        hitl.write_request(
+            out,
+            step=step,
+            run_id=run_id,
+            plan_id=plan.id,
+            completed=completed,
+            mode=mode,
+        )
+
+    value = interrupt(
+        {
+            "type": "human_gate",
+            "step_id": step.id,
+            "allow": step.human_gate.allow,
+        }
+    )
+
+    if not isinstance(value, dict) or value.get("gate") != step.id:
+        raise approval.ApprovalError(
+            f"resposta sem destinatário para o gate `{step.id}`: nada foi decidido")
+    decision = approval.check_decision(step, value.get("decision"))
+    edited_payload = value.get("payload")
+
+    log.append(
+        "human_gate_resolved",
+        run_id,
+        {
+            "step_id": step.id,
+            "decision": decision,
+            "has_payload": edited_payload is not None,
+            **(gate_fps.get(step.id) or {"fingerprint": approval.fingerprint(out, plan, step.id)}),  # M-009
+        },
+        actor={"kind": "human", "id": "cli"},
+    )
+
+    if decision == "reject":
+        return {
+            "error": f"{step.id}:rejected",
+            "log": [f"rejected:{step.id}"],
+        }
+
+    artifacts: dict[str, str] = {}
+    if step.output_artifact:
+        p = out / step.output_artifact
+        p.parent.mkdir(parents=True, exist_ok=True)
+        if not p.exists():
+            content = edited_payload if edited_payload is not None else {"decision": decision, "step_id": step.id}
+            p.write_text(json.dumps(content, indent=2) + "\n", encoding="utf-8")
+        artifacts[step.id] = step.output_artifact
+
+    return {
+        "completed": [step.id],
+        "artifacts": artifacts,
+        "log": [f"hitl:{step.id}:{decision}"],
+    }
+
+
+def _decided_now(log: EventLog, run_id: str, target: str | None, decision: str | None) -> set[str]:
+    """O gate alvo, se esta retoma o aprovou mesmo (o passo que parou o invoke não vê a escrita dele)."""
+    if target and decision in approval.APPROVED and log.has_event(
+            "human_gate_resolved", run_id, step_id=target, decision=decision):
+        return {target}
+    return set()
+
+
+def _interrupt_id(graph: Any, config: dict[str, Any], gate_id: str) -> str | None:
+    """Id da interrupção pendente do gate no checkpoint (M-010: é por ele que a decisão é entregue)."""
+    for task in graph.get_state(config).tasks:
+        for it in getattr(task, "interrupts", ()) or ():
+            v = it.value
+            if isinstance(v, dict) and v.get("type") == "human_gate" and v.get("step_id") == gate_id:
+                return it.id
+    return None
+
+
+def _settle(out: Path, plan: Plan, log: EventLog, run_id: str, status: dict[str, Any], completed: list[str]) -> None:
+    """Estado final de um invoke sem erro: done, ou parado nos gates que foram mesmo pedidos."""
+    if all(s.id in completed for s in plan.steps):
+        status.pop("paused_at_step", None)
+        status.pop("pending_gates", None)
+        if done_when.check(out, plan.done_when, log, run_id, status):
+            status["state"] = "done"
+            status["current_step"] = None
+            log.append("plan_done", run_id, {"completed": completed, "engine": "langgraph"})
+        return
+    waiting = [g for g in approval.pending_gates(out, run_id) if g not in completed]
+    if not waiting:  # run antigo sem o evento do pedido: o primeiro gate por fazer
+        waiting = [s.id for s in plan.steps if s.human_gate and s.id not in completed][:1]
+    if waiting:
+        status["state"] = "paused_human_gate"
+        status["paused_at_step"] = waiting[0]
+        status["current_step"] = waiting[0]
+        status["pending_gates"] = waiting  # M-010: cada um pede a sua decisão
+    elif done_when.check(out, plan.done_when, log, run_id, status):
+        status["state"] = "done"
+        status["current_step"] = None
+
 
 def run_plan_langgraph(
     plan_path: Path,
@@ -100,8 +227,6 @@ def run_plan_langgraph(
         save_status(out, status)
         return status
 
-    step_by_id = {s.id: s for s in plan.steps}
-
     def node_runner(step: Step, state: dict) -> dict:
         completed = list(state.get("completed") or [])
         if step.id in completed:
@@ -111,77 +236,7 @@ def run_plan_langgraph(
             inject_knowledge_context(out, step, log, run_id)
 
         if step.human_gate:
-            from langgraph.types import interrupt
-
-            if not log.has_event("human_gate_requested", run_id, step_id=step.id):
-                log.append(
-                    "human_gate_requested",
-                    run_id,
-                    {
-                        "step_id": step.id,
-                        "allow": step.human_gate.allow,
-                        **approval.request_payload(out, plan, step.id),  # M-009
-                    },
-                )
-                hitl.write_request(
-                    out,
-                    step=step,
-                    run_id=run_id,
-                    plan_id=plan.id,
-                    completed=completed,
-                    mode=mode,
-                )
-
-            decision = interrupt(
-                {
-                    "type": "human_gate",
-                    "step_id": step.id,
-                    "allow": step.human_gate.allow,
-                }
-            )
-
-            if decision not in {"approve", "reject", "edit"}:
-                raise PlanError("decision must be approve|reject|edit")
-
-            log.append(
-                "human_gate_resolved",
-                run_id,
-                {
-                    "step_id": step.id,
-                    "decision": decision,
-                    "fingerprint": approval.fingerprint(out, plan, step.id),  # M-009
-                },
-                actor={"kind": "human", "id": "cli"},
-            )
-
-            if decision == "reject":
-                return {
-                    "error": f"{step.id}:rejected",
-                    "log": [f"rejected:{step.id}"],
-                }
-
-            if step.output_artifact:
-                p = out / step.output_artifact
-                p.parent.mkdir(parents=True, exist_ok=True)
-                if not p.exists():
-                    p.write_text(
-                        json.dumps(
-                            {
-                                "decision": decision,
-                                "step_id": step.id,
-                            },
-                            indent=2,
-                        ) + "\n",
-                        encoding="utf-8",
-                    )
-
-            return {
-                "completed": [step.id],
-                "artifacts": {
-                    step.id: step.output_artifact
-                } if step.output_artifact else {},
-                "log": [f"hitl:{step.id}:{decision}"],
-            }
+            return _gate_node(out, plan, step, run_id, log, completed, mode, {})
 
         if mode == "stub":
             result = execute_stub(out, step)
@@ -247,17 +302,7 @@ def run_plan_langgraph(
         for step in plan.steps:
             builder.add_node(step.id, make_node(step))
 
-        for step in waves[0]:
-            builder.add_edge(START, step.id)
-
-        for i, wave in enumerate(waves[:-1]):
-            for b in waves[i + 1]:
-                preds = b.depends_on or [s.id for s in wave]
-                for p in preds:
-                    builder.add_edge(p, b.id)
-
-        for step in waves[-1]:
-            builder.add_edge(step.id, END)
+        add_dependency_edges(builder, waves, START, END)
 
 
         checkpoint_path = out / "checkpoints.db"
@@ -305,18 +350,8 @@ def run_plan_langgraph(
     if result.get("error"):
         status["state"] = "failed"
         status["detail"] = result["error"]
-    elif any(step_by_id[s].human_gate for s in step_by_id if s not in completed):
-        pending_hitl = [s.id for s in plan.steps if s.human_gate and s.id not in completed]
-        if pending_hitl:
-            status["state"] = "paused_human_gate"
-            status["paused_at_step"] = pending_hitl[0]
-            status["current_step"] = pending_hitl[0]
-        elif done_when.check(out, plan.done_when, log, run_id, status):
-            status["state"] = "done"
-    elif done_when.check(out, plan.done_when, log, run_id, status):
-        status["state"] = "done"
-        status["current_step"] = None
-        log.append("plan_done", run_id, {"completed": completed, "engine": "langgraph"})
+    else:
+        _settle(out, plan, log, run_id, status, completed)
 
     save_status(out, status)
     return status
@@ -443,16 +478,23 @@ def _run_waves_fallback(
 
 def resume_plan_langgraph(
     out_dir: Path,
-    decision: str,
+    decision: str | None = None,
     payload: str | None = None,
     worker: str | None = None,
     max_tokens: int | None = None,
     max_cost_usd: float | None = None,
+    gate: str | None = None,
 ) -> dict[str, Any]:
-    out_dir = _validate_out_dir(out_dir)
-    """Resume a execuÃ§Ã£o usando o checkpoint real do LangGraph."""
+    """Retoma a execução a partir do checkpoint do LangGraph.
 
-    if decision not in {"approve", "reject", "edit"}:
+    M-010: `decision` só decide um gate humano quando a retoma se dirige a ele: o run está parado num
+    gate (e é o único à espera) ou `gate` nomeia-o. Retomar por outro motivo (passo externo, orçamento,
+    interrupção, aprovação de uma tool) deixa todos os gates à espera, com ou sem `decision`.
+    Sem `decision` (None) a retoma só continua o que não depende de uma pessoa.
+    """
+    out_dir = _validate_out_dir(out_dir)
+
+    if decision is not None and decision not in approval.VALID:
         raise PlanError("decision must be approve|reject|edit")
 
     status = load_status(out_dir)
@@ -482,17 +524,30 @@ def resume_plan_langgraph(
     plan = load_plan(plan_path)
     mode = status.get("mode") or "stub"
     log = EventLog(out_dir / "events.jsonl")
+    # M-010: que gate (se algum) esta retoma decide. Um `Command(resume=valor)` simples responderia a
+    # TODAS as interrupções à espera no checkpoint; por isso a decisão vai só para a interrupção do gate
+    # alvo, pelo id dela, e as outras ficam à espera.
+    step_by_id = {s.id: s for s in plan.steps}
+    tool_pause = state == "paused_human_gate" and bool(status.get("tool_approval"))
+    pending = approval.pending_gates(out_dir, run_id)
+    target: str | None = None
+    if tool_pause:
+        if gate is not None:
+            raise PlanError("há a aprovação de uma tool à espera: decide-a primeiro (sem --gate); "
+                            "o gate do plano fica à espera da sua própria decisão")
+    elif gate is not None or state == "paused_human_gate":
+        target = approval.target_gate(pending, gate)
+        approval.check_decision(step_by_id[target], decision)
     # M-009: as aprovações já dadas têm de bater com o disco (um reject pode sempre parar o run).
     if decision != "reject":
         approval.verify_past(out_dir, plan, log, run_id)
-    # O Command(resume=...) do LangGraph responde a TODOS os gates à espera no checkpoint, não só ao
-    # do `paused_at_step` (que pode nomear outro gate, ou o run pode estar à espera de outra coisa):
-    # cada gate pedido e sem decisão tem de ter o conteúdo que foi pedido.
-    pending = approval.pending_gates(out_dir, run_id)
-    if pending and state == "paused_human_gate" and status.get("tool_approval"):
-        raise PlanError(f"há uma aprovação humana pendente ({', '.join(pending)}) ao mesmo tempo que a aprovação "
-                        "de uma tool: o LangGraph responderia às duas com a mesma decisão; resolve uma de cada vez")
-    gate_fps = {g: approval.check_pending(out_dir, plan, g, decision, log, run_id) for g in pending}
+    # M-009: o gate alvo tem de ter o conteúdo que foi pedido (os outros não são decididos aqui).
+    gate_fps: dict[str, dict[str, Any]] = {}
+    if target is not None:
+        gate_fps[target] = approval.check_pending(out_dir, plan, target, str(decision), log, run_id)
+    left = [g for g in pending if g != target]
+    if left:
+        log.append("human_gate_left_pending", run_id, {"gates": left, "resume_for": target or state})
     # W-005: --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.
     worker_obj = _worker_for(mode, worker if worker is not None else status.get("worker"))
     if worker is not None:
@@ -535,12 +590,11 @@ def resume_plan_langgraph(
         _resolve_tool_approval(out_dir, log, run_id, status, decision)
         status["state"] = "running"
         save_status(out_dir, status)
-        decision = "approve"
 
-    # Reject nÃ£o precisa continuar o grafo.
-    # Registramos a decisÃ£o e encerramos exatamente como o engine tradicional.
-    if decision == "reject":
-        paused = status.get("paused_at_step")
+    # Reject não precisa de continuar o grafo: regista a decisão e encerra como o motor nativo.
+    # (Na aprovação de uma tool o reject recusa só a chamada; o run continua.)
+    if decision == "reject" and not tool_pause:
+        paused = target or status.get("paused_at_step")
 
         log.append(
             "human_gate_resolved",
@@ -548,6 +602,7 @@ def resume_plan_langgraph(
             {
                 "step_id": paused,
                 "decision": decision,
+                **gate_fps.get(target or "", {}),
             },
             actor={"kind": "human", "id": "cli"},
         )
@@ -597,90 +652,7 @@ def resume_plan_langgraph(
                 inject_knowledge_context(out_dir, step, log, run_id)
 
             if step.human_gate:
-                from langgraph.types import interrupt
-
-                if not log.has_event("human_gate_requested", run_id, step_id=step.id):
-                    log.append(
-                        "human_gate_requested",
-                        run_id,
-                        {
-                            "step_id": step.id,
-                            "allow": step.human_gate.allow,
-                            **approval.request_payload(out_dir, plan, step.id),  # M-009
-                        },
-                    )
-                    hitl.write_request(
-                        out_dir,
-                        step=step,
-                        run_id=run_id,
-                        plan_id=plan.id,
-                        completed=completed,
-                        mode=mode,
-                    )
-
-                decision_value = interrupt(
-                    {
-                        "type": "human_gate",
-                        "step_id": step.id,
-                        "allow": step.human_gate.allow,
-                    }
-                )
-
-                # Aceita tanto string ("approve") como dict ({"decision": "edit", "payload": {...}})
-                if isinstance(decision_value, dict):
-                    edited_payload = decision_value.get("payload")
-                    decision_str = decision_value.get("decision", "approve")
-                else:
-                    edited_payload = None
-                    decision_str = decision_value
-
-                if decision_str not in {"approve", "reject", "edit"}:
-                    raise PlanError("decision must be approve|reject|edit")
-
-                log.append(
-                    "human_gate_resolved",
-                    run_id,
-                    {
-                        "step_id": step.id,
-                        "decision": decision_str,
-                        "has_payload": edited_payload is not None,
-                        **gate_fps.get(step.id, {"fingerprint": approval.fingerprint(out_dir, plan, step.id)}),  # M-009
-                    },
-                    actor={"kind": "human", "id": "cli"},
-                )
-
-                if decision_str == "reject":
-                    return {
-                        "error": f"{step.id}:rejected",
-                        "log": [f"rejected:{step.id}"],
-                    }
-
-                artifacts = {}
-
-                if step.output_artifact:
-                    p = out_dir / step.output_artifact
-                    p.parent.mkdir(parents=True, exist_ok=True)
-
-                    if not p.exists():
-                        if edited_payload is not None:
-                            content_to_write = edited_payload
-                        else:
-                            content_to_write = {
-                                "decision": decision_str,
-                                "step_id": step.id,
-                            }
-                        p.write_text(
-                            json.dumps(content_to_write, indent=2) + "\n",
-                            encoding="utf-8",
-                        )
-
-                    artifacts[step.id] = step.output_artifact
-
-                return {
-                    "completed": [step.id],
-                    "artifacts": artifacts,
-                    "log": [f"hitl:{step.id}:{decision_value}"],
-                }
+                return _gate_node(out_dir, plan, step, run_id, log, completed, mode, gate_fps)
 
             if mode == "stub":
                 result = execute_stub(out_dir, step)
@@ -731,17 +703,7 @@ def resume_plan_langgraph(
         for step in plan.steps:
             builder.add_node(step.id, make_node(step))
 
-        for step in waves[0]:
-            builder.add_edge(START, step.id)
-
-        for i, wave in enumerate(waves[:-1]):
-            for b in waves[i + 1]:
-                preds = b.depends_on or [s.id for s in wave]
-                for p in preds:
-                    builder.add_edge(p, b.id)
-
-        for step in waves[-1]:
-            builder.add_edge(step.id, END)
+        add_dependency_edges(builder, waves, START, END)
 
         with SqliteSaver.from_conn_string(str(checkpoint_path)) as checkpointer:
             graph = builder.compile(checkpointer=checkpointer)
@@ -752,18 +714,19 @@ def resume_plan_langgraph(
                 }
             }
 
-            if decision == "edit" and payload:
-                # Aceita BOM se existir (Set-Content -Encoding UTF8 do PowerShell adiciona BOM)
-                payload = payload.removeprefix("\ufeff")
-                payload_dict = json.loads(payload)
-                resume_value = {"decision": decision, "payload": payload_dict}
-            else:
-                resume_value = decision
+            command = None  # sem gate alvo: continua o que está por correr, sem responder a ninguém
+            if target is not None:
+                interrupt_id = _interrupt_id(graph, config, target)
+                if interrupt_id is None:
+                    raise approval.ApprovalError(
+                        f"o gate `{target}` não está à espera no checkpoint do run; nada foi decidido")
+                resume_value: dict[str, Any] = {"decision": decision, "gate": target}
+                if decision == "edit" and payload:
+                    # Aceita BOM se existir (Set-Content -Encoding UTF8 do PowerShell adiciona BOM)
+                    resume_value["payload"] = json.loads(payload.removeprefix("\ufeff"))
+                command = Command(resume={interrupt_id: resume_value})
 
-            result = graph.invoke(
-                Command(resume=resume_value),
-                config,
-            )
+            result = graph.invoke(command, config)
 
     except _WaitExternal as w:
         status["state"] = "waiting_external"
@@ -771,22 +734,24 @@ def resume_plan_langgraph(
         status["current_step"] = w.step_id
         if w.worker_error:
             status["worker_error"] = w.worker_error
-        # Uniao: completed anterior + completed novo (do partial_state)
+        # Uniao: completed anterior + completed novo (do partial_state) + o gate decidido nesta retoma
         previous = set(status.get("completed") or [])
         new = set(w.partial_state.get("completed") or [])
-        union = sorted(previous | new)
+        union = sorted(previous | new | _decided_now(log, run_id, target, decision))
         if union:
             status["completed"] = union
         save_status(out_dir, status)
         return status
 
     except _PausedBudget as b:
-        done = set(status.get("completed") or []) | set(b.partial_state.get("completed") or [])
+        done = (set(status.get("completed") or []) | set(b.partial_state.get("completed") or [])
+                | _decided_now(log, run_id, target, decision))
         _paused_budget(out_dir, log, run_id, status, b.step_id, b.result, done)
         return status
 
     except _ToolApproval as t:
-        done = set(status.get("completed") or []) | set(t.partial_state.get("completed") or [])
+        done = (set(status.get("completed") or []) | set(t.partial_state.get("completed") or [])
+                | _decided_now(log, run_id, target, decision))
         _paused_tool_approval(out_dir, log, run_id, status, t.step_id, t.result, done)
         return status
 
@@ -816,40 +781,14 @@ def resume_plan_langgraph(
     union = sorted(previous | new)
     if union:
         status["completed"] = union
-    status["decision"] = decision
+    if decision is not None:
+        status["decision"] = decision
 
     if result.get("error"):
         status["state"] = "failed"
         status["detail"] = result["error"]
-
-    elif all(s.id in completed for s in plan.steps):
-        status.pop("paused_at_step", None)
-        if done_when.check(out_dir, plan.done_when, log, run_id, status):
-            status["state"] = "done"
-            status["current_step"] = None
-            log.append(
-                "plan_done",
-                run_id,
-                {
-                    "completed": completed,
-                    "engine": "langgraph",
-                },
-            )
-
     else:
-        pending = [
-            s.id
-            for s in plan.steps
-            if s.human_gate and s.id not in completed
-        ]
-
-        if pending:
-            status["state"] = "paused_human_gate"
-            status["paused_at_step"] = pending[0]
-            status["current_step"] = pending[0]
-        elif done_when.check(out_dir, plan.done_when, log, run_id, status):
-            status["state"] = "done"
-            status["current_step"] = None
+        _settle(out_dir, plan, log, run_id, status, union)
 
     save_status(out_dir, status)
     return status

@@ -8,7 +8,7 @@
 | Capacidade | Critério de aceitação | Estado | Testes | Runs reais | Lacunas (PENDENCIAS) |
 |---|---|---|---:|---:|---|
 | Execução de planos | Plano real concluído e artefactos validados | **PROVADA**, com lacunas | 4 | 2 | AU-22b (ABERTO, Baixa) |
-| Aprovação humana | Acção protegida bloqueada até existir aprovação válida | **PROVADA**, com lacunas | 5 | 2 | COM-1 (EM CURSO, Média), A13 (ABERTO, Média), OFFICE-A4 (BLOQUEADO, Média) |
+| Aprovação humana | Acção protegida bloqueada até existir aprovação válida | **PROVADA**, com lacunas | 8 | 2 | COM-1 (EM CURSO, Média), A13 (ABERTO, Média), OFFICE-A4 (BLOQUEADO, Média) |
 | Recuperação | Retoma sem repetir indevidamente acções externas | **PROVADA** | 5 | 1 | — |
 | Conhecimento | Resposta com fontes identificáveis e contexto correcto | **PROVADA**, com lacunas | 4 | 2 | F3b-VAL-1 (ABERTO, Média), F6 (EM CURSO, Média) |
 | Ferramentas | Selecção e execução dentro das permissões autorizadas | **PROVADA**, com lacunas | 5 | 2 | F2-DISC-1 (ABERTO, Baixa), TRADER-RISK-1 (ABERTO, Baixa) |
@@ -34,6 +34,9 @@
 - teste: `runner/tests/test_external_worker.py::test_reject_no_gate_termina_sem_mais_chamadas`
 - teste: `runner/tests/test_done_when.py::test_gate_nao_resolvido_falha_o_run`
 - teste: `runner/tests/test_real_plans.py::test_approval_rounds_full_cycle_three_hitls`
+- teste: `runner/tests/test_m010_decisao_explicita.py::test_resume_de_um_passo_externo_nao_decide_o_gate_em_paralelo`
+- teste: `runner/tests/test_m010_decisao_explicita.py::test_resume_sem_decisao_nao_aprova`
+- teste: `runner/tests/test_m010_decisao_explicita.py::test_identificador_de_aprovacao_incorrecto_nao_decide_nada`
 - run real: `pilots/evidence/setup-close-2026-10-27T002056Z.md` ("| COM-1 | COM-1 | **PASS** | estado paused_human_gate")
 - run real: `pilots/evidence/setup-close-2026-10-27T002056Z.md` ("| F6-MARKET | F6 | **PASS** | estado paused_human_gate")
 

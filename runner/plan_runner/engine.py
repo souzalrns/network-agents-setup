@@ -306,7 +306,9 @@ def run_plan(
             (out / "HITL.md").write_text(
                 f"# HITL\n\nRun `{run_id}` paused at step `{step.id}` ({step.action}).\n\n"
                 f"Allow: {step.human_gate.allow}\n\n"
-                f"Resume:\n```\npython -m plan_runner resume {out} --decision approve\n```\n",
+                f"Decide (a decisão é sempre explícita; sem ela o run fica à espera):\n```\n"
+                f"python -m plan_runner resume {out} --gate {step.id} --decision approve\n"
+                f"python -m plan_runner resume {out} --gate {step.id} --decision reject\n```\n",
                 encoding="utf-8",
             )
             return status
@@ -361,12 +363,18 @@ def run_plan(
 
 def resume_run(
     out_dir: Path,
-    decision: str,
+    decision: str | None = None,
     worker: str | None = None,
     max_tokens: int | None = None,
     max_cost_usd: float | None = None,
+    gate: str | None = None,
 ) -> dict[str, Any]:
+    """Retoma um run. M-010: `decision` só decide o gate humano em que o run está parado, tem de ser
+    explícita e prevista no `allow` dele; `gate`, quando dado, tem de ser esse gate. Fora de um gate
+    (passo externo, orçamento, interrupção) a retoma só continua, com ou sem `decision`."""
     out_dir = _validate_out_dir(out_dir)
+    if decision is not None and decision not in approval.VALID:
+        raise PlanError("decision must be approve|reject|edit")
     status = load_status(out_dir)
     if not status:
         raise PlanError("no status.json")
@@ -383,8 +391,16 @@ def resume_run(
     if decision != "reject":
         approval.verify_past(out_dir, plan, log, run_id)
     gate_fp: dict[str, Any] = {}
-    if state == "paused_human_gate" and not status.get("tool_approval") and status.get("paused_at_step"):
-        gate_fp = approval.check_pending(out_dir, plan, str(status["paused_at_step"]), decision, log, run_id)
+    plan_gate = state == "paused_human_gate" and not status.get("tool_approval")
+    if gate is not None and (not plan_gate or gate != status.get("paused_at_step")):
+        # M-010: a decisão vem dirigida a um gate que não é o que está à espera: não decide nada.
+        approval.target_gate([str(status["paused_at_step"])] if plan_gate and status.get("paused_at_step") else [], gate)
+    if plan_gate:
+        gate_step = next((s for s in plan.steps if s.id == status.get("paused_at_step")), None)
+        if gate_step is None:
+            raise PlanError(f"gate pendente desconhecido no plano: {status.get('paused_at_step')!r}")
+        approval.check_decision(gate_step, decision)  # M-010: explícita, válida e prevista no allow
+        gate_fp = approval.check_pending(out_dir, plan, gate_step.id, str(decision), log, run_id)
     completed = set(status.get("completed") or [])
     mode = status.get("mode") or "stub"
     # --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.

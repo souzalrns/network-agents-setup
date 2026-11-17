@@ -91,7 +91,8 @@ def run_plan(plan: str, mode: str = "stub", out: str | None = None) -> dict:
         return {"ok": False, "error": str(e)}
 
 
-def resume_plan(out_dir: str, decision: str = "approve") -> dict:
+def resume_plan(out_dir: str, decision: str | None = None, gate: str | None = None) -> dict:
+    """M-010: sem `decision` a retoma só continua; um gate humano nunca é aprovado por omissão."""
     auth = authorize("resume_plan")
     rate_limit(auth.caller)
     if not auth.authorized:
@@ -102,7 +103,7 @@ def resume_plan(out_dir: str, decision: str = "approve") -> dict:
         from plan_runner.engine import resume_run
 
         path = sanitize_repo_path(out_dir, must_exist=True)
-        result = resume_run(path, decision=decision)
+        result = resume_run(path, decision=decision, gate=gate)
         audit(
             {
                 "tool": "resume_plan",

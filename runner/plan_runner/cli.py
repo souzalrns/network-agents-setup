@@ -45,7 +45,12 @@ def main(argv: list[str] | None = None) -> int:
     p_res = sub.add_parser("resume", help="Resume a paused run")
     p_res.add_argument("out", type=Path, help="Run directory with status.json")
     p_res.add_argument("--decision", default=None,
-                       help="approve|reject|edit (omissao: approve; obrigatorio na aprovacao de uma tool act)")
+                       help="approve|reject|edit. Obrigatorio para decidir um gate humano ou a aprovacao de uma "
+                            "tool act (nunca ha aprovacao por omissao); sem ele a retoma so continua o que nao "
+                            "depende de uma pessoa (passo externo, orcamento, interrupcao)")
+    p_res.add_argument("--gate", default=None, metavar="PASSO",
+                       help="M-010: o gate humano que a decisao decide. Obrigatorio quando ha mais de um pedido a "
+                            "espera; um gate que nao esta a espera e recusado e nada e decidido")
     p_res.add_argument("--payload-file", type=Path, default=None, help="Ficheiro JSON com payload para edit (opcional)")
     p_res.add_argument(
         "--worker",
@@ -147,7 +152,10 @@ def main(argv: list[str] | None = None) -> int:
             # primeiro; se nao houver, cai no --decision explicito da CLI
             # (nao-regressao: o uso actual continua a funcionar sem alteracao).
             approval = (st or {}).get("tool_approval")
+            gate = None
             if approval:
+                if args.gate is not None:
+                    raise PlanError("ha a aprovacao de uma tool a espera: decide-a primeiro, sem --gate")
                 # AU-20: so conta a decisao DESTE pedido (por id), nunca a ultima do ficheiro, e
                 # sem ela o --decision tem de ser explicito: aprovar uma tool act nunca e o default.
                 node = next((d for d in reversed(hitl._read_jsonl(args.out / hitl.DECISIONS_FILE))
@@ -177,23 +185,48 @@ def main(argv: list[str] | None = None) -> int:
                             + "; ".join(policy_errs)
                         )
             else:
-                hitl_decision = hitl.read_decision(args.out)
-                if hitl_decision is not None:
-                    req = hitl.latest_request(args.out)
-                    req_source = (req or {}).get("source") or hitl_decision.get("source")
-                    policy_errs = hitl.validate_decision_policy(
-                        hitl_decision,
-                        request_source=req_source,
-                        request_priority=(req or {}).get("priority"),
-                    )
-                    if policy_errs:
-                        raise PlanError(
-                            "decisao HITL viola a politica de actor (W-020): "
-                            + "; ".join(policy_errs)
+                # M-010: a decisao e sempre explicita e dirigida a um pedido. So ha gate a decidir se o
+                # run esta parado num gate do plano ou se --gate o nomeia; a decisao do lado Node so
+                # conta se foi escrita para o pedido DESTE gate (nunca "a ultima do ficheiro").
+                from . import approval as gate_approval
+
+                decision = args.decision
+                gate = args.gate
+                run_id = (st or {}).get("run_id")
+                if run_id and ((st or {}).get("state") == "paused_human_gate" or gate is not None):
+                    gate = gate_approval.target_gate(gate_approval.pending_gates(args.out, run_id), gate)
+                    hitl_decision = gate_approval.bound_decision(args.out, run_id, gate)
+                    if hitl_decision is not None:
+                        req = next(
+                            (r for r in reversed(hitl._read_jsonl(args.out / hitl.REQUESTS_FILE))
+                             if r.get("id") == hitl_decision.get("id")),
+                            None,
                         )
-                    decision = hitl_decision["response"]
-                else:
-                    decision = args.decision or "approve"
+                        req_source = (req or {}).get("source") or hitl_decision.get("source")
+                        policy_errs = hitl.validate_decision_policy(
+                            hitl_decision,
+                            request_source=req_source,
+                            request_priority=(req or {}).get("priority"),
+                        )
+                        if policy_errs:
+                            raise PlanError(
+                                "decisao HITL viola a politica de actor (W-020): "
+                                + "; ".join(policy_errs)
+                            )
+                        written = hitl_decision["response"]
+                        if decision is None or decision == "reject":
+                            # sem --decision vale a decisao escrita; um reject explicito para sempre o run
+                            decision = decision or written
+                        elif decision != written:
+                            raise PlanError(
+                                f"decisoes em conflito para o gate `{gate}`: --decision {decision} e a decisao "
+                                f"escrita no contrato HITL ({written}); nada foi decidido"
+                            )
+                    if decision is None:
+                        raise PlanError(
+                            f"aprovacao humana pendente em `{gate}`: passa --decision approve|reject|edit "
+                            "(um gate nunca e aprovado por omissao)"
+                        )
 
             if st and st.get("engine", "").startswith("langgraph"):
                 from .langgraph_engine import resume_plan_langgraph
@@ -205,12 +238,12 @@ def main(argv: list[str] | None = None) -> int:
                     payload = args.payload_file.read_text(encoding="utf-8-sig")
                 result = resume_plan_langgraph(
                     args.out, decision=decision, payload=payload, worker=args.worker,
-                    max_tokens=args.max_tokens, max_cost_usd=args.max_cost_usd,
+                    max_tokens=args.max_tokens, max_cost_usd=args.max_cost_usd, gate=gate,
                 )
             else:
                 result = resume_run(
                     args.out, decision=decision, worker=args.worker,
-                    max_tokens=args.max_tokens, max_cost_usd=args.max_cost_usd,
+                    max_tokens=args.max_tokens, max_cost_usd=args.max_cost_usd, gate=gate,
                 )
     except PlanError as e:
         print(f"error: {e}")

@@ -72,7 +72,7 @@ steps:
     human_gate:
       level: step
       kind: confirmation
-      allow: [approve, reject]
+      allow: [approve, reject, edit]  # o fluxo documentado decide com edit + payload (M-010: o allow passou a ser imposto)
     tools_allowed: []
     output_artifact: artifacts/06-hitl.json
 

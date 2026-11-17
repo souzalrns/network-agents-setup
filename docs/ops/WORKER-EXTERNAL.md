@@ -58,7 +58,7 @@ python -m plan_runner run ../docs/orchestration/marketing/templates/examples/seo
 
 ```bash
 # Rever os artefactos e decidir
-python -m plan_runner resume ../pilots/run-worker-seo --decision approve   # continua com o mesmo worker
+python -m plan_runner resume ../pilots/run-worker-seo   # continua com o mesmo worker (sem --decision: retomar um passo não decide gates, M-010)
 ```
 
 O `status.json` guarda `"worker": "gemini"`, por isso o `resume` continua com o mesmo worker sem flag. O `resume --worker none` volta ao contrato antigo (esperar por `result.json`). O `resume --worker gemini` liga o worker num run que arrancou sem ele.
