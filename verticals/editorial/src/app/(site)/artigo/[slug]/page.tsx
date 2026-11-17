@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArticleView } from "@/components/article-view";
 import { Teaser } from "@/components/teaser";
 import { fmtDateTime } from "@/lib/format";
-import { plainText, readingMinutes, renderMarkdown } from "@/lib/markdown";
+import { plainText } from "@/lib/markdown";
 import { article, site } from "@/lib/public";
 
 type P = { params: Promise<{ slug: string }> };
@@ -58,28 +59,7 @@ export default async function Artigo({ params }: P) {
   return (
     <article className="article">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
-      <div style={{ "--c": s.section_color ?? "var(--brand)" } as React.CSSProperties}>
-        {s.section_slug && <Link className="kicker" href={`/seccao/${s.section_slug}`}>{s.section_name}</Link>}
-        {s.kind === "opinion" && <span className="kicker" style={{ marginLeft: 10 }}>Opinião</span>}
-        {s.kind === "sponsored" && <span className="kicker" style={{ marginLeft: 10 }}>Conteúdo patrocinado</span>}
-      </div>
-      <h1>{s.title}</h1>
-      {s.subtitle && <p className="dek">{s.subtitle}</p>}
-      <div className="byline">
-        {s.author_name && (s.author_public ? <Link href={`/autor/${s.author_slug}`}>{s.author_name}</Link> : <span>{s.author_name}</span>)}
-        <time dateTime={new Date(s.published_at).toISOString()}>{fmtDateTime(s.published_at)}</time>
-        {updated && <span>Atualizado {fmtDateTime(s.updated_at)}</span>}
-        <span>{readingMinutes(s.body)} min de leitura</span>
-      </div>
-      {s.kind === "sponsored" && <p className="notice">Este conteúdo é pago por um anunciante. A redação não participou na sua produção.</p>}
-      {s.hero_image_url && (
-        <figure>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.hero_image_url} alt={s.hero_caption || ""} />
-          {(s.hero_caption || s.hero_credit) && <figcaption>{s.hero_caption}{s.hero_credit && ` Fotografia: ${s.hero_credit}`}</figcaption>}
-        </figure>
-      )}
-      <div className="prose" dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body) }} />
+      <ArticleView a={{ ...s, updated_label: updated ? `Atualizado ${fmtDateTime(s.updated_at)}` : null }} />
       {a.refs.length > 0 && (
         <section className="notice"><b>Documentos e dados citados</b>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>{a.refs.map((r) => <li key={r.url}><a href={r.url} rel="noopener noreferrer">{r.title || r.url}</a></li>)}</ul></section>

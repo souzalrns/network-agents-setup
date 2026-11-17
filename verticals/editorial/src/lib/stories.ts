@@ -10,7 +10,7 @@ export interface Story {
   summary: string; body: string; author_id: string | null; hero_image_url: string | null; hero_caption: string;
   hero_credit: string; tags: string[]; seo_title: string; meta_description: string; kind: string;
   scheduled_at: Date | null; approved_by: string | null; approved_at: Date | null; published_at: Date | null;
-  version: number; created_at: Date; updated_at: Date;
+  version: number; created_at: Date; updated_at: Date; approved_version: number | null; approved_fingerprint: string | null;
 }
 
 export class EditorialError extends Error {}
@@ -24,7 +24,7 @@ export type StoryPatch = Partial<Pick<Story, (typeof PITCH_FIELDS)[number] | (ty
 const COLS = `id, publication_id, section_id, state, priority, format, origin, title, angle, to_confirm, interview_questions,
   due_date::text as due_date, assignee_id, created_by, slug, subtitle, summary, body, author_id, hero_image_url, hero_caption,
   hero_credit, tags, seo_title, meta_description, kind, scheduled_at, approved_by, approved_at, published_at, version,
-  created_at, updated_at`;
+  created_at, updated_at, approved_version, approved_fingerprint`;
 
 export async function getStory(tx: Tx, id: string): Promise<Story | null> {
   const [row] = await tx.unsafe<Story[]>(`select ${COLS} from stories where id = $1`, [id]);
@@ -55,7 +55,7 @@ export async function createStory(ctx: Ctx, input: NewStory): Promise<Story> {
 }
 
 /** Altera campos da pauta ou do artigo. A base de dados decide se este actor pode, e regista a versão. */
-export async function updateStory(ctx: Ctx, id: string, patch: StoryPatch, note = ""): Promise<Story> {
+export async function updateStory(ctx: Ctx, id: string, patch: StoryPatch, note = "", expectedVersion?: number): Promise<Story> {
   const entries = Object.entries(patch).filter(([k, v]) => EDITABLE.has(k) && v !== undefined);
   if (!entries.length) throw new EditorialError("Nada para alterar.");
   if (patch.title !== undefined && !patch.title.trim()) throw new EditorialError("A peça precisa de um título.");
@@ -63,7 +63,16 @@ export async function updateStory(ctx: Ctx, id: string, patch: StoryPatch, note 
   return withCtx(ctx, async (tx) => {
     const sets = entries.map(([k], i) => `${k} = $${i + 2}`).join(", ");
     const values = entries.map(([k]) => (patch as Record<string, unknown>)[k] ?? null);
-    const [row] = await tx.unsafe<Story[]>(`update stories set ${sets} where id = $1 returning ${COLS}`, [id, ...values] as never[]);
+    // com expectedVersion, só grava se ninguém tiver gravado entretanto (a última gravação não ganha em silêncio)
+    const guard = expectedVersion === undefined ? "" : ` and version = $${values.length + 2}`;
+    const params = expectedVersion === undefined ? [id, ...values] : [id, ...values, expectedVersion];
+    const [row] = await tx.unsafe<Story[]>(`update stories set ${sets} where id = $1${guard} returning ${COLS}`, params as never[]);
+    if (!row && expectedVersion !== undefined) {
+      const [cur] = await tx<{ version: number }[]>`select version from stories where id = ${id}`;
+      if (cur && cur.version !== expectedVersion) {
+        throw new EditorialError(`Outra pessoa guardou a versão ${cur.version} enquanto escrevias (começaste na ${expectedVersion}). Compara e junta antes de guardar.`);
+      }
+    }
     if (!row) throw new EditorialError("Não encontrei a peça ou não tens permissão para a alterar.");
     return row;
   }, note);

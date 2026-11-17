@@ -7,8 +7,8 @@ import {
 } from "@/lib/constants";
 import { canWrite, isDesk } from "@/lib/context";
 import { withCtx } from "@/lib/db";
+import { articleOf, getDraft } from "@/lib/drafts";
 import { fmtDateTime, relTime, toLocalInput } from "@/lib/format";
-import { renderMarkdown } from "@/lib/markdown";
 import { agentName, getPublication } from "@/lib/publication";
 import { listSections, listSources, listTeam, storyDetail } from "@/lib/queries";
 import { isOwner, nextSteps, STATE_LABEL } from "@/lib/workflow";
@@ -18,6 +18,7 @@ import {
   updateArticleAction, updateClaimAction, updatePitchAction, verifyClaimAction,
 } from "../../../actions";
 import { AgentPanel } from "./agent-panel";
+import { ArticleEditor } from "./article-editor";
 
 type SP = Record<string, string | string[] | undefined>;
 
@@ -28,11 +29,12 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const d = await storyDetail(ctx, id);
   if (!d) notFound();
-  const [pub, sections, team, allSources] = await Promise.all([
+  const [pub, sections, team, allSources, draft] = await Promise.all([
     getPublication(ctx),
     withCtx(ctx, (tx) => listSections(tx)),
     withCtx(ctx, (tx) => listTeam(tx)),
     listSources(ctx),
+    withCtx(ctx, (tx) => getDraft(tx, id)),
   ]);
   const s = d.story;
   const actors = { assigneeId: s.assignee_id, authorId: s.author_id, createdBy: s.created_by };
@@ -104,49 +106,13 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
           {showArticle && (
             <section className="card" id="artigo">
               <h2>Artigo <span className="label">versão {s.version}</span></h2>
-              <form action={updateArticleAction} className="stack">
-                <input type="hidden" name="id" value={s.id} />
-                <fieldset disabled={!editable} style={{ border: 0, padding: 0, margin: 0 }} className="stack">
-                  <label className="field"><span>Título</span><input id="a-title" name="title" defaultValue={s.title} required maxLength={300} /></label>
-                  <label className="field"><span>Subtítulo</span><input id="a-subtitle" name="subtitle" defaultValue={s.subtitle} maxLength={600} /></label>
-                  <label className="field"><span>Resumo</span><textarea id="a-summary" name="summary" defaultValue={s.summary} style={{ minHeight: 70 }} /><small>Aparece na página inicial e nas partilhas.</small></label>
-                  <label className="field"><span>Texto</span>
-                    <textarea id="a-body" className="body" name="body" defaultValue={s.body} />
-                    <small>Markdown: ## intertítulo, **negrito**, *itálico*, &gt; citação, [ligação](https://…).</small>
-                  </label>
-                  <div className="grid2">
-                    <label className="field"><span>Tipo</span>
-                      <select id="a-kind" name="kind" defaultValue={s.kind}><option value="news">Notícia ou reportagem</option><option value="opinion">Opinião</option>
-                        <option value="interview">Entrevista</option><option value="sponsored">Conteúdo patrocinado</option></select></label>
-                    <label className="field"><span>Endereço (URL)</span><input id="a-slug" name="slug" defaultValue={s.slug ?? ""} placeholder="gerado a partir do título" /></label>
-                    <label className="field"><span>Etiquetas</span><input id="a-tags" name="tags" defaultValue={s.tags.join(", ")} placeholder="separadas por vírgulas" /></label>
-                  </div>
-                  <details className="box"><summary>Imagem principal</summary>
-                    <div className="stack" style={{ marginTop: 10 }}>
-                      <label className="field"><span>Endereço da imagem</span><input id="a-hero" name="hero_image_url" type="url" defaultValue={s.hero_image_url ?? ""} placeholder="https://…" /></label>
-                      <div className="grid2">
-                        <label className="field"><span>Legenda</span><input id="a-caption" name="hero_caption" defaultValue={s.hero_caption} /></label>
-                        <label className="field"><span>Crédito</span><input id="a-credit" name="hero_credit" defaultValue={s.hero_credit} /></label>
-                      </div>
-                    </div>
-                  </details>
-                  <details className="box"><summary>Pesquisa (SEO)</summary>
-                    <div className="stack" style={{ marginTop: 10 }}>
-                      <label className="field"><span>Título para pesquisa</span><input id="a-seo" name="seo_title" defaultValue={s.seo_title} maxLength={120} /><small>Até 60 caracteres funciona melhor. Vazio usa o título.</small></label>
-                      <label className="field"><span>Descrição</span><textarea id="a-meta" name="meta_description" defaultValue={s.meta_description} style={{ minHeight: 60 }} maxLength={320} /><small>Até 155 caracteres. Vazio usa o resumo.</small></label>
-                    </div>
-                  </details>
-                  {s.state === "published"
-                    ? <label className="field"><span>Nota da alteração (obrigatória)</span><input id="a-note" name="note" required placeholder="O que mudou no artigo publicado e porquê" maxLength={300} /><small>A alteração conta como nova aprovação tua e fica no histórico.</small></label>
-                    : <label className="field"><span>Nota desta versão</span><input id="a-note" name="note" placeholder="Ex.: acrescentei a reação da câmara" maxLength={300} /></label>}
-                  {editable && <div><button className="btn primary" type="submit">Guardar texto</button></div>}
-                  {!editable && ["approved", "scheduled", "published"].includes(s.state) && <p className="muted">Peça aprovada: só a edição altera o texto (e alterar retira a aprovação).</p>}
-                  {editable && ["approved", "scheduled"].includes(s.state) && <p className="muted">Guardar alterações a esta peça retira a aprovação: volta a «em revisão».</p>}
-                  {s.state === "archived" && <p className="muted">Peça arquivada: para a alterar, reabre-a como ideia.</p>}
-                </fieldset>
-              </form>
-              {s.body && <details className="box" style={{ marginTop: 12 }}><summary>Pré-visualização</summary>
-                <div className="preview" dangerouslySetInnerHTML={{ __html: renderMarkdown(s.body) }} /></details>}
+              {editable && ["approved", "scheduled"].includes(s.state) && <p className="muted" style={{ marginTop: 0 }}>Guardar alterações a esta peça retira a aprovação: volta a «em revisão».</p>}
+              {!editable && ["approved", "scheduled", "published"].includes(s.state) && <p className="muted" style={{ marginTop: 0 }}>Peça aprovada: só a edição altera o texto (e alterar retira a aprovação).</p>}
+              {s.state === "archived" && <p className="muted" style={{ marginTop: 0 }}>Peça arquivada: para a alterar, reabre-a como ideia.</p>}
+              <ArticleEditor key={`${s.version}-${draft?.rev ?? 0}-${draft?.updated_by ?? ""}`} storyId={s.id} version={s.version} state={s.state} editable={editable} me={user.userId} action={updateArticleAction}
+                saved={articleOf(s)} draft={draft ? { ...draft, updated_at: draft.updated_at.toISOString(), lease_until: draft.lease_until?.toISOString() ?? null } : null}
+                photos={d.refs.filter((r) => r.kind === "photo").map((r) => ({ url: r.url, title: r.title, credit: r.credit }))} />
+              <p className="meta" style={{ marginTop: 10 }}><Link href={`/redacao/pecas/${s.id}/versoes`}>Histórico de versões, comparação e restauro</Link></p>
             </section>
           )}
 
@@ -374,6 +340,7 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
           </section>
           <section className="card">
             <h2>Versões</h2>
+            <p className="meta" style={{ marginTop: 0 }}><Link href={`/redacao/pecas/${s.id}/versoes`}>Comparar e restaurar</Link></p>
             <ul className="timeline">{d.versions.map((v) => <li key={v.version}><b>v{v.version}</b> · {v.name ?? v.saved_kind} · <span className="num">{v.words} palavras</span><div className="meta">{fmtDateTime(v.saved_at)}</div></li>)}</ul>
           </section>
         </aside>

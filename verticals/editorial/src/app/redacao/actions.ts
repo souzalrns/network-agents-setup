@@ -10,7 +10,8 @@ import { dbMessage, withCtx } from "@/lib/db";
 import { int, isDate, isHttpUrl, isUuid, lines, opt, str } from "@/lib/forms";
 import { fromLocalInput } from "@/lib/format";
 import { hashPassword } from "@/lib/password";
-import { createStory, EditorialError, transition, updateStory } from "@/lib/stories";
+import { ConflictError, discardDraft, parseArticle, restoreVersion, saveDraft, saveVersion } from "@/lib/drafts";
+import { createStory, EditorialError, getStory, transition, updateStory } from "@/lib/stories";
 import { slugify } from "@/lib/text";
 import { isState } from "@/lib/workflow";
 
@@ -103,26 +104,54 @@ export async function updatePitchAction(form: FormData) {
   back(`${path}#pauta`, "ok", "Pauta guardada.");
 }
 
+/**
+ * «Guardar versão»: grava o artigo se a peça ainda estiver na versão em que o texto foi começado (base_version).
+ * Se outra pessoa guardou entretanto, recusa e deixa o texto no rascunho do servidor: nada se perde.
+ */
 export async function updateArticleAction(form: FormData) {
   const { ctx } = await requireUser();
   const id = str(form, "id", 40);
   if (!isUuid(id)) back("/redacao/pautas", "erro", "Peça inválida.");
   const path = `/redacao/pecas/${id}`;
-  const hero = str(form, "hero_image_url", 1000);
-  if (hero && !isHttpUrl(hero)) back(`${path}#artigo`, "erro", "O endereço da imagem tem de começar por https://.");
-  const kind = str(form, "kind", 20);
-  await attempt(path, async () => {
-    await updateStory(ctx, id, {
-      title: str(form, "title", 300), subtitle: str(form, "subtitle", 600), summary: str(form, "summary", 1200),
-      body: str(form, "body", 200_000), slug: str(form, "slug", 120) || undefined,
-      hero_image_url: hero || null, hero_caption: str(form, "hero_caption", 600), hero_credit: str(form, "hero_credit", 200),
-      tags: str(form, "tags", 600).split(",").map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 12),
-      seo_title: str(form, "seo_title", 120), meta_description: str(form, "meta_description", 320),
-      kind: ["news", "opinion", "interview", "sponsored"].includes(kind) ? kind : "news",
-    }, str(form, "note", 300));
+  const base = int(form, "base_version", 1, 1_000_000, 0);
+  let fields: ReturnType<typeof parseArticle>;
+  try { fields = parseArticle((k) => form.get(k)); } catch (e) { back(`${path}#artigo`, "erro", failMessage(e)); }
+  if (!fields!.title) back(`${path}#artigo`, "erro", "A peça precisa de um título.");
+  let msg = "Versão guardada.";
+  await attempt(`${path}#artigo`, async () => {
+    try {
+      const before = await withCtx(ctx, (tx) => getStory(tx, id));
+      const saved = await saveVersion(ctx, id, fields!, base || before?.version || 0, str(form, "note", 300));
+      if (before && saved.version === before.version) msg = "Não havia alterações para guardar.";
+      else if (before && ["approved", "scheduled"].includes(before.state) && saved.state === "in_review") msg = "Versão guardada. A peça voltou a revisão: o texto aprovado era outro.";
+    } catch (e) {
+      if (e instanceof ConflictError) await saveDraft(ctx, id, { rev: null, baseVersion: base, fields: fields!, force: true }).catch(() => undefined);
+      throw e;
+    }
   });
   revalidatePath(path);
-  back(`${path}#artigo`, "ok", "Texto guardado. Ficou registada uma nova versão.");
+  back(`${path}#artigo`, "ok", msg);
+}
+
+export async function restoreVersionAction(form: FormData) {
+  const { ctx } = await requireUser();
+  const id = str(form, "id", 40);
+  const path = `/redacao/pecas/${id}/versoes`;
+  if (!isUuid(id)) back("/redacao/pautas", "erro", "Peça inválida.");
+  const version = int(form, "version", 1, 1_000_000, 0), current = int(form, "current", 1, 1_000_000, 0);
+  let made = 0;
+  await attempt(path, async () => { made = (await restoreVersion(ctx, id, version, current)).version; });
+  revalidatePath(`/redacao/pecas/${id}`);
+  back(`/redacao/pecas/${id}#artigo`, "ok", `Versão ${version} restaurada como versão ${made}. O histórico ficou intacto.`);
+}
+
+export async function discardDraftAction(form: FormData) {
+  const { ctx } = await requireUser();
+  const id = str(form, "id", 40);
+  if (!isUuid(id)) back("/redacao/pautas", "erro", "Peça inválida.");
+  await attempt(`/redacao/pecas/${id}`, () => discardDraft(ctx, id));
+  revalidatePath(`/redacao/pecas/${id}`);
+  back(`/redacao/pecas/${id}#artigo`, "ok", "Rascunho descartado.");
 }
 
 export async function transitionAction(form: FormData) {

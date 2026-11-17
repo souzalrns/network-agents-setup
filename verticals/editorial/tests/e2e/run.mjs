@@ -106,7 +106,7 @@ try {
   await page.fill("#a-body", `## O que encontrámos\n\nSegundo a associação de estudantes, um quarto custa em média 350 euros por mês.\n\n> «Pago mais de quarto do que de propinas», disse uma estudante.\n\nTexto de teste ${tag}.`);
   await page.fill("#a-note", "primeira versão");
   await act(page.locator("#artigo button[type=submit]"));
-  check("a jornalista guarda o texto e fica uma versão", (await flash()).includes("nova versão"));
+  check("a jornalista guarda o texto e fica uma versão", (await flash()).includes("Versão guardada"), await flash());
 
   // o agente de edição revê sem mexer no texto
   const before = await page.inputValue("#a-body");
