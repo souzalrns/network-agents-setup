@@ -1,0 +1,24 @@
+{
+  "publication": {
+    "slug": "gazeta-exemplo",
+    "name": "Gazeta Exemplo",
+    "tagline": "Uma publicação de demonstração",
+    "description": "Publicação de exemplo para experimentar a redação. Substitui este ficheiro pela configuração da tua publicação.",
+    "primary_color": "#1F2A44",
+    "secondary_color": "#E8B931",
+    "language": "pt-PT",
+    "agent_names": {},
+    "public_launch": false
+  },
+  "sections": [
+    { "slug": "local", "name": "Local", "color": "#B4232E" },
+    { "slug": "sociedade", "name": "Sociedade", "color": "#2F5FB3" }
+  ],
+  "pages": [
+    { "slug": "sobre", "title": "Sobre", "body": "Escreve aqui quem somos.", "published": true },
+    { "slug": "politica-de-correcoes", "title": "Política de correções", "body": "Quando erramos, corrigimos e dizemos o que mudou.", "published": true }
+  ],
+  "stories": [
+    { "title": "Quanto custa viver na cidade?", "section": "local", "angle": "Pauta de exemplo.", "questions": ["Quanto gasta num mês?"] }
+  ]
+}
