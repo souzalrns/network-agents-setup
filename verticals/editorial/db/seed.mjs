@@ -5,6 +5,7 @@ import { randomBytes, scrypt as scryptCb } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
 import postgres from "postgres";
+import { validateSeed } from "./validate-seed.mjs";
 
 const scrypt = promisify(scryptCb);
 const need = (k) => {
@@ -14,6 +15,12 @@ const need = (k) => {
 };
 const url = need("EDITORIAL_MIGRATION_URL");
 const seed = JSON.parse(readFileSync(need("EDITORIAL_SEED_FILE"), "utf8"));
+{
+  const { errors, warnings } = validateSeed(seed);
+  for (const w of warnings) console.log(`aviso: ${w}`);
+  if (errors.length) { for (const e of errors) console.error(`ERRO: ${e}`); console.error("Sementeira cancelada: corrige o ficheiro."); process.exit(1); }
+  console.log("Sementeira inicial: numa publicação existente só se actualizam nome, slogan, descrição, cores e nomes dos agentes.");
+}
 const adminEmail = process.env.EDITORIAL_ADMIN_EMAIL;
 const adminPassword = process.env.EDITORIAL_ADMIN_PASSWORD;
 const adminName = process.env.EDITORIAL_ADMIN_NAME ?? "Direção";

@@ -18,6 +18,7 @@ export default async function NewsroomLayout({ children }: { children: React.Rea
     { href: "/redacao/radar", label: "Radar" },
     { href: "/redacao/fontes", label: "Fontes" },
     ...(isDesk(user.role) ? [{ href: "/redacao/distribuicao", label: "Distribuição" }] : []),
+    { href: "/redacao/atividade", label: "Atividade" },
     { href: "/redacao/equipa", label: "Equipa" },
     ...(isLead(user.role) ? [{ href: "/redacao/configuracao", label: "Configuração" }] : []),
   ];

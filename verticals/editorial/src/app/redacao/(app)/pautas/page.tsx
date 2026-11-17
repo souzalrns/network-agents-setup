@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Empty, Flash, STATE_COLOR, StoryLine } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { withCtx } from "@/lib/db";
-import { listSections, listStoriesTx, type StoryRow } from "@/lib/queries";
+import { countStoriesTx, listSections, listStoriesTx, listTeam, type StoryFilter, type StoryRow } from "@/lib/queries";
 import { DESK_STATES, isState, PITCH_STATES, STATE_LABEL, STATES, type State, WORK_STATES } from "@/lib/workflow";
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : "");
+const PAGE = 25;
 
 const COLUMNS: { title: string; states: State[] }[] = [
   { title: "Banco de ideias", states: ["idea"] },
@@ -21,15 +22,22 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<S
   const sp = await searchParams;
   const vista = one(sp.vista) === "quadro" ? "quadro" : "lista";
   const estado = one(sp.estado);
-  const filtro = { state: (isState(estado) ? estado : estado === "todas" ? "" : "active") as State | "active" | "",
-    section: one(sp.editoria) || undefined, q: one(sp.q) || undefined, mine: one(sp.minhas) === "1" ? user.userId : undefined };
-  const { rows, sections } = await withCtx(ctx, async (tx) => ({
-    rows: await listStoriesTx(tx, vista === "quadro" ? { ...filtro, state: estado === "todas" ? "" : filtro.state === "active" ? "" : filtro.state, limit: 400 } : filtro),
-    sections: await listSections(tx),
-  }));
+  const pessoa = one(sp.pessoa), prio = Number(one(sp.prioridade)), ordem = one(sp.ordem);
+  const page = Math.max(1, Math.min(1000, Number(one(sp.pagina)) || 1));
+  const filtro: StoryFilter = { state: (isState(estado) ? estado : estado === "todas" ? "" : "active") as State | "active" | "",
+    section: one(sp.editoria) || undefined, q: one(sp.q) || undefined, mine: one(sp.minhas) === "1" ? user.userId : undefined,
+    assignee: pessoa === "none" || /^[0-9a-f-]{36}$/i.test(pessoa) ? pessoa : undefined, priority: [1, 2, 3].includes(prio) ? prio : undefined,
+    sort: ordem === "recentes" || ordem === "prazo" ? ordem : "prioridade" };
+  const { rows, sections, total, team } = await withCtx(ctx, async (tx) => {
+    const board = vista === "quadro";
+    const f = board ? { ...filtro, state: estado === "todas" ? "" : filtro.state === "active" ? "" : filtro.state, limit: 400 }
+      : { ...filtro, limit: PAGE, offset: (page - 1) * PAGE };
+    return { rows: await listStoriesTx(tx, f), sections: await listSections(tx), total: board ? 0 : await countStoriesTx(tx, filtro), team: await listTeam(tx) };
+  });
+  const pages = Math.max(1, Math.ceil(total / PAGE));
   const qs = (patch: Record<string, string>) => {
     const p = new URLSearchParams();
-    for (const [k, v] of Object.entries({ vista, estado, editoria: one(sp.editoria), q: one(sp.q), minhas: one(sp.minhas), ...patch })) if (v) p.set(k, v);
+    for (const [k, v] of Object.entries({ vista, estado, editoria: one(sp.editoria), q: one(sp.q), minhas: one(sp.minhas), pessoa, prioridade: one(sp.prioridade), ordem, pagina: "", ...patch })) if (v) p.set(k, v);
     return `/redacao/pautas?${p}`;
   };
   return (
@@ -55,14 +63,31 @@ export default async function Pautas({ searchParams }: { searchParams: Promise<S
           <option value="">Todas as editorias</option>
           {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
+        <select name="pessoa" defaultValue={pessoa} aria-label="Pessoa">
+          <option value="">Toda a equipa</option><option value="none">Sem responsável</option>
+          {team.filter((m) => m.role !== "reviewer").map((m) => <option key={m.user_id} value={m.user_id}>{m.name}</option>)}
+        </select>
+        <select name="prioridade" defaultValue={one(sp.prioridade)} aria-label="Prioridade">
+          <option value="">Qualquer prioridade</option><option value="1">Alta</option><option value="2">Normal</option><option value="3">Baixa</option>
+        </select>
+        <select name="ordem" defaultValue={ordem || "prioridade"} aria-label="Ordenar">
+          <option value="prioridade">Por prioridade</option><option value="prazo">Por prazo</option><option value="recentes">Mexidas há menos tempo</option>
+        </select>
         <label className="check"><input type="checkbox" name="minhas" value="1" defaultChecked={one(sp.minhas) === "1"} /> Só as minhas</label>
         <button className="btn" type="submit">Filtrar</button>
       </form>
 
       {vista === "lista" ? (
         <section className="card">
-          <p className="label" style={{ marginTop: 0 }}>{rows.length} {rows.length === 1 ? "peça" : "peças"}</p>
+          <p className="label" style={{ marginTop: 0 }}>{total} {total === 1 ? "peça" : "peças"}{pages > 1 && ` · página ${page} de ${pages}`}</p>
           <div className="list">{rows.length ? rows.map((s) => <StoryLine key={s.id} s={s} />) : <Empty>Nenhuma peça com estes filtros.</Empty>}</div>
+          {pages > 1 && (
+            <nav className="pager" aria-label="Páginas">
+              {page > 1 ? <Link className="btn small" href={qs({ pagina: String(page - 1) })} rel="prev">← Anterior</Link> : <span />}
+              <span className="muted">{(page - 1) * PAGE + 1}–{Math.min(total, page * PAGE)} de {total}</span>
+              {page < pages ? <Link className="btn small" href={qs({ pagina: String(page + 1) })} rel="next">Seguinte →</Link> : <span />}
+            </nav>
+          )}
         </section>
       ) : (
         <div className="board">

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "node db/migrate.mjs",
     "db:seed": "node db/seed.mjs",
+    "db:validate": "node db/validate-seed.mjs config/seed.example.json",
     "test": "vitest run",
     "test:e2e": "node tests/e2e/all.mjs"
   },

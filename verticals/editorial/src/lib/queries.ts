@@ -18,27 +18,69 @@ const FROM = `from stories s
   left join memberships ma on ma.user_id = s.assignee_id and ma.publication_id = s.publication_id
   left join memberships mu on mu.user_id = s.author_id and mu.publication_id = s.publication_id`;
 
-export interface StoryFilter { state?: State | "active" | ""; section?: string; q?: string; mine?: string; limit?: number }
+export interface StoryFilter {
+  state?: State | "active" | ""; section?: string; q?: string; mine?: string; limit?: number;
+  assignee?: string; priority?: number; offset?: number; sort?: "prioridade" | "recentes" | "prazo";
+}
 
 export async function listStories(ctx: Ctx, f: StoryFilter = {}): Promise<StoryRow[]> {
   return withCtx(ctx, (tx) => listStoriesTx(tx, f));
 }
 
-export async function listStoriesTx(tx: Tx, f: StoryFilter = {}): Promise<StoryRow[]> {
+function storyWhere(f: StoryFilter): { sql: string; v: unknown[] } {
   const where: string[] = [];
   const v: unknown[] = [];
   if (f.state === "active") where.push(`s.state not in ('published', 'archived')`);
   else if (f.state) { v.push(f.state); where.push(`s.state = $${v.length}`); }
   if (f.section) { v.push(f.section); where.push(`s.section_id = $${v.length}`); }
   if (f.mine) { v.push(f.mine); where.push(`(s.assignee_id = $${v.length} or s.author_id = $${v.length})`); }
+  if (f.assignee === "none") where.push(`s.assignee_id is null`);
+  else if (f.assignee) { v.push(f.assignee); where.push(`(s.assignee_id = $${v.length} or s.author_id = $${v.length})`); }
+  if (f.priority) { v.push(f.priority); where.push(`s.priority = $${v.length}`); }
   if (f.q?.trim()) {
     v.push(f.q.trim());
     where.push(`(s.search @@ websearch_to_tsquery('portuguese', $${v.length}) or s.title ilike '%' || $${v.length} || '%')`);
   }
+  return { sql: where.length ? `where ${where.join(" and ")}` : "", v };
+}
+
+const ORDER: Record<NonNullable<StoryFilter["sort"]>, string> = {
+  prioridade: "s.priority, coalesce(s.due_date, '9999-12-31'), s.updated_at desc",
+  recentes: "s.updated_at desc",
+  prazo: "coalesce(s.due_date, '9999-12-31'), s.priority, s.updated_at desc",
+};
+
+export async function listStoriesTx(tx: Tx, f: StoryFilter = {}): Promise<StoryRow[]> {
+  const { sql, v } = storyWhere(f);
   v.push(Math.min(f.limit ?? 200, 500));
+  v.push(Math.max(0, f.offset ?? 0));
   return tx.unsafe<StoryRow[]>(
-    `select ${ROW} ${FROM} ${where.length ? `where ${where.join(" and ")}` : ""}
-     order by s.priority, coalesce(s.due_date, '9999-12-31'), s.updated_at desc limit $${v.length}`, v as never[]);
+    `select ${ROW} ${FROM} ${sql} order by ${ORDER[f.sort ?? "prioridade"]} limit $${v.length - 1} offset $${v.length}`, v as never[]);
+}
+
+export async function countStoriesTx(tx: Tx, f: StoryFilter = {}): Promise<number> {
+  const { sql, v } = storyWhere(f);
+  const [r] = await tx.unsafe<{ n: number }[]>(`select count(*)::int as n ${FROM} ${sql}`, v as never[]);
+  return r?.n ?? 0;
+}
+
+export interface ActivityRow {
+  id: string; type: string; from_state: State | null; to_state: State | null; actor_kind: string; actor_label: string; note: string;
+  at: Date; story_id: string; title: string; payload: Record<string, unknown>;
+}
+export interface ActivityFilter { type?: string; actor?: string; kind?: string; story?: string; before?: number; limit?: number }
+
+/** Actividade da redacção: cada mudança de estado, edição de publicada, atribuição; com filtros e paginação por cursor. */
+export async function listActivity(tx: Tx, f: ActivityFilter = {}): Promise<ActivityRow[]> {
+  const limit = Math.min(f.limit ?? 50, 200);
+  return tx<ActivityRow[]>`select e.id, e.type, e.from_state, e.to_state, e.actor_kind, e.actor_label, e.note, e.at, e.story_id, s.title, e.payload
+    from story_events e join stories s on s.id = e.story_id
+    where (${f.type ?? ""} = '' or e.type = ${f.type ?? ""})
+      and (${f.kind ?? ""} = '' or e.actor_kind = ${f.kind ?? ""})
+      and (${f.actor ?? ""} = '' or e.actor_user_id::text = ${f.actor ?? ""})
+      and (${f.story ?? ""} = '' or e.story_id::text = ${f.story ?? ""})
+      and (${f.before ?? 0} = 0 or e.id < ${f.before ?? 0})
+    order by e.id desc limit ${limit + 1}`;
 }
 
 export interface Member { user_id: string; name: string; email: string; role: Role; author_slug: string; bio: string; public_profile: boolean }
