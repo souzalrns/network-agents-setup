@@ -4,9 +4,10 @@
 // 2. deixa o papel editorial_app entrar, com a palavra-passe derivada (db/app-url.mjs);
 // 3. semeia a publicação a partir de EDITORIAL_SEED_JSON (o conteúdo), EDITORIAL_SEED_URL (https) ou EDITORIAL_SEED_FILE,
 //    validado antes (db/validate-seed.mjs), com a conta de administração de EDITORIAL_ADMIN_EMAIL/PASSWORD.
-// Idempotente: pode correr em todos os builds. Nunca imprime ligações nem palavras-passe.
+// Idempotente: pode correr em todos os builds; a sementeira só corre se a publicação ainda não existir.
+// Nunca imprime ligações nem palavras-passe.
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,5 +57,23 @@ if (seedText) {
   seedFile = join(mkdtempSync(join(tmpdir(), "seed-")), "seed.json");
   writeFileSync(seedFile, seedText);
 }
+// A sementeira é INICIAL: depois de a publicação existir, quem manda é a redacção (Configuração, Editorias).
+// Por isso, num build normal só se semeia uma publicação que ainda não existe; EDITORIAL_SEED_FORCE=1 obriga
+// (por exemplo, para acrescentar pautas novas do ficheiro, que nunca substituem as existentes).
+if (seedFile && process.env.EDITORIAL_SEED_FORCE !== "1") {
+  const slug = JSON.parse(readFileSync(seedFile, "utf8"))?.publication?.slug;
+  const check = postgres(owner, { max: 1, onnotice: () => {} });
+  try {
+    const [hit] = await check`select 1 from editorial.publications where slug = ${String(slug ?? "")}`;
+    if (hit) {
+      console.log(`[preparação] a publicação «${slug}» já existe: a sementeira não volta a correr (EDITORIAL_SEED_FORCE=1 para obrigar).`);
+      seedFile = undefined;
+    }
+  } finally {
+    await check.end();
+  }
+}
 if (seedFile) run("seed.mjs", { EDITORIAL_MIGRATION_URL: owner, EDITORIAL_SEED_FILE: seedFile });
-else console.log("[preparação] sem EDITORIAL_SEED_JSON nem EDITORIAL_SEED_FILE: sem sementeira.");
+else if (!process.env.EDITORIAL_SEED_JSON && !process.env.EDITORIAL_SEED_URL && !process.env.EDITORIAL_SEED_FILE) {
+  console.log("[preparação] sem EDITORIAL_SEED_JSON, EDITORIAL_SEED_URL nem EDITORIAL_SEED_FILE: sem sementeira.");
+}

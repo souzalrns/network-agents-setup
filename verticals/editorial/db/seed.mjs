@@ -61,9 +61,9 @@ try {
     for (const [i, s] of (seed.sections ?? []).entries()) {
       const [row] = await tx`insert into sections (publication_id, slug, name, description, color, position)
         values (${pid}, ${s.slug}, ${s.name}, ${s.description ?? ""}, ${s.color ?? "#7A8480"}, ${i + 1})
-        on conflict (publication_id, slug) do update set name = excluded.name, color = excluded.color, description = excluded.description
-        returning id`;
-      secIds[s.slug] = row.id;
+        on conflict (publication_id, slug) do nothing returning id`;
+      // editoria que já existe: fica como a redacção a deixou (a sementeira é só inicial)
+      secIds[s.slug] = row?.id ?? (await tx`select id from sections where publication_id = ${pid} and slug = ${s.slug}`)[0].id;
     }
     for (const pg of seed.pages ?? []) {
       await tx`insert into pages (publication_id, slug, title, body, published)

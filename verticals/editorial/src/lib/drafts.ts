@@ -96,8 +96,36 @@ export async function saveDraft(ctx: Ctx, storyId: string, input: { rev: number 
   });
 }
 
+/** Descarta o rascunho da peça (acção explícita de quem o vê). */
 export async function discardDraft(ctx: Ctx, storyId: string): Promise<void> {
   await withCtx(ctx, (tx) => tx`delete from story_drafts where story_id = ${storyId}`);
+}
+
+/**
+ * Depois de guardar uma versão, apaga o rascunho SÓ se for desta pessoa. O rascunho de outra pessoa fica:
+ * ela vê o aviso de versão nova e decide (nada se perde por alguém ter guardado entretanto).
+ */
+async function discardOwnDraft(ctx: Ctx, storyId: string): Promise<void> {
+  await withCtx(ctx, (tx) => tx`delete from story_drafts where story_id = ${storyId} and updated_by = ${ctx.userId ?? null}`);
+}
+
+/**
+ * Resgate depois de um conflito ao guardar versão: grava o texto desta pessoa como rascunho, sobre a versão em
+ * que o começou, desde que o rascunho existente (se houver) seja dela. Nunca apaga o rascunho de outra pessoa:
+ * nesse caso devolve false e o texto fica na cópia do browser (o editor grava-a antes de enviar).
+ */
+export async function rescueDraft(ctx: Ctx, storyId: string, baseVersion: number, fields: ArticleFields): Promise<boolean> {
+  return withCtx(ctx, async (tx) => {
+    const [cur] = await tx<{ updated_by: string | null }[]>`select updated_by from story_drafts where story_id = ${storyId} for update`;
+    if (cur && cur.updated_by !== ctx.userId) return false;
+    const lease = new Date(Date.now() + LEASE_SECONDS * 1000);
+    const rows = cur
+      ? await tx`update story_drafts set fields = ${tx.json(fields as never)}, base_version = ${baseVersion},
+          updated_by = ${ctx.userId!}, lease_user = ${ctx.userId!}, lease_until = ${lease} where story_id = ${storyId} returning rev`
+      : await tx`insert into story_drafts (story_id, publication_id, base_version, fields, updated_by, lease_user, lease_until)
+          values (${storyId}, ${ctx.publicationId}, ${baseVersion}, ${tx.json(fields as never)}, ${ctx.userId!}, ${ctx.userId!}, ${lease}) returning rev`;
+    return rows.length > 0;
+  });
 }
 
 /** Diferença entre o que está guardado e o que vem: só os campos que mudam (para não criar versões vazias). */
@@ -118,12 +146,12 @@ export async function saveVersion(ctx: Ctx, storyId: string, fields: ArticleFiel
   const current = await withCtx(ctx, (tx) => getStory(tx, storyId));
   if (!current) throw new EditorialError("Não encontrei a peça.");
   if (current.version !== expectedVersion) {
-    throw new ConflictError(`Outra pessoa guardou a versão ${current.version} enquanto escrevias (começaste na ${expectedVersion}). O teu texto ficou no rascunho: compara e junta antes de guardar.`);
+    throw new ConflictError(`Outra pessoa guardou a versão ${current.version} enquanto escrevias (começaste na ${expectedVersion}).`);
   }
   const patch = changedFields(articleOf(current), fields);
-  if (!Object.keys(patch).length) { await discardDraft(ctx, storyId); return current; }
+  if (!Object.keys(patch).length) { await discardOwnDraft(ctx, storyId); return current; }
   const saved = await updateStory(ctx, storyId, patch, note, expectedVersion);
-  await discardDraft(ctx, storyId);
+  await discardOwnDraft(ctx, storyId);
   return saved;
 }
 

@@ -26,7 +26,16 @@ interface Props {
 }
 
 type Status = { kind: "idle" | "saving" | "saved" | "offline" | "conflict" | "error"; text: string };
-const same = (a: Fields, b: Fields) => JSON.stringify(a) === JSON.stringify(b);
+/** Como o servidor normaliza (parseArticle): sem isto, «igual» falhava por espaços, maiúsculas nas etiquetas ou slug vazio. */
+const norm = (f: Fields) => ({
+  ...f, title: f.title.trim(), subtitle: f.subtitle.trim(), summary: f.summary.trim(), slug: f.slug?.trim() || null,
+  hero_image_url: f.hero_image_url?.trim() || null, hero_caption: f.hero_caption.trim(), hero_credit: f.hero_credit.trim(),
+  seo_title: f.seo_title.trim(), meta_description: f.meta_description.trim(),
+  tags: f.tags.map((t) => t.trim().toLowerCase()).filter(Boolean),
+});
+const same = (a: Fields, b: Fields) => JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+// os browsers recusam pedidos keepalive com corpo acima de 64 KB: acima disso fica a cópia local
+const KEEPALIVE_MAX = 60_000;
 const hhmm = (d: string | Date) => new Date(d).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Lisbon" });
 const store = {
   get(k: string) { try { return JSON.parse(localStorage.getItem(k) ?? "null"); } catch { return null; } },
@@ -63,14 +72,16 @@ export function ArticleEditor({ storyId, version, state, editable, me, saved, dr
     setLocalBuffer(b);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const send = useCallback(async (force = false, keepalive = false) => {
+  const send = useCallback(async (force = false, leaving = false) => {
     const { fields: f, rev: r, base: b, server: srv } = live.current;
     if (!editable || (same(f, srv) && !force)) return;
     setStatus({ kind: "saving", text: "A guardar no servidor…" });
+    const body = JSON.stringify({ rev: r, baseVersion: b, fields: f, force });
     try {
       const res = await fetch(`/redacao/rascunho/${storyId}`, {
-        method: "POST", headers: { "content-type": "application/json" }, keepalive,
-        body: JSON.stringify({ rev: r, baseVersion: b, fields: f, force }),
+        method: "POST", headers: { "content-type": "application/json" },
+        keepalive: leaving && new TextEncoder().encode(body).length < KEEPALIVE_MAX, // bytes, não caracteres
+        body,
       });
       const j = await res.json().catch(() => ({}));
       if (res.status === 200) {
@@ -207,7 +218,11 @@ export function ArticleEditor({ storyId, version, state, editable, me, saved, dr
         </div>
       )}
 
-      <form action={action} className="stack" onSubmit={() => { clearTimeout(timer.current); }}>
+      <form action={action} className="stack" onSubmit={() => {
+        clearTimeout(timer.current);
+        // cópia local antes de enviar: se a gravação for recusada (versão nova de outra pessoa), o texto recupera-se
+        store.set(key, { fields: live.current.fields, at: new Date().toISOString(), base: live.current.base });
+      }}>
         <input type="hidden" name="id" value={storyId} />
         <input type="hidden" name="base_version" value={base} />
         <input type="hidden" name="tags" value={fields.tags.join(", ")} />

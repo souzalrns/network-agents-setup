@@ -22,6 +22,15 @@ describe("ligação da aplicação derivada", () => {
     expect(appDatabaseUrl({})).toBeUndefined();
   });
 
+  it("com EDITORIAL_MIGRATION_URL, o build e a aplicação derivam do MESMO dono", () => {
+    const migration = "postgres://outro:outra-senha@direto.neon.invalid/neondb";
+    const env = { EDITORIAL_MIGRATION_URL: migration, DATABASE_URL: pooled, DATABASE_URL_UNPOOLED: owner };
+    expect(ownerDatabaseUrl(env)).toBe(migration);
+    expect(new URL(appDatabaseUrl(env)).password).toBe(derivedAppPassword(migration));
+    // só com a ligação de migração, a aplicação também consegue ligar (antes falhava com «Falta EDITORIAL_DATABASE_URL»)
+    expect(new URL(appDatabaseUrl({ EDITORIAL_MIGRATION_URL: migration })).username).toBe("editorial_app");
+  });
+
   it("a mesma ligação do dono dá sempre a mesma palavra-passe (o build e a aplicação calculam igual)", () => {
     expect(derivedAppPassword(owner)).toBe(derivedAppPassword(owner));
     expect(derivedAppPassword(owner)).not.toBe(derivedAppPassword(owner.replace("segredo", "outro")));

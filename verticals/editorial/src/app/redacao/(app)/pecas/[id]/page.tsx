@@ -44,7 +44,9 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
   const section = sections.find((x) => x.id === s.section_id);
   const nameOf = (uid: string | null) => team.find((m) => m.user_id === uid)?.name ?? null;
   const fourEyes = pub.settings?.require_second_reviewer !== false;
-  const blockers = d.claims.filter((c) => c.in_article && (c.kind === "unconfirmed" || (c.kind === "fact" && c.verification !== "verified")));
+  // a mesma regra da base de dados (story_claims_block): não confirmadas, factos por verificar e tudo o que foi contestado
+  const blockers = d.claims.filter((c) => c.in_article && (c.kind === "unconfirmed" || (c.kind === "fact" && c.verification !== "verified")
+    || ["disputed", "unsupported"].includes(c.verification)));
   const linked = new Set(d.sources.map((x) => x.id));
   const showArticle = !["idea", "pitch_proposed"].includes(s.state) || s.body.length > 0;
 
@@ -99,6 +101,10 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
                 <label className="field"><span>Ângulo de investigação</span><textarea id="p-angle" name="angle" defaultValue={s.angle} /></label>
                 <label className="field"><span>A confirmar antes de avançar</span><textarea id="p-confirm" name="to_confirm" defaultValue={s.to_confirm} /></label>
                 <label className="field"><span>Perguntas para entrevista</span><textarea id="p-questions" name="interview_questions" defaultValue={s.interview_questions.join("\n")} /><small>Uma por linha.</small></label>
+                {editable && s.state === "published" && (
+                  <label className="field"><span>Nota da alteração (obrigatória numa peça publicada)</span>
+                    <input id="p-note" name="note" required maxLength={300} placeholder="Ex.: mudou de editoria" /></label>
+                )}
                 {editable && <div><button className="btn" type="submit">Guardar pauta</button></div>}
               </fieldset>
             </form>
@@ -119,7 +125,7 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
 
           <section className="card" id="verificacao">
             <h2>Verificação <span className="label">{d.claims.length} afirmações</span></h2>
-            {blockers.length > 0 && <p className="flash erro" style={{ marginTop: 0 }}>{blockers.length} {blockers.length === 1 ? "afirmação impede" : "afirmações impedem"} a aprovação: factos por verificar ou informação não confirmada no artigo.</p>}
+            {blockers.length > 0 && <p className="flash erro" style={{ marginTop: 0 }}>{blockers.length} {blockers.length === 1 ? "afirmação impede" : "afirmações impedem"} a aprovação: factos por verificar, informação não confirmada ou afirmações contestadas no artigo.</p>}
             <div className="list">{d.claims.length ? d.claims.map((c) => {
               const own = fourEyes && (c.created_by === user.userId || s.author_id === user.userId);
               const canVerify = (canWrite(user.role) || user.role === "reviewer") && !own;
@@ -276,7 +282,7 @@ export default async function StoryPage({ params, searchParams }: { params: Prom
                     {([
                       ["approved", "Aprovar", isDesk(user.role) && x.state !== "approved" && x.state !== "handed_off", "primary"],
                       ["in_review", "Pedir revisão", x.state === "draft", ""],
-                      ["discarded", "Descartar", isDesk(user.role), "danger"],
+                      ["discarded", "Descartar", isDesk(user.role) && !["handed_off", "published"].includes(x.state), "danger"],
                     ] as const).filter(([, , show]) => show).map(([st, label, , cls]) => (
                       <form key={st} action={distributionStateAction}>
                         <input type="hidden" name="id" value={s.id} /><input type="hidden" name="item" value={x.id} />

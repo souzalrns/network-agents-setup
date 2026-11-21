@@ -10,7 +10,7 @@ import { dbMessage, withCtx } from "@/lib/db";
 import { int, isDate, isHttpUrl, isUuid, lines, opt, str } from "@/lib/forms";
 import { fromLocalInput } from "@/lib/format";
 import { hashPassword } from "@/lib/password";
-import { ConflictError, discardDraft, parseArticle, restoreVersion, saveDraft, saveVersion } from "@/lib/drafts";
+import { ConflictError, discardDraft, parseArticle, rescueDraft, restoreVersion, saveVersion } from "@/lib/drafts";
 import { createStory, EditorialError, getStory, transition, updateStory } from "@/lib/stories";
 import { slugify } from "@/lib/text";
 import { isState, STATE_LABEL, type State } from "@/lib/workflow";
@@ -98,7 +98,7 @@ export async function updatePitchAction(form: FormData) {
       priority: int(form, "priority", 1, 3, 2), section_id: section && isUuid(section) ? section : null,
       due_date: isDate(due) ? due : null,
       ...(isDesk(ctx.role) ? { assignee_id: assignee && isUuid(assignee) ? assignee : null } : {}),
-    });
+    }, str(form, "note", 300)); // numa peça publicada, mudar título ou editoria exige nota (regra da base de dados)
   });
   revalidatePath(path);
   back(`${path}#pauta`, "ok", "Pauta guardada.");
@@ -113,23 +113,31 @@ export async function updateArticleAction(form: FormData) {
   const id = str(form, "id", 40);
   if (!isUuid(id)) back("/redacao/pautas", "erro", "Peça inválida.");
   const path = `/redacao/pecas/${id}`;
+  // sem a versão de base não se sabe se alguém guardou entretanto: recusa em vez de gravar por cima
   const base = int(form, "base_version", 1, 1_000_000, 0);
+  if (!base) back(`${path}#artigo`, "erro", "A página está desactualizada: recarrega-a antes de guardar (o teu texto continua no rascunho).");
   let fields: ReturnType<typeof parseArticle>;
   try { fields = parseArticle((k) => form.get(k)); } catch (e) { back(`${path}#artigo`, "erro", failMessage(e)); }
   if (!fields!.title) back(`${path}#artigo`, "erro", "A peça precisa de um título.");
   let msg = "Versão guardada.";
+  let conflict = "";
   await attempt(`${path}#artigo`, async () => {
     try {
       const before = await withCtx(ctx, (tx) => getStory(tx, id));
-      const saved = await saveVersion(ctx, id, fields!, base || before?.version || 0, str(form, "note", 300));
+      const saved = await saveVersion(ctx, id, fields!, base, str(form, "note", 300));
       if (before && saved.version === before.version) msg = "Não havia alterações para guardar.";
       else if (before && ["approved", "scheduled"].includes(before.state) && saved.state === "in_review") msg = "Versão guardada. A peça voltou a revisão: o texto aprovado era outro.";
     } catch (e) {
-      if (e instanceof ConflictError) await saveDraft(ctx, id, { rev: null, baseVersion: base, fields: fields!, force: true }).catch(() => undefined);
-      throw e;
+      if (!(e instanceof ConflictError)) throw e;
+      // o texto desta pessoa fica guardado como rascunho, se o rascunho da peça for dela (ou não houver nenhum)
+      const kept = await rescueDraft(ctx, id, base, fields!).catch(() => false);
+      conflict = `${e.message} ${kept
+        ? "O teu texto ficou guardado como rascunho: compara as versões e junta antes de guardar."
+        : "Há um rascunho de outra pessoa nesta peça; o teu texto ficou na cópia deste browser: recupera-o no aviso do editor."}`;
     }
   });
   revalidatePath(path);
+  if (conflict) back(`${path}#artigo`, "erro", conflict);
   back(`${path}#artigo`, "ok", msg);
 }
 

@@ -226,3 +226,27 @@ describe("imagens: crédito obrigatório para aprovar", () => {
     expect((await transition(N.as("editor"), s.id, "approved")).state).toBe("approved");
   });
 });
+
+describe("revisão de código: distribuição e peças publicadas", () => {
+  it("o que seguiu para o agendador não volta a rascunho nem se reenvia; só passa a publicado", async () => {
+    const s = await aprovada("Enviado não volta");
+    const [d] = await as("editor", (tx) => tx`insert into distribution_items (publication_id, story_id, channel, content, prepared_kind)
+      values (${N.publicationId}, ${s.id}, 'instagram', ${tx.json({ text: "aprovado" })}, 'human') returning id`);
+    await as("editor", (tx) => tx`update distribution_items set state = 'approved' where id = ${d!.id}`);
+    await as("editor", (tx) => tx`update distribution_items set state = 'handed_off' where id = ${d!.id}`);
+    for (const st of ["draft", "in_review", "approved", "discarded"]) {
+      await expect(as("editor", (tx) => tx`update distribution_items set state = ${st} where id = ${d!.id}`), st).rejects.toThrow(/não volta atrás/);
+    }
+    await as("editor", (tx) => tx`update distribution_items set state = 'published' where id = ${d!.id}`);
+    await expect(as("editor", (tx) => tx`update distribution_items set state = 'draft' where id = ${d!.id}`)).rejects.toThrow(/não volta atrás/);
+  });
+
+  it("mudar a editoria de uma peça publicada pela pauta exige nota e fica registado", async () => {
+    const s = await aprovada("Editoria publicada");
+    await transition(N.as("editor"), s.id, "published");
+    const [outra] = await ownerDb()`insert into sections (publication_id, slug, name) values (${N.publicationId}, ${`outra-${s.id.slice(0, 6)}`}, 'Outra') returning id`;
+    await expect(updateStory(N.as("editor"), s.id, { section_id: outra!.id })).rejects.toThrow(/exige uma nota/);
+    const r = await updateStory(N.as("director"), s.id, { section_id: outra!.id }, "Mudou de editoria");
+    expect([r.state, r.section_id]).toEqual(["published", outra!.id]);
+  });
+});

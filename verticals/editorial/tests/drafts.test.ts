@@ -2,7 +2,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { agentCtx } from "@/lib/context";
 import { closeDb, withCtx } from "@/lib/db";
-import { articleOf, compareArticles, discardDraft, getDraft, parseArticle, restoreVersion, saveDraft, saveVersion } from "@/lib/drafts";
+import { articleOf, compareArticles, discardDraft, getDraft, parseArticle, rescueDraft, restoreVersion, saveDraft, saveVersion } from "@/lib/drafts";
 import { createStory, getStory, transition, updateStory } from "@/lib/stories";
 import { closeOwner, type Newsroom, newsroom, ownerDb } from "./helpers/fixture";
 
@@ -112,5 +112,31 @@ describe("versões: comparação e restauro", () => {
     await transition(N.as("editor"), s.id, "approved");
     const r = await restoreVersion(N.as("editor"), s.id, v.version, w.version);
     expect([r.state, r.approved_by, r.body]).toEqual(["in_review", null, "Primeiro texto."]);
+  });
+});
+
+describe("revisão de código: nenhum texto se perde quando outra pessoa guarda", () => {
+  it("guardar uma versão não apaga o rascunho de OUTRA pessoa", async () => {
+    const s = await emRedacao("Rascunho alheio");
+    await saveDraft(N.as("journalist"), s.id, { rev: null, baseVersion: s.version, fields: com(s, { body: "texto da jornalista por guardar" }) });
+    await saveVersion(N.as("editor"), s.id, com(s, { body: "a editora guardou outra coisa" }), s.version);
+    const d = await withCtx(N.as("journalist"), (tx) => getDraft(tx, s.id));
+    expect(d?.fields.body).toBe("texto da jornalista por guardar");
+  });
+
+  it("depois de um conflito, o resgate guarda mesmo o texto (sem rascunho, ou com rascunho próprio)", async () => {
+    const s = await emRedacao("Resgate");
+    await updateStory(N.as("editor"), s.id, { body: "versão nova da editora" }, "", s.version); // a peça avançou
+    expect(await rescueDraft(N.as("journalist"), s.id, s.version, com(s, { body: "texto da jornalista" }))).toBe(true);
+    const d = (await withCtx(N.as("journalist"), (tx) => getDraft(tx, s.id)))!;
+    expect([d.fields.body, d.base_version, d.updated_by]).toEqual(["texto da jornalista", s.version, N.users.journalist!.id]);
+    expect(await rescueDraft(N.as("journalist"), s.id, s.version, com(s, { body: "texto revisto" }))).toBe(true);
+  });
+
+  it("o resgate nunca escreve por cima do rascunho de outra pessoa", async () => {
+    const s = await emRedacao("Resgate alheio");
+    await saveDraft(N.as("editor"), s.id, { rev: null, baseVersion: s.version, fields: com(s, { body: "rascunho da editora" }) });
+    expect(await rescueDraft(N.as("journalist"), s.id, s.version, com(s, { body: "da jornalista" }))).toBe(false);
+    expect((await withCtx(N.as("editor"), (tx) => getDraft(tx, s.id)))!.fields.body).toBe("rascunho da editora");
   });
 });

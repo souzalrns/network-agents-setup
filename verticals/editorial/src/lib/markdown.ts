@@ -39,6 +39,8 @@ export function renderMarkdown(md: string): string {
     allowedClasses: { figure: ["embed"] },
     allowedSchemes: ["http", "https", "mailto"],
     allowedIframeHostnames: ["www.youtube-nocookie.com", "player.vimeo.com"],
+    // sem isto, <iframe src="/redacao"> passava (endereços relativos ao próprio site são aceites por omissão)
+    allowIframeRelativeUrls: false,
     transformTags: {
       a: (tag, attribs) => ({ tagName: tag, attribs: { ...attribs, rel: "noopener noreferrer", ...(attribs.href?.startsWith("http") ? { target: "_blank" } : {}) } }),
       img: (tag, attribs) => ({ tagName: tag, attribs: { ...attribs, loading: "lazy" } }),

@@ -20,20 +20,20 @@ export function appUrlFrom(pooledUrl, ownerUrl) {
   return u.toString();
 }
 
+/** Ligação do dono, para migrações, sementeira e para derivar a palavra-passe do editorial_app. */
+export function ownerDatabaseUrl(env = process.env) {
+  return env.EDITORIAL_MIGRATION_URL ?? env.DATABASE_URL_UNPOOLED ?? env.POSTGRES_URL_NON_POOLING;
+}
+
 /**
  * Ligação da aplicação a partir do ambiente:
  * 1. EDITORIAL_DATABASE_URL, se existir (configuração explícita, como no README);
- * 2. senão, derivada da ligação do dono (DATABASE_URL_UNPOOLED ou POSTGRES_URL_NON_POOLING) e do servidor pooled
- *    (DATABASE_URL ou POSTGRES_URL).
+ * 2. senão, derivada da MESMA ligação do dono que o build usa (ownerDatabaseUrl: assim o build e a aplicação
+ *    calculam sempre a mesma palavra-passe), no servidor pooled (DATABASE_URL ou POSTGRES_URL).
  */
 export function appDatabaseUrl(env = process.env) {
   if (env.EDITORIAL_DATABASE_URL) return env.EDITORIAL_DATABASE_URL;
-  const owner = env.DATABASE_URL_UNPOOLED ?? env.POSTGRES_URL_NON_POOLING ?? env.DATABASE_URL ?? env.POSTGRES_URL;
+  const owner = ownerDatabaseUrl(env) ?? env.DATABASE_URL ?? env.POSTGRES_URL;
   const pooled = env.DATABASE_URL ?? env.POSTGRES_URL ?? owner;
   return owner && pooled ? appUrlFrom(pooled, owner) : undefined;
-}
-
-/** Ligação do dono, para migrações e sementeira. */
-export function ownerDatabaseUrl(env = process.env) {
-  return env.EDITORIAL_MIGRATION_URL ?? env.DATABASE_URL_UNPOOLED ?? env.POSTGRES_URL_NON_POOLING;
 }

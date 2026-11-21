@@ -105,33 +105,47 @@ npm run db:validate      # valida a configuração inicial antes de semear
 | `EDITORIAL_LLM_MODEL`, `EDITORIAL_AGENT_MAX_USD`, `EDITORIAL_AGENT_MAX_CALLS`, `EDITORIAL_AGENT_MAX_OUTPUT_TOKENS` | Modelo e limites por execução (omissão: `gemini-2.5-flash-lite`, 0,05 USD, 3 chamadas, 1024 tokens) |
 | `POSTIZ_API_URL`, `POSTIZ_API_KEY` | Opcional: o Postiz da redação. Sem elas, o envio simula |
 
-## Deployment (Vercel + Postgres)
+## Deployment: Vercel (Hobby) + Neon (Free), a custo zero
 
-1. Criar a base de dados (recomendação P-94: projecto Supabase próprio), correr as migrações e o seed com a ligação
-   do dono, e dar palavra-passe ao papel `editorial_app`.
-2. Criar o projecto Vercel com raiz `verticals/editorial` e as variáveis acima (a `EDITORIAL_DATABASE_URL` aponta
-   para o pooler em modo transacção; o driver já usa `prepare: false`).
-3. Agendar `POST /api/cron/publicar` de 5 em 5 minutos e `POST /api/cron/radar` de 15 em 15, com
-   `Authorization: Bearer $CRON_SECRET` (Vercel Cron ou um agendador externo).
-4. Domínio: preencher `domain` na configuração da publicação; o site passa a responder por esse domínio.
-5. Lançamento: com o registo na ERC feito, ligar «Site lançado» na configuração. Até lá o site mostra um aviso,
-   o `robots.txt` bloqueia tudo e as páginas pedem para não ser indexadas.
+**Porquê Neon** (decisão P-94, com a evidência de 2026-11-17/18): a organização Supabase já tem os 2 projectos
+gratuitos ocupados (`agent-network-memory` e `vianna-gestao`) e o limite é por pessoa, não por organização; um
+terceiro obriga ao plano pago ou a misturar a redacção com a memória dos agentes ou com um cliente. O Neon gratuito
+tem 100 projectos, 1 GB por projecto, desliga-se sozinho sem uso (não há nada para «esquecer ligado») e não cobra
+excessos: sem cartão, o pior caso é a base parar até ao mês seguinte. A integração Neon do Vercel cria as ligações
+no projecto sem passos manuais. Contrapartida: 100 CU-horas por mês por projecto; com tráfego real contínuo, medir e
+decidir entre o plano pago do Neon e o Supabase Pro (as duas funcionam com o mesmo código).
 
-### Vercel com a integração Neon (sem passos manuais na base)
+Passos (testado no projecto `editorial-teste`):
 
-A integração Neon cria `DATABASE_URL` (pooler) e `DATABASE_URL_UNPOOLED` (dono). Com `EDITORIAL_PROVISION=1`, o
-script `vercel-build` corre `db/provision.mjs` antes do `next build`: aplica as migrações em falta, deixa entrar o
-papel `editorial_app` e semeia a publicação a partir de `EDITORIAL_SEED_JSON` (o conteúdo do ficheiro de
-sementeira) ou de `EDITORIAL_SEED_URL` (https, por exemplo o raw do repositório onde vive a marca), com a conta de
-`EDITORIAL_ADMIN_EMAIL`/`EDITORIAL_ADMIN_PASSWORD`. É idempotente.
+1. Projecto Vercel com raiz `verticals/editorial` ligado ao repositório. O `vercel.json` fixa a região `fra1`
+   (perto da base em Frankfurt) e as tarefas diárias.
+2. Separador **Storage → Create → Neon → Free**, região Frankfurt, ligado a Production e Preview. A integração cria
+   `DATABASE_URL` (pooler) e `DATABASE_URL_UNPOOLED` (dono).
+3. Variáveis: `EDITORIAL_PROVISION=1`, `EDITORIAL_DEFAULT_PUBLICATION`, `EDITORIAL_SEED_URL` (ou
+   `EDITORIAL_SEED_JSON`), `EDITORIAL_ADMIN_EMAIL`, `EDITORIAL_ADMIN_PASSWORD` (sensível), `EDITORIAL_ADMIN_SLUG`
+   (opcional) e `CRON_SECRET` (sensível, 24+ caracteres).
+4. Deploy. O script `vercel-build` corre `db/provision.mjs` antes do `next build`: migrações em falta, papel
+   `editorial_app` com palavra-passe derivada da do dono (`db/app-url.mjs`, sem segredo novo) e sementeira **só se a
+   publicação ainda não existir** (depois quem manda é a redacção; `EDITORIAL_SEED_FORCE=1` obriga, por exemplo para
+   acrescentar uma conta de direcção ou pautas novas do ficheiro, que nunca substituem as existentes).
+5. Domínio: preencher `domain` na configuração da publicação.
+6. Lançamento: com o registo na ERC feito, ligar «Site lançado». Até lá o site mostra um aviso, o `robots.txt`
+   bloqueia tudo e as páginas pedem para não ser indexadas.
 
-- A aplicação liga-se como `editorial_app` ao pooler; a palavra-passe é derivada da do dono (`db/app-url.mjs`),
-  por isso não há segredo novo. `EDITORIAL_DATABASE_URL`, se existir, continua a mandar.
-- O dono, num Postgres gerido, não é superutilizador: a migração `0005_owner_policies.sql` dá-lhe uma política
-  própria para as funções SECURITY DEFINER (entrar, sessões, domínio) continuarem a ver os dados; a aplicação não
-  ganha nenhum acesso com isso. Verificado com um Postgres 16 limpo e um dono sem superutilizador (migrações,
-  sementeira, entrada e os quatro testes no browser).
-- No plano Hobby do Vercel, as tarefas agendadas correm no máximo uma vez por dia.
+Detalhes que só aparecem num Postgres gerido (e estão resolvidos):
+
+- O dono não é superutilizador: `0005_owner_policies.sql` dá-lhe uma política própria para as funções SECURITY
+  DEFINER (entrar, sessões, domínio); a aplicação (`editorial_app`) não ganha nenhum acesso.
+- O Neon e os poolers ignoram o `search_path` enviado ao ligar: cada transacção define-o (`withCtx`).
+- Publicação agendada: no Hobby as tarefas correm uma vez por dia, por isso cada visita ao site ou à redacção
+  publica as peças cuja hora chegou (no máximo uma vez por minuto por instância, como «sistema», que só publica o
+  que uma pessoa agendou). A tarefa diária fica como rede de segurança.
+- Protecção do Vercel: o projecto de teste está sem a autenticação do Vercel para a direcção poder entrar (a
+  redacção tem login próprio e o site está em pré-lançamento). Em produção, com domínio próprio, a autenticação do
+  Vercel não se aplica ao domínio; quem guarda a redacção é o login da aplicação.
+
+Outro Postgres: também funciona com `EDITORIAL_MIGRATION_URL` (dono) e `EDITORIAL_DATABASE_URL` (aplicação,
+pooler em modo transacção; o driver usa `prepare: false`), com `db/migrate.mjs` e `db/seed.mjs` à mão.
 
 ## Decisões técnicas tomadas (reversíveis)
 

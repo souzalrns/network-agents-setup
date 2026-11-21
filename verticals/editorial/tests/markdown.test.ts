@@ -13,6 +13,8 @@ describe("dialecto do artigo", () => {
     const h = renderMarkdown("Veja:\n\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n\nFim.");
     expect(h).toContain('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"');
     expect(renderMarkdown('<iframe src="https://mau.invalid/x"></iframe>')).not.toContain("mau.invalid");
+    // nem páginas do próprio site (a redacção dentro de um artigo público)
+    expect(renderMarkdown('<iframe src="/redacao/entrar"></iframe>')).not.toContain("/redacao");
   });
 
   it("continua a retirar scripts, eventos e esquemas perigosos", () => {

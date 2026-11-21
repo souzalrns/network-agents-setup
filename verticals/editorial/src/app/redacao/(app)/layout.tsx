@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NewsroomNav } from "@/components/nav";
 import { requireUser } from "@/lib/auth";
+import { publishDueOpportunistic } from "@/lib/cron";
 import { isDesk, isLead, ROLE_LABEL } from "@/lib/context";
 import { getPublication } from "@/lib/publication";
 import { logoutAction } from "../actions";
@@ -10,7 +11,8 @@ export const metadata: Metadata = { title: "Redação", robots: { index: false, 
 
 export default async function NewsroomLayout({ children }: { children: React.ReactNode }) {
   const { user, ctx } = await requireUser();
-  const pub = await getPublication(ctx);
+  // as peças agendadas cuja hora chegou passam a publicadas também quando alguém usa a redacção
+  const [pub] = await Promise.all([getPublication(ctx), publishDueOpportunistic(ctx.publicationId)]);
   const items = [
     { href: "/redacao", label: "Painel" },
     { href: "/redacao/pautas", label: "Pautas e peças" },

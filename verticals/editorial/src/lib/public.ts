@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import type { Ctx } from "./context";
+import { publishDueOpportunistic } from "./cron";
 import { withCtx } from "./db";
 import { type Publication, publicContext } from "./publication";
 
@@ -19,6 +20,7 @@ export const site = cache(async (): Promise<{ ctx: Ctx; pub: Publication; sectio
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const ctx = await publicContext(host);
   if (!ctx) notFound();
+  await publishDueOpportunistic(ctx.publicationId); // as peças agendadas cuja hora chegou aparecem já nesta visita
   return withCtx(ctx, async (tx) => {
     const [pub] = await tx<Publication[]>`select * from publications where id = ${ctx.publicationId}`;
     const sections = await tx<PublicSection[]>`select id, slug, name, color, description from sections where active order by position, name`;
