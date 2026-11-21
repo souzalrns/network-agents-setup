@@ -73,9 +73,9 @@ try {
   await a.waitForFunction(() => !!document.querySelector(".preview-live h2, .preview-live strong"), null, { timeout: 10_000 });
   check("a pré-visualização ao lado mostra a formatação", (await a.locator(".preview-live strong").count()) > 0);
   await a.locator(".toolbar-pop summary").click();
-  await a.locator(".toolbar-pop input").nth(0).fill("https://exemplo.invalid/foto.jpg");
-  await a.locator(".toolbar-pop input").nth(1).fill("A ponte ao fim da tarde");
-  await a.locator(".toolbar-pop input").nth(2).fill("Ana Silva");
+  await a.locator(".toolbar-pop input").nth(1).fill("https://exemplo.invalid/foto.jpg");
+  await a.locator(".toolbar-pop input").nth(2).fill("A ponte ao fim da tarde");
+  await a.locator(".toolbar-pop input").nth(3).fill("Ana Silva");
   await a.locator(".toolbar-pop button", { hasText: "Inserir figura" }).click();
   check("inserir figura escreve legenda e crédito no dialecto", (await a.inputValue("#a-body")).includes('![A ponte ao fim da tarde](https://exemplo.invalid/foto.jpg "Ana Silva")'));
   await a.waitForFunction(() => !!document.querySelector(".preview-live figcaption"), null, { timeout: 10_000 });

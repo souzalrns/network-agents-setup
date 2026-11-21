@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { NewsletterForm } from "@/components/newsletter-form";
 import { publishedPages, site } from "@/lib/public";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -70,6 +71,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
               {pub.legal?.address && <li>{pub.legal.address}</li>}
             </ul>
           </div>
+          <div><NewsletterForm pubName={pub.name} /></div>
           {social.length > 0 && (
             <div><b>Segue-nos</b>
               <ul style={{ listStyle: "none", padding: 0, margin: "6px 0 0" }}>{social.map(([k, url]) => <li key={k}><a href={url} rel="noopener noreferrer me">{k}</a></li>)}</ul>

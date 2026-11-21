@@ -34,7 +34,10 @@ export function parseArticle(get: (k: string) => unknown): ArticleFields {
   const tags = (Array.isArray(tagsRaw) ? tagsRaw.map(String) : String(tagsRaw ?? "").split(","))
     .map((t) => t.trim().toLowerCase().slice(0, 40)).filter(Boolean).slice(0, 12);
   const hero = s("hero_image_url");
-  if (hero && !isHttpUrl(hero)) throw new EditorialError("O endereço da imagem tem de começar por https://.");
+  // imagem principal: endereço http(s) ou uma imagem da biblioteca de média (/media/<id>)
+  if (hero && !isHttpUrl(hero) && !/^\/media\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(hero)) {
+    throw new EditorialError("A imagem tem de ser um endereço https:// ou uma imagem da biblioteca de média.");
+  }
   const kind = s("kind");
   return {
     title: s("title"), subtitle: s("subtitle"), summary: s("summary"), body: String(get("body") ?? "").slice(0, LIMITS.body),

@@ -1,6 +1,10 @@
 "use client";
 import { diffWords } from "diff";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { uploadImage } from "@/components/image-upload";
+
+// imagem utilizável: endereço http(s) ou da biblioteca de média
+const IMG_OK = /^(https?:\/\/|\/media\/[0-9a-f-]{36}$)/;
 
 /**
  * Editor do artigo (D2 + D4).
@@ -162,8 +166,10 @@ export function ArticleEditor({ storyId, version, state, editable, me, saved, dr
     requestAnimationFrame(() => el.focus());
   };
   const [fig, setFig] = useState({ url: "", caption: "", credit: "" });
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const insertFigure = () => {
-    if (!/^https?:\/\//.test(fig.url)) return;
+    if (!IMG_OK.test(fig.url)) return;
     const esc = (s: string) => s.replace(/[[\]"]/g, "");
     block(`![${esc(fig.caption)}](${fig.url}${fig.credit ? ` "${esc(fig.credit)}"` : ""})`);
     setFig({ url: "", caption: "", credit: "" });
@@ -248,10 +254,17 @@ export function ArticleEditor({ storyId, version, state, editable, me, saved, dr
                     {photos.length > 0 && <label className="field"><span>Das referências</span>
                       <select value="" onChange={(e) => { const p = photos[Number(e.target.value)]; if (p) setFig({ url: p.url, caption: p.title, credit: p.credit }); }}>
                         <option value="">Escolher fotografia…</option>{photos.map((p, i) => <option key={p.url} value={i}>{p.title || p.url}</option>)}</select></label>}
-                    <label className="field"><span>Endereço (https://)</span><input value={fig.url} onChange={(e) => setFig({ ...fig, url: e.target.value })} /></label>
+                    <label className="field"><span>Do dispositivo</span>
+                      <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={async (e) => {
+                        const f = e.target.files?.[0]; if (!f) return;
+                        setUploading(true); setUploadError("");
+                        try { const r = await uploadImage(f, { alt: fig.caption, credit: fig.credit }); setFig((x) => ({ ...x, url: r.url })); }
+                        catch (err) { setUploadError((err as Error).message); } finally { setUploading(false); }
+                      }} />{uploading && <small>A carregar…</small>}{uploadError && <small className="warn-text">{uploadError}</small>}</label>
+                    <label className="field"><span>Ou endereço (https://)</span><input value={fig.url} onChange={(e) => setFig({ ...fig, url: e.target.value })} /></label>
                     <label className="field"><span>Legenda</span><input value={fig.caption} onChange={(e) => setFig({ ...fig, caption: e.target.value })} /></label>
                     <label className="field"><span>Crédito</span><input value={fig.credit} onChange={(e) => setFig({ ...fig, credit: e.target.value })} /></label>
-                    <button type="button" className="btn small primary" disabled={!/^https?:\/\//.test(fig.url)} onClick={insertFigure}>Inserir figura</button>
+                    <button type="button" className="btn small primary" disabled={!IMG_OK.test(fig.url)} onClick={insertFigure}>Inserir figura</button>
                   </div>
                 </details>
                 <button type="button" title="Vídeo do YouTube ou Vimeo: cola o endereço sozinho numa linha" onClick={() => block("https://www.youtube.com/watch?v=")}>Vídeo</button>
@@ -276,7 +289,14 @@ export function ArticleEditor({ storyId, version, state, editable, me, saved, dr
           <details className="box" open={!!fields.hero_image_url}><summary>Imagem principal</summary>
             <div className="hero-edit" style={{ marginTop: 10 }}>
               <div className="stack">
-                <label className="field"><span>Endereço da imagem</span><input id="a-hero" name="hero_image_url" type="url" value={fields.hero_image_url ?? ""} onChange={(e) => change({ hero_image_url: e.target.value || null })} placeholder="https://…" /></label>
+                <label className="field"><span>Carregar do dispositivo</span>
+                  <input id="a-hero-file" type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} onChange={async (e) => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    setUploading(true); setUploadError("");
+                    try { const r = await uploadImage(f, { alt: fields.hero_caption, credit: fields.hero_credit }); change({ hero_image_url: r.url }); }
+                    catch (err) { setUploadError((err as Error).message); } finally { setUploading(false); }
+                  }} />{uploading && <small>A carregar…</small>}{uploadError && <small className="warn-text">{uploadError}</small>}</label>
+                <label className="field"><span>Ou endereço da imagem</span><input id="a-hero" name="hero_image_url" value={fields.hero_image_url ?? ""} onChange={(e) => change({ hero_image_url: e.target.value || null })} placeholder="https://… ou /media/…" /></label>
                 {photos.length > 0 && <label className="field"><span>Ou escolhe das referências</span>
                   <select value="" onChange={(e) => { const p = photos[Number(e.target.value)]; if (p) change({ hero_image_url: p.url, hero_caption: fields.hero_caption || p.title, hero_credit: p.credit || fields.hero_credit }); }}>
                     <option value="">Escolher fotografia…</option>{photos.map((p, i) => <option key={p.url} value={i}>{p.title || p.url}</option>)}</select></label>}
@@ -287,7 +307,7 @@ export function ArticleEditor({ storyId, version, state, editable, me, saved, dr
                 {fields.hero_image_url && !fields.hero_credit && <small className="warn-text">Falta o crédito da imagem.</small>}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {fields.hero_image_url && /^https?:\/\//.test(fields.hero_image_url) && <img className="hero-thumb" src={fields.hero_image_url} alt="" />}
+              {fields.hero_image_url && IMG_OK.test(fields.hero_image_url) && <img className="hero-thumb" src={fields.hero_image_url} alt="" />}
             </div>
           </details>
           <details className="box"><summary>Pesquisa (SEO)</summary>

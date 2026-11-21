@@ -21,7 +21,8 @@ export default async function Configuracao({ searchParams }: { searchParams: Pro
   }));
   return (
     <>
-      <div className="nr-head"><div><p className="label">Direção</p><h1>Configuração da publicação</h1></div></div>
+      <div className="nr-head"><div><p className="label">Direção</p><h1>Configuração da publicação</h1></div>
+        <a className="btn" href="/redacao/exportar/copia" title="Tudo o que a redação produziu, em JSON, sem palavras-passe nem tokens">Descarregar cópia de segurança</a></div>
       <Flash sp={sp} />
       <p className="muted" style={{ marginTop: 0, maxWidth: "75ch" }}>A identidade da publicação vive aqui, não no código: mudar o nome, as cores ou o domínio muda o site e a redação sem tocar em nada mais.</p>
       <form action={savePublicationAction} className="stack">

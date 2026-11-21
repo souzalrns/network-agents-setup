@@ -46,7 +46,7 @@ export default async function Artigo({ params }: P) {
     headline: s.title.slice(0, 110), description: describe(s), mainEntityOfPage: url, url,
     datePublished: new Date(s.published_at).toISOString(), dateModified: new Date(s.updated_at).toISOString(),
     articleSection: s.section_name ?? undefined, keywords: s.tags.join(", ") || undefined, inLanguage: pub.language,
-    image: s.hero_image_url ? [s.hero_image_url] : undefined,
+    image: s.hero_image_url ? [s.hero_image_url.startsWith("/") ? `${baseUrl}${s.hero_image_url}` : s.hero_image_url] : undefined,
     author: s.author_name ? [{ "@type": "Person", name: s.author_name, url: s.author_public ? `${baseUrl}/autor/${s.author_slug}` : undefined }] : undefined,
     publisher: { "@type": "NewsMediaOrganization", name: pub.name, url: baseUrl, logo: pub.logo_url ? { "@type": "ImageObject", url: pub.logo_url } : undefined },
   };

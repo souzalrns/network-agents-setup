@@ -6,6 +6,7 @@ import { isLead, ROLE_LABEL, ROLES } from "@/lib/context";
 import { withCtx } from "@/lib/db";
 import { listTeam } from "@/lib/queries";
 import { removeMemberAction, updateMemberAction } from "../../../actions";
+import { ResetLink } from "./reset-link";
 
 const ROLE_HELP: Record<string, string> = {
   admin: "Tudo, incluindo papéis de administração.", director: "Linha editorial, equipa, configuração, aprovação e publicação.",
@@ -43,6 +44,9 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
       {lead && !self && (
         <section className="card" style={{ maxWidth: 720, marginTop: 16 }}>
           <h2>Acesso</h2>
+          <p className="muted">Se a pessoa esqueceu a palavra-passe, gera um link de recuperação e entrega-lho.</p>
+          <ResetLink userId={m.user_id} name={m.name} />
+          <hr style={{ margin: "16px 0", border: 0, borderTop: "1px solid var(--line)" }} />
           <p className="muted">Retirar o acesso não apaga as peças nem o histórico desta pessoa.</p>
           <form action={removeMemberAction}><input type="hidden" name="user" value={m.user_id} />
             <button className="btn danger" type="submit">Retirar acesso a esta publicação</button></form>

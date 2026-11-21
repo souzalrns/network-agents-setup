@@ -252,3 +252,11 @@ figure.embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; b
 @media (max-width: 860px) { .board { grid-template-columns: repeat(5, minmax(78vw, 1fr)); scroll-snap-type: x mandatory; } .col { scroll-snap-align: start; } }
 .show-md { display: none; }
 @media (max-width: 980px) { .show-md { display: inline-flex; } .btn.jump { width: 100%; justify-content: center; margin-bottom: 12px; white-space: normal; text-align: center; } }
+/* biblioteca de média */
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 14px; }
+.media-item { margin: 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.media-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--sunken); }
+.media-md { font-size: 11.5px; overflow-wrap: anywhere; background: var(--sunken); padding: 4px 6px; border-radius: 6px; }
+/* newsletter no rodapé do site */
+.newsletter { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+.newsletter .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

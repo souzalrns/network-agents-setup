@@ -21,7 +21,7 @@ try {
     await page.goto(`${BASE}/redacao/pautas?estado=todas`);
     const story = await page.locator(".card .item-title").first().getAttribute("href");
     const pages = ["/redacao", "/redacao/pautas", "/redacao/pautas?vista=quadro&estado=todas", story, "/redacao/calendario",
-      "/redacao/fontes", "/redacao/equipa", "/redacao/radar", "/redacao/configuracao", "/redacao/atividade", `${story}/versoes`, "/", "/sobre"];
+      "/redacao/fontes", "/redacao/equipa", "/redacao/radar", "/redacao/configuracao", "/redacao/atividade", `${story}/versoes`, "/redacao/media", "/redacao/newsletter", "/", "/newsletter"];
     const over = [];
     for (const url of pages) {
       await page.goto(`${BASE}${url}`); await page.waitForLoadState("networkidle");

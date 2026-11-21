@@ -1,8 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createResetLink, resetPassword } from "@/lib/accounts";
 import { login, logout } from "@/lib/auth-core";
 import { requireLead, requireUser, SESSION_COOKIE } from "@/lib/auth";
 import { isDesk, isLead, ROLES, type Role } from "@/lib/context";
@@ -503,4 +504,65 @@ export async function savePageAction(form: FormData) {
       updated_by = excluded.updated_by, updated_at = now()`));
   revalidatePath("/", "layout");
   back("/redacao/configuracao#paginas", "ok", "Página guardada.");
+}
+
+// ------------------------------------------------------------------ recuperar a palavra-passe (sem email)
+
+async function requestBaseUrl(): Promise<string> {
+  if (process.env.EDITORIAL_SITE_URL) return process.env.EDITORIAL_SITE_URL;
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  return `${h.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https")}://${host}`;
+}
+
+export interface ResetLinkState { link?: string; expires?: string; error?: string }
+
+/** A direção gera um link de uso único (24 h) para uma pessoa da equipa; mostra-se uma vez, não vai no endereço. */
+export async function createResetLinkAction(_prev: ResetLinkState, form: FormData): Promise<ResetLinkState> {
+  const { ctx } = await requireLead();
+  const user = str(form, "user", 40);
+  if (!isUuid(user)) return { error: "Pedido inválido." };
+  try {
+    const { link, expires } = await createResetLink(ctx, user, await requestBaseUrl());
+    return { link, expires: expires.toISOString() };
+  } catch (e) {
+    return { error: failMessage(e) };
+  }
+}
+
+export async function resetPasswordAction(form: FormData) {
+  const token = str(form, "token", 120), pw = str(form, "password", 200);
+  const path = `/redacao/recuperar/${encodeURIComponent(token)}`;
+  if (pw.length < 10 || pw !== str(form, "confirm", 200)) back(path, "erro", "As palavras-passe não coincidem ou têm menos de 10 caracteres.");
+  const ok = await resetPassword(token, pw);
+  if (!ok) back(path, "erro", "Este link já foi usado, expirou ou não é válido. Pede outro à direção.");
+  redirect("/redacao/entrar?ok=" + encodeURIComponent("Palavra-passe alterada. Já podes entrar."));
+}
+
+// ------------------------------------------------------------------ biblioteca de média
+
+export async function updateMediaAction(form: FormData) {
+  const { ctx } = await requireUser();
+  const id = str(form, "media", 40);
+  if (!isUuid(id)) back("/redacao/media", "erro", "Pedido inválido.");
+  await attempt("/redacao/media", () => withCtx(ctx, async (tx) => {
+    const rows = await tx`update media set alt = ${str(form, "alt", 300)}, credit = ${str(form, "credit", 200)} where id = ${id} returning id`;
+    if (!rows.length) throw new EditorialError("Só quem carregou a imagem (ou a edição) a altera.");
+  }));
+  revalidatePath("/redacao/media");
+  back("/redacao/media", "ok", "Legenda e crédito guardados.");
+}
+
+export async function deleteMediaAction(form: FormData) {
+  const { ctx } = await requireUser();
+  const id = str(form, "media", 40);
+  if (!isUuid(id)) back("/redacao/media", "erro", "Pedido inválido.");
+  await attempt("/redacao/media", () => withCtx(ctx, async (tx) => {
+    const [used] = await tx`select 1 from stories where hero_image_url = ${`/media/${id}`} or body like ${`%/media/${id}%`} limit 1`;
+    if (used) throw new EditorialError("Esta imagem está a ser usada numa peça: retira-a da peça primeiro.");
+    const rows = await tx`delete from media where id = ${id} returning id`;
+    if (!rows.length) throw new EditorialError("Só quem carregou a imagem (ou a edição) a apaga.");
+  }));
+  revalidatePath("/redacao/media");
+  back("/redacao/media", "ok", "Imagem apagada.");
 }

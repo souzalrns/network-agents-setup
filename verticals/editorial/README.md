@@ -19,6 +19,10 @@ O estado e as decisões por tomar estão no `PENDENCIAS.md` (item **E-005**, dec
 | Atividade, filtros e paginação | `/redacao/atividade`, `pautas/page.tsx`, `listActivity`, `countStoriesTx` | `tests/queries.test.ts` |
 | Telemóvel: menu em `<dialog>`, sem transbordo, equipa numa linha por pessoa | `src/components/nav.tsx`, `globals.css`, `equipa/[id]` | `tests/e2e/mobile.mjs` |
 | Validação da configuração inicial | `db/validate-seed.mjs` (`npm run db:validate`) | `tests/seed.test.ts` |
+| Recuperar a palavra-passe sem email (link de uso único, 24 h, gerado pela direção) | `0007`, `src/lib/accounts.ts`, `/redacao/recuperar/[token]` | `tests/operations.test.ts`, `tests/e2e/operations.mjs` |
+| Biblioteca de média na própria base (redução no browser, tipo confirmado pelos bytes, legenda e crédito) | `0007`, `src/lib/media.ts`, `/redacao/media`, `/media/[id]` | idem |
+| Newsletter: inscrição com consentimento registado (RGPD), anulação por link, exportação CSV | `0007`, `src/lib/newsletter.ts`, `/newsletter`, `/redacao/newsletter` | idem |
+| Cópia de segurança da publicação (JSON, sem segredos) | `src/lib/backup.ts`, Configuração → Descarregar cópia | idem |
 | Redação (painel, pautas, ficha da peça, calendário, radar, fontes, equipa, distribuição, configuração) | `src/app/redacao/` | `tests/e2e/run.mjs` |
 | Site público (início, editorias, artigo, autor, pesquisa, páginas, sitemap, robots, RSS) | `src/app/(site)/`, `src/app/sitemap.ts`, `robots.ts`, `feed.xml/` | `tests/e2e/run.mjs` |
 | Radar de fontes (RSS/Atom, allowlist, SSRF, deduplicação, relevância) | `src/lib/radar/` | `tests/radar.test.ts` |
@@ -157,9 +161,23 @@ pooler em modo transacção; o driver usa `prepare: false`), com `db/migrate.mjs
   sessão e devolve a página com a mensagem.
 - **Sessões próprias** (cookie httpOnly, token aleatório guardado como sha256, scrypt nas palavras-passe), em vez de
   um fornecedor externo: menos dependências e funciona em qualquer Postgres.
-- **CMS próprio em vez de We.Publish ou Byline.** O fluxo de aprovação com quatro olhos, afirmações e fontes
-  protegidas não existe nesses projectos e teria de ser construído por cima de um segundo modelo de dados. Fica a
-  opção de exportar para um CMS headless se o volume o justificar.
+- **Sistema próprio em vez de um CMS existente.** Comparação (2026-11-21), pelo que O Bode precisa:
+
+  | | Este sistema | Ghost | WordPress | Superdesk | We.Publish / Byline |
+  |---|---|---|---|---|---|
+  | Regras de redacção impostas pela base (quatro olhos, aprovação presa ao conteúdo, afirmações verificadas antes de publicar) | **sim**, provadas contra contornos directos (R1–R8) | não | só com plugins, na interface | parcial (fluxo, sem afirmações) | não |
+  | Fontes protegidas fora do alcance de agentes e do público | **sim** (RLS) | não | não | não | não |
+  | Agentes de IA que só propõem, ligados à plataforma LRNSdigital | **sim** | não | por plugins, sem limites na base | não | não |
+  | Várias publicações com a marca só em configuração | **sim** | uma por instalação | multisite | sim | sim |
+  | Newsletter | inscrição, consentimento e exportação (envio num serviço à escolha) | **completa, com assinaturas pagas** | por plugins | não | parcial |
+  | Editor | Markdown com barra, figuras e vídeo | **rico** | **rico** | rico | rico |
+  | Maturidade, comunidade, actualizações | nova; mantida por nós | **grande** | **enorme** | média | pequena |
+  | Licença e custo | nossa; custo zero (Vercel Hobby + Neon Free) | MIT; alojamento próprio ou pago | GPL | AGPL; pesado para 4 pessoas | MIT / MPL |
+
+  Decisivo: as regras de integridade e a protecção das fontes não existem nos outros e teriam de ser reconstruídas
+  por cima de um modelo de dados alheio. Onde os outros ganham (editor rico, assinaturas pagas, maturidade), a
+  resposta está nas secções de limites: o Ghost continua a ser o complemento natural se a newsletter paga for
+  central no modelo de negócio (híbrido: esta redacção produz e verifica, o Ghost serve leitores pagantes).
 - **Postiz pela API pública, mesmo contrato do `runner/plan_runner/postiz.py`:** só rascunhos, idempotente, sem
   publicação imediata. PostSider e OpenPost não foram instalados (duplicariam o Postiz).
 - **Markdown com dialecto próprio (D2)** em vez de um editor rico: figura `![Legenda](https://… "Crédito")` e
@@ -176,10 +194,13 @@ pooler em modo transacção; o driver usa `prepare: false`), com `db/migrate.mjs
 - Nenhum feed do radar foi verificado nesta sessão: o proxy do ambiente recusou todos os domínios (P-93).
 - O radar verifica o DNS antes de cada pedido, mas o `fetch` volta a resolver o nome ao ligar (janela de
   DNS rebinding); fechá-la exige um conector próprio.
-- Imagens e anexos entram por endereço (URL); não há carregamento de ficheiros (precisa de um armazenamento,
-  por exemplo Supabase Storage, com credenciais que esta sessão não tem).
+- Imagens: biblioteca na própria base (máx. 3 MB cada, reduzidas no browser); com a base gratuita de 1 GB cabem
+  milhares de fotografias, mas vídeo e áudio continuam por endereço. Para muito volume, mover para um armazenamento
+  de objectos (a rota `/media/[id]` isola essa troca).
 - O aviso de quem está a editar é informativo (2 minutos depois da última gravação), não um bloqueio.
 - Os agentes correm dentro da vertical (D7): a integração com o motor universal está registada como dívida (E-006).
-- Sem notificações por email; o painel mostra o que espera por cada pessoa.
+- Sem envio de email (notificações e newsletter): falta escolher um serviço. A recuperação da palavra-passe
+  funciona sem email (link gerado pela direção); a newsletter recolhe e exporta, o envio faz-se nesse serviço.
+- Cópias de segurança: a direção descarrega quando quiser; ainda não há cópia automática para um sítio privado.
 - Podcast e vídeo: há rascunhos de guião e descrição pelo agente de edição; transcrição e cortes ficaram de fora
   (o Podguy foi avaliado: MIT, criado em maio de 2026, sem versões publicadas).

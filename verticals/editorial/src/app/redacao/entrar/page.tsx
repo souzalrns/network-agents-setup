@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <label className="field"><span>Palavra-passe</span><input id="password" name="password" type="password" autoComplete="current-password" required /></label>
           <button className="btn primary" type="submit">Entrar</button>
         </form>
-        <p className="muted" style={{ fontSize: 13, margin: 0 }}>Esqueceste a palavra-passe? Pede à direção uma nova.</p>
+        <p className="muted" style={{ fontSize: 13, margin: 0 }}>Esqueceste a palavra-passe? Pede à direção um link de recuperação (Equipa → a tua ficha).</p>
       </div>
     </main>
   );

@@ -19,10 +19,11 @@ export default async function NewsroomLayout({ children }: { children: React.Rea
     { href: "/redacao/calendario", label: "Calendário" },
     { href: "/redacao/radar", label: "Radar" },
     { href: "/redacao/fontes", label: "Fontes" },
+    { href: "/redacao/media", label: "Média" },
     ...(isDesk(user.role) ? [{ href: "/redacao/distribuicao", label: "Distribuição" }] : []),
     { href: "/redacao/atividade", label: "Atividade" },
     { href: "/redacao/equipa", label: "Equipa" },
-    ...(isLead(user.role) ? [{ href: "/redacao/configuracao", label: "Configuração" }] : []),
+    ...(isLead(user.role) ? [{ href: "/redacao/newsletter", label: "Newsletter" }, { href: "/redacao/configuracao", label: "Configuração" }] : []),
   ];
   const [first, ...rest] = pub.name.split(" ");
   return (
