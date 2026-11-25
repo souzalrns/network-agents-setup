@@ -9,6 +9,7 @@ from uuid import uuid4
 import yaml
 
 from . import approval, done_when, hitl, working_memory
+from . import governance_local as gov
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
@@ -279,6 +280,17 @@ def run_plan(
         )
         inject_knowledge_context(out, step, log, run_id)
 
+        gov_ok, gov_dec = gov.governance_gate(out, step)  # GOV-LOCAL-1
+        if not gov_ok:
+            gov.ReceiptLog(out).append(run_id=run_id, step_id=step.id, agent=step.action, capability=gov.STEP_CAPABILITY,
+                                       decision=gov_dec, detail="recusado pela governança (mode: enforce)")
+            log.append("step_failed", run_id, {"step_id": step.id, "detail": f"governança: {gov_dec.reason}"})
+            status["state"] = "failed"
+            status["failed_step"] = step.id
+            status["detail"] = f"governança: {gov_dec.reason}"
+            save_status(out, status)
+            return status
+
         if step.human_gate:
             log.append(
                 "human_gate_requested",
@@ -345,6 +357,7 @@ def run_plan(
             run_id,
             {"step_id": step.id, "detail": result.detail, "artifact": result.artifact},
         )
+        gov.governance_receipt(out, run_id, step, gov_dec, detail=str(result.detail)[:200], artifact=result.artifact)
         completed.add(step.id)
         status["completed"] = sorted(completed)
         save_status(out, status)
