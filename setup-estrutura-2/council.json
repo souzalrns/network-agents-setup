@@ -1,0 +1,107 @@
+{
+  "schema": "council-session-v1",
+  "session_id": "council_8f85911499",
+  "council_type": "structural",
+  "council": {
+    "id": "structural",
+    "description": "Discussoes estruturais e de projeto, com as IAs registadas pelo utilizador; entrega o projeto base e executivo (plano).",
+    "area": "software",
+    "chairman": "meta.chairman",
+    "members": [
+      {
+        "id": "ext:claude",
+        "role": "member",
+        "provider": "claude"
+      },
+      {
+        "id": "ext:gpt",
+        "role": "member",
+        "provider": "gpt"
+      },
+      {
+        "id": "ext:grok",
+        "role": "member",
+        "provider": "grok"
+      },
+      {
+        "id": "ext:perplexity",
+        "role": "member",
+        "provider": "perplexity"
+      },
+      {
+        "id": "ext:manus",
+        "role": "member",
+        "provider": "manus"
+      }
+    ],
+    "required": [],
+    "max_rounds": 2,
+    "confidence_threshold": 0.7,
+    "hitl_category": "architectural",
+    "chairman_model": null,
+    "emits_plan": true,
+    "members_from": "providers"
+  },
+  "topic": "Analisa o repo github.com/souzalrns/network-agents-setup (le docs/STATUS.md, docs/initiatives/PENDENCIAS.md e docs/architecture/GOVERNANCE.md) e propoe ate 5 mudancas estruturais para ele ser a melhor escolha entre repos de agentes de IA, com uso gratuito e baixa capacidade de processamento. Compara com repos concorrentes. Cada argumento cita um ficheiro ou um item de pendencia.",
+  "context": null,
+  "participant_ids": [
+    "ext:claude",
+    "ext:gpt",
+    "ext:grok",
+    "ext:perplexity",
+    "ext:manus"
+  ],
+  "chairman": "meta.chairman",
+  "scope": "project:network-agents-setup",
+  "max_tokens": 80000,
+  "model": "gemini-flash-lite-latest",
+  "status": "awaiting_external",
+  "stage": "independent",
+  "round": 1,
+  "rounds": [
+    {
+      "round": 1,
+      "labels": {
+        "A": "ext:gpt",
+        "B": "ext:grok",
+        "C": "ext:perplexity",
+        "D": "ext:manus",
+        "E": "ext:claude"
+      },
+      "positions": {},
+      "ballots": {},
+      "ballot_errors": {},
+      "peer_scores": {},
+      "verdict": null,
+      "gate": null,
+      "hitl": null,
+      "memory": null
+    }
+  ],
+  "ledger": [],
+  "error": null,
+  "created_at": "2026-11-25T20:37:10.699431+00:00",
+  "panel": {
+    "mode": "full",
+    "providers": [
+      "claude",
+      "gpt",
+      "grok",
+      "perplexity",
+      "manus"
+    ]
+  },
+  "partial": false,
+  "waiting_for": [
+    "claude",
+    "gpt",
+    "grok",
+    "perplexity",
+    "manus"
+  ],
+  "updated_at": "2026-11-25T20:37:10.701014+00:00",
+  "verdict": null,
+  "gate_ok": null,
+  "hitl_decision": null,
+  "tokens_total": 0
+}
