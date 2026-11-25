@@ -1,0 +1,119 @@
+{
+  "provider": "claude",
+  "round": 1,
+  "submitted_at": "2026-11-25T20:37:32.957222+00:00",
+  "data": {
+    "vote": "approve",
+    "confidence": 0.72,
+    "position": "O diferencial real do repo e controlo e prova (orcamento, gate humano, resume, done_when, auditoria), nao autonomia. Para ser a escolha com uso gratuito e pouca capacidade de processamento, faltam cinco mudancas: caminho de modelo local, nucleo instalavel minimo, cortar peso morto, reduzir o passivo documental e uma prova publica comparavel.",
+    "arguments": [
+      "README.md (Design choice): o posicionamento e controlo e evidencia, onde LangGraph e a referencia de workflows controlados; o repo ja usa LangGraph opcional (runner/plan_runner/langgraph_engine.py)",
+      "README.md e runner/plan_runner/external_worker.py: o worker so tem stub ou Gemini; nao ha caminho de modelo local, que e onde smolagents compete em hardware fraco",
+      "runner/requirements.txt: o minimo instalavel arrasta psycopg, mcp==1.30.0 e 5 pacotes proprios fixados, sem extras separados",
+      "Arvore: vendor (3.6 MB, 291 ficheiros), oss (2.3 MB, 308), packages e apps legados (1.4 MB, 140) em 23 MB, embora o README diga que o TypeScript legado esta arquivado",
+      "docs/initiatives/PENDENCIAS.md: 136 itens vivos, 46 BLOQUEADO; 311 ficheiros .md em docs/"
+    ],
+    "risks": [
+      "Medir valor por menos ficheiros pode apagar capacidades usadas pelo agent-network-mcp",
+      "Modelo pequeno local pode falhar em tool-use e dar a ideia errada de que o motor e fraco",
+      "Comparar com LangGraph/CrewAI sem benchmark reproduzivel vira marketing"
+    ],
+    "conditions": [
+      "Cada mudanca tem criterio de pronto verificavel por teste, run ou medicao",
+      "Nada pago sem aprovacao; so tiers gratuitos"
+    ],
+    "kill_criteria": [
+      "Worker local nao completa o plano demo com um modelo de 7B ou menos",
+      "Instalacao minima continua acima de 50 MB ou exige Postgres",
+      "Menos de 10 dos 46 BLOQUEADO mudam de estado em 30 dias"
+    ],
+    "veto": false,
+    "veto_reason": null,
+    "proposals": [
+      {
+        "title": "Worker de modelo local (OpenAI-compativel)",
+        "why": "README.md e external_worker.py so tem stub e Gemini; smolagents e a referencia local",
+        "steps": [
+          "Acrescentar kind local em external_worker.py com URL OpenAI-compativel (Ollama, llama.cpp)",
+          "Orcamento em tokens com custo USD zero e model_tiers com modelo pequeno por passo",
+          "Teste com servidor falso OpenAI-compativel no CI",
+          "Documentar o plano demo a correr com um modelo de 7B ou menos"
+        ],
+        "done_when": [
+          "python -m plan_runner run <demo> --mode local termina done com o servidor falso no CI",
+          "docs/ops/BUDGET.md descreve o custo zero"
+        ],
+        "out_of_scope": [
+          "Treinar ou afinar modelos",
+          "Suporte a GPU especifica"
+        ]
+      },
+      {
+        "title": "Nucleo minimo instalavel com extras",
+        "why": "runner/requirements.txt mistura nucleo, Postgres, MCP e pacotes proprios",
+        "steps": [
+          "Criar pyproject.toml com nucleo (PyYAML, jsonschema, httpx) e extras rag, mcp, langgraph",
+          "Garantir que o quickstart corre so com o nucleo",
+          "Medir tamanho e tempo de instalacao num venv limpo"
+        ],
+        "done_when": [
+          "Venv limpo com so o nucleo passa o quickstart em stub",
+          "Instalacao do nucleo abaixo de 50 MB, registada em docs"
+        ],
+        "out_of_scope": [
+          "Publicar no PyPI",
+          "Remover o extra rag"
+        ]
+      },
+      {
+        "title": "Cortar peso morto da arvore",
+        "why": "README.md diz que packages e apps estao arquivados, mas vendor, oss, packages e apps pesam 7 MB e ~700 ficheiros",
+        "steps": [
+          "Listar quem usa vendor, oss, packages e apps (grep e CI)",
+          "Mover o que nao e usado para um repo de arquivo ou para uma tag",
+          "Atualizar CI, README e CORE-MAPPING.md"
+        ],
+        "done_when": [
+          "CI verde sem as pastas movidas",
+          "Clone do repo mais pequeno, medido antes e depois"
+        ],
+        "out_of_scope": [
+          "Apagar historico git",
+          "Mexer no agent-network-mcp"
+        ]
+      },
+      {
+        "title": "Triar o passivo documental",
+        "why": "PENDENCIAS.md tem 136 itens vivos, 46 BLOQUEADO, e docs/ tem 311 .md",
+        "steps": [
+          "Rever os 46 BLOQUEADO um a um: desbloquear, decidir ou marcar OBSOLETO (sempre em A/B/C com recomendacao)",
+          "Reduzir o README a uma pagina de entrada para quem chega de fora"
+        ],
+        "done_when": [
+          "BLOQUEADO abaixo de 25 em PENDENCIAS.md",
+          "python -m plan_runner.pendencias passa"
+        ],
+        "out_of_scope": [
+          "Apagar itens sem decisao do maestro"
+        ]
+      },
+      {
+        "title": "Prova publica comparavel",
+        "why": "Sem numeros, o argumento de controlo e gratuito nao convence; a concorrencia ja publica tempo e memoria",
+        "steps": [
+          "Script reproduzivel que corre a mesma tarefa no plan_runner e em LangGraph e CrewAI",
+          "Registar tokens, tempo, memoria de pico e se respeitou orcamento e gate",
+          "Publicar a tabela no README com a data"
+        ],
+        "done_when": [
+          "Script em scripts/ corre num comando e gera a tabela",
+          "Tabela no README com fonte e data"
+        ],
+        "out_of_scope": [
+          "Benchmark de qualidade das respostas",
+          "Comparar com produtos pagos"
+        ]
+      }
+    ]
+  }
+}
