@@ -1,0 +1,90 @@
+{
+  "provider": "grok",
+  "round": 1,
+  "submitted_at": "2026-11-25T20:38:35.259912+00:00",
+  "data": {
+    "vote": "approve",
+    "confidence": 0.72,
+    "position": "O repo ja ganha em controlo, evidencia, domain packs e stub de custo zero. Para ser a melhor escolha em uso gratuito e baixa capacidade faltam: caminho 100% local como first-class, nucleo minimo com perfil lite, governanca local minima antes do AGT, tiers gratuitos com Domain Onboarding Cost medido e um contrato de domain pack com CI.",
+    "arguments": [
+      "STATUS.md: duas camadas e numeros gerados por validadores; quickstart em stub sem API key",
+      "PENDENCIAS.md T-001, T-004, T-005, S19, S27; PLANWRIGHT-1/2 e AUDITRON-1/2 (padrao OSS acoplavel)",
+      "GOVERNANCE.md secao 4 (Delegation Graph e Action Receipts em falta) e secao 2 (3 MOCK); EX-C3, EX-C4, B16, A13",
+      "Ponto fraco: dependencia residual de Postgres/pgvector, legado TS arquivado e ausencia de caminho 100% local com modelos open-source leves"
+    ],
+    "risks": [
+      "Backend SQLite para L4/L5 duplica manutencao",
+      "Perfil lite que desliga council e LangGraph pode divergir do completo"
+    ],
+    "conditions": [],
+    "kill_criteria": [
+      "O perfil lite nao corre o quickstart sem Postgres"
+    ],
+    "veto": false,
+    "veto_reason": null,
+    "proposals": [
+      {
+        "title": "Runtime 100% local e zero-infra first-class (SQLite, stub e Ollama)",
+        "why": "STATUS.md; T-001, T-004, T-005, S19, S27; GOVERNANCE.md 1.1",
+        "steps": [
+          "Documentar e testar o caminho sem Postgres, cloud nem API paga como default",
+          "L4/L5 com backend SQLite opcional e worker local"
+        ],
+        "done_when": [
+          "O caminho zero-infra e o default documentado e testado"
+        ],
+        "out_of_scope": []
+      },
+      {
+        "title": "Core plan_runner e domain-pack loader como pacote minimo com perfil lite",
+        "why": "PLANWRIGHT-1/2, AUDITRON-1/2; STATUS.md; GOVERNANCE.md secao 2",
+        "steps": [
+          "Separar motor, schema, HITL/budget/ledger do RAG pesado, k8s e legado",
+          "Perfil lite desliga LangGraph, pgvector e council por omissao"
+        ],
+        "done_when": [
+          "Pacote minimo instalavel com governanca nativa"
+        ],
+        "out_of_scope": []
+      },
+      {
+        "title": "Identity, Delegation Graph e Action Receipts minimos e local-first antes do AGT",
+        "why": "GOVERNANCE.md secoes 2 e 4; EX-C3, EX-C4, B16, A13",
+        "steps": [
+          "Primitiva leve com hash-chaining e schema local",
+          "Integrar o AGT depois"
+        ],
+        "done_when": [
+          "Identity, delegacao e receipts funcionam localmente sem o AGT"
+        ],
+        "out_of_scope": [
+          "AGT completo como pre-requisito"
+        ]
+      },
+      {
+        "title": "Orcamentos e tiers orientados a free-tier extremo com Domain Onboarding Cost medido",
+        "why": "T-001 a T-005, F6, S19, S27; GOVERNANCE.md 1.2",
+        "steps": [
+          "Expandir model-prices.yaml e tiers para modelos gratuitos (Gemini Flash Lite, Ollama)",
+          "Gerar e publicar o Domain Onboarding Cost por pack"
+        ],
+        "done_when": [
+          "Domain Onboarding Cost e uma metrica gerada e publicavel por pack"
+        ],
+        "out_of_scope": []
+      },
+      {
+        "title": "Domain packs como unidade de reutilizacao com CI de cobertura, proveniencia e baixo recurso",
+        "why": "STATUS.md; F6, F3, ING-*",
+        "steps": [
+          "Contrato de pack: area, agentes e skills, planos, testes, DOC(core)=0",
+          "CI exige stub, budget, proveniencia e footprint de memoria"
+        ],
+        "done_when": [
+          "Um pack novo so entra se passar stub, budget, proveniencia e footprint"
+        ],
+        "out_of_scope": []
+      }
+    ]
+  }
+}
