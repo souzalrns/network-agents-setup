@@ -31,6 +31,8 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 | **Duix Avatar** | Avatar digital e clonagem de voz offline | Não para uso pequeno | Sim | Licença própria (DUIX.COM Community License, não OSI): exige atribuição e licença comercial acima de certos limites de utilizadores. **Clonar rosto ou voz só com consentimento escrito da pessoa.** Precisa de GPU NVIDIA. |
 | **Caveman** | Reduzir tokens de saída dos agentes | Não (MIT) | Não | Acrescenta tokens de entrada e pode piorar respostas curtas. **Medir antes de ligar** em agentes de produção. |
 | **Orca** | Orquestração de agentes Claude Code numa app de desktop | Não (MIT) | Sim, moderado | App de terceiros com acesso aos repositórios; serve quem trabalha num PC local. |
+| **Wren AI** | Perguntas em linguagem natural sobre bases de dados (texto para SQL), com camada semântica e servidor MCP | Não (núcleo Apache-2.0; existe versão comercial) | Sim | Dá a um modelo acesso a dados reais: ligar **só com utilizador de base de dados só de leitura**. Precisa de chave de um modelo de linguagem. |
+| **agenttrace** | Relatórios locais de custo, tokens e lentidão das sessões de agentes de código | Não | Sim, baixo | Corre localmente e não envia prompts para fora. Instala-se por script (`curl … \| sh`): ler o script antes de correr e confirmar a licença no repositório. Só serve a quem usa o Claude Code no próprio computador. |
 
 ## Práticas adoptadas (não são instalação)
 
@@ -38,6 +40,7 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 |---|---|
 | **Loops de agente** (`/loop`, `/goal`, `/schedule` do Claude Code) | Usar com critério de paragem e **teto de ciclos** definidos; consomem a quota de utilização. |
 | **GSAP + ScrollTrigger** | Opção de animação para projectos visuais novos; confirmar os termos da licença no momento de usar. |
+| **Plugin `security-guidance`** (Anthropic) | O Claude revê o próprio código à procura de vulnerabilidades durante a sessão | Gratuito, mas as revisões consomem quota de utilização. Em sessões na nuvem, declarar `enabledPlugins` em `.claude/settings.json` do repo. Activar só nos repos que vão para produção. |
 | **public-apis** | Lista de consulta para o agente de radar de ferramentas; nada a instalar. Cada API listada tem regras próprias e algumas são pagas. |
 | **Metodologia de análise de conteúdo** | Dissecar gancho, virada e fecho de conteúdos de referência (links fornecidos pelo utilizador, transcritos pelo pipeline existente). **Não** descarregar posts de redes sociais com contas pessoais: viola os termos das plataformas e arrisca bloqueio. |
 
@@ -50,6 +53,13 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 | **Obscura** (navegador headless em Rust) | Projecto muito novo, binário de terceiros, anti-fingerprint com uso dual. Reabrir só com versão estável 1.x e um caso real de falha do Playwright. |
 | **gstack** | Modo de equipa que se actualiza sozinho em silêncio, compila um binário e inclui um comando de cookies do navegador. Fica só como link de referência. |
 | **LearnHarness** | App de estudo imatura (v0.6), instalador sem assinatura; os cursos continuam na skill `/teach`. |
+| **Agency Agents** (e o fork do contains-studio) | Biblioteca de mais de 200 personas de agentes em texto. Instalar tudo duplica os agentes da rede e gasta contexto. Fica como **fonte de consulta** de prompts, nunca instalada em bloco. |
+| **Ruflo** | Meta-harness de agentes em enxame; sobrepõe-se ao router e aos agentes da rede, e a regra do repo é não substituir os agentes com contexto real por templates genéricos. |
+| **Vanna AI** | Repositório principal arquivado (só leitura) a 2026-03-29. A alternativa mantida é o Wren AI, nos opcionais. |
+| **PlanExe** | Precisa de chave de um modelo pago (OpenRouter) ou de conta no serviço alojado, e o `planwright` já cobre o planeamento com Gantt (ver `PLANWRIGHT-2`). |
+| **NotebookLM como memória externa** | Sobrepõe-se à memória em Supabase e enviaria o contexto das sessões (que pode incluir dados de clientes) para um serviço de terceiros. |
+| **Cognee** | Sobrepõe-se à memória e ao RAG existentes e gastaria a quota do modelo sem ganho demonstrado. Reabrir só se a memória actual mostrar limites. |
+| **LangGraph, CrewAI, PydanticAI** | Todos MIT e mantidos, mas a rede tem runtime próprio. Ficam como **referência** de desenho, sem dependência. |
 
 ## Como acrescentar uma ferramenta a este catálogo
 
