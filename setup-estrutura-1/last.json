@@ -1,28 +1,7 @@
 {
-  "session_id": "council_d4e6708404",
-  "council": "structural",
-  "dir": "/home/runner/work/network-agents-setup/network-agents-setup/council-sessions/setup-estrutura-1",
-  "status": "awaiting_external",
-  "stage": "independent",
+  "ok": true,
   "round": 1,
-  "error": null,
-  "verdict": null,
-  "gate": null,
-  "hitl": null,
-  "memory": null,
-  "tokens_by_round": {},
-  "tokens_total": 0,
-  "max_tokens": 80000,
-  "panel": {
-    "mode": "full",
-    "providers": [
-      "claude",
-      "gpt",
-      "grok"
-    ]
-  },
   "waiting_for": [
-    "claude",
     "gpt",
     "grok"
   ]

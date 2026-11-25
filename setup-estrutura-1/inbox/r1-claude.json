@@ -1,0 +1,31 @@
+{
+  "provider": "claude",
+  "round": 1,
+  "submitted_at": "2026-11-25T20:00:56.414849+00:00",
+  "data": {
+    "vote": "conditional",
+    "confidence": 0.7,
+    "position": "Tres mudancas de maior valor: (1) fechar o M-011 com uma sessao real e correr o plan.yaml no runner, para provar que o conselho entrega plano executavel; (2) triar os 46 itens BLOQUEADO de PENDENCIAS.md, desbloqueando, decidindo ou marcando OBSOLETO, porque sao a maior parte do passivo; (3) um unico caminho de arranque para o utilizador sem PC (workflow + MCP remoto) em vez de mais documentos. Condicional a que cada uma tenha criterio de pronto verificavel por teste ou run, nao por texto.",
+    "arguments": [
+      "docs/initiatives/PENDENCIAS.md: 137 itens vivos (ABERTO 77, EM CURSO 14, BLOQUEADO 46); BLOQUEADO e o maior bloco e esta parado por dependencias ou decisoes",
+      "PENDENCIAS.md item M-011: o desenho e o codigo existem mas faltava prova com IAs reais e execucao do plan.yaml no runner",
+      "PENDENCIAS.md item M-001 (Execution Broker) fica de fora por decisao P-91 = A, por isso a execucao do plano continua a ser do Claude e precisa de um caminho testado",
+      "config/council-providers.yaml e .github/workflows/council.yml: ja existe a ponte manual; falta transporte remoto para IAs de chat"
+    ],
+    "risks": [
+      "Medir valor pelo numero de itens fechados incentiva fechar o facil em vez do importante",
+      "O conselho pode dar consenso aparente se as IAs lerem o mesmo repo e o mesmo PENDENCIAS.md",
+      "Sem sessao real, o plano emitido pode nao passar no schema do runner"
+    ],
+    "conditions": [
+      "Cada mudanca ter criterio de pronto verificavel (teste, run ou SELECT)",
+      "Nenhuma mudanca depender de custo pago sem aprovacao"
+    ],
+    "kill_criteria": [
+      "A sessao real do conselho nao produzir um plan.yaml que o runner aceite",
+      "Menos de 10 dos 46 itens BLOQUEADO mudarem de estado em 30 dias"
+    ],
+    "veto": false,
+    "veto_reason": null
+  }
+}
