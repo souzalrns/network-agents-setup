@@ -1,0 +1,96 @@
+{
+  "provider": "perplexity",
+  "round": 1,
+  "submitted_at": "2026-11-25T20:39:00.283600+00:00",
+  "data": {
+    "vote": "approve",
+    "confidence": 0.7,
+    "position": "A proposta do repo (runtime governado, planos declarativos, gates humanos, orcamentos, trilha auditavel) deve virar um produto leve, instalavel e demonstravel em minutos. Nao competir com LangGraph, AutoGen ou CrewAI na orquestracao geral, mas no nicho de agente governado, auditavel e barato.",
+    "arguments": [
+      "README.md e STATUS.md: status.json, events.jsonl e artifacts/ sao evidencias de execucao e recuperacao, base para modo local-first",
+      "STATUS.md: identidade e autorizacao (grafo de delegacao e recibos de acao) desenhadas mas nao implementadas",
+      "MCP-MAPPING.md: 33 agentes e inconsistencia de classificacao do imobiliario-digital; docs/generated/AGENTS.md refere 24 agentes",
+      "PENDENCIAS.md: decisoes A/B/C em aberto; falta um caminho de adocao com exemplo resolvido"
+    ],
+    "risks": [
+      "Premissa da proposta de BudgetGuard em parte contraria o README, que ja declara tectos de tokens e USD verificados antes de cada chamada, com falha fechada",
+      "Reduzir agentes publicos pode quebrar o agent-network-mcp"
+    ],
+    "conditions": [],
+    "kill_criteria": [
+      "Um utilizador novo nao consegue correr a demo em 5 minutos"
+    ],
+    "veto": false,
+    "veto_reason": null,
+    "proposals": [
+      {
+        "title": "Free Tier Runtime de ficheiro unico",
+        "why": "STATUS.md (status.json, events.jsonl, artifacts/); PENDENCIAS.md F0",
+        "steps": [
+          "Modo local sem Supabase nem servidor, com SQLite/duckdb ou ficheiros",
+          "Comando unico para iniciar, retomar e auditar",
+          "init cria plan.yaml, budgets.yaml, policy.yaml e um exemplo offline"
+        ],
+        "done_when": [
+          "O exemplo corre offline"
+        ],
+        "out_of_scope": [
+          "Supabase",
+          "RAG/pgvector no modo gratuito"
+        ]
+      },
+      {
+        "title": "BudgetGuard como fronteira dura",
+        "why": "README.md (orcamentos); PENDENCIAS.md decisoes em aberto",
+        "steps": [
+          "Aplicar o orcamento antes de cada chamada a modelo, ferramenta ou subagente",
+          "Limites por run, tarefa, agente e utilizador",
+          "Acoes ao atingir o limite: block, ask_human, downgrade_model, resume_later; custo estimado antes da aprovacao"
+        ],
+        "done_when": [
+          "Cada acao do BudgetGuard e testada"
+        ],
+        "out_of_scope": []
+      },
+      {
+        "title": "Reduzir 33 agentes a 5 a 7 papeis universais e domain packs opcionais",
+        "why": "MCP-MAPPING.md (33 agentes); docs/generated/AGENTS.md (24)",
+        "steps": [
+          "Papeis: planner, researcher, builder, reviewer, operator, auditor, escalation",
+          "Restantes agentes como domain packs carregaveis so quando necessarios"
+        ],
+        "done_when": [
+          "Primeiro resultado com os papeis universais"
+        ],
+        "out_of_scope": []
+      },
+      {
+        "title": "MVP local de identidade, papeis e recibos",
+        "why": "STATUS.md (ADR-001 desenhado); GOVERNANCE.md",
+        "steps": [
+          "Identidades locais pseudonimas e papeis owner, approver, operator, auditor",
+          "Recibos assinados localmente",
+          "Adiar SSO, delegacao complexa e multi-tenant"
+        ],
+        "done_when": [
+          "A auditoria responde quem autorizou cada acao"
+        ],
+        "out_of_scope": [
+          "SSO",
+          "multi-tenant"
+        ]
+      },
+      {
+        "title": "Governed Demo executavel em menos de 5 minutos",
+        "why": "README.md (pilots/demo); PENDENCIAS.md",
+        "steps": [
+          "demo-budget-guard: tarefa com modelo local ou API gratuita que atinge um limite, pede aprovacao, retoma e gera relatorio de auditoria"
+        ],
+        "done_when": [
+          "Plano, estimativa de custo, gate humano, execucao limitada, falha e retoma e auditoria final numa execucao"
+        ],
+        "out_of_scope": []
+      }
+    ]
+  }
+}
