@@ -340,6 +340,8 @@ Para discussões estruturais e de projeto: o conselho entrega **a base e o plano
 
 **Perguntas abertas.** Para temas como "estruturar um app" ou "analisar o repo e propor mudanças", cada IA acrescenta `proposals` (título, porquê com prova, passos, critério de pronto, o que fica de fora; até 5) e usa `vote: approve` se defende as propostas. O chairman funde as convergentes num só plano e regista as restantes como dissidência.
 
+**Decisões em aberto e avisos do gate.** Se duas posições defendem abordagens incompatíveis, o chairman lista-as em `open_decisions` (o gate mostra-as como aviso, para o maestro decidir, em vez de escolher em silêncio). O gate avisa também quando o voto é unânime numa pergunta aberta (aprovar = defender as próprias propostas, não valida o plano) e quando um `done_when` já é verdadeiro neste repo. Erros 500/502/503/504 do Gemini repetem-se até 3 vezes, com espera crescente (`CouncilDeps.retry_delay`).
+
 **Segurança.** Uma `key_env` declarada mas sem variável no servidor falha fechada; as chaves comparam-se em tempo constante; o chairman nunca vê os nomes das IAs. Testes: `runner/tests/test_council_external.py` e `test_council_mcp_tools.py`.
 
 **Custo.** Só o chairman gasta tokens (1 chamada por ronda). As IAs externas correm nas subscrições do maestro; o tipo `api` não está implementado (regra: nada pago).

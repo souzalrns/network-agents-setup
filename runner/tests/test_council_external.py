@@ -381,3 +381,82 @@ def test_pedido_explica_pergunta_aberta_e_propostas_chegam_anonimas_ao_chairman(
     assert "propostas" in chairman["user"] and "Fechar o M-011 com sessao real" in chairman["user"]
     assert "funde as convergentes" in chairman["system"]
     assert "ext:" not in chairman["user"]
+
+
+# ---------------------------------------------------------------------------
+# Falhas encontradas no primeiro conselho real (setup-estrutura-2)
+# ---------------------------------------------------------------------------
+
+def _transient_transport(g, fails: int, code: int = 503):
+    state = {"n": 0}
+
+    def transport(url, headers, body, timeout):
+        state["n"] += 1
+        if state["n"] <= fails:
+            return code, {"error": {"message": "This model is currently experiencing high demand."}}
+        return g(url, headers, body, timeout)
+    return transport, state
+
+
+def _run_with(tmp_path, monkeypatch, verdict, props=True, votes=("approve", "approve", "approve"), transport=None, g=None):
+    register(monkeypatch, ["claude", "gpt", "grok"])
+    g = g or CouncilGemini(verdict=verdict)
+    s = open_session(tmp_path, g)
+    for pid, vote in zip(("claude", "gpt", "grok"), votes):
+        prov.submit_position(s.out, pid, {**pos(vote), **({"proposals": PROPOSALS} if props else {})})
+    d = deps(g, l4store=False)
+    d.retry_delay = 0
+    if transport:
+        d.transport = transport
+    return cs.CouncilSession.load(s.out, deps=d).resume(), g
+
+
+def test_gemini_503_repete_e_passa(tmp_path, monkeypatch):
+    g = CouncilGemini(verdict=VERDICT)
+    transport, st = _transient_transport(g, fails=2)
+    out, _ = _run_with(tmp_path, monkeypatch, VERDICT, transport=transport, g=g)
+    assert out["status"] == "awaiting_human" and st["n"] == 3
+
+
+def test_gemini_503_persistente_falha_com_erro_claro(tmp_path, monkeypatch):
+    g = CouncilGemini(verdict=VERDICT)
+    transport, st = _transient_transport(g, fails=99)
+    out, _ = _run_with(tmp_path, monkeypatch, VERDICT, transport=transport, g=g)
+    assert out["status"] == "error" and "503" in out["error"] and st["n"] == 3
+
+
+def test_gemini_erro_nao_transitorio_nao_repete(tmp_path, monkeypatch):
+    g = CouncilGemini(verdict=VERDICT)
+    transport, st = _transient_transport(g, fails=99, code=400)
+    out, _ = _run_with(tmp_path, monkeypatch, VERDICT, transport=transport, g=g)
+    assert out["status"] == "error" and st["n"] == 1
+
+
+def test_voto_unanime_em_pergunta_aberta_avisa(tmp_path, monkeypatch):
+    out, _ = _run_with(tmp_path, monkeypatch, VERDICT)
+    assert any("voto unanime nao valida" in w for w in out["gate"]["warnings"])
+    out2, _ = _run_with(tmp_path / "b", monkeypatch, VERDICT, props=False)
+    assert not any("unanime" in w for w in out2["gate"]["warnings"])  # sem propostas: comportamento antigo
+
+
+def test_decisoes_em_aberto_ficam_no_veredicto_e_no_gate(tmp_path, monkeypatch):
+    od = [{"question": "Governanca: adotar o AGT ou construir local primeiro?",
+           "options": [{"position": "a", "option": "adotar o AGT"}, {"position": "b", "option": "local primeiro"}]},
+          {"question": "ponto sem opcoes suficientes", "options": [{"position": "a", "option": "so uma"}]}]
+    out, _ = _run_with(tmp_path, monkeypatch, {**VERDICT, "open_decisions": od})
+    assert [d["question"] for d in out["verdict"]["open_decisions"]] == ["Governanca: adotar o AGT ou construir local primeiro?"]
+    assert out["verdict"]["open_decisions"][0]["options"][0]["position"] == "A"
+    assert any("decisao em aberto" in w and "AGT" in w for w in out["gate"]["warnings"])
+
+
+def test_done_when_ja_verdadeiro_avisa(tmp_path, monkeypatch):
+    plan = {**PLAN, "done_when": ["docs/STATUS.md exists", "out/novo.md exists"]}
+    out, _ = _run_with(tmp_path, monkeypatch, {**VERDICT, "plan": plan})
+    warns = [w for w in out["gate"]["warnings"] if "ja verdadeiro" in w]
+    assert len(warns) == 1 and "docs/STATUS.md" in warns[0]
+    assert out["gate"]["result"] == "pass"  # aviso, nao bloqueio: o plano pode ser de outro projecto
+
+
+def test_prompt_do_chairman_pede_decisoes_em_aberto_e_done_when_real(tmp_path, monkeypatch):
+    _, g = _run_with(tmp_path, monkeypatch, VERDICT)
+    assert "open_decisions" in g.calls[0]["system"] and "ja existem hoje" in g.calls[0]["system"]
