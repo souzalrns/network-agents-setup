@@ -104,7 +104,7 @@ def _lock(path: Path, timeout: float = 5.0):
                 pass
             if time.monotonic() > deadline:
                 raise GovernanceError(f"não consegui o lock de {path.name} (outro processo a escrever?)") from None
-            time.sleep(0.02)
+            threading.Event().wait(0.02)
     try:
         yield
     finally:
