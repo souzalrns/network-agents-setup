@@ -55,6 +55,7 @@ import os
 import random
 import re
 import sys
+import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -94,6 +95,8 @@ LIST_MAX_ITEMS = 8
 ITEM_MAX_CHARS = 400
 WHOLE_WORD_MAX_LEN = 5  # mesma regra de keywords do areas.yaml / router
 PLAN_FILE = "plan.yaml"
+TRANSIENT_ATTEMPTS = 3
+TRANSIENT_RE = re.compile(r"gemini HTTP (500|502|503|504)\b")
 POSITION_FORMAT = (
     '{"vote": "approve|conditional|reject|defer", "confidence": <0 a 1>, "position": "<2 a 4 frases>", '
     '"arguments": ["..."], "risks": ["..."], "conditions": ["... so em conditional"], '
@@ -301,6 +304,7 @@ class CouncilDeps:
     memory: mw.MemoryStore | None = None
     remote_ledger: ew.RemoteSink | None = None
     timeout: float = 60.0
+    retry_delay: float = 8.0  # espera entre tentativas num erro transitorio do Gemini (503, 500, 502, 504)
 
     @classmethod
     def from_env(cls, *, memory: bool = True) -> CouncilDeps:
@@ -425,8 +429,19 @@ def normalize_verdict(data: Any, labels: dict[str, str], *, require_plan: bool =
     if require_plan and decision in ("approve", "conditional"):
         plan, plan_problems = normalize_plan(data.get("plan"))
         invalid += plan_problems
+    open_decisions = []
+    for od in data.get("open_decisions") or []:
+        if isinstance(od, dict) and str(od.get("question") or "").strip():
+            opts = []
+            for o in od.get("options") or []:
+                if isinstance(o, dict) and str(o.get("option") or "").strip():
+                    opts.append({"position": str(o.get("position") or "").strip().upper() or None,
+                                 "option": str(o["option"]).strip()[:ITEM_MAX_CHARS]})
+            if len(opts) >= 2:
+                open_decisions.append({"question": str(od["question"]).strip()[:ITEM_MAX_CHARS], "options": opts[:LIST_MAX_ITEMS]})
     return {
         "plan": plan,
+        "open_decisions": open_decisions[:LIST_MAX_ITEMS],
         "decision": decision,
         "summary": str(data.get("summary") or "").strip()[:1000],
         "rationale": str(data.get("rationale") or "").strip()[:2000],
@@ -509,6 +524,15 @@ def run_gate(verdict: dict[str, Any], positions: dict[str, dict], council: dict[
         warnings.append(f"numero par de IAs ({len(valid)} posicoes): sem desempate, a decisao humana e obrigatoria")
     elif mode == "simple":
         warnings.append("modo simples (uma IA so): sem votacao nem critica entre pares")
+    if any(p.get("proposals") for p in valid.values()) and len(valid) >= 2 and len({p["vote"] for p in valid.values()}) == 1:
+        warnings.append("pergunta aberta: o voto unanime nao valida o plano (aprovar = defender as proprias propostas)")
+    for od in verdict.get("open_decisions") or []:
+        warnings.append(f"decisao em aberto para o maestro: {od['question']}")
+    plan = verdict.get("plan") or {}
+    for item in plan.get("done_when") or []:
+        m = re.match(r"^(\S+) exists$", str(item).strip())
+        if m and (REPO_ROOT / m.group(1)).exists():
+            warnings.append(f"criterio de pronto ja verdadeiro neste repo (nao prova trabalho feito): {m.group(1)}")
     return {"result": result, "gate_ok": result == "pass", "reasons": reasons, "warnings": warnings, "tau": tau,
             "confidence": verdict.get("confidence"), "vetoes": vetoes, "allow": allow}
 
@@ -669,6 +693,14 @@ def chairman_prompt(repo_root: Path, state: dict[str, Any], rnd: dict[str, Any],
             "cada uma em `done_when`) e regista em `dissent` as propostas que ficaram de fora e porque.\n"
             if state["council"].get("emits_plan") else ""
         )
+        + (
+            "Se duas ou mais posicoes defendem abordagens INCOMPATIVEIS sobre o mesmo ponto (nao uma ressalva: um "
+            "desacordo sobre COMO fazer), nao escolhas em silencio: lista-o em `open_decisions` "
+            '(`[{"question": "<o ponto>", "options": [{"position": "<letra>", "option": "<a abordagem>"}]}]`, '
+            "pelo menos duas opcoes) para o maestro decidir. Os criterios `done_when` do plano nao podem ser coisas "
+            "que ja existem hoje: tem de ser algo que so passa a existir quando o trabalho estiver feito.\n"
+            if state["council"].get("emits_plan") else ""
+        )
         + 'Responde SO com JSON: {"decision": "approve|conditional|reject|defer", "summary": "<1-2 frases>", '
         '"rationale": "<porque>", "conditions": ["... so em conditional"], '
         '"dissent": [{"position": "<letra>", "point": "<o ponto da posicao que discorda>"}], '
@@ -808,13 +840,19 @@ class CouncilSession:
         """Uma chamada ao Gemini, com orcamento antes e ledger depois. Lanca BudgetExceeded."""
         ew.check_budget(self.out)
         model = (self.state["council"].get("chairman_model") if stage == "synthesize" else None) or self.model
-        try:
-            response = ew.gemini_generate(
-                system, user, model=model, api_key=self.deps.api_key, wants_json=True,
-                max_output_tokens=OUTPUT_CAPS[stage], timeout=self.deps.timeout, transport=self.deps.transport,
-            )
-        except ew.WorkerError as e:
-            return CallResult(error=str(e))
+        response = None
+        for attempt in range(1, TRANSIENT_ATTEMPTS + 1):
+            try:
+                response = ew.gemini_generate(
+                    system, user, model=model, api_key=self.deps.api_key, wants_json=True,
+                    max_output_tokens=OUTPUT_CAPS[stage], timeout=self.deps.timeout, transport=self.deps.transport,
+                )
+                break
+            except ew.WorkerError as e:
+                if attempt < TRANSIENT_ATTEMPTS and TRANSIENT_RE.search(str(e)):
+                    time.sleep(self.deps.retry_delay * attempt)  # o 503 "alta procura" do tier gratuito costuma passar
+                    continue
+                return CallResult(error=str(e))
         row = ew.build_usage_row(run_id=self.state["session_id"], agent_id=participant, model=model,
                                  response=response, call_kind=CALL_KINDS[stage])
         rnd = self.state["round"]
