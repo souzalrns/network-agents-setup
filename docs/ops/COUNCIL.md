@@ -338,6 +338,8 @@ Para discussões estruturais e de projeto: o conselho entrega **a base e o plano
 
 **Ferramentas MCP** (`mcp/plan_runner`): `council_get_request` e `council_status` (scope `runner:council:read`), `council_submit_position` (scope `runner:council:submit`, mutante: em `strict` exige `PLAN_RUNNER_MCP_KEY`). A auditoria não regista tema, posições nem chaves. CLI equivalente: `python -m plan_runner.council_session submit ...`.
 
+**Perguntas abertas.** Para temas como "estruturar um app" ou "analisar o repo e propor mudanças", cada IA acrescenta `proposals` (título, porquê com prova, passos, critério de pronto, o que fica de fora; até 5) e usa `vote: approve` se defende as propostas. O chairman funde as convergentes num só plano e regista as restantes como dissidência.
+
 **Segurança.** Uma `key_env` declarada mas sem variável no servidor falha fechada; as chaves comparam-se em tempo constante; o chairman nunca vê os nomes das IAs. Testes: `runner/tests/test_council_external.py` e `test_council_mcp_tools.py`.
 
 **Custo.** Só o chairman gasta tokens (1 chamada por ronda). As IAs externas correm nas subscrições do maestro; o tipo `api` não está implementado (regra: nada pago).
