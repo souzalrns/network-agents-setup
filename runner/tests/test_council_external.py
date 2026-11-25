@@ -346,3 +346,38 @@ def test_status_da_cli_reflete_as_entregas_ao_vivo(tmp_path, monkeypatch):
     submit_all(s, {"gpt": "approve"})
     summary = cs.CouncilSession.load(s.out, deps=deps(CouncilGemini(), l4store=False)).summary()
     assert summary["waiting_for"] == ["claude"]
+
+
+# ---------------------------------------------------------------------------
+# Perguntas abertas: propostas estruturadas (estruturar um app, analisar um repo)
+# ---------------------------------------------------------------------------
+
+PROPOSALS = [
+    {"title": "Fechar o M-011 com sessao real", "why": "PENDENCIAS.md M-011", "steps": ["abrir sessao", "colar respostas"],
+     "done_when": ["out/plan.yaml exists"], "out_of_scope": ["Execution Broker"]},
+    {"title": "Triar BLOQUEADO", "why": "PENDENCIAS.md", "steps": ["listar"], "done_when": [], "out_of_scope": []},
+    {"sem": "titulo"},  # descartada
+]
+
+
+def test_propostas_normalizadas_e_limitadas():
+    p = cs.normalize_position({**pos(), "proposals": PROPOSALS + [{"title": f"x{i}"} for i in range(8)]})
+    assert [x["title"] for x in p["proposals"]][:2] == ["Fechar o M-011 com sessao real", "Triar BLOQUEADO"]
+    assert len(p["proposals"]) == 5 and p["proposals"][0]["steps"] == ["abrir sessao", "colar respostas"]
+    assert "proposals" not in cs.normalize_position(pos())  # opcional: sem propostas, tudo como antes
+    assert "proposals" not in cs.normalize_position({**pos(), "proposals": "lixo"})
+
+
+def test_pedido_explica_pergunta_aberta_e_propostas_chegam_anonimas_ao_chairman(tmp_path, monkeypatch):
+    register(monkeypatch, ["claude", "gpt", "grok"])
+    g = CouncilGemini(verdict=VERDICT)
+    s = open_session(tmp_path, g)
+    assert "PERGUNTA ABERTA" in prov.paste_ready(s.out, "gpt") and "proposals" in prov.paste_ready(s.out, "gpt")
+    for pid in ("claude", "gpt", "grok"):
+        prov.submit_position(s.out, pid, {**pos(), "proposals": PROPOSALS, "position": f"{pid} propoe duas mudancas."})
+    out = cs.CouncilSession.load(s.out, deps=deps(g, l4store=False)).resume()
+    assert out["status"] == "awaiting_human"
+    chairman = g.calls[0]
+    assert "propostas" in chairman["user"] and "Fechar o M-011 com sessao real" in chairman["user"]
+    assert "funde as convergentes" in chairman["system"]
+    assert "ext:" not in chairman["user"]
