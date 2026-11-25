@@ -55,7 +55,7 @@ jobs:
 
       - name: gitleaks (histórico completo, valores redigidos)
         run: |
-          "$(go env GOPATH)/bin/gitleaks" git --redact --no-banner --exit-code 1 \
+          "$(go env GOPATH)/bin/gitleaks" git --redact --verbose --no-banner --exit-code 1 \
             --report-format json --report-path gitleaks-report.json .
 
       - name: Relatório (só se falhar; valores redigidos)
