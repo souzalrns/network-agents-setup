@@ -1222,8 +1222,12 @@ def main(argv: list[str] | None = None) -> int:
     sb = sub.add_parser("submit", help="Entrega a posicao de uma IA externa a partir de um ficheiro JSON (alternativa ao MCP)")
     sb.add_argument("dir", type=Path)
     sb.add_argument("provider")
-    sb.add_argument("--file", type=Path, required=True)
+    sb.add_argument("--file", type=Path, required=True, help="Ficheiro com a resposta da IA (JSON puro ou texto colado com o JSON la dentro)")
     sb.add_argument("--key", default=None, help="Chave da IA (so se o cadastro tiver key_env)")
+    pp = sub.add_parser("prompt", help="Ponte manual: texto completo a colar numa IA externa (so JSON de volta)")
+    pp.add_argument("dir", type=Path)
+    pp.add_argument("provider")
+    pp.add_argument("--key", default=None)
     s = sub.add_parser("status", help="Estado da sessao")
     s.add_argument("dir", type=Path)
     c = sub.add_parser("cost", help="Custo de 1 ronda com countTokens (sem gerar texto)")
@@ -1248,8 +1252,11 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "cost":
             context = args.context_file.read_text(encoding="utf-8") if args.context_file else None
             result = estimate_cost(args.council_type, args.topic, context=context)
+        elif args.cmd == "prompt":
+            print(prov.paste_ready(args.dir, args.provider, key=args.key, repo_root=REPO_ROOT))
+            return 0
         elif args.cmd == "submit":
-            result = prov.submit_position(args.dir, args.provider, json.loads(args.file.read_text(encoding="utf-8")),
+            result = prov.submit_position(args.dir, args.provider, args.file.read_text(encoding="utf-8"),
                                           key=args.key, repo_root=REPO_ROOT)
         else:
             session = CouncilSession.load(args.dir, deps=CouncilDeps.from_env())

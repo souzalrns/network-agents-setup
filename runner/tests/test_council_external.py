@@ -310,3 +310,31 @@ def test_revisao_humana_abre_nova_ronda_e_pede_novas_posicoes(tmp_path, monkeypa
     assert out["status"] == "awaiting_external" and out["round"] == 2
     assert out["waiting_for"] == ["claude", "gpt", "grok"]  # ronda nova: as IAs voltam a ser pedidas
     assert "detalha os custos" in prov.get_request(s.out, "claude")["request"]  # e vêem o comentario do humano
+
+
+# ---------------------------------------------------------------------------
+# Ponte manual: colar o pedido numa IA e colar a resposta de volta (sem MCP)
+# ---------------------------------------------------------------------------
+
+def test_ponte_manual_pedido_para_colar_e_resposta_suja(tmp_path, monkeypatch):
+    register(monkeypatch, ["claude", "gpt", "grok"])
+    s = open_session(tmp_path, CouncilGemini(verdict=VERDICT))
+    text = prov.paste_ready(s.out, "gpt")
+    assert TOPIC in text and "APENAS" in text and "ext:" not in text and "claude" not in text
+    # resposta como as IAs de chat costumam dar: conversa + cerca de codigo + conversa
+    reply = "Claro! Aqui vai:\n```json\n" + json.dumps(pos("conditional", conditions=["medir"])) + "\n```\nEspero que ajude."
+    assert prov.submit_position(s.out, "gpt", reply)["ok"]
+    assert prov.read_submission(s.out, 1, "gpt")["vote"] == "conditional"
+    with pytest.raises(prov.ProviderError, match="não é JSON válido"):
+        prov.submit_position(s.out, "grok", "so conversa, sem objecto nenhum")
+
+
+def test_cli_prompt_e_submit_de_texto_colado(tmp_path, monkeypatch, capsys):
+    register(monkeypatch, ["claude"])
+    s = open_session(tmp_path, CouncilGemini(verdict=VERDICT))
+    assert cs.main(["prompt", str(s.out), "claude"]) == 0
+    assert TOPIC in capsys.readouterr().out
+    f = tmp_path / "resposta.txt"
+    f.write_text("Resposta:\n" + json.dumps(pos("approve")) + "\nfim", encoding="utf-8")
+    assert cs.main(["submit", str(s.out), "claude", "--file", str(f)]) == 0
+    assert prov.read_submission(s.out, 1, "claude")["vote"] == "approve"

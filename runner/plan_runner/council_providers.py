@@ -179,6 +179,31 @@ def waiting_for(state: dict[str, Any], out_dir: Path) -> list[str]:
 # As 3 operações que o MCP expõe
 # ---------------------------------------------------------------------------
 
+def extract_json(text: str) -> Any:
+    """JSON de uma resposta colada à mão: aceita texto à volta e cercas ```json. Erro claro se não houver objecto."""
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as first:
+        decoder = json.JSONDecoder()
+        for i, ch in enumerate(text):
+            if ch == "{":
+                try:
+                    obj, _ = decoder.raw_decode(text[i:])
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(obj, dict):
+                    return obj
+        raise ProviderError(f"a posição não é JSON válido ({first.msg})") from first
+
+
+def paste_ready(out_dir: Path, provider_id: str, *, key: str | None = None, repo_root: Path = REPO_ROOT) -> str:
+    """Ponte manual (sem MCP): o texto completo para colar numa IA, a pedir só o JSON da posição."""
+    req = get_request(out_dir, provider_id, key=key, repo_root=repo_root)
+    return (f"{req['instructions']}\n\n{req['request']}\n\nFORMATO DA RESPOSTA:\n{req['answer_format']}\n\n"
+            "Responde APENAS com um objecto JSON nesse formato, sem texto antes ou depois.")
+
+
 def get_request(out_dir: Path, provider_id: str, *, key: str | None = None, repo_root: Path = REPO_ROOT) -> dict[str, Any]:
     """O pedido para a posição desta IA na ronda actual (sem ver as posições das outras)."""
     from . import council_session as cs
@@ -206,10 +231,7 @@ def submit_position(out_dir: Path, provider_id: str, data: Any, *, key: str | No
     if state.get("status") != "awaiting_external":
         raise ProviderError(f"a sessão está em `{state.get('status')}`, não a espera de posições")
     if isinstance(data, str):
-        try:
-            data = json.loads(data)
-        except json.JSONDecodeError as e:
-            raise ProviderError(f"a posição não é JSON válido ({e.msg})") from e
+        data = extract_json(data)
     try:
         cs.normalize_position(data)
     except ValueError as e:
