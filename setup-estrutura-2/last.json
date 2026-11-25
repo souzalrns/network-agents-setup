@@ -2,7 +2,6 @@
   "ok": true,
   "round": 1,
   "waiting_for": [
-    "gpt",
     "grok",
     "perplexity",
     "manus"
