@@ -31,6 +31,14 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 | **Duix Avatar** | Avatar digital e clonagem de voz offline | Não para uso pequeno | Sim | Licença própria (DUIX.COM Community License, não OSI): exige atribuição e licença comercial acima de certos limites de utilizadores. **Clonar rosto ou voz só com consentimento escrito da pessoa.** Precisa de GPU NVIDIA. |
 | **Caveman** | Reduzir tokens de saída dos agentes | Não (MIT) | Não | Acrescenta tokens de entrada e pode piorar respostas curtas. **Medir antes de ligar** em agentes de produção. |
 | **Orca** | Orquestração de agentes Claude Code numa app de desktop | Não (MIT) | Sim, moderado | App de terceiros com acesso aos repositórios; serve quem trabalha num PC local. |
+| **AirLLM** | Correr modelos grandes em placas gráficas pequenas | Não | Não | Lenta, porque carrega o modelo por camadas. Precisa de GPU. |
+| **Amazon Chronos** | Previsão de séries temporais (vendas, procura) | Não | Não | Confirmar a licença no repositório antes de usar. Fora do núcleo de agentes de negócio. |
+| **Agency Agents** (e o contains-studio) | Biblioteca de mais de 200 personas de agentes em texto | Não (MIT) | Sim, baixo | Instalar só as divisões de que precisa (o script permite) e ler os prompts antes: instalar tudo gasta contexto e duplica agentes que já tenha. |
+| **Ruflo** | Meta-harness de agentes em enxame | Não (MIT) | Sim, moderado | Sobrepõe-se a um router próprio: só faz sentido a quem ainda não tem orquestração. |
+| **PlanExe** | Planos com Gantt, riscos e partes interessadas a partir de uma frase | Sim, indirecta: precisa de chave de um modelo (ex.: OpenRouter) ou de conta no serviço alojado | Não | O `planwright` deste repo já cobre planeamento com Gantt; usar o PlanExe só se quiser planos mais longos. |
+| **Cognee** | Memória em grafo para agentes | Sim, indirecta: gasta quota do modelo | Não | Sobrepõe-se ao RAG e à memória do repo; testar só se a memória actual mostrar limites. |
+| **NotebookLM como memória externa** | Segundo cérebro pesquisável para sessões do Claude Code | Não | **Sim** | Envia o contexto das sessões para a Google: **não usar com dados de clientes**. |
+| **LangGraph, CrewAI, PydanticAI** | Frameworks de agentes (todos MIT) | Não | Não | Dependências opcionais ou referência de desenho; o repo tem runtime próprio. |
 | **Wren AI** | Perguntas em linguagem natural sobre bases de dados (texto para SQL), com camada semântica e servidor MCP | Não (núcleo Apache-2.0; existe versão comercial) | Sim | Dá a um modelo acesso a dados reais: ligar **só com utilizador de base de dados só de leitura**. Precisa de chave de um modelo de linguagem. |
 | **agenttrace** | Relatórios locais de custo, tokens e lentidão das sessões de agentes de código | Não | Sim, baixo | Corre localmente e não envia prompts para fora. Instala-se por script (`curl … \| sh`): ler o script antes de correr e confirmar a licença no repositório. Só serve a quem usa o Claude Code no próprio computador. |
 
@@ -46,20 +54,14 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 
 ## Avaliadas e não adoptadas
 
+Só entram aqui as que são más **para qualquer utilizador** (imaturas, arquivadas ou com risco de segurança). "Não serve a um utilizador em particular" não é razão para recusar: vai para os opcionais, com o aviso.
+
 | Ferramenta | Razão |
 |---|---|
-| **AirLLM** | Sem caso de uso no setup; lenta, carrega o modelo por camadas. |
-| **Amazon Chronos** | Previsão de séries temporais genérica, fora do âmbito de uma rede de agentes de negócio. |
 | **Obscura** (navegador headless em Rust) | Projecto muito novo, binário de terceiros, anti-fingerprint com uso dual. Reabrir só com versão estável 1.x e um caso real de falha do Playwright. |
 | **gstack** | Modo de equipa que se actualiza sozinho em silêncio, compila um binário e inclui um comando de cookies do navegador. Fica só como link de referência. |
 | **LearnHarness** | App de estudo imatura (v0.6), instalador sem assinatura; os cursos continuam na skill `/teach`. |
-| **Agency Agents** (e o fork do contains-studio) | Biblioteca de mais de 200 personas de agentes em texto. Instalar tudo duplica os agentes da rede e gasta contexto. Fica como **fonte de consulta** de prompts, nunca instalada em bloco. |
-| **Ruflo** | Meta-harness de agentes em enxame; sobrepõe-se ao router e aos agentes da rede, e a regra do repo é não substituir os agentes com contexto real por templates genéricos. |
 | **Vanna AI** | Repositório principal arquivado (só leitura) a 2026-03-29. A alternativa mantida é o Wren AI, nos opcionais. |
-| **PlanExe** | Precisa de chave de um modelo pago (OpenRouter) ou de conta no serviço alojado, e o `planwright` já cobre o planeamento com Gantt (ver `PLANWRIGHT-2`). |
-| **NotebookLM como memória externa** | Sobrepõe-se à memória em Supabase e enviaria o contexto das sessões (que pode incluir dados de clientes) para um serviço de terceiros. |
-| **Cognee** | Sobrepõe-se à memória e ao RAG existentes e gastaria a quota do modelo sem ganho demonstrado. Reabrir só se a memória actual mostrar limites. |
-| **LangGraph, CrewAI, PydanticAI** | Todos MIT e mantidos, mas a rede tem runtime próprio. Ficam como **referência** de desenho, sem dependência. |
 
 ## Como acrescentar uma ferramenta a este catálogo
 
