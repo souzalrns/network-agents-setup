@@ -55,8 +55,8 @@
   "scope": "project:network-agents-setup",
   "max_tokens": 80000,
   "model": "gemini-flash-lite-latest",
-  "status": "error",
-  "stage": "synthesize",
+  "status": "awaiting_human",
+  "stage": "hitl",
   "round": 1,
   "rounds": [
     {
@@ -564,14 +564,202 @@
       "ballots": {},
       "ballot_errors": {},
       "peer_scores": {},
-      "verdict": null,
-      "gate": null,
-      "hitl": null,
-      "memory": null
+      "verdict": {
+        "plan": {
+          "id": "network-agents-setup-structural-enhancements",
+          "objective": "Transformar o repositório numa infraestrutura de agentes leve, de uso gratuito e baixa capacidade, garantindo runtime 100% local, pacotes de domínio desacoplados, identidade e recibos locais, e triagem de dependências e documentação.",
+          "done_when": [
+            "docs/STATUS.md exists",
+            "config/areas.yaml exists"
+          ],
+          "steps": [
+            {
+              "id": "s1",
+              "action": "resolver-p81-domain-packs",
+              "task": "Resolver P-81 opção A (_kb_for por config/areas.yaml) e estruturar Domain Packs como unidades de reutilização instaláveis e removíveis com contrato de CI.",
+              "depends_on": []
+            },
+            {
+              "id": "s2",
+              "action": "runtime-local-zero-infra",
+              "task": "Implementar o worker local OpenAI-compatível em external_worker.py (suporte a Ollama/llama.cpp) e garantir suporte a SQLite/filesystem como padrão (perfil edge).",
+              "depends_on": [
+                "s1"
+              ]
+            },
+            {
+              "id": "s3",
+              "action": "nucleo-minimo-extras",
+              "task": "Criar pyproject.toml isolando o núcleo leve (PyYAML, jsonschema, httpx) e definindo extras para rag, mcp e langgraph, reduzindo o tamanho de instalação abaixo de 50 MB.",
+              "depends_on": [
+                "s2"
+              ]
+            },
+            {
+              "id": "s4",
+              "action": "cortar-peso-morto-e-triagem",
+              "task": "Remover ou arquivar pastas não utilizadas (vendor, oss, pacotes legados) após validação por grep/CI, e triar o passivo documental em PENDENCIAS.md reduzindo os itens bloqueados.",
+              "depends_on": [
+                "s3"
+              ]
+            },
+            {
+              "id": "s5",
+              "action": "governanca-local-e-benchmarks",
+              "task": "Implementar primitivas locais de identidade, Delegation Graph, Action Receipts encadeados via SQLite/JSONL e criar o benchmark tiny golden para validação de custo e execução.",
+              "depends_on": [
+                "s4"
+              ]
+            }
+          ]
+        },
+        "decision": "conditional",
+        "summary": "O conselho converge de forma unânime no voto 'approve' (condicionado), identificando que o repositório se destaca pelo controlo, evidência, orçamentos e planos declarativos, mas exige um runtime 100% local, corte de peso morto, enxugamento de dependências e adoção de pacotes de domínio para ser a escolha ideal com uso gratuito e baixa capacidade.",
+        "rationale": "Todas as posições (A, B, C, D, E) apontam para a necessidade de descentralizar a dependência exclusiva de infraestruturas pesadas (Postgres/pgvector, Cloud/Gemini API) e tornar o núcleo leve, executável localmente (com SQLite, ficheiros ou Ollama) e auditável por receipts e orçamentos rígidos (BudgetGuard). A ausência de ranking entre pares foi suprida por uma análise rigorosa das propostas, convergindo num plano único e executável que funde as iniciativas complementares e elimina o peso morto.",
+        "conditions": [
+          "Resolver o P-81 (opção A: generalizar _kb_for por config/areas.yaml) antes de iniciar grandes refatorações estruturais [Posição A].",
+          "Garantir que o perfil lite/edge executa o quickstart sem Postgres e sem API paga externa [Posições B, D, E].",
+          "Cada mudança deve possuir critério de pronto verificável por teste, run ou medição [Posição E]."
+        ],
+        "dissent": [
+          {
+            "position": "A",
+            "member_id": "ext:gpt",
+            "point": "Alerta para não iniciar cinco iniciativas em paralelo e evitar grande refatoração imediata, focando primeiro no P-81.",
+            "source": "chairman"
+          },
+          {
+            "position": "C",
+            "member_id": "ext:perplexity",
+            "point": "Destaca que a premissa do BudgetGuard em parte contraria o README (que já declara tectos verificados), alertando para evitar regressões na rede de agentes MCP.",
+            "source": "chairman"
+          },
+          {
+            "position": "E",
+            "member_id": "ext:claude",
+            "point": "Propõe a remoção física de peso morto (vendor, oss, pacotes legados) da árvore, o que exige cautela para não quebrar dependências do agent-network-mcp.",
+            "source": "chairman"
+          },
+          {
+            "position": "B",
+            "member_id": "ext:grok",
+            "source": "gate",
+            "point": "votou approve: O repo ja ganha em controlo, evidencia, domain packs e stub de custo zero. Para ser a melhor escolha em uso gratuito e baixa capacidade faltam: caminho 100% local como first-class, nucleo minimo com perfil lite, governanca local minima antes do AGT, tiers gratuitos com Domain Onboarding Cost medido "
+          },
+          {
+            "position": "D",
+            "member_id": "ext:manus",
+            "source": "gate",
+            "point": "votou approve: O repo deve ser a camada gratuita de execucao responsavel: planos portateis, agentes substituiveis, custo limitado, pausa humana e prova verificavel. Ha tensao entre a promessa do quickstart sem chave e um caminho de producao que depende de Gemini, MCP, Postgres/pgvector e governanca parcialmente mo"
+          }
+        ],
+        "kill_criteria": [
+          "Nenhuma prova mensurável de execução económica e reutilização de domínio após a implementação do P-81 [Posição A].",
+          "O perfil lite/edge não corre o quickstart ou o plano demo sem Postgres ou sem serviço externo [Posições B, D].",
+          "Worker local não consegue completar um plano demo com um modelo de 7B ou menos [Posição E]."
+        ],
+        "next_actions": [
+          {
+            "action": "Executar o plano unificado estrutural para o repositório",
+            "owner": "plan_runner"
+          }
+        ],
+        "risks": [
+          "Diluição de esforço com múltiplas frentes em paralelo [Posição A].",
+          "Backend SQLite duplicando manutenção se coexistir incorretamente com L4/L5 [Posição B].",
+          "Modelos pequenos locais falharem em tool-use e darem falsa impressão de fraqueza no motor [Posição E]."
+        ],
+        "confidence": 0.73,
+        "invalid": [],
+        "participants": {
+          "chairman": "meta.chairman",
+          "members": {
+            "ext:claude": {
+              "role": "member",
+              "vote": "approve",
+              "confidence": 0.72,
+              "veto": false,
+              "error": null
+            },
+            "ext:gpt": {
+              "role": "member",
+              "vote": "approve",
+              "confidence": 0.72,
+              "veto": false,
+              "error": null
+            },
+            "ext:grok": {
+              "role": "member",
+              "vote": "approve",
+              "confidence": 0.72,
+              "veto": false,
+              "error": null
+            },
+            "ext:perplexity": {
+              "role": "member",
+              "vote": "approve",
+              "confidence": 0.7,
+              "veto": false,
+              "error": null
+            },
+            "ext:manus": {
+              "role": "member",
+              "vote": "approve",
+              "confidence": 0.75,
+              "veto": false,
+              "error": null
+            }
+          }
+        }
+      },
+      "gate": {
+        "result": "pass",
+        "gate_ok": true,
+        "reasons": [],
+        "warnings": [],
+        "tau": 0.7,
+        "confidence": 0.73,
+        "vetoes": [],
+        "allow": [
+          "approve",
+          "reject",
+          "edit"
+        ]
+      },
+      "hitl": {
+        "request_id": "hitl_4cf5347b-3881-42a3-8ae2-825aeb9ea2b9",
+        "step_id": "council_r1",
+        "allow": [
+          "approve",
+          "reject",
+          "edit"
+        ],
+        "decision": null,
+        "comment": null,
+        "responder": null
+      },
+      "memory": {
+        "status": "disabled",
+        "reason": "sem DATABASE_URL: o veredicto fica so em council.json/verdict.json"
+      }
     }
   ],
-  "ledger": [],
-  "error": "chairman: gemini HTTP 503: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later. -- `resume` repete a sintese",
+  "ledger": [
+    {
+      "round": 1,
+      "stage": "synthesize",
+      "participant": "meta.chairman",
+      "call_kind": "council_chairman",
+      "model": "gemini-flash-lite-latest",
+      "tokens_in": 6634,
+      "tokens_out": 1355,
+      "tokens_total": 7989,
+      "status": "ok",
+      "remote": "skipped",
+      "prompt_chars": 23672
+    }
+  ],
+  "error": null,
   "created_at": "2026-11-25T20:37:10.699431+00:00",
   "panel": {
     "mode": "full",
@@ -585,9 +773,156 @@
   },
   "partial": false,
   "waiting_for": [],
-  "updated_at": "2026-11-25T20:43:59.777334+00:00",
-  "verdict": null,
-  "gate_ok": null,
+  "updated_at": "2026-11-25T20:45:25.567521+00:00",
+  "verdict": {
+    "plan": {
+      "id": "network-agents-setup-structural-enhancements",
+      "objective": "Transformar o repositório numa infraestrutura de agentes leve, de uso gratuito e baixa capacidade, garantindo runtime 100% local, pacotes de domínio desacoplados, identidade e recibos locais, e triagem de dependências e documentação.",
+      "done_when": [
+        "docs/STATUS.md exists",
+        "config/areas.yaml exists"
+      ],
+      "steps": [
+        {
+          "id": "s1",
+          "action": "resolver-p81-domain-packs",
+          "task": "Resolver P-81 opção A (_kb_for por config/areas.yaml) e estruturar Domain Packs como unidades de reutilização instaláveis e removíveis com contrato de CI.",
+          "depends_on": []
+        },
+        {
+          "id": "s2",
+          "action": "runtime-local-zero-infra",
+          "task": "Implementar o worker local OpenAI-compatível em external_worker.py (suporte a Ollama/llama.cpp) e garantir suporte a SQLite/filesystem como padrão (perfil edge).",
+          "depends_on": [
+            "s1"
+          ]
+        },
+        {
+          "id": "s3",
+          "action": "nucleo-minimo-extras",
+          "task": "Criar pyproject.toml isolando o núcleo leve (PyYAML, jsonschema, httpx) e definindo extras para rag, mcp e langgraph, reduzindo o tamanho de instalação abaixo de 50 MB.",
+          "depends_on": [
+            "s2"
+          ]
+        },
+        {
+          "id": "s4",
+          "action": "cortar-peso-morto-e-triagem",
+          "task": "Remover ou arquivar pastas não utilizadas (vendor, oss, pacotes legados) após validação por grep/CI, e triar o passivo documental em PENDENCIAS.md reduzindo os itens bloqueados.",
+          "depends_on": [
+            "s3"
+          ]
+        },
+        {
+          "id": "s5",
+          "action": "governanca-local-e-benchmarks",
+          "task": "Implementar primitivas locais de identidade, Delegation Graph, Action Receipts encadeados via SQLite/JSONL e criar o benchmark tiny golden para validação de custo e execução.",
+          "depends_on": [
+            "s4"
+          ]
+        }
+      ]
+    },
+    "decision": "conditional",
+    "summary": "O conselho converge de forma unânime no voto 'approve' (condicionado), identificando que o repositório se destaca pelo controlo, evidência, orçamentos e planos declarativos, mas exige um runtime 100% local, corte de peso morto, enxugamento de dependências e adoção de pacotes de domínio para ser a escolha ideal com uso gratuito e baixa capacidade.",
+    "rationale": "Todas as posições (A, B, C, D, E) apontam para a necessidade de descentralizar a dependência exclusiva de infraestruturas pesadas (Postgres/pgvector, Cloud/Gemini API) e tornar o núcleo leve, executável localmente (com SQLite, ficheiros ou Ollama) e auditável por receipts e orçamentos rígidos (BudgetGuard). A ausência de ranking entre pares foi suprida por uma análise rigorosa das propostas, convergindo num plano único e executável que funde as iniciativas complementares e elimina o peso morto.",
+    "conditions": [
+      "Resolver o P-81 (opção A: generalizar _kb_for por config/areas.yaml) antes de iniciar grandes refatorações estruturais [Posição A].",
+      "Garantir que o perfil lite/edge executa o quickstart sem Postgres e sem API paga externa [Posições B, D, E].",
+      "Cada mudança deve possuir critério de pronto verificável por teste, run ou medição [Posição E]."
+    ],
+    "dissent": [
+      {
+        "position": "A",
+        "member_id": "ext:gpt",
+        "point": "Alerta para não iniciar cinco iniciativas em paralelo e evitar grande refatoração imediata, focando primeiro no P-81.",
+        "source": "chairman"
+      },
+      {
+        "position": "C",
+        "member_id": "ext:perplexity",
+        "point": "Destaca que a premissa do BudgetGuard em parte contraria o README (que já declara tectos verificados), alertando para evitar regressões na rede de agentes MCP.",
+        "source": "chairman"
+      },
+      {
+        "position": "E",
+        "member_id": "ext:claude",
+        "point": "Propõe a remoção física de peso morto (vendor, oss, pacotes legados) da árvore, o que exige cautela para não quebrar dependências do agent-network-mcp.",
+        "source": "chairman"
+      },
+      {
+        "position": "B",
+        "member_id": "ext:grok",
+        "source": "gate",
+        "point": "votou approve: O repo ja ganha em controlo, evidencia, domain packs e stub de custo zero. Para ser a melhor escolha em uso gratuito e baixa capacidade faltam: caminho 100% local como first-class, nucleo minimo com perfil lite, governanca local minima antes do AGT, tiers gratuitos com Domain Onboarding Cost medido "
+      },
+      {
+        "position": "D",
+        "member_id": "ext:manus",
+        "source": "gate",
+        "point": "votou approve: O repo deve ser a camada gratuita de execucao responsavel: planos portateis, agentes substituiveis, custo limitado, pausa humana e prova verificavel. Ha tensao entre a promessa do quickstart sem chave e um caminho de producao que depende de Gemini, MCP, Postgres/pgvector e governanca parcialmente mo"
+      }
+    ],
+    "kill_criteria": [
+      "Nenhuma prova mensurável de execução económica e reutilização de domínio após a implementação do P-81 [Posição A].",
+      "O perfil lite/edge não corre o quickstart ou o plano demo sem Postgres ou sem serviço externo [Posições B, D].",
+      "Worker local não consegue completar um plano demo com um modelo de 7B ou menos [Posição E]."
+    ],
+    "next_actions": [
+      {
+        "action": "Executar o plano unificado estrutural para o repositório",
+        "owner": "plan_runner"
+      }
+    ],
+    "risks": [
+      "Diluição de esforço com múltiplas frentes em paralelo [Posição A].",
+      "Backend SQLite duplicando manutenção se coexistir incorretamente com L4/L5 [Posição B].",
+      "Modelos pequenos locais falharem em tool-use e darem falsa impressão de fraqueza no motor [Posição E]."
+    ],
+    "confidence": 0.73,
+    "invalid": [],
+    "participants": {
+      "chairman": "meta.chairman",
+      "members": {
+        "ext:claude": {
+          "role": "member",
+          "vote": "approve",
+          "confidence": 0.72,
+          "veto": false,
+          "error": null
+        },
+        "ext:gpt": {
+          "role": "member",
+          "vote": "approve",
+          "confidence": 0.72,
+          "veto": false,
+          "error": null
+        },
+        "ext:grok": {
+          "role": "member",
+          "vote": "approve",
+          "confidence": 0.72,
+          "veto": false,
+          "error": null
+        },
+        "ext:perplexity": {
+          "role": "member",
+          "vote": "approve",
+          "confidence": 0.7,
+          "veto": false,
+          "error": null
+        },
+        "ext:manus": {
+          "role": "member",
+          "vote": "approve",
+          "confidence": 0.75,
+          "veto": false,
+          "error": null
+        }
+      }
+    }
+  },
+  "gate_ok": true,
   "hitl_decision": null,
-  "tokens_total": 0
+  "tokens_total": 7989
 }
