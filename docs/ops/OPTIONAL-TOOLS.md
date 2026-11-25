@@ -31,7 +31,6 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 | **Duix Avatar** | Avatar digital e clonagem de voz offline | Não para uso pequeno | Sim | Licença própria (DUIX.COM Community License, não OSI): exige atribuição e licença comercial acima de certos limites de utilizadores. **Clonar rosto ou voz só com consentimento escrito da pessoa.** Precisa de GPU NVIDIA. |
 | **Caveman** | Reduzir tokens de saída dos agentes | Não (MIT) | Não | Acrescenta tokens de entrada e pode piorar respostas curtas. **Medir antes de ligar** em agentes de produção. |
 | **Orca** | Orquestração de agentes Claude Code numa app de desktop | Não (MIT) | Sim, moderado | App de terceiros com acesso aos repositórios; serve quem trabalha num PC local. |
-| **AirLLM** | Correr modelos grandes em placas gráficas pequenas | Não | Não | Lenta, porque carrega o modelo por camadas. Precisa de GPU. |
 | **Amazon Chronos** | Previsão de séries temporais (vendas, procura) | Não | Não | Confirmar a licença no repositório antes de usar. Fora do núcleo de agentes de negócio. |
 | **Agency Agents** (e o contains-studio) | Biblioteca de mais de 200 personas de agentes em texto | Não (MIT) | Sim, baixo | Instalar só as divisões de que precisa (o script permite) e ler os prompts antes: instalar tudo gasta contexto e duplica agentes que já tenha. |
 | **Ruflo** | Meta-harness de agentes em enxame | Não (MIT) | Sim, moderado | Sobrepõe-se a um router próprio: só faz sentido a quem ainda não tem orquestração. |
@@ -51,6 +50,14 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 | **Plugin `security-guidance`** (Anthropic) | O Claude revê o próprio código à procura de vulnerabilidades durante a sessão | Gratuito, mas as revisões consomem quota de utilização. Em sessões na nuvem, declarar `enabledPlugins` em `.claude/settings.json` do repo. Activar só nos repos que vão para produção. |
 | **public-apis** | Lista de consulta para o agente de radar de ferramentas; nada a instalar. Cada API listada tem regras próprias e algumas são pagas. |
 | **Metodologia de análise de conteúdo** | Dissecar gancho, virada e fecho de conteúdos de referência (links fornecidos pelo utilizador, transcritos pelo pipeline existente). **Não** descarregar posts de redes sociais com contas pessoais: viola os termos das plataformas e arrisca bloqueio. |
+
+## Adiadas (sem hardware para testar)
+
+Não são más: o mantenedor não as consegue testar na máquina actual e por isso não as instala. Reavaliam-se quando houver o hardware.
+
+| Ferramenta | O que faz | Quando reavaliar |
+|---|---|---|
+| **AirLLM** | Correr modelos grandes em placas gráficas pequenas (lenta: carrega o modelo por camadas) | Quando o mantenedor trocar de máquina e tiver GPU. Sem custo nem risco de segurança conhecidos. |
 
 ## Avaliadas e não adoptadas
 
