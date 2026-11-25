@@ -1,0 +1,2 @@
+{"id": "evt_dcf1100fda8f", "type": "council_started", "run_id": "council_d4e6708404", "at": "2026-11-25T19:59:50.674416+00:00", "payload": {"council": "structural", "members": ["ext:claude", "ext:gpt", "ext:grok"], "chairman": "meta.chairman", "max_tokens": 80000, "scope": "project:network-agents-setup"}}
+{"id": "evt_c3a1210cbf85", "type": "awaiting_external", "run_id": "council_d4e6708404", "at": "2026-11-25T19:59:50.675395+00:00", "payload": {"round": 1, "waiting_for": ["claude", "gpt", "grok"]}}
