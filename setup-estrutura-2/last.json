@@ -1,5 +1,27 @@
 {
-  "ok": true,
+  "session_id": "council_8f85911499",
+  "council": "structural",
+  "dir": "/home/runner/work/network-agents-setup/network-agents-setup/council-sessions/setup-estrutura-2",
+  "status": "error",
+  "stage": "synthesize",
   "round": 1,
+  "error": "chairman: gemini HTTP 503: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later. -- `resume` repete a sintese",
+  "verdict": null,
+  "gate": null,
+  "hitl": null,
+  "memory": null,
+  "tokens_by_round": {},
+  "tokens_total": 0,
+  "max_tokens": 80000,
+  "panel": {
+    "mode": "full",
+    "providers": [
+      "claude",
+      "gpt",
+      "grok",
+      "perplexity",
+      "manus"
+    ]
+  },
   "waiting_for": []
 }

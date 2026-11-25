@@ -1,7 +1,7 @@
 {
   "kind": "council",
   "run_id": "council_8f85911499",
-  "state": "awaiting_external",
+  "state": "error",
   "paused_at_step": null,
   "max_tokens": 80000
 }

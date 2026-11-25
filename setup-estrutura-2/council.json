@@ -55,8 +55,8 @@
   "scope": "project:network-agents-setup",
   "max_tokens": 80000,
   "model": "gemini-flash-lite-latest",
-  "status": "awaiting_external",
-  "stage": "independent",
+  "status": "error",
+  "stage": "synthesize",
   "round": 1,
   "rounds": [
     {
@@ -68,7 +68,499 @@
         "D": "ext:manus",
         "E": "ext:claude"
       },
-      "positions": {},
+      "positions": {
+        "ext:claude": {
+          "vote": "approve",
+          "confidence": 0.72,
+          "position": "O diferencial real do repo e controlo e prova (orcamento, gate humano, resume, done_when, auditoria), nao autonomia. Para ser a escolha com uso gratuito e pouca capacidade de processamento, faltam cinco mudancas: caminho de modelo local, nucleo instalavel minimo, cortar peso morto, reduzir o passivo documental e uma prova publica comparavel.",
+          "arguments": [
+            "README.md (Design choice): o posicionamento e controlo e evidencia, onde LangGraph e a referencia de workflows controlados; o repo ja usa LangGraph opcional (runner/plan_runner/langgraph_engine.py)",
+            "README.md e runner/plan_runner/external_worker.py: o worker so tem stub ou Gemini; nao ha caminho de modelo local, que e onde smolagents compete em hardware fraco",
+            "runner/requirements.txt: o minimo instalavel arrasta psycopg, mcp==1.30.0 e 5 pacotes proprios fixados, sem extras separados",
+            "Arvore: vendor (3.6 MB, 291 ficheiros), oss (2.3 MB, 308), packages e apps legados (1.4 MB, 140) em 23 MB, embora o README diga que o TypeScript legado esta arquivado",
+            "docs/initiatives/PENDENCIAS.md: 136 itens vivos, 46 BLOQUEADO; 311 ficheiros .md em docs/"
+          ],
+          "risks": [
+            "Medir valor por menos ficheiros pode apagar capacidades usadas pelo agent-network-mcp",
+            "Modelo pequeno local pode falhar em tool-use e dar a ideia errada de que o motor e fraco",
+            "Comparar com LangGraph/CrewAI sem benchmark reproduzivel vira marketing"
+          ],
+          "conditions": [
+            "Cada mudanca tem criterio de pronto verificavel por teste, run ou medicao",
+            "Nada pago sem aprovacao; so tiers gratuitos"
+          ],
+          "kill_criteria": [
+            "Worker local nao completa o plano demo com um modelo de 7B ou menos",
+            "Instalacao minima continua acima de 50 MB ou exige Postgres",
+            "Menos de 10 dos 46 BLOQUEADO mudam de estado em 30 dias"
+          ],
+          "veto": false,
+          "veto_reason": null,
+          "proposals": [
+            {
+              "title": "Worker de modelo local (OpenAI-compativel)",
+              "why": "README.md e external_worker.py so tem stub e Gemini; smolagents e a referencia local",
+              "steps": [
+                "Acrescentar kind local em external_worker.py com URL OpenAI-compativel (Ollama, llama.cpp)",
+                "Orcamento em tokens com custo USD zero e model_tiers com modelo pequeno por passo",
+                "Teste com servidor falso OpenAI-compativel no CI",
+                "Documentar o plano demo a correr com um modelo de 7B ou menos"
+              ],
+              "done_when": [
+                "python -m plan_runner run <demo> --mode local termina done com o servidor falso no CI",
+                "docs/ops/BUDGET.md descreve o custo zero"
+              ],
+              "out_of_scope": [
+                "Treinar ou afinar modelos",
+                "Suporte a GPU especifica"
+              ]
+            },
+            {
+              "title": "Nucleo minimo instalavel com extras",
+              "why": "runner/requirements.txt mistura nucleo, Postgres, MCP e pacotes proprios",
+              "steps": [
+                "Criar pyproject.toml com nucleo (PyYAML, jsonschema, httpx) e extras rag, mcp, langgraph",
+                "Garantir que o quickstart corre so com o nucleo",
+                "Medir tamanho e tempo de instalacao num venv limpo"
+              ],
+              "done_when": [
+                "Venv limpo com so o nucleo passa o quickstart em stub",
+                "Instalacao do nucleo abaixo de 50 MB, registada em docs"
+              ],
+              "out_of_scope": [
+                "Publicar no PyPI",
+                "Remover o extra rag"
+              ]
+            },
+            {
+              "title": "Cortar peso morto da arvore",
+              "why": "README.md diz que packages e apps estao arquivados, mas vendor, oss, packages e apps pesam 7 MB e ~700 ficheiros",
+              "steps": [
+                "Listar quem usa vendor, oss, packages e apps (grep e CI)",
+                "Mover o que nao e usado para um repo de arquivo ou para uma tag",
+                "Atualizar CI, README e CORE-MAPPING.md"
+              ],
+              "done_when": [
+                "CI verde sem as pastas movidas",
+                "Clone do repo mais pequeno, medido antes e depois"
+              ],
+              "out_of_scope": [
+                "Apagar historico git",
+                "Mexer no agent-network-mcp"
+              ]
+            },
+            {
+              "title": "Triar o passivo documental",
+              "why": "PENDENCIAS.md tem 136 itens vivos, 46 BLOQUEADO, e docs/ tem 311 .md",
+              "steps": [
+                "Rever os 46 BLOQUEADO um a um: desbloquear, decidir ou marcar OBSOLETO (sempre em A/B/C com recomendacao)",
+                "Reduzir o README a uma pagina de entrada para quem chega de fora"
+              ],
+              "done_when": [
+                "BLOQUEADO abaixo de 25 em PENDENCIAS.md",
+                "python -m plan_runner.pendencias passa"
+              ],
+              "out_of_scope": [
+                "Apagar itens sem decisao do maestro"
+              ]
+            },
+            {
+              "title": "Prova publica comparavel",
+              "why": "Sem numeros, o argumento de controlo e gratuito nao convence; a concorrencia ja publica tempo e memoria",
+              "steps": [
+                "Script reproduzivel que corre a mesma tarefa no plan_runner e em LangGraph e CrewAI",
+                "Registar tokens, tempo, memoria de pico e se respeitou orcamento e gate",
+                "Publicar a tabela no README com a data"
+              ],
+              "done_when": [
+                "Script em scripts/ corre num comando e gera a tabela",
+                "Tabela no README com fonte e data"
+              ],
+              "out_of_scope": [
+                "Benchmark de qualidade das respostas",
+                "Comparar com produtos pagos"
+              ]
+            }
+          ],
+          "role": "member"
+        },
+        "ext:gpt": {
+          "vote": "approve",
+          "confidence": 0.72,
+          "position": "Nao comecar por mais agentes, departamentos ou interfaces: consolidar e resolver lacunas estruturais. Posicionamento: infraestrutura de agentes para todos, sem hardware poderoso nem servicos pagos obrigatorios, com controlo de custo na arquitetura. A eficiencia tem de ser demonstrada por testes. Primeiro resolver P-81 opcao A e medir execucao economica e reutilizacao de dominio; nao iniciar grande refatoracao.",
+          "arguments": [
+            "STATUS.md: separacao entre nucleo publico e producao privada e boa decisao",
+            "GOVERNANCE.md: dos sete modulos, 1 REAL, 3 INCOMPLETO, 3 MOCK; SecurityManager aceita password e MFA fixo",
+            "GOVERNANCE.md identifica o Microsoft Agent Governance Toolkit como candidato para identidade, politica e seguranca",
+            "PENDENCIAS.md F6 (trading: 3 agentes, 2 planos, 10 testes, DOC(core)=0, Reuse Ratio 0,67) e P-81 (generalizar _kb_for por config/areas.yaml)",
+            "PENDENCIAS.md T-001 a T-005, Q-001, Q-002; STATUS.md de 25/10/2026 vs 137 itens vivos: confirmar sincronizacao"
+          ],
+          "risks": [
+            "Cinco iniciativas em paralelo diluem o esforco",
+            "Aproveitar o AGT cria dependencia de uma preview externa"
+          ],
+          "conditions": [
+            "Resolver P-81 opcao A antes das restantes",
+            "Eficiencia provada por testes"
+          ],
+          "kill_criteria": [
+            "Nenhuma prova mensuravel de execucao economica e reutilizacao de dominio depois do P-81"
+          ],
+          "veto": false,
+          "veto_reason": null,
+          "proposals": [
+            {
+              "title": "Modo de execucao economica (economico, equilibrado, avancado)",
+              "why": "PENDENCIAS.md T-001 a T-005; GOVERNANCE.md 1.1 e 1.2",
+              "steps": [
+                "Tres niveis escolhidos automaticamente dentro do limite de custo",
+                "Nao convocar cinco agentes quando um resolve; nao usar modelo caro para classificacao simples; nao repetir pesquisas; reutilizar contexto; interromper ao atingir o orcamento"
+              ],
+              "done_when": [
+                "Um computador modesto coordena uma equipa de agentes sem correr modelos gigantes localmente"
+              ],
+              "out_of_scope": [
+                "Treinar modelo proprio"
+              ]
+            },
+            {
+              "title": "Domain Packs como arquitetura de distribuicao (P-81 opcao A primeiro)",
+              "why": "PENDENCIAS.md F6, P-81, F3; STATUS.md",
+              "steps": [
+                "Cada dominio instalavel e removivel, com dependencias e capacidades declaradas",
+                "Agentes herdam capacidades comuns; dados isolados por dominio",
+                "Resolver P-81 opcao A (_kb_for por config/areas.yaml)"
+              ],
+              "done_when": [
+                "DOC(core)=0 e Reuse Ratio verificaveis em cada novo dominio"
+              ],
+              "out_of_scope": [
+                "P-81 opcao B"
+              ]
+            },
+            {
+              "title": "Identidade, autorizacao e delegacao aproveitando componentes externos",
+              "why": "GOVERNANCE.md secoes 2, 3, 4; GOV-42001-1, GOV-IMPACT-1, GOV-RET-2",
+              "steps": [
+                "Cadeia verificavel: identidade, autorizacao, delegacao, execucao, receipt",
+                "Aproveitar o Microsoft Agent Governance Toolkit; construir so a integracao da rede",
+                "Criar Delegation Graph e Action Receipts; adiar Context Sync federado"
+              ],
+              "done_when": [
+                "Cada acao tem uma cadeia verificavel de identidade ate receipt"
+              ],
+              "out_of_scope": [
+                "Governanca inteira de raiz",
+                "Context Sync federado completo"
+              ]
+            },
+            {
+              "title": "Avaliacao comparativa por agente (qualidade, custo, latencia, fiabilidade)",
+              "why": "PENDENCIAS.md Q-001, Q-002, T-001 a T-005; GOVERNANCE.md 1.2",
+              "steps": [
+                "Ficha de desempenho por agente",
+                "Mesmo problema com varios modelos e configuracoes; indicador experimental de qualidade por custo e tempo"
+              ],
+              "done_when": [
+                "O sistema indica a combinacao mais economica por tipo de trabalho, com evidencia"
+              ],
+              "out_of_scope": [
+                "Metrica cientifica universal"
+              ]
+            },
+            {
+              "title": "Interoperabilidade sem dependencia de framework (MCP, A2A, adaptadores finos)",
+              "why": "STATUS.md; GOVERNANCE.md secao 4; F3, F6",
+              "steps": [
+                "Adotar padroes existentes e adaptadores finos",
+                "Um agente smolagents trabalha com um agente do runner sem reescrever ambos"
+              ],
+              "done_when": [
+                "Um agente externo executa dentro de um plano do runner via adaptador"
+              ],
+              "out_of_scope": [
+                "Protocolo novo"
+              ]
+            }
+          ],
+          "role": "member"
+        },
+        "ext:grok": {
+          "vote": "approve",
+          "confidence": 0.72,
+          "position": "O repo ja ganha em controlo, evidencia, domain packs e stub de custo zero. Para ser a melhor escolha em uso gratuito e baixa capacidade faltam: caminho 100% local como first-class, nucleo minimo com perfil lite, governanca local minima antes do AGT, tiers gratuitos com Domain Onboarding Cost medido e um contrato de domain pack com CI.",
+          "arguments": [
+            "STATUS.md: duas camadas e numeros gerados por validadores; quickstart em stub sem API key",
+            "PENDENCIAS.md T-001, T-004, T-005, S19, S27; PLANWRIGHT-1/2 e AUDITRON-1/2 (padrao OSS acoplavel)",
+            "GOVERNANCE.md secao 4 (Delegation Graph e Action Receipts em falta) e secao 2 (3 MOCK); EX-C3, EX-C4, B16, A13",
+            "Ponto fraco: dependencia residual de Postgres/pgvector, legado TS arquivado e ausencia de caminho 100% local com modelos open-source leves"
+          ],
+          "risks": [
+            "Backend SQLite para L4/L5 duplica manutencao",
+            "Perfil lite que desliga council e LangGraph pode divergir do completo"
+          ],
+          "conditions": [],
+          "kill_criteria": [
+            "O perfil lite nao corre o quickstart sem Postgres"
+          ],
+          "veto": false,
+          "veto_reason": null,
+          "proposals": [
+            {
+              "title": "Runtime 100% local e zero-infra first-class (SQLite, stub e Ollama)",
+              "why": "STATUS.md; T-001, T-004, T-005, S19, S27; GOVERNANCE.md 1.1",
+              "steps": [
+                "Documentar e testar o caminho sem Postgres, cloud nem API paga como default",
+                "L4/L5 com backend SQLite opcional e worker local"
+              ],
+              "done_when": [
+                "O caminho zero-infra e o default documentado e testado"
+              ],
+              "out_of_scope": []
+            },
+            {
+              "title": "Core plan_runner e domain-pack loader como pacote minimo com perfil lite",
+              "why": "PLANWRIGHT-1/2, AUDITRON-1/2; STATUS.md; GOVERNANCE.md secao 2",
+              "steps": [
+                "Separar motor, schema, HITL/budget/ledger do RAG pesado, k8s e legado",
+                "Perfil lite desliga LangGraph, pgvector e council por omissao"
+              ],
+              "done_when": [
+                "Pacote minimo instalavel com governanca nativa"
+              ],
+              "out_of_scope": []
+            },
+            {
+              "title": "Identity, Delegation Graph e Action Receipts minimos e local-first antes do AGT",
+              "why": "GOVERNANCE.md secoes 2 e 4; EX-C3, EX-C4, B16, A13",
+              "steps": [
+                "Primitiva leve com hash-chaining e schema local",
+                "Integrar o AGT depois"
+              ],
+              "done_when": [
+                "Identity, delegacao e receipts funcionam localmente sem o AGT"
+              ],
+              "out_of_scope": [
+                "AGT completo como pre-requisito"
+              ]
+            },
+            {
+              "title": "Orcamentos e tiers orientados a free-tier extremo com Domain Onboarding Cost medido",
+              "why": "T-001 a T-005, F6, S19, S27; GOVERNANCE.md 1.2",
+              "steps": [
+                "Expandir model-prices.yaml e tiers para modelos gratuitos (Gemini Flash Lite, Ollama)",
+                "Gerar e publicar o Domain Onboarding Cost por pack"
+              ],
+              "done_when": [
+                "Domain Onboarding Cost e uma metrica gerada e publicavel por pack"
+              ],
+              "out_of_scope": []
+            },
+            {
+              "title": "Domain packs como unidade de reutilizacao com CI de cobertura, proveniencia e baixo recurso",
+              "why": "STATUS.md; F6, F3, ING-*",
+              "steps": [
+                "Contrato de pack: area, agentes e skills, planos, testes, DOC(core)=0",
+                "CI exige stub, budget, proveniencia e footprint de memoria"
+              ],
+              "done_when": [
+                "Um pack novo so entra se passar stub, budget, proveniencia e footprint"
+              ],
+              "out_of_scope": []
+            }
+          ],
+          "role": "member"
+        },
+        "ext:perplexity": {
+          "vote": "approve",
+          "confidence": 0.7,
+          "position": "A proposta do repo (runtime governado, planos declarativos, gates humanos, orcamentos, trilha auditavel) deve virar um produto leve, instalavel e demonstravel em minutos. Nao competir com LangGraph, AutoGen ou CrewAI na orquestracao geral, mas no nicho de agente governado, auditavel e barato.",
+          "arguments": [
+            "README.md e STATUS.md: status.json, events.jsonl e artifacts/ sao evidencias de execucao e recuperacao, base para modo local-first",
+            "STATUS.md: identidade e autorizacao (grafo de delegacao e recibos de acao) desenhadas mas nao implementadas",
+            "MCP-MAPPING.md: 33 agentes e inconsistencia de classificacao do imobiliario-digital; docs/generated/AGENTS.md refere 24 agentes",
+            "PENDENCIAS.md: decisoes A/B/C em aberto; falta um caminho de adocao com exemplo resolvido"
+          ],
+          "risks": [
+            "Premissa da proposta de BudgetGuard em parte contraria o README, que ja declara tectos de tokens e USD verificados antes de cada chamada, com falha fechada",
+            "Reduzir agentes publicos pode quebrar o agent-network-mcp"
+          ],
+          "conditions": [],
+          "kill_criteria": [
+            "Um utilizador novo nao consegue correr a demo em 5 minutos"
+          ],
+          "veto": false,
+          "veto_reason": null,
+          "proposals": [
+            {
+              "title": "Free Tier Runtime de ficheiro unico",
+              "why": "STATUS.md (status.json, events.jsonl, artifacts/); PENDENCIAS.md F0",
+              "steps": [
+                "Modo local sem Supabase nem servidor, com SQLite/duckdb ou ficheiros",
+                "Comando unico para iniciar, retomar e auditar",
+                "init cria plan.yaml, budgets.yaml, policy.yaml e um exemplo offline"
+              ],
+              "done_when": [
+                "O exemplo corre offline"
+              ],
+              "out_of_scope": [
+                "Supabase",
+                "RAG/pgvector no modo gratuito"
+              ]
+            },
+            {
+              "title": "BudgetGuard como fronteira dura",
+              "why": "README.md (orcamentos); PENDENCIAS.md decisoes em aberto",
+              "steps": [
+                "Aplicar o orcamento antes de cada chamada a modelo, ferramenta ou subagente",
+                "Limites por run, tarefa, agente e utilizador",
+                "Acoes ao atingir o limite: block, ask_human, downgrade_model, resume_later; custo estimado antes da aprovacao"
+              ],
+              "done_when": [
+                "Cada acao do BudgetGuard e testada"
+              ],
+              "out_of_scope": []
+            },
+            {
+              "title": "Reduzir 33 agentes a 5 a 7 papeis universais e domain packs opcionais",
+              "why": "MCP-MAPPING.md (33 agentes); docs/generated/AGENTS.md (24)",
+              "steps": [
+                "Papeis: planner, researcher, builder, reviewer, operator, auditor, escalation",
+                "Restantes agentes como domain packs carregaveis so quando necessarios"
+              ],
+              "done_when": [
+                "Primeiro resultado com os papeis universais"
+              ],
+              "out_of_scope": []
+            },
+            {
+              "title": "MVP local de identidade, papeis e recibos",
+              "why": "STATUS.md (ADR-001 desenhado); GOVERNANCE.md",
+              "steps": [
+                "Identidades locais pseudonimas e papeis owner, approver, operator, auditor",
+                "Recibos assinados localmente",
+                "Adiar SSO, delegacao complexa e multi-tenant"
+              ],
+              "done_when": [
+                "A auditoria responde quem autorizou cada acao"
+              ],
+              "out_of_scope": [
+                "SSO",
+                "multi-tenant"
+              ]
+            },
+            {
+              "title": "Governed Demo executavel em menos de 5 minutos",
+              "why": "README.md (pilots/demo); PENDENCIAS.md",
+              "steps": [
+                "demo-budget-guard: tarefa com modelo local ou API gratuita que atinge um limite, pede aprovacao, retoma e gera relatorio de auditoria"
+              ],
+              "done_when": [
+                "Plano, estimativa de custo, gate humano, execucao limitada, falha e retoma e auditoria final numa execucao"
+              ],
+              "out_of_scope": []
+            }
+          ],
+          "role": "member"
+        },
+        "ext:manus": {
+          "vote": "approve",
+          "confidence": 0.75,
+          "position": "O repo deve ser a camada gratuita de execucao responsavel: planos portateis, agentes substituiveis, custo limitado, pausa humana e prova verificavel. Ha tensao entre a promessa do quickstart sem chave e um caminho de producao que depende de Gemini, MCP, Postgres/pgvector e governanca parcialmente mock. Cinco mudancas: perfil edge, interface de provider free/local/paid, capability packs preguicosos, governanca local com receipts e benchmark tiny golden.",
+          "arguments": [
+            "GOVERNANCE.md define ficheiros canonicos por run (status.json, events.jsonl, token_usage.jsonl, HITL): base para um perfil edge",
+            "PENDENCIAS.md E-001 (onde o motor corre), L4-1b e L4-3 (memoria dependente de DATABASE_URL/MCP), Q-001 (bloqueado por RAM)",
+            "config/model-tiers.yaml deixa planner, executor, verifier e C1..C4 em null e o worker so fala com a Gemini API; W-001, W-003, T-001, S19",
+            "Inventario: 89 agentes do runner, 124 skills, 67 so em marketing; B1-bis-C mede base de 10.136 tokens, meta abaixo de 9 mil; M-006, M-007",
+            "GOVERNANCE.md: DeliberationEngine REAL; SecurityManager, ComplianceManager, DataGovernance MOCK; faltam Delegation Graph e Action Receipts; B16 e M-001 a M-004 bloqueados; M-010"
+          ],
+          "risks": [
+            "Governanca propria pode divergir do AGT/Cedar mais tarde",
+            "Packs preguicosos podem esconder dependencias entre skills"
+          ],
+          "conditions": [],
+          "kill_criteria": [
+            "O perfil edge nao completa um plano com HITL, done_when e orcamento sem servico externo"
+          ],
+          "veto": false,
+          "veto_reason": null,
+          "proposals": [
+            {
+              "title": "Perfil edge: processo unico, SQLite e filesystem; Postgres e MCP como extras",
+              "why": "GOVERNANCE.md (ficheiros por run), E-001, L4-1b, L4-3, Q-001",
+              "steps": [
+                "Definir tres perfis: edge, cloud, distributed",
+                "Memoria e RAG atras de interfaces; SQLite/ficheiros por omissao",
+                "Executar planos, HITL, done_when, orcamento e receipts localmente"
+              ],
+              "done_when": [
+                "Um plano corre com HITL, done_when e orcamento sem servico externo"
+              ],
+              "out_of_scope": [
+                "Perfil distributed completo"
+              ]
+            },
+            {
+              "title": "Interface ModelProvider com perfis free, local e paid",
+              "why": "config/model-tiers.yaml (tiers null, so Gemini); W-001, W-003, T-001, S19, Q-001",
+              "steps": [
+                "Adaptadores OpenAI-compativel, Ollama/llama.cpp e Gemini",
+                "Perfis com capacidades, limite de tokens, preco e fallback",
+                "Router nunca escolhe modelo acima do teto; paid so com aprovacao"
+              ],
+              "done_when": [
+                "Perfis free, local e paid declarados e o router nunca escolhe modelo fora do teto"
+              ],
+              "out_of_scope": []
+            },
+            {
+              "title": "Capability packs com carregamento preguicoso e orcamento de contexto",
+              "why": "Inventario (89 agentes, 124 skills, 67 marketing); B1-bis-C; M-006; M-007",
+              "steps": [
+                "Manifesto de pack: capabilities, agentes, skills, tamanho, dependencias, modelo, golden tests",
+                "Router carrega so o pack necessario; especialistas por handoff"
+              ],
+              "done_when": [
+                "CI falha se um pack excede o orcamento de contexto ou duplica uma skill sem justificacao"
+              ],
+              "out_of_scope": [
+                "Criar agentes novos"
+              ]
+            },
+            {
+              "title": "Governanca local append-only: delegation graph e action receipts",
+              "why": "GOVERNANCE.md secoes 2 e 4; B16; M-001 a M-004; M-010",
+              "steps": [
+                "Identidade, autorizacao, cadeia de delegacao, ActionReceipt encadeado, politica allow/approve/deny",
+                "SQLite/JSONL no perfil edge; adaptadores opcionais Cedar/AgentMesh/AGT",
+                "Fechar M-010 com identificador de interrupcao por gate"
+              ],
+              "done_when": [
+                "Cada receipt refere run, step, agente, ferramenta, hash dos inputs, decisao, custo e artefatos"
+              ],
+              "out_of_scope": [
+                "Depender do AGT como pre-requisito"
+              ]
+            },
+            {
+              "title": "Benchmark tiny golden",
+              "why": "T-001, T-002, T-003, W-001, Q-001, Q-002, F3",
+              "steps": [
+                "20 a 30 casos em stub, modelo local e provider gratuito",
+                "Registar tokens, latencia, memoria, custo, sucesso e evidencia",
+                "CI corre stub; job manual corre providers reais"
+              ],
+              "done_when": [
+                "Relatorio comparavel atualizado e regressao de custo ou seguranca falha o CI"
+              ],
+              "out_of_scope": [
+                "Judge grande ou SaaS"
+              ]
+            }
+          ],
+          "role": "member"
+        }
+      },
       "ballots": {},
       "ballot_errors": {},
       "peer_scores": {},
@@ -79,7 +571,7 @@
     }
   ],
   "ledger": [],
-  "error": null,
+  "error": "chairman: gemini HTTP 503: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later. -- `resume` repete a sintese",
   "created_at": "2026-11-25T20:37:10.699431+00:00",
   "panel": {
     "mode": "full",
@@ -92,14 +584,8 @@
     ]
   },
   "partial": false,
-  "waiting_for": [
-    "claude",
-    "gpt",
-    "grok",
-    "perplexity",
-    "manus"
-  ],
-  "updated_at": "2026-11-25T20:37:10.701014+00:00",
+  "waiting_for": [],
+  "updated_at": "2026-11-25T20:41:19.474107+00:00",
   "verdict": null,
   "gate_ok": null,
   "hitl_decision": null,
