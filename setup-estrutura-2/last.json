@@ -2,8 +2,8 @@
   "session_id": "council_8f85911499",
   "council": "structural",
   "dir": "/home/runner/work/network-agents-setup/network-agents-setup/council-sessions/setup-estrutura-2",
-  "status": "awaiting_human",
-  "stage": "hitl",
+  "status": "done",
+  "stage": "closed",
   "round": 1,
   "error": null,
   "verdict": {
@@ -176,13 +176,16 @@
       "reject",
       "edit"
     ],
-    "decision": null,
-    "comment": null,
-    "responder": null
+    "decision": "approve",
+    "comment": "Aprovado pelo maestro (opcao A). Corrigir done_when ao transformar em tarefas; registar AGT vs local como decisao pendente.",
+    "responder": "human:maestro",
+    "decided_at": "2026-11-25T20:48:34.039962+00:00"
   },
   "memory": {
     "status": "disabled",
-    "reason": "sem DATABASE_URL: o veredicto fica so em council.json/verdict.json"
+    "reason": "sem DATABASE_URL: o veredicto fica so em council.json/verdict.json",
+    "op": "promote",
+    "skipped": "sem candidate na L4"
   },
   "tokens_by_round": {
     "r1": {

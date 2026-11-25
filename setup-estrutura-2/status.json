@@ -1,7 +1,7 @@
 {
   "kind": "council",
   "run_id": "council_8f85911499",
-  "state": "paused_human_gate",
-  "paused_at_step": "council_r1",
+  "state": "done",
+  "paused_at_step": null,
   "max_tokens": 80000
 }

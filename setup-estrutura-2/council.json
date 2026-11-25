@@ -55,8 +55,8 @@
   "scope": "project:network-agents-setup",
   "max_tokens": 80000,
   "model": "gemini-flash-lite-latest",
-  "status": "awaiting_human",
-  "stage": "hitl",
+  "status": "done",
+  "stage": "closed",
   "round": 1,
   "rounds": [
     {
@@ -734,13 +734,16 @@
           "reject",
           "edit"
         ],
-        "decision": null,
-        "comment": null,
-        "responder": null
+        "decision": "approve",
+        "comment": "Aprovado pelo maestro (opcao A). Corrigir done_when ao transformar em tarefas; registar AGT vs local como decisao pendente.",
+        "responder": "human:maestro",
+        "decided_at": "2026-11-25T20:48:34.039962+00:00"
       },
       "memory": {
         "status": "disabled",
-        "reason": "sem DATABASE_URL: o veredicto fica so em council.json/verdict.json"
+        "reason": "sem DATABASE_URL: o veredicto fica so em council.json/verdict.json",
+        "op": "promote",
+        "skipped": "sem candidate na L4"
       }
     }
   ],
@@ -773,7 +776,7 @@
   },
   "partial": false,
   "waiting_for": [],
-  "updated_at": "2026-11-25T20:45:25.567521+00:00",
+  "updated_at": "2026-11-25T20:48:34.041744+00:00",
   "verdict": {
     "plan": {
       "id": "network-agents-setup-structural-enhancements",
@@ -923,6 +926,6 @@
     }
   },
   "gate_ok": true,
-  "hitl_decision": null,
+  "hitl_decision": "approve",
   "tokens_total": 7989
 }
