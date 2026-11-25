@@ -1111,7 +1111,7 @@ class CouncilSession:
             "error": self.state.get("error"), "verdict": rnd.get("verdict"), "gate": rnd.get("gate"),
             "hitl": rnd.get("hitl"), "memory": rnd.get("memory"), "tokens_by_round": per_round,
             "tokens_total": self.state.get("tokens_total"), "max_tokens": self.state.get("max_tokens"),
-            "panel": self.state.get("panel"), "waiting_for": self.state.get("waiting_for") or [],
+            "panel": self.state.get("panel"), "waiting_for": (prov.waiting_for(self.state, self.out) if self.state.get("status") == "awaiting_external" else []),
         }
 
 

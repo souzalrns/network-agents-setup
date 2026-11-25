@@ -338,3 +338,11 @@ def test_cli_prompt_e_submit_de_texto_colado(tmp_path, monkeypatch, capsys):
     f.write_text("Resposta:\n" + json.dumps(pos("approve")) + "\nfim", encoding="utf-8")
     assert cs.main(["submit", str(s.out), "claude", "--file", str(f)]) == 0
     assert prov.read_submission(s.out, 1, "claude")["vote"] == "approve"
+
+
+def test_status_da_cli_reflete_as_entregas_ao_vivo(tmp_path, monkeypatch):
+    register(monkeypatch, ["claude", "gpt"])
+    s = open_session(tmp_path, CouncilGemini(verdict=VERDICT))
+    submit_all(s, {"gpt": "approve"})
+    summary = cs.CouncilSession.load(s.out, deps=deps(CouncilGemini(), l4store=False)).summary()
+    assert summary["waiting_for"] == ["claude"]
