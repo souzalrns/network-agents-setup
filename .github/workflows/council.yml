@@ -108,7 +108,7 @@ jobs:
 
       - name: Correr o passo
         run: |
-          set -uo pipefail
+          set -u +e  # o passo nunca aborta: o resultado (mesmo de erro) fica em last.json
           OUT="$GITHUB_WORKSPACE/council-sessions/$SESSION"
           cd runner
           export PYTHONPATH="$PWD"
