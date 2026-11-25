@@ -1,7 +1,5 @@
 {
   "ok": true,
   "round": 1,
-  "waiting_for": [
-    "manus"
-  ]
+  "waiting_for": []
 }

@@ -1,0 +1,101 @@
+{
+  "provider": "manus",
+  "round": 1,
+  "submitted_at": "2026-11-25T20:39:26.418732+00:00",
+  "data": {
+    "vote": "approve",
+    "confidence": 0.75,
+    "position": "O repo deve ser a camada gratuita de execucao responsavel: planos portateis, agentes substituiveis, custo limitado, pausa humana e prova verificavel. Ha tensao entre a promessa do quickstart sem chave e um caminho de producao que depende de Gemini, MCP, Postgres/pgvector e governanca parcialmente mock. Cinco mudancas: perfil edge, interface de provider free/local/paid, capability packs preguicosos, governanca local com receipts e benchmark tiny golden.",
+    "arguments": [
+      "GOVERNANCE.md define ficheiros canonicos por run (status.json, events.jsonl, token_usage.jsonl, HITL): base para um perfil edge",
+      "PENDENCIAS.md E-001 (onde o motor corre), L4-1b e L4-3 (memoria dependente de DATABASE_URL/MCP), Q-001 (bloqueado por RAM)",
+      "config/model-tiers.yaml deixa planner, executor, verifier e C1..C4 em null e o worker so fala com a Gemini API; W-001, W-003, T-001, S19",
+      "Inventario: 89 agentes do runner, 124 skills, 67 so em marketing; B1-bis-C mede base de 10.136 tokens, meta abaixo de 9 mil; M-006, M-007",
+      "GOVERNANCE.md: DeliberationEngine REAL; SecurityManager, ComplianceManager, DataGovernance MOCK; faltam Delegation Graph e Action Receipts; B16 e M-001 a M-004 bloqueados; M-010"
+    ],
+    "risks": [
+      "Governanca propria pode divergir do AGT/Cedar mais tarde",
+      "Packs preguicosos podem esconder dependencias entre skills"
+    ],
+    "conditions": [],
+    "kill_criteria": [
+      "O perfil edge nao completa um plano com HITL, done_when e orcamento sem servico externo"
+    ],
+    "veto": false,
+    "veto_reason": null,
+    "proposals": [
+      {
+        "title": "Perfil edge: processo unico, SQLite e filesystem; Postgres e MCP como extras",
+        "why": "GOVERNANCE.md (ficheiros por run), E-001, L4-1b, L4-3, Q-001",
+        "steps": [
+          "Definir tres perfis: edge, cloud, distributed",
+          "Memoria e RAG atras de interfaces; SQLite/ficheiros por omissao",
+          "Executar planos, HITL, done_when, orcamento e receipts localmente"
+        ],
+        "done_when": [
+          "Um plano corre com HITL, done_when e orcamento sem servico externo"
+        ],
+        "out_of_scope": [
+          "Perfil distributed completo"
+        ]
+      },
+      {
+        "title": "Interface ModelProvider com perfis free, local e paid",
+        "why": "config/model-tiers.yaml (tiers null, so Gemini); W-001, W-003, T-001, S19, Q-001",
+        "steps": [
+          "Adaptadores OpenAI-compativel, Ollama/llama.cpp e Gemini",
+          "Perfis com capacidades, limite de tokens, preco e fallback",
+          "Router nunca escolhe modelo acima do teto; paid so com aprovacao"
+        ],
+        "done_when": [
+          "Perfis free, local e paid declarados e o router nunca escolhe modelo fora do teto"
+        ],
+        "out_of_scope": []
+      },
+      {
+        "title": "Capability packs com carregamento preguicoso e orcamento de contexto",
+        "why": "Inventario (89 agentes, 124 skills, 67 marketing); B1-bis-C; M-006; M-007",
+        "steps": [
+          "Manifesto de pack: capabilities, agentes, skills, tamanho, dependencias, modelo, golden tests",
+          "Router carrega so o pack necessario; especialistas por handoff"
+        ],
+        "done_when": [
+          "CI falha se um pack excede o orcamento de contexto ou duplica uma skill sem justificacao"
+        ],
+        "out_of_scope": [
+          "Criar agentes novos"
+        ]
+      },
+      {
+        "title": "Governanca local append-only: delegation graph e action receipts",
+        "why": "GOVERNANCE.md secoes 2 e 4; B16; M-001 a M-004; M-010",
+        "steps": [
+          "Identidade, autorizacao, cadeia de delegacao, ActionReceipt encadeado, politica allow/approve/deny",
+          "SQLite/JSONL no perfil edge; adaptadores opcionais Cedar/AgentMesh/AGT",
+          "Fechar M-010 com identificador de interrupcao por gate"
+        ],
+        "done_when": [
+          "Cada receipt refere run, step, agente, ferramenta, hash dos inputs, decisao, custo e artefatos"
+        ],
+        "out_of_scope": [
+          "Depender do AGT como pre-requisito"
+        ]
+      },
+      {
+        "title": "Benchmark tiny golden",
+        "why": "T-001, T-002, T-003, W-001, Q-001, Q-002, F3",
+        "steps": [
+          "20 a 30 casos em stub, modelo local e provider gratuito",
+          "Registar tokens, latencia, memoria, custo, sucesso e evidencia",
+          "CI corre stub; job manual corre providers reais"
+        ],
+        "done_when": [
+          "Relatorio comparavel atualizado e regressao de custo ou seguranca falha o CI"
+        ],
+        "out_of_scope": [
+          "Judge grande ou SaaS"
+        ]
+      }
+    ]
+  }
+}
