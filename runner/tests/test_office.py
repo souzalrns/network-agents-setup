@@ -79,11 +79,14 @@ def _expected_total() -> int:
 
 def test_todos_os_agentes_aparecem_nas_2_alas() -> None:
     data = office.load_office(REPO_ROOT)
-    assert sum(_n(d) for d in data["departments"]) == _expected_total() >= 100
+    # M-006: 11 agentes de marketing passaram a modos de um herdeiro (P-89 = A), por isso o piso desceu de 100
+    assert sum(_n(d) for d in data["departments"]) == _expected_total() >= 90
     negocios = [d for d in data["departments"] if d["wing"] == "negocios"]
     assert sum(_n(d) for d in negocios) == 19  # os agentes de cada negócio, só no MCP
     mk, com = _dept(data, "marketing"), _dept(data, "comercial")
-    assert len(mk["seats"]) == 9 and mk["lead"] == "marketing.marketing"
+    # M-006: 10 lugares = direção + as áreas da agência (docs/orchestration/marketing/ESTRUTURA-AREAS.md)
+    assert len(mk["seats"]) == 10 and mk["lead"] == "marketing.marketing"
+    assert len(com["seats"]) == 8  # Comercial = área "CRM e vendas": liderança (P-90), captação e relação
     area_mk = next(a for a in office.load_areas(REPO_ROOT) if a["id"] == "marketing")
     assert _n(mk) + _n(com) == len(area_mk["agents"])  # a área marketing do router, em 2 departamentos
 

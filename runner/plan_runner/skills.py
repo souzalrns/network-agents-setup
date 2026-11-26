@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import yaml
+
+# P-89 (M-006): um agente herdeiro carrega as funcoes de agentes fundidos como MODOS da sua
+# skill. Cada modo e um ficheiro `modes/<mode>.md` ao lado do SKILL.md e so entra no prompt do
+# passo que o pede (`mode:` no plano), para o prompt dos outros passos nao crescer.
+MODES_DIR = "modes"
+MODE_RE = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 
 
 def repo_root_from_out(out_root: Path) -> Path:
@@ -58,6 +65,31 @@ def resolve_skill_path(repo_root: Path, action: str, vertical: str = "marketing"
             return p
     p = repo_root / "skills" / vertical / action / "SKILL.md"
     return p if p.is_file() else None
+
+
+def resolve_mode_path(skill_path: Path | None, mode: str | None) -> Path | None:
+    """`modes/<mode>.md` da skill; None se o nome for invalido, o ficheiro faltar ou sair da pasta."""
+    if skill_path is None or not isinstance(mode, str) or not MODE_RE.match(mode):
+        return None
+    base = (skill_path.parent / MODES_DIR).resolve()
+    p = (base / f"{mode}.md").resolve()
+    if not p.is_relative_to(base) or p.is_symlink() or not p.is_file():
+        return None
+    return p
+
+
+def list_modes(skill_path: Path | None) -> dict[str, str]:
+    """Modos da skill -> `description:` do frontmatter de cada modo (vazio se nao tiver modos)."""
+    if skill_path is None:
+        return {}
+    base = skill_path.parent / MODES_DIR
+    if not base.is_dir():
+        return {}
+    out: dict[str, str] = {}
+    for p in sorted(base.glob("*.md")):
+        if MODE_RE.match(p.stem) and not p.is_symlink():
+            out[p.stem] = str(_frontmatter(p).get("description") or "").strip()
+    return out
 
 
 def resolve_agent_path(repo_root: Path, action: str, vertical: str = "marketing") -> Path | None:

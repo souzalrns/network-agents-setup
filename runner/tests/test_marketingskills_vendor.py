@@ -26,7 +26,7 @@ def _script():
 def test_vendor_tem_as_50_skills_e_licenca():
     mod = _script()
     names = {p.name for p in (VENDOR / "skills").iterdir() if p.is_dir()}
-    assert names == set(mod.NEW) | set(mod.OVERLAP) and len(names) == 50
+    assert names == set(mod.NEW) | set(mod.OVERLAP) | set(mod.MERGED) and len(names) == 50  # M-006: MERGED = modos
     assert "MIT License" in (VENDOR / "LICENSE").read_text(encoding="utf-8")
     prov = (VENDOR / "PROVENANCE.md").read_text(encoding="utf-8")
     assert re.search(r"\*\*Commit:\*\* `[0-9a-f]{40}`", prov)
@@ -40,6 +40,8 @@ def test_nada_de_parceiros_pagos_nem_chamadas_a_api():
         p for p in VENDOR.rglob("*") if p.is_file() and p.suffix in (".md", ".html", ".csv") and p.name != "PROVENANCE.md"
     ]
     files += [REPO_ROOT / "skills" / "marketing" / n.replace("-", "_") / "SKILL.md" for n in mod.NEW]
+    files += [REPO_ROOT / mod.heir_skill(v[3])[1] for v in mod.MERGED.values()]  # skills dos herdeiros
+    files += [(REPO_ROOT / mod.heir_skill(v[3])[1]).parent / "modes" / f"{v[4]}.md" for v in mod.MERGED.values()]
     hits = [str(p.relative_to(REPO_ROOT)) for p in files if mod.FORBIDDEN.search(p.read_text(encoding="utf-8"))]
     assert not hits, hits
     assert not (VENDOR / "tools").exists()  # tools/ (CLIs, guias de API, parceiros) nunca entra

@@ -107,6 +107,9 @@ class _SizingGemini:
 
 
 _INPUT_RE = re.compile(r"^## Input( \(resumo\))?: (.+?)\n\n(.*?)(?=^## |\Z)", re.S | re.M)
+# M-008: desde a regra R6 cada passo de marketing recebe o contexto da base de conhecimento (L5).
+# O B1 foi medido sem ele: a secção conta-se à parte (`l5_tokens`) e `tokens_in_sem_l5` é o comparável ao B1.
+_L5_RE = re.compile(r"^## Conhecimento recuperado \(L5\)\n\n(.*?)(?=^## |\Z)", re.S | re.M)
 
 
 def project(
@@ -166,10 +169,14 @@ def project(
                     tok = full_tokens
                     notes.append(f"{rel} (completo)")
                 injected_tokens += tok
-            base_chars = len(c["system"]) + len(c["user"]) - injected_chars
-            t_in = round(base_chars / ratios.get(c["step"], 3.4)) + injected_tokens
+            l5_chars = sum(len(m.group(0)) for m in _L5_RE.finditer(c["user"]))
+            base_chars = len(c["system"]) + len(c["user"]) - injected_chars - l5_chars
+            ratio = ratios.get(c["step"], 3.4)
+            l5_tokens = round(l5_chars / ratio)
+            t_in = round(base_chars / ratio) + injected_tokens + l5_tokens
             t_out = out_tokens.get(c["step"], 400) + (summary_tokens if c["summary"] else 0)
             rows.append({"step": c["step"], "tokens_in": t_in, "tokens_out": t_out, "total": t_in + t_out,
+                         "l5_tokens": l5_tokens, "tokens_in_sem_l5": t_in - l5_tokens,
                          "injected": notes, "summary_generated": c["summary"]})
         return rows
     finally:

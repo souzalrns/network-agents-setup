@@ -80,8 +80,10 @@ Item 13 = **checks e campos** nos steps `seo_brief` / `copy_*` / `critic`, multi
 | `full_content_piece` | research → seo_brief (Item 13) → copy → storytelling polish? → critic → HITL |
 | `internal_brief` | research → internal_brief → HITL |
 | `approval_rounds` | creative_review loops + HITL |
+| `area_<área>` (P-90, M-006) | lider_<área> → especialistas da área (paralelo quando independentes) → critic → HITL; um template por área em `templates/areas/` |
 
-O orquestrador **escolhe template**, preenche `depends_on`, nao inventa mesh livre.
+O orquestrador **escolhe template**, preenche `depends_on`, nao inventa mesh livre. Os lideres de area
+(P-90) entregam o brief e o plano recomendado; nao chamam outros agentes: quem corre os passos e o plano.
 
 ---
 

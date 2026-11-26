@@ -3,6 +3,8 @@
 id: template-ugc-video-pack
 version: 1
 deliverable_type: ugc_video_pack
+# Entrega para fora (terceiros ou publicação): vídeos para publicar
+delivery: external
 objective: "(preencher)"
 audience: "(preencher)"
 
@@ -34,10 +36,23 @@ steps:
     tools_allowed: [read_repo_file]
     inputs: [artifacts/01-ugc-brief.md, artifacts/02-video-edit-plan.md]
     output_artifact: artifacts/03-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [edit]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/01-ugc-brief.md, artifacts/02-video-edit-plan.md]
+    output_artifact: artifacts/09-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl
     action: plan_approve
-    depends_on: [critic]
+    depends_on: [critic, compliance]
     human_gate:
       level: step
       kind: output_review

@@ -20,11 +20,11 @@
 | `aso` | runner: `aso` | `681a8e3cb4ff` |
 | `attribution` | runner: `attribution` | `2ba5632f4f3f` |
 | `churn-prevention` | runner: `churn_prevention` | `f073c722e14f` |
-| `co-marketing` | runner: `co_marketing` | `b230b83aec95` |
+| `co-marketing` | runner: modo `co_marketing` de `marketing.referrals` (M-006) | `b230b83aec95` |
 | `cold-email` | runner: `cold_email` | `bec0f727ec02` |
 | `community-marketing` | runner: `community_marketing` | `e4c4a21e82a0` |
 | `competitor-profiling` | runner: `competitor_profiling` | `ed74677eb8df` |
-| `competitors` | runner: `competitors` | `ff77b76dfe43` |
+| `competitors` | runner: modo `competitors` de `marketing.seo_brief` (M-006) | `ff77b76dfe43` |
 | `content-strategy` | já coberta no runner por internal_brief / seo_brief | `dce9f4027ae1` |
 | `copy-editing` | já coberta no runner por critic / creative_review | `d23184ad62cb` |
 | `copywriting` | já coberta no runner por copy_answer_first | `78c0a09b78a4` |
@@ -32,28 +32,28 @@
 | `customer-research` | já coberta no runner por research | `905e65e67268` |
 | `directory-submissions` | runner: `directory_submissions` | `d06ccda24aa5` |
 | `emails` | runner: `emails` | `f43471d28f53` |
-| `events` | runner: `events` | `2861ad31d71d` |
-| `free-tools` | runner: `free_tools` | `609158ee26c6` |
+| `events` | runner: modo `events` de `marketing.community_marketing` (M-006) | `2861ad31d71d` |
+| `free-tools` | runner: modo `free_tools` de `marketing.lead_magnets` (M-006) | `609158ee26c6` |
 | `image` | runner: `image` | `a03da6dd4aed` |
 | `influencer-marketing` | já coberta no runner por influencer_brief / ugc_brief | `cdb0a278312e` |
-| `launch` | runner: `launch` | `cae90dd1f098` |
+| `launch` | runner: modo `launch` de `marketing.marketing_plan` (M-006) | `cae90dd1f098` |
 | `lead-magnets` | runner: `lead_magnets` | `190a64c72a9a` |
-| `marketing-council` | runner: `marketing_council` | `0b94358427c3` |
-| `marketing-ideas` | runner: `marketing_ideas` | `d5ea46d2d2eb` |
-| `marketing-loops` | runner: `marketing_loops` | `d92623cd1dc1` |
+| `marketing-council` | runner: modo `council` de `marketing.marketing_plan` (M-006) | `0b94358427c3` |
+| `marketing-ideas` | runner: modo `ideas` de `marketing.marketing_plan` (M-006) | `d5ea46d2d2eb` |
+| `marketing-loops` | runner: modo `loops` de `marketing.marketing_plan` (M-006) | `d92623cd1dc1` |
 | `marketing-plan` | runner: `marketing_plan` | `36cfcf3485c1` |
 | `marketing-psychology` | runner: `marketing_psychology` | `573bbe4f6e30` |
 | `offers` | runner: `offers` | `f27239be82e5` |
 | `onboarding` | runner: `onboarding` | `ca219e0ba8f9` |
 | `paywalls` | runner: `paywalls` | `d062c03f6b99` |
-| `popups` | runner: `popups` | `6c66e7f923c1` |
-| `pricing` | runner: `pricing` | `4cb8ab0616f8` |
+| `popups` | runner: modo `popups` de `marketing.cro` (M-006) | `6c66e7f923c1` |
+| `pricing` | runner: modo `pricing` de `marketing.offers` (M-006) | `4cb8ab0616f8` |
 | `product-marketing` | runner: `product_marketing` | `6dfd6bd485f6` |
 | `programmatic-seo` | runner: `programmatic_seo` | `b31208c88e2b` |
 | `prospecting` | runner: `prospecting` | `d8a1b3bf0d64` |
 | `public-relations` | runner: `public_relations` | `025b180e6b00` |
 | `referrals` | runner: `referrals` | `d94da4f86d5c` |
-| `revops` | runner: `revops` | `510d01bc0589` |
+| `revops` | runner: modo `revops` de `marketing.inbound_qualification` (M-006) | `510d01bc0589` |
 | `sales-enablement` | runner: `sales_enablement` | `6c39a7795f44` |
 | `schema` | runner: `schema` | `d298f5d6e1b3` |
 | `seo-audit` | já coberta no runner por skills/meta/seo-tech-checklist | `f79aebc633d5` |

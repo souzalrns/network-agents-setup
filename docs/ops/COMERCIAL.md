@@ -13,7 +13,7 @@
 | PROPOSTAS | `marketing.proposals` | `proposal` | `skills/marketing/proposal/SKILL.md` | Proposta com âmbito incluído e excluído, preços só da tabela do plano, lacunas `[[A DEFINIR]]` e email de envio |
 | FOLLOW-UPS | `marketing.follow_ups` | `follow_up` | `skills/marketing/follow_up/SKILL.md` | Pipeline classificado (em dia/follow-up/fechar/parar) e rascunhos com um motivo novo cada |
 
-Os 3 juntam-se, no departamento **Comercial** do escritório, a `prospecting`, `cold_email`, `offers`, `pricing`, `product_marketing`, `sales_enablement` e `revops`.
+Os 3 juntam-se, no departamento **Comercial** do escritório (= área "CRM e vendas" da agência, M-006), a `prospecting`, `cold_email`, `offers` (com o modo `pricing`), `product_marketing`, `sales_enablement`, `lead_magnets` (com o modo `free_tools`), `emails`, `sms` e `referrals` (com o modo `co_marketing`). O `revops` é hoje o modo `revops` do `inbound_qualification`.
 
 ## Regras que não se dobram
 

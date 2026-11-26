@@ -1,0 +1,120 @@
+# Template — área Inteligência (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_inteligencia) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
+
+id: template-area-inteligencia
+version: 1
+deliverable_type: area_inteligencia
+# Entrega interna: pesquisa e análise para uso interno
+delivery: internal
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 9
+
+steps:
+  - id: lider
+    action: lider_inteligencia
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-inteligencia.md
+    knowledge:
+      kb: marketing
+      query: "pesquisa de mercado, concorrentes e tendências"
+
+  - id: factos
+    action: research
+    depends_on: [lider]
+    task: "Factos com fonte para as perguntas do brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/01-factos.md
+    knowledge:
+      kb: marketing
+      query: "metodologia de pesquisa de marketing e fontes citáveis"
+
+  - id: concorrentes
+    action: competitor_profiling
+    depends_on: [lider]
+    task: "Perfis dos concorrentes indicados no brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/02-concorrentes.md
+    knowledge:
+      kb: marketing
+      query: "análise de concorrentes e posicionamento de marca"
+
+  - id: tendencias
+    action: trend_hunter
+    depends_on: [lider]
+    task: "Tendências e hooks relevantes para o público"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/03-tendencias.md
+    knowledge:
+      kb: marketing
+      query: "tendências de conteúdo e sinais de mercado"
+
+  - id: redes
+    action: social_intelligence
+    depends_on: [lider]
+    task: "Padrões das redes da concorrência a partir dos dados fornecidos"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/04-redes.md
+    knowledge:
+      kb: marketing
+      query: "escuta social e sinais das redes sociais"
+
+  - id: desempenho
+    action: social_performance
+    depends_on: [lider]
+    task: "O que funcionou nas publicações da marca e o que mudar"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md]
+    output_artifact: artifacts/05-desempenho.md
+    knowledge:
+      kb: marketing
+      query: "métricas de desempenho em redes sociais"
+
+  - id: critic
+    action: critic
+    depends_on: [factos, concorrentes, tendencias, redes, desempenho]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md, artifacts/04-redes.md, artifacts/05-desempenho.md]
+    output_artifact: artifacts/06-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [factos, concorrentes, tendencias, redes, desempenho]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-inteligencia.md, artifacts/01-factos.md, artifacts/02-concorrentes.md, artifacts/03-tendencias.md, artifacts/04-redes.md, artifacts/05-desempenho.md]
+    output_artifact: artifacts/07-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic, compliance]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/08-hitl.json
+
+done_when:
+  - artifacts/00-brief-inteligencia.md exists
+  - artifacts/01-factos.md exists
+  - artifacts/02-concorrentes.md exists
+  - artifacts/03-tendencias.md exists
+  - artifacts/04-redes.md exists
+  - artifacts/05-desempenho.md exists
+  - artifacts/07-compliance.json exists
+  - human_gate_resolved on hitl

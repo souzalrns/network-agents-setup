@@ -1,5 +1,8 @@
 """Testes do engine legacy em --mode external + ramos de erro.
 
+Correm num subprocesso (sem a base de conhecimento falsa do conftest): usam agentes do design,
+que nao tem a regra R6, para o passo nao parar por falta de contexto (M-009).
+
 Cobre ramos do run_plan/resume_run que os testes de fluxo nao exercitam:
 budget abort, external waiting, step failed, plan_done sem HITL.
 """
@@ -9,11 +12,12 @@ import json
 from pathlib import Path
 
 from tests.conftest import RUNNER_DIR, _run_cli
+from tests.politica import politica
 
 
 def _write_plan(tmp_path: Path, body: str) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text(body, encoding="utf-8")
+    p.write_text(politica(body), encoding="utf-8")
     return p
 
 
@@ -53,9 +57,11 @@ budget:
   max_steps: 1
 steps:
   - id: a
-    action: do_a
+    action: ui_spec
+    vertical: design
   - id: b
-    action: do_b
+    action: ux_flow
+    vertical: design
     depends_on: [a]
 """)
     out = tmp_run_dir
@@ -79,7 +85,8 @@ id: ext
 objective: teste external
 steps:
   - id: prep
-    action: prep
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
     proc = _run(out, plan, mode="external")
@@ -105,7 +112,8 @@ id: fail
 objective: teste fail
 steps:
   - id: prep
-    action: prep
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
 
@@ -140,9 +148,11 @@ id: simple
 objective: teste done
 steps:
   - id: a
-    action: do_a
+    action: ui_spec
+    vertical: design
   - id: b
-    action: do_b
+    action: ux_flow
+    vertical: design
     depends_on: [a]
 """)
     out = tmp_run_dir
@@ -166,7 +176,8 @@ id: ext2
 objective: teste resume external
 steps:
   - id: prep
-    action: prep
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
 
@@ -200,7 +211,8 @@ id: reuse
 objective: teste reuse
 steps:
   - id: a
-    action: do_a
+    action: ui_spec
+    vertical: design
 """)
     out = tmp_run_dir
 

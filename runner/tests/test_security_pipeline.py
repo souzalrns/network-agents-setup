@@ -80,7 +80,16 @@ def test_stub_chega_ao_hitl_com_os_3_artefactos(run_dir):
     assert sorted(p.name for p in (run_dir / "artifacts").iterdir()) == ARTIFACTS
 
 
-def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir):
+def test_external_resolve_agentes_e_skills_e_nao_pede_resumo_da_triagem(run_dir, monkeypatch):
+    # O MCP sem MCP_API_KEY: a segurança não tem a regra R6, por isso o audit segue sem o contexto
+    from plan_runner import knowledge_wiring
+    from plan_runner.mcp_knowledge import McpKnowledgeError
+
+    class _SemChave:
+        def retrieve(self, *a, **kw):
+            raise McpKnowledgeError("MCP_API_KEY nao definida no ambiente.")
+
+    monkeypatch.setattr(knowledge_wiring, "McpKnowledge", _SemChave)
     calls: list[dict] = []
     ew_transport = ew.httpx_transport
     ew.httpx_transport = _fake_gemini(calls)

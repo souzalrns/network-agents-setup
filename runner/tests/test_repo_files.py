@@ -13,6 +13,7 @@ import yaml
 from plan_runner import external_worker as ew
 from plan_runner import repo_files as rf
 from plan_runner.engine import run_plan
+from tests.politica import politica_dict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SECRET = "SEGREDO-DE-TESTE-NAO-PODE-ENTRAR-NO-PROMPT"
@@ -149,7 +150,7 @@ class Capture:
 
 def _plan(tmp_path: Path, steps: list[dict]) -> Path:
     p = tmp_path / "plan.yaml"
-    p.write_text(yaml.safe_dump({"id": "teste-repo-files", "version": 1, "objective": "testar", "steps": steps}), encoding="utf-8")
+    p.write_text(yaml.safe_dump(politica_dict({"id": "teste-repo-files", "version": 1, "objective": "testar", "steps": steps})), encoding="utf-8")
     return p
 
 

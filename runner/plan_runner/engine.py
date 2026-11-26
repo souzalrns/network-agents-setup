@@ -3,12 +3,14 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
 
 import yaml
 
-from . import done_when, hitl, working_memory
+from . import approval, done_when, hitl, working_memory
+from . import governance_local as gov
 from .events import EventLog
 from .executor import execute_external_request, execute_stub
 from .graph import PlanError, topo_order, validate_plan
@@ -23,6 +25,10 @@ def load_plan(path: Path) -> Plan:
         raise PlanError("plan root must be a mapping")
     plan = Plan.from_dict(data)
     validate_plan(plan)
+    # M-008: as regras de config/plan-policy.yaml valem para todos os planos, venham de onde vierem.
+    from .policy import check_plan
+
+    check_plan(plan)
     return plan
 
 
@@ -231,6 +237,8 @@ def run_plan(
 
     out.mkdir(parents=True, exist_ok=True)
     shutil.copy(plan_path, out / "plan.yaml")
+    plan = load_plan(out / "plan.yaml")  # M-008: o que corre é a cópia; verifica-se a cópia, não o original
+    order = topo_order(plan)
     log = EventLog(out / "events.jsonl")
     log.append("plan_created", run_id, {"plan_id": plan.id, "mode": mode, "objective": plan.objective})
     _log_ignored_fields(plan_path, log, run_id)
@@ -273,6 +281,15 @@ def run_plan(
         )
         inject_knowledge_context(out, step, log, run_id)
 
+        gov_reason = gov.refuse_reason(out, run_id, step)  # GOV-LOCAL-1
+        if gov_reason:
+            log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
+            status["state"] = "failed"
+            status["failed_step"] = step.id
+            status["detail"] = gov_reason
+            save_status(out, status)
+            return status
+
         if step.human_gate:
             log.append(
                 "human_gate_requested",
@@ -282,6 +299,7 @@ def run_plan(
                     "level": step.human_gate.level,
                     "kind": step.human_gate.kind,
                     "allow": step.human_gate.allow,
+                    **approval.request_payload(out, plan, step.id),  # M-009: o que está a ser aprovado
                 },
             )
             hitl.write_request(
@@ -338,6 +356,7 @@ def run_plan(
             run_id,
             {"step_id": step.id, "detail": result.detail, "artifact": result.artifact},
         )
+        gov.record_step(out, run_id, step, result)
         completed.add(step.id)
         status["completed"] = sorted(completed)
         save_status(out, status)
@@ -371,6 +390,13 @@ def resume_run(
     log = EventLog(out_dir / "events.jsonl")
     plan = load_plan(out_dir / "plan.yaml")
     order = topo_order(plan)
+    # M-009: as aprovações já dadas têm de bater com o disco (um reject pode sempre parar o run);
+    # a pendente, com o que foi pedido
+    if decision != "reject":
+        approval.verify_past(out_dir, plan, log, run_id)
+    gate_fp: dict[str, Any] = {}
+    if state == "paused_human_gate" and not status.get("tool_approval") and status.get("paused_at_step"):
+        gate_fp = approval.check_pending(out_dir, plan, str(status["paused_at_step"]), decision, log, run_id)
     completed = set(status.get("completed") or [])
     mode = status.get("mode") or "stub"
     # --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.
@@ -414,7 +440,7 @@ def resume_run(
         log.append(
             "human_gate_resolved",
             run_id,
-            {"step_id": paused, "decision": decision},
+            {"step_id": paused, "decision": decision, **gate_fp},
             actor={"kind": "human", "id": "cli"},
         )
         if decision == "reject":
@@ -424,6 +450,7 @@ def resume_run(
         if paused:
             completed.add(paused)
             step_gate = next(s for s in plan.steps if s.id == paused)
+            gov.record_step(out_dir, run_id, step_gate, SimpleNamespace(detail="human_gate", artifact=step_gate.output_artifact))
             if step_gate.output_artifact:
                 p = out_dir / step_gate.output_artifact
                 p.parent.mkdir(parents=True, exist_ok=True)
@@ -454,11 +481,19 @@ def resume_run(
         log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "skill": skill_ref(out_dir, step)})
         inject_knowledge_context(out_dir, step, log, run_id)
 
+        gov_reason = gov.refuse_reason(out_dir, run_id, step)  # GOV-LOCAL-1
+        if gov_reason:
+            log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
+            status["state"] = "failed"
+            status["detail"] = gov_reason
+            save_status(out_dir, status)
+            return status
+
         if step.human_gate:
             log.append(
                 "human_gate_requested",
                 run_id,
-                {"step_id": step.id, "allow": step.human_gate.allow},
+                {"step_id": step.id, "allow": step.human_gate.allow, **approval.request_payload(out_dir, plan, step.id)},
             )
             hitl.write_request(
                 out_dir,
@@ -500,6 +535,7 @@ def resume_run(
             return status
 
         log.append("step_finished", run_id, {"step_id": step.id, "artifact": result.artifact})
+        gov.record_step(out_dir, run_id, step, result)
         completed.add(step.id)
         status["completed"] = sorted(completed)
         save_status(out_dir, status)

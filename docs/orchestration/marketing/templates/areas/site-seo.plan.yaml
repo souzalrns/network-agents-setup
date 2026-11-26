@@ -1,0 +1,118 @@
+# Template — área Site & SEO (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_site_seo) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
+
+id: template-area-site-seo
+version: 1
+deliverable_type: area_site_seo
+# Entrega para fora (terceiros ou publicação): páginas do site
+delivery: external
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 9
+
+steps:
+  - id: lider
+    action: lider_site_seo
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-site_seo.md
+    knowledge:
+      kb: marketing
+      query: "SEO, arquitectura do site e findability em IA (Item 13)"
+
+  - id: brief
+    action: seo_brief
+    depends_on: [lider]
+    task: "Brief SEO/AEO das páginas do brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md]
+    output_artifact: artifacts/01-brief.md
+    knowledge:
+      kb: marketing
+      query: "checklist SEO tecnico FAQ citavel"
+
+  - id: estrutura
+    action: site_architecture
+    depends_on: [lider]
+    task: "Hierarquia e links internos das páginas"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md]
+    output_artifact: artifacts/02-estrutura.md
+    knowledge:
+      kb: marketing
+      query: "arquitectura do site, navegação e links internos"
+
+  - id: visibilidade
+    action: ai_visibility
+    depends_on: [lider]
+    task: "Painel e diagnóstico de visibilidade em IA (números só de uma medição fornecida)"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md]
+    output_artifact: artifacts/03-visibilidade.md
+    knowledge:
+      kb: marketing
+      query: "visibilidade da marca em assistentes de IA (GEO/AEO, Item 13)"
+
+  - id: conversao
+    action: cro
+    depends_on: [brief, estrutura, visibilidade]
+    task: "Conversão da página principal"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md]
+    output_artifact: artifacts/04-conversao.md
+    knowledge:
+      kb: marketing
+      query: "optimização de conversão e UX de páginas"
+
+  - id: critic
+    action: critic
+    depends_on: [conversao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
+    output_artifact: artifacts/05-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: citabilidade
+    action: critic_item13
+    depends_on: [conversao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
+    output_artifact: artifacts/06-citabilidade.json
+    knowledge:
+      kb: marketing
+      query: "criterios de avaliacao AI findability"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [conversao]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-site_seo.md, artifacts/01-brief.md, artifacts/02-estrutura.md, artifacts/03-visibilidade.md, artifacts/04-conversao.md]
+    output_artifact: artifacts/07-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic, citabilidade, compliance]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/08-hitl.json
+
+done_when:
+  - artifacts/00-brief-site_seo.md exists
+  - artifacts/01-brief.md exists
+  - artifacts/02-estrutura.md exists
+  - artifacts/03-visibilidade.md exists
+  - artifacts/04-conversao.md exists
+  - artifacts/07-compliance.json exists
+  - human_gate_resolved on hitl

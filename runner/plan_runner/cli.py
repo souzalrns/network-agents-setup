@@ -116,6 +116,12 @@ def main(argv: list[str] | None = None) -> int:
             result = abort_run(args.out, reason=args.reason)
         elif args.cmd == "run":
             if args.engine == "langgraph":
+                if args.out:
+                    # O guard do --out corre antes de importar o langgraph (dependência opcional):
+                    # um --out errado dá a mensagem certa mesmo sem o langgraph instalado.
+                    from .engine import _validate_out_dir
+
+                    _validate_out_dir(args.out)
                 # W-005: worker inline e tectos tambem no langgraph (paridade com o native)
                 from .langgraph_engine import run_plan_langgraph
 

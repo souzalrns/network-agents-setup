@@ -12,6 +12,8 @@
 id: example-comercial-demo
 version: 1
 deliverable_type: comercial_proposal_pack
+# Entrega para fora (terceiros ou publicação): proposta e mensagens enviadas ao cliente
+delivery: external
 objective: >
   Qualificar um pedido inbound de renovação, preparar a proposta com preços só da tabela do
   plano e as lacunas à vista, e rever o pipeline em aberto com os follow-ups devidos, sem
@@ -20,7 +22,7 @@ audience: >
   O dono do negócio, que revê, completa as lacunas e envia (ou não) cada mensagem.
 
 budget:
-  max_steps: 5
+  max_steps: 6
   max_tokens: 40000
 
 steps:
@@ -30,6 +32,9 @@ steps:
     repo_files:
       - docs/orchestration/marketing/templates/examples/fixtures/comercial-pedido-ficticio.md
     output_artifact: artifacts/01-qualificacao.md
+    knowledge:
+      kb: marketing
+      query: "qualificação de leads e perfil do cliente"
 
   - id: proposal
     action: proposal
@@ -39,6 +44,9 @@ steps:
     repo_files:
       - docs/orchestration/marketing/templates/examples/fixtures/comercial-pedido-ficticio.md
     output_artifact: artifacts/02-proposta.md
+    knowledge:
+      kb: marketing
+      query: "propostas comerciais"
 
   - id: follow_ups
     action: follow_up
@@ -47,10 +55,33 @@ steps:
     repo_files:
       - docs/orchestration/marketing/templates/examples/fixtures/comercial-pedido-ficticio.md
     output_artifact: artifacts/03-follow-ups.md
+    knowledge:
+      kb: marketing
+      query: "follow-up comercial"
+
+  - id: revisao
+    action: critic
+    depends_on: [follow_ups]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/02-proposta.md, artifacts/03-follow-ups.md]
+    output_artifact: artifacts/05-revisao.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [follow_ups]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/02-proposta.md, artifacts/03-follow-ups.md]
+    output_artifact: artifacts/06-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
 
   - id: hitl_send_decision
     action: plan_approve
-    depends_on: [follow_ups]
+    depends_on: [follow_ups, revisao, compliance]
     human_gate:
       level: step
       kind: output_review

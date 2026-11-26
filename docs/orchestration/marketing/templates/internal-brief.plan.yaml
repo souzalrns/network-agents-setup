@@ -1,6 +1,8 @@
 id: template-internal-brief
 version: 1
 deliverable_type: internal_brief
+# Entrega interna: brief para a equipa
+delivery: internal
 objective: "(preencher)"
 
 budget:
@@ -9,7 +11,7 @@ budget:
 steps:
   - id: gather
     action: research
-    tools_allowed: [read_repo_file, web_search]
+    tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-context.md
     knowledge:
       kb: marketing
@@ -20,6 +22,9 @@ steps:
     depends_on: [gather]
     tools_allowed: [read_repo_file]
     output_artifact: artifacts/02-internal-brief.md
+    knowledge:
+      kb: marketing
+      query: "brief interno de marketing"
 
   - id: hitl
     action: plan_approve

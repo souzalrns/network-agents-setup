@@ -29,9 +29,10 @@ Formato do bloco opcional no plan.yaml:
           require_citations: false   # opcional, default do proprio retrieve_knowledge
 
 Falha de retrieval (rede, quota Gemini excedida, MCP_API_KEY em falta, etc.)
-nunca aborta o step nem o plano -- fica registada no events.jsonl e um
-ficheiro de contexto com o motivo da falha e escrito, para nao deixar o
-worker externo (humano ou agente) sem saber que o contexto nao chegou.
+fica registada no events.jsonl e num ficheiro de contexto com o motivo. Num
+passo que EXIGE o contexto (R6 de config/plan-policy.yaml) o executor recusa
+depois correr o passo sem ele (M-009, `executor.knowledge_gap`); nos outros
+passos o worker segue, sabendo que o contexto nao chegou.
 """
 from __future__ import annotations
 
@@ -99,8 +100,9 @@ def inject_knowledge_context(
         path.write_text(
             "[L5 CONTEXT: FALHA]\n"
             f"Nao foi possivel obter contexto de '{kb}' -- {e}\n"
-            "Prossegue sem este contexto; nao inventar dados que substituam "
-            "o que faltou.\n"
+            "Nao inventar dados que substituam o que faltou. Num passo que "
+            "exige este contexto (config/plan-policy.yaml, R6) o motor nao "
+            "chega a chamar o worker (M-009).\n"
             "[/L5 CONTEXT]\n",
             encoding="utf-8",
         )

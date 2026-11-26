@@ -1,0 +1,84 @@
+# Template — área Conteúdo (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_conteudo) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
+
+id: template-area-conteudo
+version: 1
+deliverable_type: area_conteudo
+# Entrega para fora (terceiros ou publicação): conteúdo para publicar
+delivery: external
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 6
+
+steps:
+  - id: lider
+    action: lider_conteudo
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-conteudo.md
+    knowledge:
+      kb: marketing
+      query: "estratégia de conteúdo e calendário editorial"
+
+  - id: copy
+    action: copy_social
+    depends_on: [lider]
+    task: "Variantes de copy por canal segundo o brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md]
+    output_artifact: artifacts/01-copy.md
+    knowledge:
+      kb: marketing
+      query: "copywriting para redes sociais"
+
+  - id: narrativa
+    action: storytelling
+    depends_on: [copy]
+    task: "Reforçar o arco narrativo das variantes"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md]
+    output_artifact: artifacts/02-narrativa.md
+    knowledge:
+      kb: marketing
+      query: "storytelling e narrativa de marca"
+
+  - id: critic
+    action: critic
+    depends_on: [narrativa]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md, artifacts/02-narrativa.md]
+    output_artifact: artifacts/03-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [narrativa]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-conteudo.md, artifacts/01-copy.md, artifacts/02-narrativa.md]
+    output_artifact: artifacts/04-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic, compliance]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/05-hitl.json
+
+done_when:
+  - artifacts/00-brief-conteudo.md exists
+  - artifacts/01-copy.md exists
+  - artifacts/02-narrativa.md exists
+  - artifacts/04-compliance.json exists
+  - human_gate_resolved on hitl

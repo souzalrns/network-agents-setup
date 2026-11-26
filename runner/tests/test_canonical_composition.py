@@ -28,6 +28,7 @@ from plan_runner import model_tiers as mt
 from plan_runner.engine import load_plan, resume_run, run_plan
 from plan_runner.plan_import import import_contract
 from plan_runner.plan_schema import plan_errors
+from tests.politica import politica
 from tests.test_external_worker import FakeGemini
 
 PER_CALL = 955  # tokens por chamada falsa (USAGE de test_external_worker)
@@ -175,11 +176,11 @@ def test_sinais_da_planwright_chegam_a_seleccao_do_runner(tmp_path, tmp_run_dir,
     mtcfg.write_text('{"complexity": {"C1": "modelo-barato", "C2": "modelo-medio"}}', encoding="utf-8")
     monkeypatch.setattr(mt, "TIERS_PATH", mtcfg)
     plan_yaml = tmp_path / "plan.yaml"
-    plan_yaml.write_text(
+    plan_yaml.write_text(politica(
         '{"id": "sel", "objective": "x",'
         ' "router": {"signals": {"a": {"complexity": "C2"}, "b": {"complexity": "C1"}}},'
         ' "steps": [{"id": "a", "action": "research", "output_artifact": "artifacts/a.md"},'
-        '           {"id": "b", "action": "research", "depends_on": ["a"], "output_artifact": "artifacts/b.md"}]}',
+        '           {"id": "b", "action": "research", "depends_on": ["a"], "output_artifact": "artifacts/b.md"}]}'),
         encoding="utf-8",
     )
     status = run_plan(plan_yaml, mode="external", out_dir=tmp_run_dir, worker="gemini")

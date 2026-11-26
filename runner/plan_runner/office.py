@@ -11,6 +11,11 @@ Regras de validação (cabeçalho de config/office.yaml):
   - cada agente só do MCP (config/mcp-agents.yaml, runtime: null) está em exactamente um
     lugar como `mcp:<id>`; os que existem nos dois sítios entram pelo id do runner;
   - lead null ou agente do próprio departamento; ids únicos; wing funcoes|negocios;
+  - P-90 (M-006): um lugar pode ter `lead` (agente desse lugar). Um lead com skill (lugar ou
+    departamento) só é aceite se ORQUESTRAR DE FACTO: num plano do runner
+    (docs/orchestration/**/*.plan.yaml), pelo menos um passo de outro agente do mesmo lugar
+    (ou departamento) depende, directa ou indirectamente, do passo do lead. Um coordenador sem
+    skill (o `marketing.marketing`, que faz dispatch pelo router) fica com a regra antiga;
   - cada `action:` de agents/**/*.agent.md pertence a um só agente (é por ela que um
     passo de plano é atribuído a um agente).
 
@@ -40,6 +45,7 @@ from .skills import _frontmatter
 
 OFFICE_FILE = Path("config") / "office.yaml"
 MCP_FILE = Path("config") / "mcp-agents.yaml"
+PLAN_GLOB = "docs/orchestration/**/*.plan.yaml"
 MCP_PREFIX = "mcp:"
 WINGS = ("funcoes", "negocios")
 
@@ -128,6 +134,51 @@ def _validate_mcp(repo_root: Path, runtime_ids: set[str], errors: list[str]) -> 
     return only, also
 
 
+def _plans(repo_root: Path) -> list[tuple[str, list[dict[str, Any]]]]:
+    """(path relativo, passos) de cada plano do runner; ficheiros ilegíveis ficam de fora (o W-006 reporta)."""
+    out: list[tuple[str, list[dict[str, Any]]]] = []
+    for path in sorted(repo_root.glob(PLAN_GLOB)):
+        try:
+            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            continue
+        steps = [s for s in data.get("steps") or [] if isinstance(s, dict) and s.get("id")]
+        out.append((path.relative_to(repo_root).as_posix(), steps))
+    return out
+
+
+def orchestration_evidence(repo_root: Path, lead: str, members: set[str]) -> str | None:
+    """P-90: plano onde o lead orquestra de facto outro agente de `members`; None se não houver.
+
+    Orquestrar = o passo do lead vem antes (depends_on directo ou transitivo) de um passo cuja
+    action pertence a outro agente de `members`. A action -> agente é a do frontmatter (action_index).
+    """
+    index, _ = action_index(repo_root)
+    lead_actions = {a for a, aid in index.items() if aid == lead}
+    others = {a for a, aid in index.items() if aid in members and aid != lead}
+    for rel, steps in _plans(repo_root):
+        by_id = {str(s["id"]): s for s in steps}
+        lead_steps = {sid for sid, s in by_id.items() if s.get("action") in lead_actions}
+        if not lead_steps:
+            continue
+
+        def reaches(sid: str, seen: set[str]) -> bool:
+            for dep in by_id.get(sid, {}).get("depends_on") or []:
+                if dep in lead_steps or (dep not in seen and reaches(dep, seen | {dep})):
+                    return True
+            return False
+
+        if any(s.get("action") in others and reaches(sid, {sid}) for sid, s in by_id.items()):
+            return rel
+    return None
+
+
+def _lead_has_skill(repo_root: Path, lead: str) -> bool:
+    ids, _ = agent_ids(repo_root)
+    path = ids.get(lead)
+    return bool(path and _frontmatter(path).get("skill"))
+
+
 def validate_office(repo_root: Path) -> list[str]:
     office = load_office(repo_root)
     if not office:
@@ -173,6 +224,15 @@ def validate_office(repo_root: Path) -> list[str]:
             if not isinstance(agents, list) or not agents:
                 errors.append(f"{did}/{sid}: lugar sem agentes (lugares vazios não se desenham)")
                 continue
+            seat_lead = seat.get("lead")
+            if seat_lead is not None:
+                if seat_lead not in agents:
+                    errors.append(f"{did}/{sid}: lead `{seat_lead}` não é agente do lugar")
+                elif orchestration_evidence(repo_root, seat_lead, set(agents)) is None:
+                    errors.append(
+                        f"{did}/{sid}: lead `{seat_lead}` não orquestra de facto (nenhum plano em {PLAN_GLOB} "
+                        "tem um passo de outro agente do lugar a depender do passo dele; P-90)"
+                    )
             for aid in agents:
                 if aid not in expected:
                     errors.append(f"{did}/{sid}: `{aid}` não existe (nem em config/areas.yaml nem só no MCP em {MCP_FILE})")
@@ -184,6 +244,11 @@ def validate_office(repo_root: Path) -> list[str]:
         lead = dept.get("lead")
         if lead is not None and lead not in members:
             errors.append(f"{did}: lead `{lead}` não é agente do departamento")
+        elif lead is not None and _lead_has_skill(repo_root, lead) and orchestration_evidence(repo_root, lead, members) is None:
+            errors.append(
+                f"{did}: lead `{lead}` não orquestra de facto (nenhum plano em {PLAN_GLOB} tem um passo de outro "
+                "agente do departamento a depender do passo dele; P-90)"
+            )
 
     for aid in sorted(expected - set(placed)):
         errors.append(f"`{aid}` sem lugar (o escritório não pode esconder um agente)")
@@ -270,7 +335,7 @@ def project(events: Iterable[dict[str, Any]], office: dict, actions: dict[str, s
         seats = []
         for seat in dept.get("seats") or []:
             members = [member(aid) for aid in seat.get("agents") or []]
-            seats.append({"id": seat["id"], "name": seat["name"], "does": seat["does"],
+            seats.append({"id": seat["id"], "name": seat["name"], "does": seat["does"], "lead": seat.get("lead"),
                           "state": worst(m["state"] for m in members), "agents": members})
         departments.append({
             "id": dept["id"], "wing": dept.get("wing"), "name": dept["name"], "lead": dept.get("lead"),

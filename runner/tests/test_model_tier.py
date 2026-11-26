@@ -9,6 +9,7 @@ import pytest
 from plan_runner import external_worker as ew
 from plan_runner import model_tiers as mt
 from plan_runner.engine import run_plan
+from tests.politica import politica, politica_dict
 from tests.test_external_worker import FakeGemini
 
 
@@ -44,8 +45,8 @@ def _plan(tmp_path: Path, tiers: tuple[str | None, str | None]) -> Path:
         return f"  - {{id: {sid}, action: {action}{t}{d}, output_artifact: artifacts/{sid}.md}}\n"
 
     p = tmp_path / "plan.yaml"
-    p.write_text("id: tiers\nobjective: x\nsteps:\n" + line("research", "research", tiers[0])
-                 + line("copy", "copy_social", tiers[1], "research"), encoding="utf-8")
+    p.write_text(politica("id: tiers\nobjective: x\nsteps:\n" + line("research", "research", tiers[0])
+                 + line("copy", "copy_social", tiers[1], "research")), encoding="utf-8")
     return p
 
 
@@ -151,7 +152,7 @@ def _plan_com_sinais(tmp_path: Path, complexities: dict[str, str]) -> Path:
         ],
     }
     p = tmp_path / "plan.yaml"
-    p.write_text(json.dumps(plan), encoding="utf-8")  # JSON e YAML valido
+    p.write_text(json.dumps(politica_dict(plan)), encoding="utf-8")  # JSON e YAML valido
     return p
 
 

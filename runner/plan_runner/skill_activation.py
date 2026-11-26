@@ -51,11 +51,18 @@ import httpx
 import yaml
 
 from .skill_scan import FetchFn, ScanFn, scan_candidates
-from .skills import _frontmatter, read_text_if_exists, resolve_agent_path, resolve_skill_path
+from .skills import (
+    _frontmatter,
+    read_text_if_exists,
+    resolve_agent_path,
+    resolve_mode_path,
+    resolve_skill_path,
+)
 
 CONFIG_REL = "config/skills.yaml"
 ACTIVATION_JSON = "skill_activation.json"
 ACTIVATION_MD = "SKILL_ACTIVATION.md"
+MODE_MD = "MODE.md"  # P-89: o modo pedido pelo passo, copiado para pending_steps/<id>/
 SKILL_PREVIEW_CHARS = 2000
 AGENT_PREVIEW_CHARS = 1500
 
@@ -323,6 +330,13 @@ class SkillActivation:
     external: dict[str, Any] = field(default_factory=_external_not_requested)
     warnings: list[str] = field(default_factory=list)
     activated_at: str = ""
+    # P-89 (M-006): modo da skill pedido pelo passo. `mode_error` != None = o passo nao corre
+    # (fail-closed: sem o modo, o herdeiro faria o trabalho sem o conhecimento da funcao fundida).
+    mode: str | None = None
+    mode_path: Path | None = None
+    mode_rel: str | None = None
+    mode_sha256: str | None = None
+    mode_error: str | None = None
 
     @property
     def external_candidates(self) -> list[dict[str, Any]]:
@@ -341,6 +355,8 @@ class SkillActivation:
                         "allowed": self.allowed_scripts, "blocked": self.blocked_scripts},
             "external": self.external,
             "warnings": self.warnings,
+            **({"mode": {"name": self.mode, "path": self.mode_rel, "sha256": self.mode_sha256,
+                         "error": self.mode_error}} if self.mode else {}),
         }
 
     def to_request_fields(self) -> dict[str, Any]:
@@ -358,6 +374,8 @@ class SkillActivation:
             "external_skill_candidates": self.external_candidates,
             "skill_activation": ACTIVATION_JSON,
         })
+        if self.mode:
+            fields.update({"mode": self.mode, "mode_path": self.mode_rel, "mode_sha256": self.mode_sha256})
         return fields
 
     def prompt_block(self) -> str:
@@ -429,10 +447,27 @@ def activate_for_task(
         act.skill_allowed_tools = str(tools) if tools else None
         _apply_script_policy(act, policy)
 
+    _apply_mode(repo_root, act, step)
     _apply_external_search(act, step, policy, search)
     if act.external.get("candidates"):
         act.external["scan"] = scan_candidates(act.external["candidates"], fetch=fetch, scan=scanner)
     return act
+
+
+def _apply_mode(repo_root: Path, act: SkillActivation, step: Any) -> None:
+    """P-89: resolve `modes/<mode>.md` da skill do passo; falha fechada se nao existir."""
+    mode = getattr(step, "mode", None)
+    if not mode:
+        return
+    act.mode = str(mode)
+    if act.skill_path is None:
+        act.mode_error = f"modo `{mode}` pedido, mas a action `{act.action}` nao tem skill"
+        return
+    act.mode_path = resolve_mode_path(act.skill_path, act.mode)
+    if act.mode_path is None:
+        act.mode_error = f"modo `{mode}` nao existe em {act.skill_rel.rsplit('/', 1)[0] if act.skill_rel else '?'}/modes/"
+        return
+    act.mode_rel, act.mode_sha256 = _rel(repo_root, act.mode_path), _sha256(act.mode_path)
 
 
 def _apply_script_policy(act: SkillActivation, policy: SkillsPolicy) -> None:
@@ -520,6 +555,11 @@ def materialize_activation(pending: Path, activation: SkillActivation) -> None:
         (pending / "SKILL.md").write_text(activation.skill_path.read_text(encoding="utf-8"), encoding="utf-8")
     if activation.agent_path and activation.agent_path.is_file():
         (pending / "AGENT.md").write_text(activation.agent_path.read_text(encoding="utf-8"), encoding="utf-8")
+    mode_md = pending / MODE_MD
+    if activation.mode_path and activation.mode_path.is_file():
+        mode_md.write_text(activation.mode_path.read_text(encoding="utf-8"), encoding="utf-8")
+    elif mode_md.exists():
+        mode_md.unlink()  # resume: um modo antigo nao pode entrar num passo que ja nao o pede
     (pending / ACTIVATION_JSON).write_text(
         json.dumps(activation.to_json(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )

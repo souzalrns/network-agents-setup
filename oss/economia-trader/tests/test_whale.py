@@ -208,7 +208,14 @@ def test_cli_screen_and_run_once(tmp_path, monkeypatch, capsys):
 
     monkeypatch.setattr(cli, "make_exchange", lambda name, mode: FakeExchange({"ACME": "20"}))
     flow = tmp_path / "flow.json"
-    flow.write_text((EXAMPLES / "flow.example.json").read_text())
+    # `run` has no --as-of (always real time, by design: it's the live/paper loop). The example
+    # file's earnings_date values are only meant to exercise the earnings block under the fixed
+    # AS_OF above; left in place they drift in and out of the block window as real time passes,
+    # which flips which ticker screens in and breaks this round trip on a date it doesn't control.
+    prints = json.loads((EXAMPLES / "flow.example.json").read_text())
+    for p in prints:
+        p.pop("earnings_date", None)
+    flow.write_text(json.dumps(prints))
     rc = cli.main(
         [
             "run",

@@ -3,7 +3,7 @@
 > **Não editar à mão.** Regenerar com:
 > `pnpm --filter @network-agents/scripts docs:agents`
 >
-> Gerado em: 2026-09-20
+> Gerado em: 2026-11-04
 > Fonte: `config/agents.config.ts`
 > Total: **24** agentes
 

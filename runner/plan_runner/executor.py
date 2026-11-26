@@ -6,7 +6,7 @@ from typing import Any
 
 from .models import Step
 from .skill_activation import activate_for_task, materialize_activation
-from .skills import repo_root_from_out
+from .skills import repo_root_from_out, resolve_mode_path, resolve_skill_path
 
 
 class StepResult:
@@ -64,8 +64,40 @@ def _write_stub_artifact(out_root: Path, step: Step) -> str | None:
 def execute_stub(out_root: Path, step: Step) -> StepResult:
     if step.human_gate:
         return StepResult(ok=True, detail="awaiting_human_gate", artifact=None)
+    if step.mode:
+        # P-89: o stub tambem falha com um modo inexistente, para um dry-run apanhar o erro
+        # antes de um run real (a mesma regra do execute_external_request).
+        vertical = str(step.raw.get("vertical") or "marketing") if isinstance(step.raw, dict) else "marketing"
+        skill = resolve_skill_path(repo_root_from_out(out_root), step.action, vertical)
+        if resolve_mode_path(skill, step.mode) is None:
+            return StepResult(ok=False, detail=f"mode_missing: modo `{step.mode}` nao existe para a action `{step.action}`")
     art = _write_stub_artifact(out_root, step)
     return StepResult(ok=True, detail="stub_ok", artifact=art)
+
+
+def knowledge_gap(out_root: Path, step: Step) -> str | None:
+    """M-009: motivo se o passo exige contexto da base de conhecimento (R6) e ele não chegou; senão None."""
+    from .artifact_sources import KNOWLEDGE_SOURCES_FILE
+    from .knowledge_wiring import CONTEXT_FILENAME
+    from .policy import requires_knowledge
+
+    if not requires_knowledge(step):
+        return None
+    pending = out_root / "pending_steps" / step.id
+    ctx = pending / CONTEXT_FILENAME
+    if not ctx.is_file():
+        return "o contexto não foi pedido (falta o bloco knowledge: ou o pedido não correu)"
+    text = ctx.read_text(encoding="utf-8")
+    if not text.startswith("[L5 CONTEXT]"):
+        first = text.splitlines()[1] if len(text.splitlines()) > 1 else text[:120]
+        return f"a base de conhecimento não devolveu contexto ({first.strip()[:200]})"
+    try:
+        sources = json.loads((pending / KNOWLEDGE_SOURCES_FILE).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        sources = []
+    if not sources:
+        return "o contexto veio sem nenhuma fonte citada"
+    return None
 
 
 def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> StepResult:
@@ -85,6 +117,12 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     # skills externas (candidatas, nunca instaladas). Resultado no request.json,
     # em skill_activation.json e, se houver algo a dizer, no prompt.
     activation = activate_for_task(repo_root, step)
+    # um result.json que já existe veio de um pedido que passou nesta verificação: não se refaz
+    done = (pending / "result.json").is_file()
+    gap = None if activation.mode_error or done else knowledge_gap(out_root, step)
+    if gap:  # M-009, fail-closed: sem o conhecimento que a regra exige, nem há pedido para o worker
+        (pending / "request.json").unlink(missing_ok=True)  # um pedido antigo não pode ser servido sem contexto
+        return StepResult(ok=False, detail=f"knowledge_missing: o passo `{step.id}` exige a base de conhecimento (R6) e {gap}")
 
     req: dict[str, Any] = {
         "step_id": step.id,
@@ -117,6 +155,10 @@ def execute_external_request(out_root: Path, step: Step, worker: Any = None) -> 
     )
 
     materialize_activation(pending, activation)
+    if activation.mode_error:
+        # P-89: fail-closed. Sem o modo, o herdeiro faria o passo sem o conhecimento da funcao
+        # fundida; o erro fica no skill_activation.json e o modelo nem e chamado.
+        return StepResult(ok=False, detail=f"mode_missing: {activation.mode_error}")
     if client_memory_path.is_file():
         (pending / "CLIENT_MEMORY.md").write_text(
             client_memory_path.read_text(encoding="utf-8"), encoding="utf-8"

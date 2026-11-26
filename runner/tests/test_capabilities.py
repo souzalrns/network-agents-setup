@@ -153,7 +153,7 @@ def test_inventario_real_e_cli(capsys):
 def test_marketing_implemented_sustentadas_por_planos_validos():
     """F4: o pipeline carrega o domínio novo. Cada capability `implemented` de marketing tem
     plano(s) do runner com a action, e esses planos passam o schema do runner (W-006)."""
-    from plan_runner.capabilities import plan_actions
+    from plan_runner.capabilities import action_key, plan_actions
     from plan_runner.plan_schema import file_errors
 
     data = yaml.safe_load((REPO_ROOT / "config/marketing-capabilities.yaml").read_text(encoding="utf-8"))
@@ -161,7 +161,7 @@ def test_marketing_implemented_sustentadas_por_planos_validos():
     implemented = [c for c in data["capabilities"] if c["status"] == "implemented"]
     assert len(implemented) >= 10
     for cap in implemented:
-        plans = used.get(cap["action"])
+        plans = used.get(action_key(cap["action"], cap.get("mode")))  # P-89: modo = action#mode
         assert plans, cap["id"]
         for rel in plans:
             assert file_errors(REPO_ROOT / rel) == [], (cap["id"], rel)

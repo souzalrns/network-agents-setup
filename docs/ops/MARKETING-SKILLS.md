@@ -18,7 +18,7 @@ inesperada:
 | Camada | O que entra | Onde |
 |---|---|---|
 | **Claude Code** (interactivo) | as **50** skills limpas | `vendor/marketingskills/skills/` → instaladas pelo maestro no `agent-network-mcp/.claude/skills` com o `skill-scout` (`scripts/install-marketing-skills.sh`) |
-| **Runner** (pipeline) | as **39** que não tínhamos: skill (contrato PT + conhecimento upstream), agente, capability `partial`, agente na área `marketing` | `skills/marketing/<action>/`, `agents/marketing/<action>.agent.md`, `config/marketing-capabilities.yaml` (bloco gerado), `config/areas.yaml` |
+| **Runner** (pipeline) | as **39** que não tínhamos: 28 com skill (contrato PT + conhecimento upstream), agente, capability `partial` e agente na área `marketing`; 11 como **modos** de um agente herdeiro (M-006, abaixo) | `skills/marketing/<action>/`, `agents/marketing/<action>.agent.md`, `config/marketing-capabilities.yaml` (bloco gerado), `config/areas.yaml` |
 | Catálogo de ferramentas | `tools/REGISTRY.md` sem parceiros, sem CLIs e sem guias de API | `vendor/marketingskills/tools-registry.md` (fora de `docs/knowledge/`, para não entrar no RAG de produção sem decisão) |
 
 A capability `performance_analysis` (estava `planned`, sem agente) passa a usar a skill `attribution`.
@@ -73,7 +73,7 @@ As 11 que o runner já cobria em parte (vão só para o Claude Code):
 | `influencer-marketing` | influencer_brief / ugc_brief |
 | `content-strategy` | internal_brief / seo_brief |
 
-As 39 novas no runner:
+As 28 novas no runner (cada uma com agente próprio):
 
 | upstream | action | capability | descrição |
 |---|---|---|---|
@@ -82,40 +82,45 @@ As 39 novas no runner:
 | `aso` | `aso` | `app_store_optimization` | Auditoria e optimização de fichas na App Store e Google Play (título, keywords, screenshots, reviews). |
 | `attribution` | `attribution` | `performance_analysis` | Lê resultados de campanha e atribuição (modelos, incrementalidade, MMM leve) para decidir o próximo ciclo. |
 | `churn-prevention` | `churn_prevention` | `churn_prevention` | Reduz churn: fluxos de cancelamento, ofertas de retenção, recuperação de pagamentos falhados. |
-| `co-marketing` | `co_marketing` | `co_marketing` | Encontra parceiros de co-marketing e planeia campanhas conjuntas. |
 | `cold-email` | `cold_email` | `cold_outbound` | Rascunhos de outbound B2B (emails frios e follow-ups) dentro do RGPD/LGPD; nunca envia. |
 | `community-marketing` | `community_marketing` | `community_marketing` | Estratégia de comunidade (fóruns, Discord, grupos) para crescimento e lealdade. |
 | `competitor-profiling` | `competitor_profiling` | `competitor_profiling` | Perfis de concorrentes a partir dos sites deles: posicionamento, preços, mensagens, lacunas. |
-| `competitors` | `competitors` | `comparison_pages` | Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra. |
 | `cro` | `cro` | `conversion_optimization` | Optimização de conversão de páginas e formulários: diagnóstico, hipóteses e alterações priorizadas. |
 | `directory-submissions` | `directory_submissions` | `directory_submissions` | Lista e textos para submeter o produto em directórios e sites de reviews; o envio é humano. |
 | `emails` | `emails` | `email_sequences` | Sequências de email (boas-vindas, nurture, lifecycle, reactivação) com copy e calendário. |
-| `events` | `events` | `events_marketing` | Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline. |
-| `free-tools` | `free_tools` | `free_tools` | Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO. |
 | `image` | `image` | `marketing_images` | Briefs e prompts de imagens de marketing (heróis de blog, gráficos sociais, OG) e a sua optimização. |
-| `launch` | `launch` | `launch_plan` | Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist. |
 | `lead-magnets` | `lead_magnets` | `lead_magnets` | Cria e optimiza lead magnets (guias, templates, checklists) para captar emails. |
-| `marketing-council` | `marketing_council` | `marketing_council` | Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação. |
-| `marketing-ideas` | `marketing_ideas` | `marketing_ideas` | Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio. |
-| `marketing-loops` | `marketing_loops` | `marketing_loops` | Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano. |
 | `marketing-plan` | `marketing_plan` | `marketing_plan` | Plano de marketing completo (objectivos, públicos, canais, orçamento, calendário, métricas). |
 | `marketing-psychology` | `marketing_psychology` | `marketing_psychology` | Aplica princípios de psicologia e economia comportamental à mensagem, oferta e página, sem manipulação. |
 | `offers` | `offers` | `offer_design` | Desenha ou melhora a oferta (o que se vende): valor, bónus, garantias, escassez honesta. |
 | `onboarding` | `onboarding` | `onboarding_activation` | Onboarding e activação pós-registo: primeiro uso, tempo até ao valor, emails e checklists. |
 | `paywalls` | `paywalls` | `paywalls_upgrades` | Paywalls, ecrãs de upgrade e feature gates dentro do produto. |
-| `popups` | `popups` | `popups_overlays` | Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência. |
-| `pricing` | `pricing` | `pricing_strategy` | Decisões de preço, planos e monetização, com hipóteses a validar. |
 | `product-marketing` | `product_marketing` | `product_marketing_context` | Documento de contexto de product marketing (produto, público, posicionamento) que as outras skills leem primeiro. |
 | `programmatic-seo` | `programmatic_seo` | `programmatic_seo` | Páginas SEO em escala a partir de templates e dados, com controlo de qualidade e de canibalização. |
 | `prospecting` | `prospecting` | `prospecting_lists` | Define e qualifica listas de prospects B2B (empresas e cargos) dentro do RGPD/LGPD; sem identificação de pessoas. |
 | `public-relations` | `public_relations` | `public_relations` | Relações públicas: ângulos, comunicados, pitch a jornalistas e comunicação de crise. |
 | `referrals` | `referrals` | `referral_programs` | Programas de referência e afiliados: incentivo, mecânica, regras e medição. |
-| `revops` | `revops` | `revenue_operations` | RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas. |
 | `sales-enablement` | `sales_enablement` | `sales_enablement` | Material de vendas: one-pagers, decks, objecções e guiões de demo. |
 | `schema` | `schema` | `schema_markup` | Schema markup e dados estruturados (JSON-LD) para páginas e rich results. |
 | `signup` | `signup` | `signup_flow` | Optimiza registo, criação de conta e activação do trial. |
 | `site-architecture` | `site_architecture` | `site_architecture` | Arquitectura do site: hierarquia de páginas, navegação, URLs e linkagem interna. |
 | `sms` | `sms` | `sms_whatsapp` | Marketing por SMS e WhatsApp com opt-in explícito (RGPD/LGPD): fluxos, copy e frequência. |
+
+As 11 fundidas como modos de um herdeiro (M-006, P-89 = A): a capability mantém o id e aponta para o herdeiro + `mode`; o conhecimento está em `skills/marketing/<skill do herdeiro>/modes/<modo>.md` e só entra no passo com esse `mode:` ([ESTRUTURA-AREAS.md](../orchestration/marketing/ESTRUTURA-AREAS.md) §4):
+
+| upstream | herdeiro | modo | capability | descrição |
+|---|---|---|---|---|
+| `co-marketing` | `marketing.referrals` | `co_marketing` | `co_marketing` | Encontra parceiros de co-marketing e planeia campanhas conjuntas. |
+| `competitors` | `marketing.seo_brief` | `competitors` | `comparison_pages` | Páginas de comparação e de alternativas (vs/alternativas) para SEO e para quem compra. |
+| `events` | `marketing.community_marketing` | `events` | `events_marketing` | Planeia webinars, conferências e eventos (organizar, patrocinar, falar) com metas de pipeline. |
+| `free-tools` | `marketing.lead_magnets` | `free_tools` | `free_tools` | Planeia e avalia ferramentas grátis de marketing (calculadoras, geradores) para leads e SEO. |
+| `launch` | `marketing.marketing_plan` | `launch` | `launch_plan` | Plano de lançamento de produto ou funcionalidade: fases, canais, mensagens e checklist. |
+| `marketing-council` | `marketing.marketing_plan` | `council` | `marketing_council` | Painel simulado de especialistas que discute uma questão de marketing e converge numa recomendação. |
+| `marketing-ideas` | `marketing.marketing_plan` | `ideas` | `marketing_ideas` | Ideias e estratégias de marketing filtradas pelo estágio, canal e orçamento do negócio. |
+| `marketing-loops` | `marketing.marketing_plan` | `loops` | `marketing_loops` | Desenha loops recorrentes de marketing que um agente prepara; publicar ou enviar continua humano. |
+| `popups` | `marketing.cro` | `popups` | `popups_overlays` | Popups, modais e banners de conversão: gatilhos, oferta, copy e regras de frequência. |
+| `pricing` | `marketing.offers` | `pricing` | `pricing_strategy` | Decisões de preço, planos e monetização, com hipóteses a validar. |
+| `revops` | `marketing.inbound_qualification` | `revops` | `revenue_operations` | RevOps: ciclo de vida do lead, scoring, routing e passagem marketing → vendas. |
 
 ## Actualizar
 

@@ -9,6 +9,12 @@ policy:
   act_in_production: forbidden
   default_level: read
   hitl: required
+  # Regra do maestro (2026-11-07): auditoria completa multi-agente só com autorização expressa,
+  # aviso prévio de consumo (agentes, tokens, % do limite) e tecto proposto antes de lançar.
+  full_multi_agent_audit: express_authorization_required
+  # Antes de qualquer sistema entrar em produção: recomendar pentest profissional externo.
+  # Nunca correr ferramentas de ataque activo, mesmo com autorização.
+  pre_production_pentest: recommend_external_service
 
 capabilities:
   - id: triage

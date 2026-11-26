@@ -37,6 +37,8 @@ class Step:
     output_schema: str | None = None
     inputs: list[str] = field(default_factory=list)
     human_gate: HumanGate | None = None
+    # P-89 (M-006): modo da skill so para este passo (skills/<vertical>/<action>/modes/<mode>.md).
+    mode: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
 
@@ -65,6 +67,7 @@ class Plan:
                     output_schema=s.get("output_schema"),
                     inputs=list(s.get("inputs") or []),
                     human_gate=HumanGate.from_raw(s.get("human_gate")),
+                    mode=str(s["mode"]) if s.get("mode") else None,
                     raw=s,
                 )
             )

@@ -8,6 +8,8 @@
 id: example-seo-article-demo
 version: 1
 deliverable_type: seo_article
+# Entrega para fora (terceiros ou publicação): artigo para publicar no site
+delivery: external
 objective: >
   Produzir um artigo informativo que explique o que e AI Findability (Item 13):
   como estruturar conteudo para sistemas de IA encontrarem, citarem e recomendarem
@@ -27,7 +29,7 @@ budget:
 steps:
   - id: research
     action: research
-    tools_allowed: [read_repo_file, web_search]
+    tools_allowed: [read_repo_file]
     output_artifact: artifacts/01-research.md
     knowledge:
       kb: marketing
@@ -37,7 +39,7 @@ steps:
   - id: seo_brief
     action: seo_brief
     depends_on: [research]
-    tools_allowed: [read_repo_file, web_search]
+    tools_allowed: [read_repo_file]
     output_artifact: artifacts/02-seo-brief.json
     output_schema: SeoBrief
     knowledge:
@@ -51,6 +53,9 @@ steps:
     inputs: [artifacts/02-seo-brief.json]
     output_artifact: artifacts/03-copy.md
     output_schema: CopyAnswerFirst
+    knowledge:
+      kb: marketing
+      query: "escrita answer-first: resposta directa no topo para ser citada por IA"
 
   - id: critic
     action: critic_item13
@@ -63,9 +68,29 @@ steps:
       kb: marketing
       query: "criterios de avaliacao AI findability"
 
+  - id: revisao
+    action: critic
+    depends_on: [copy]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/02-seo-brief.json, artifacts/03-copy.md]
+    output_artifact: artifacts/06-revisao.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [copy]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/02-seo-brief.json, artifacts/03-copy.md]
+    output_artifact: artifacts/07-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
+
   - id: hitl_publish_decision
     action: plan_approve
-    depends_on: [critic]
+    depends_on: [critic, revisao, compliance]
     human_gate:
       level: step
       kind: output_review

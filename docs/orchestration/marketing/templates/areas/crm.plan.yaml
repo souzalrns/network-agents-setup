@@ -1,0 +1,97 @@
+# Template — área CRM e vendas (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_crm) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
+
+id: template-area-crm
+version: 1
+deliverable_type: area_crm
+# Entrega para fora (terceiros ou publicação): propostas e mensagens para clientes
+delivery: external
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 7
+
+steps:
+  - id: lider
+    action: lider_crm
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-crm.md
+    knowledge:
+      kb: marketing
+      query: "qualificação de leads, propostas e follow-up comercial"
+
+  - id: qualificar
+    action: lead_qualification
+    depends_on: [lider]
+    task: "Qualificar o pedido descrito no brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md]
+    output_artifact: artifacts/01-qualificar.md
+    knowledge:
+      kb: marketing
+      query: "qualificação de leads e perfil do cliente"
+
+  - id: oferta
+    action: offers
+    mode: pricing
+    depends_on: [lider]
+    task: "Preços e planos com a tabela do plano"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md]
+    output_artifact: artifacts/02-oferta.md
+    knowledge:
+      kb: marketing
+      query: "construção de ofertas comerciais"
+
+  - id: proposta
+    action: proposal
+    depends_on: [qualificar, oferta]
+    task: "Proposta pronta a rever"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md]
+    output_artifact: artifacts/03-proposta.md
+    knowledge:
+      kb: marketing
+      query: "propostas comerciais"
+
+  - id: critic
+    action: critic
+    depends_on: [proposta]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md, artifacts/03-proposta.md]
+    output_artifact: artifacts/04-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [proposta]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-crm.md, artifacts/01-qualificar.md, artifacts/02-oferta.md, artifacts/03-proposta.md]
+    output_artifact: artifacts/05-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic, compliance]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/06-hitl.json
+
+done_when:
+  - artifacts/00-brief-crm.md exists
+  - artifacts/01-qualificar.md exists
+  - artifacts/02-oferta.md exists
+  - artifacts/03-proposta.md exists
+  - artifacts/05-compliance.json exists
+  - human_gate_resolved on hitl

@@ -1,0 +1,109 @@
+# Template — área Estratégia (P-90 = B, M-006)
+#
+# O líder da área (marketing.lider_estrategia) decide e entrega o brief; os especialistas da área
+# recebem-no como input. Passos sem dependência entre si correm em paralelo (motor LangGraph).
+# Qualidade: critic e compliance (e, nos sites, a citabilidade por IA) revêem em paralelo antes da aprovação humana.
+
+id: template-area-estrategia
+version: 1
+deliverable_type: area_estrategia
+# Entrega interna: estratégia para a equipa decidir; não sai para fora
+delivery: internal
+objective: "(preencher)"
+audience: "(preencher)"
+
+budget:
+  max_steps: 8
+
+steps:
+  - id: lider
+    action: lider_estrategia
+    tools_allowed: [read_repo_file]
+    output_artifact: artifacts/00-brief-estrategia.md
+    knowledge:
+      kb: marketing
+      query: "estratégia de marca, posicionamento e plano de marketing"
+
+  - id: marca
+    action: brand_guardian
+    depends_on: [lider]
+    task: "Livro de marca (voz, tom, claims) para o objectivo do brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md]
+    output_artifact: artifacts/01-marca.md
+    knowledge:
+      kb: marketing
+      query: "guardião de marca, tom de voz e regras do cliente"
+
+  - id: ideias
+    action: marketing_plan
+    mode: ideas
+    depends_on: [lider]
+    task: "Ideias de marketing para o objectivo do brief"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md]
+    output_artifact: artifacts/02-ideias.md
+    knowledge:
+      kb: marketing
+      query: "plano de marketing, campanhas e objectivos"
+
+  - id: psicologia
+    action: marketing_psychology
+    depends_on: [lider]
+    task: "Princípios de comportamento para a mensagem e a oferta"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md]
+    output_artifact: artifacts/03-psicologia.md
+    knowledge:
+      kb: marketing
+      query: "psicologia do consumidor e persuasão ética"
+
+  - id: plano
+    action: marketing_plan
+    depends_on: [marca, ideias, psicologia]
+    task: "Plano de marketing a partir das ideias escolhidas, dentro do livro de marca"
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md, artifacts/01-marca.md, artifacts/02-ideias.md, artifacts/03-psicologia.md]
+    output_artifact: artifacts/04-plano.md
+    knowledge:
+      kb: marketing
+      query: "plano de marketing, campanhas e objectivos"
+
+  - id: critic
+    action: critic
+    depends_on: [plano]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md, artifacts/01-marca.md, artifacts/02-ideias.md, artifacts/03-psicologia.md, artifacts/04-plano.md]
+    output_artifact: artifacts/05-critic.json
+    knowledge:
+      kb: marketing
+      query: "rubrica de revisão criativa e critérios de qualidade"
+
+  - id: compliance
+    action: compliance_check
+    depends_on: [plano]
+    tools_allowed: [read_repo_file]
+    inputs: [artifacts/00-brief-estrategia.md, artifacts/01-marca.md, artifacts/02-ideias.md, artifacts/03-psicologia.md, artifacts/04-plano.md]
+    output_artifact: artifacts/06-compliance.json
+    knowledge:
+      kb: marketing
+      query: "regras de marca do cliente e conformidade legal da publicidade"
+
+  - id: hitl
+    action: plan_approve
+    depends_on: [critic, compliance]
+    human_gate:
+      level: step
+      kind: output_review
+      allow: [approve, reject, edit]
+    tools_allowed: []
+    output_artifact: artifacts/07-hitl.json
+
+done_when:
+  - artifacts/00-brief-estrategia.md exists
+  - artifacts/01-marca.md exists
+  - artifacts/02-ideias.md exists
+  - artifacts/03-psicologia.md exists
+  - artifacts/04-plano.md exists
+  - artifacts/06-compliance.json exists
+  - human_gate_resolved on hitl

@@ -67,8 +67,16 @@ def tmp_run_dir() -> Path:
     shutil.rmtree(root, ignore_errors=True)
 
 
+SUBPROCESS_FAKES = Path(__file__).resolve().parent / "subprocess_fakes"
+
+
 def _run_cli(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
-    """Executa 'python -m plan_runner ...' e devolve o resultado."""
+    """Executa 'python -m plan_runner ...' e devolve o resultado.
+
+    M-009: o subprocesso recebe a mesma base de conhecimento falsa (tests/subprocess_fakes/sitecustomize.py).
+    """
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join(
+        [str(SUBPROCESS_FAKES), str(RUNNER_DIR), *filter(None, [os.environ.get("PYTHONPATH")])])}
     return subprocess.run(
         [sys.executable, "-m", "plan_runner", *args],
         cwd=str(cwd),
@@ -76,6 +84,7 @@ def _run_cli(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
         text=True,
         encoding="utf-8",
         timeout=120,
+        env=env,
     )
 
 def _load_status_safe(out_dir: Path) -> dict:
@@ -231,3 +240,29 @@ def _psycopg():
 
     return psycopg
 
+
+
+class FakeKnowledge:
+    """Base de conhecimento falsa (o MCP real precisa de rede e de MCP_API_KEY).
+
+    Desde o M-009 um passo de marketing não corre sem contexto da base (R6). Os testes que
+    correm planos no processo recebem 1 trecho citado por pedido; os testes da própria
+    recuperação trocam isto pelo seu duplo (monkeypatch dentro do teste ganha a este).
+    """
+
+    def __init__(self):
+        self.calls: list[tuple[str, str]] = []
+
+    def retrieve(self, kb, query, *, top_k=None, filters=None, require_citations=None):
+        self.calls.append((kb, query))
+        return [{"content": f"trecho de teste para: {query[:60]}", "score": 0.9, "doc_id": "teste-1",
+                 "citation": {"source": "docs/knowledge/teste.md", "locator": "§1"}, "metadata": None}]
+
+
+@pytest.fixture(autouse=True)
+def fake_knowledge(monkeypatch):
+    from plan_runner import knowledge_wiring
+
+    fake = FakeKnowledge()
+    monkeypatch.setattr(knowledge_wiring, "McpKnowledge", lambda: fake)
+    return fake
