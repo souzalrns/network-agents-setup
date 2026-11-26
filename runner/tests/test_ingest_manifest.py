@@ -88,3 +88,31 @@ def test_is_unchanged_com_agent_id_composto(monkeypatch):
     state = {"content_hash": "h", "agent_id": "a+b", "chunk_count": 3, "rows": 6}  # 1 linha por agente
     assert ia.is_unchanged(state, content_hash="h", agent_id="a+b") is True
     assert ia.is_unchanged({**state, "rows": 3}, content_hash="h", agent_id="a+b") is False
+
+
+def test_kb_for_por_areas_p81(monkeypatch):
+    """P-81 = A: kb = id da área; o que já estava ingerido não muda de kb."""
+    monkeypatch.setattr(os, "environ", dict(os.environ))
+    ia = _load("ingest_apply_kb_p81", "scripts/ingest_apply.py")
+    assert ia._kb_for("trading") == "trading"                     # o domínio novo ganha kb própria
+    assert ia._kb_for("gamedev") == "gamedev"                     # e qualquer área futura, sem lista fixa
+    assert ia._kb_for("legal") == "global"                        # já ingerido em `global`: não muda sem purga
+    assert ia._kb_for("agente-que-nao-e-area") == "global"
+    assert ia._kb_for("marketing+produto-tech-transversal") == "marketing"  # regras antigas intactas
+
+
+def test_p81_nenhuma_kb_existente_muda(monkeypatch):
+    """Regressão: para todos os agent_id do MANIFEST antigo, a kb é a que era antes do P-81."""
+    monkeypatch.setattr(os, "environ", dict(os.environ))
+    ia = _load("ingest_apply_kb_p81b", "scripts/ingest_apply.py")
+    before = {"marketing+produto-tech-transversal": "marketing", "marketing": "marketing", "produto-tech-transversal": "produto-tech",
+              "security": "security", "saude": "global", "legal": "global", "imobiliario": "global"}
+    for agent_id, kb in before.items():
+        assert ia._kb_for(agent_id) == kb, agent_id
+
+
+def test_pack_trading_esta_no_manifest_com_kb_propria(manifest, monkeypatch):
+    monkeypatch.setattr(os, "environ", dict(os.environ))
+    ia = _load("ingest_apply_kb_p81c", "scripts/ingest_apply.py")
+    trading = [(p, a) for p, a, _ in manifest if p.startswith("docs/knowledge/trading/")]
+    assert len(trading) == 2 and all(a == "trading" and ia._kb_for(a) == "trading" for _, a in trading)

@@ -40,3 +40,9 @@ ee956781d67c0c9d30f9803bab1455ccabed5cb8:runner/tests/test_mcp_knowledge.py:gene
 # commit fica no histórico porque reescrevê-lo exigiria force-push (proibido).
 fb297ad1fd66b369344e5376eedde9dac4f4a257:runner/tests/test_setup_close_runs.py:generic-api-key:64
 fb297ad1fd66b369344e5376eedde9dac4f4a257:runner/tests/test_setup_close_runs.py:generic-api-key:65
+#
+# E-005 / SEC-2 (2026-11-25): falso positivo confirmado pelo maestro. Palavra-passe de EXEMPLO
+# (frase fictícia) no comando de semente da primeira conta de administração, no README do
+# projecto editorial (ramo claude/bode-editorial-planning-0k7bem, ainda fora da main). Nunca
+# foi usada em nenhum sítio real. Reescrever o histórico exigiria force-push (proibido).
+678be5e43490012844927b997da9aa874b9aace8:verticals/editorial/README.md:generic-api-key:53
