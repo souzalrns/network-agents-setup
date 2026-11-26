@@ -150,19 +150,19 @@ def test_approval_rounds_full_cycle_three_hitls(tmp_run_dir):
 
     # 2. Resume 1 -> pause em hitl_r2
     proc = _run_cli(["resume", str(out), "--decision", "approve"], cwd=RUNNER_DIR)
-    assert proc.returncode == 0, f"resume 1 falhou: {proc.stderr}"
+    assert proc.returncode == 0, f"resume 1 falhou: {proc.stdout[-600:]}{proc.stderr}"
     s = _load_status_safe(out)
     assert s.get("paused_at_step") == "hitl_r2"
 
     # 3. Resume 2 -> pause em hitl_final
     proc = _run_cli(["resume", str(out), "--decision", "approve"], cwd=RUNNER_DIR)
-    assert proc.returncode == 0, f"resume 2 falhou: {proc.stderr}"
+    assert proc.returncode == 0, f"resume 2 falhou: {proc.stdout[-600:]}{proc.stderr}"
     s = _load_status_safe(out)
     assert s.get("paused_at_step") == "hitl_final"
 
     # 4. Resume 3 -> done
     proc = _run_cli(["resume", str(out), "--decision", "approve"], cwd=RUNNER_DIR)
-    assert proc.returncode == 0, f"resume 3 falhou: {proc.stderr}"
+    assert proc.returncode == 0, f"resume 3 falhou: {proc.stdout[-600:]}{proc.stderr}"
     s = _load_status_safe(out)
     assert s.get("state") == "done"
 
