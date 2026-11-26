@@ -54,6 +54,24 @@ def main() -> int:
         """Resume paused run (approve|reject|edit). Requires resume scope."""
         return json.dumps(tools_impl.resume_plan(out_dir, decision=decision), ensure_ascii=False)
 
+    @mcp.tool()
+    def council_get_request(session_dir: str, provider: str, key: str = "") -> str:
+        """Council (M-011): read the request for your position (topic, context, answer format). `provider` is your
+        id in config/council-providers.yaml; `key` only if your entry has key_env."""
+        return json.dumps(tools_impl.council_get_request(session_dir, provider, key), ensure_ascii=False)
+
+    @mcp.tool()
+    def council_submit_position(session_dir: str, provider: str, position: str, key: str = "") -> str:
+        """Council (M-011): submit your position as JSON text: {"vote": "approve|conditional|reject|defer",
+        "confidence": 0-1, "position": "...", "arguments": [], "risks": [], "conditions": [], "kill_criteria": [],
+        "veto": false, "veto_reason": null}. One submission per IA per round. Requires submit scope."""
+        return json.dumps(tools_impl.council_submit_position(session_dir, provider, position, key), ensure_ascii=False)
+
+    @mcp.tool()
+    def council_status(session_dir: str) -> str:
+        """Council (M-011): public status of a council session (phase, round, panel mode, who is still missing)."""
+        return json.dumps(tools_impl.council_status(session_dir), ensure_ascii=False)
+
     mcp.run(transport="stdio")
     return 0
 
