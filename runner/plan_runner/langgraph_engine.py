@@ -12,6 +12,7 @@ from uuid import uuid4
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 from . import approval, done_when, hitl
+from . import governance_local as gov
 from .engine import (
     _check_max_cost,
     _check_max_tokens,
@@ -33,6 +34,15 @@ from .knowledge_wiring import inject_knowledge_context
 from .langgraph_compile import build_graph, compile_report, parallel_groups
 from .models import Plan, Step
 from .skills import skill_ref
+
+
+class _GateDone:
+    """Resultado de um passo que é um gate humano aprovado (para o recibo)."""
+
+    detail = "human_gate"
+
+    def __init__(self, artifact: str | None):
+        self.artifact = artifact
 
 
 def merge_artifacts(left: dict | None, right: dict | None) -> dict:
@@ -110,6 +120,11 @@ def run_plan_langgraph(
             log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "engine": "langgraph", "skill": skill_ref(out, step)})
             inject_knowledge_context(out, step, log, run_id)
 
+        gov_reason = gov.refuse_reason(out, run_id, step)  # GOV-LOCAL-1
+        if gov_reason:
+            log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
+            return {"error": f"{step.id}:{gov_reason}"}
+
         if step.human_gate:
             from langgraph.types import interrupt
 
@@ -175,6 +190,7 @@ def run_plan_langgraph(
                         encoding="utf-8",
                     )
 
+            gov.record_step(out, run_id, step, _GateDone(step.output_artifact))
             return {
                 "completed": [step.id],
                 "artifacts": {
@@ -193,6 +209,7 @@ def run_plan_langgraph(
             return {"error": f"{step.id}:{result.detail}"}
 
         log.append("step_finished", run_id, {"step_id": step.id, "artifact": result.artifact})
+        gov.record_step(out, run_id, step, result)
         arts = dict(state.get("artifacts") or {})
         if result.artifact:
             arts[step.id] = result.artifact
@@ -393,6 +410,14 @@ def _run_waves_fallback(
             log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "skill": skill_ref(out, step)})
             inject_knowledge_context(out, step, log, run_id)
 
+            gov_reason = gov.refuse_reason(out, run_id, step)  # GOV-LOCAL-1
+            if gov_reason:
+                log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
+                status["state"] = "failed"
+                status["detail"] = gov_reason
+                save_status(out, status)
+                return status
+
             if step.human_gate:
                 log.append("human_gate_requested", run_id, {"step_id": step.id, **approval.request_payload(out, plan, step.id)})
                 status["state"] = "paused_human_gate"
@@ -427,6 +452,7 @@ def _run_waves_fallback(
                 return status
 
             log.append("step_finished", run_id, {"step_id": step.id, "artifact": result.artifact})
+            gov.record_step(out, run_id, step, result)
             completed.add(step.id)
             status["completed"] = sorted(completed)
             save_status(out, status)
@@ -492,7 +518,12 @@ def resume_plan_langgraph(
     if pending and state == "paused_human_gate" and status.get("tool_approval"):
         raise PlanError(f"há uma aprovação humana pendente ({', '.join(pending)}) ao mesmo tempo que a aprovação "
                         "de uma tool: o LangGraph responderia às duas com a mesma decisão; resolve uma de cada vez")
-    gate_fps = {g: approval.check_pending(out_dir, plan, g, decision, log, run_id) for g in pending}
+    # M-010: a decisão responde a UM gate (o `paused_at_step` se estiver pendente, senão o primeiro pedido),
+    # nunca aos outros; e um resume dado por outro motivo (passo externo, orçamento) não responde a nenhum.
+    answered: str | None = None
+    if state == "paused_human_gate" and not status.get("tool_approval") and pending:
+        answered = status.get("paused_at_step") if status.get("paused_at_step") in pending else pending[0]
+    gate_fps = {answered: approval.check_pending(out_dir, plan, answered, decision, log, run_id)} if answered else {}
     # W-005: --worker no resume tem prioridade; sem ele, o worker com que o run arrancou.
     worker_obj = _worker_for(mode, worker if worker is not None else status.get("worker"))
     if worker is not None:
@@ -596,6 +627,11 @@ def resume_plan_langgraph(
                 )
                 inject_knowledge_context(out_dir, step, log, run_id)
 
+            gov_reason = gov.refuse_reason(out_dir, run_id, step)  # GOV-LOCAL-1
+            if gov_reason:
+                log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
+                return {"error": f"{step.id}:{gov_reason}"}
+
             if step.human_gate:
                 from langgraph.types import interrupt
 
@@ -676,6 +712,7 @@ def resume_plan_langgraph(
 
                     artifacts[step.id] = step.output_artifact
 
+                gov.record_step(out_dir, run_id, step, _GateDone(step.output_artifact))
                 return {
                     "completed": [step.id],
                     "artifacts": artifacts,
@@ -708,6 +745,7 @@ def resume_plan_langgraph(
                     "artifact": result.artifact,
                 },
             )
+            gov.record_step(out_dir, run_id, step, result)
 
             arts = {}
 
@@ -760,10 +798,19 @@ def resume_plan_langgraph(
             else:
                 resume_value = decision
 
-            result = graph.invoke(
-                Command(resume=resume_value),
-                config,
-            )
+            # M-010: resumir a interrupção do gate respondido pelo seu id; as outras ficam pendentes.
+            ids = {
+                i.value.get("step_id"): i.id
+                for t in graph.get_state(config).tasks
+                for i in t.interrupts
+                if isinstance(i.value, dict) and i.value.get("type") == "human_gate"
+            }
+            if answered is not None and answered in ids:
+                result = graph.invoke(Command(resume={ids[answered]: resume_value}), config)
+            elif ids:
+                result = graph.invoke(None, config)  # nenhum gate respondido: continua só o que não é gate
+            else:
+                result = graph.invoke(Command(resume=resume_value), config)
 
     except _WaitExternal as w:
         status["state"] = "waiting_external"
