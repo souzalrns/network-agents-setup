@@ -213,3 +213,87 @@ def test_cli_verify(tmp_path, capsys):
     p = tmp_path / g.RECEIPTS
     p.write_text(p.read_text(encoding="utf-8").replace('"allow"', '"deny"', 1), encoding="utf-8")
     assert g.main(["verify", str(tmp_path)]) == 1
+
+
+# -- GOV-LOCAL-1 fecho: LangGraph, enforce e M-010 -------------------------------
+def _plano(tmp_path, steps):
+    import yaml
+
+    from tests.politica import politica_dict
+    p = tmp_path / "plan.yaml"
+    p.write_text(yaml.safe_dump(politica_dict({"id": "gov", "objective": "x", "steps": steps})), encoding="utf-8")
+    return p
+
+
+GATE = {"level": "step", "kind": "output_review", "allow": ["approve", "reject", "edit"]}
+
+
+@pytest.fixture
+def _skills_offline(monkeypatch):
+    monkeypatch.setenv("PLAN_RUNNER_SKILLS_OFFLINE", "1")
+
+
+def _cfg(tmp_path, monkeypatch, mode="enforce", default="deny"):
+    f = tmp_path / "gov.yaml"
+    f.write_text(f"version: 1\nmode: {mode}\ndefault: {default}\nrules: []\n", encoding="utf-8")
+    monkeypatch.setattr(g, "CONFIG_FILE", f)
+
+
+def test_langgraph_escreve_recibos_e_o_gate_leva_aprovador(tmp_path, tmp_run_dir, _skills_offline):
+    pytest.importorskip("langgraph.graph")
+    from plan_runner.engine import resume_run  # noqa: F401
+    from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
+    plan = _plano(tmp_path, [{"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"},
+                             {"id": "hitl", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE}])
+    assert run_plan_langgraph(plan, mode="stub", out_dir=tmp_run_dir)["state"] == "paused_human_gate"
+    assert resume_plan_langgraph(tmp_run_dir, decision="approve")["state"] == "done"
+    log = g.ReceiptLog(tmp_run_dir)
+    recs = {r["step_id"]: r for r in log.records()}
+    assert set(recs) == {"copy", "hitl"} and recs["hitl"]["approver"] == "human:cli" and recs["copy"]["approver"] is None
+    assert log.verify() == []
+
+
+@pytest.mark.parametrize("engine", ["native", "langgraph"])
+def test_enforce_recusa_o_passo_e_deixa_recibo_deny(tmp_path, tmp_run_dir, monkeypatch, engine, _skills_offline):
+    _cfg(tmp_path, monkeypatch)
+    plan = _plano(tmp_path, [{"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"}])
+    if engine == "native":
+        from plan_runner.engine import run_plan
+        st = run_plan(plan, mode="stub", out_dir=tmp_run_dir)
+    else:
+        pytest.importorskip("langgraph.graph")
+        from plan_runner.langgraph_engine import run_plan_langgraph
+        st = run_plan_langgraph(plan, mode="stub", out_dir=tmp_run_dir)
+    assert st["state"] == "failed" and "governança" in st["detail"]
+    assert not (tmp_run_dir / "artifacts/01-copy.md").exists()
+    recs = g.ReceiptLog(tmp_run_dir).records()
+    assert [r["decision"] for r in recs] == ["deny"] and g.ReceiptLog(tmp_run_dir).verify() == []
+
+
+def test_m010_decisao_responde_a_um_gate_e_deixa_o_outro_pendente(tmp_path, tmp_run_dir, _skills_offline):
+    pytest.importorskip("langgraph.graph")
+    from plan_runner import approval
+    from plan_runner.langgraph_engine import resume_plan_langgraph, run_plan_langgraph
+    plan = _plano(tmp_path, [
+        {"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"},
+        {"id": "g1", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE},
+        {"id": "g2", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE}])
+    st = run_plan_langgraph(plan, mode="stub", out_dir=tmp_run_dir)
+    assert st["state"] == "paused_human_gate"
+    assert sorted(approval.pending_gates(tmp_run_dir, st["run_id"])) == ["g1", "g2"]
+    st = resume_plan_langgraph(tmp_run_dir, decision="approve")
+    assert len(approval.pending_gates(tmp_run_dir, st["run_id"])) == 1 and st["state"] == "paused_human_gate"
+    st = resume_plan_langgraph(tmp_run_dir, decision="approve")
+    assert st["state"] == "done" and approval.pending_gates(tmp_run_dir, st["run_id"]) == []
+    assert g.ReceiptLog(tmp_run_dir).verify() == []
+
+
+def test_nativo_tambem_deixa_recibo_do_gate_aprovado(tmp_path, tmp_run_dir, _skills_offline):
+    from plan_runner.engine import resume_run, run_plan
+    plan = _plano(tmp_path, [{"id": "copy", "action": "copy_social", "output_artifact": "artifacts/01-copy.md"},
+                             {"id": "hitl", "action": "plan_approve", "depends_on": ["copy"], "human_gate": GATE}])
+    assert run_plan(plan, mode="stub", out_dir=tmp_run_dir)["state"] == "paused_human_gate"
+    assert resume_run(tmp_run_dir, decision="approve")["state"] == "done"
+    recs = {r["step_id"]: r for r in g.ReceiptLog(tmp_run_dir).records()}
+    assert set(recs) == {"copy", "hitl"} and recs["hitl"]["approver"] == "human:cli"
+    assert g.ReceiptLog(tmp_run_dir).verify() == []

@@ -198,6 +198,11 @@ def test_langgraph_gate_pendente_enquanto_espera_outro_passo_nao_aprova_conteudo
     (tmp_run_dir / "artifacts/01-copy.md").write_text("texto mudado por fora\n", encoding="utf-8")
     if (tmp_run_dir / "pending_steps/img").is_dir():
         _resultado(tmp_run_dir, "img", "imagem\n")
+    # M-010: o resume do passo externo não responde ao gate (nem com o conteúdo mudado, nem com o original)
+    st = resume_plan_langgraph(tmp_run_dir, decision="approve")
+    assert not [e for e in _events(tmp_run_dir, "human_gate_resolved") if e["payload"]["step_id"] == "g1"]
+    assert "g1" in __import__("plan_runner.approval", fromlist=["x"]).pending_gates(tmp_run_dir, st["run_id"])
+    # a decisão humana explícita, essa sim, é verificada contra o conteúdo pedido
     with pytest.raises(ApprovalError, match=r"`g1` não foi aceite: mudou desde o pedido \(artifacts/01-copy.md\)"):
         resume_plan_langgraph(tmp_run_dir, decision="approve")
 

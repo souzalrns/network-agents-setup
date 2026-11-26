@@ -1,14 +1,14 @@
 # GOV-LOCAL-1 (P-93 = B): contrato local de governança. Lido por runner/plan_runner/governance_local.py.
 #
 # mode:
-#   record  -> só regista um recibo por passo (hash encadeado em receipts.jsonl); nunca bloqueia. (omissão)
+#   record  -> só regista um recibo por passo (hash encadeado em receipts.jsonl); nunca bloqueia.
 #   enforce -> recusa o passo que a política não autorize (deny, ou approve sem gate humano no passo).
 # default: o que decide quando nenhuma regra nem delegação se aplica. `deny` = fail-closed.
 # rules: agent = `action` do passo; capability = `step:run` ou `tool:<nome>`. Aceita * e ?.
 #        deny ganha a approve, que ganha a allow. Uma delegação válida (delegations.jsonl) dá allow, mas nunca vence um deny.
 # max_delegation_depth: profundidade máxima da cadeia de delegação (1 a 10).
 version: 1
-mode: record
+mode: enforce
 default: allow
 max_delegation_depth: 3
 rules:

@@ -460,6 +460,27 @@ def governance_receipt(out: Path, run_id: str, step: Any, decision: Decision, *,
         approver=approver, artifacts=arts, detail=detail)
 
 
+def refuse_reason(out: Path, run_id: str, step: Any) -> str | None:
+    """Para os motores: None se o passo pode correr; senão o motivo (já com recibo `deny`). Só recusa em `enforce`."""
+    ok, dec = governance_gate(out, step)
+    if ok:
+        return None
+    ReceiptLog(out).append(run_id=run_id, step_id=step.id, agent=step.action, capability=STEP_CAPABILITY,
+                           decision=dec, detail="recusado pela governança (mode: enforce)")
+    return f"governança: {dec.reason}"
+
+
+def record_step(out: Path, run_id: str, step: Any, result: Any) -> None:
+    """Para os motores: recibo de um passo concluído; idempotente (um recibo por run e passo)."""
+    log = ReceiptLog(out)
+    if any(r.get("run_id") == run_id and r.get("step_id") == step.id and r.get("decision") != "deny" for r in log.records()):
+        return
+    _, dec = governance_gate(out, step)
+    governance_receipt(out, run_id, step, dec, detail=str(getattr(result, "detail", ""))[:200],
+                       artifact=getattr(result, "artifact", None),
+                       approver="human:cli" if getattr(step, "human_gate", None) else None)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
