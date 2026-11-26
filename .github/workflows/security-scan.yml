@@ -103,7 +103,12 @@ jobs:
           semgrep scan --metrics=off --disable-version-check \
             --config "$R/python" --config "$R/yaml/github-actions" --config "$R/generic/secrets" \
             --config "$R/javascript" --config "$R/typescript" \
+            --config config/semgrep-rules/tenant-isolation-missing-filter.yml \
             --json --output semgrep.json --quiet .
+          # tenant-isolation-missing-filter incorporada 2026-11-07 (origem: auditoria mesaflow-api).
+          # Report-only aqui (não no step PR/--error acima) até os achados existentes serem
+          # triados (ver item na PENDENCIAS.md) — mesmo padrão cauteloso usado para as regras do
+          # registo semgrep/semgrep-rules antes do SEC-2d.
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           from collections import Counter
