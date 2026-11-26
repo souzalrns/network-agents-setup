@@ -6,7 +6,7 @@
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
 > - **137 itens vivos** (§4): ABERTO 76, EM CURSO 15, BLOQUEADO 46;
-> - **150 linhas de histórico** (no histórico, §7): 128 fechadas, 22 obsoletas;
+> - **151 linhas de histórico** (no histórico, §7): 129 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
 > - **93 decisões** A/B/C: 93 tomadas (no histórico, §10) e **0 por decidir** (§10 abaixo).
 
@@ -342,7 +342,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 **Por estado:** ABERTO 76 · EM CURSO 15 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
-## 7. Histórico (150 linhas: 128 FECHADO, 22 OBSOLETO)
+## 7. Histórico (151 linhas: 129 FECHADO, 22 OBSOLETO)
 
 Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-10-25).
 

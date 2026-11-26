@@ -354,7 +354,7 @@ def cost_cap(out_root: Path) -> float | None:
     return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
 
 
-def check_budget(out_root: Path, model: str | None = None) -> None:
+def check_budget(out_root: Path, model: str | None = None, *, free: bool = False) -> None:
     """Lanca BudgetExceeded se o ledger do run ja chegou a um tecto (tokens ou custo).
 
     D6: com tecto de custo, falha fechada (WorkerError) se o modelo a usar, ou um
@@ -366,7 +366,7 @@ def check_budget(out_root: Path, model: str | None = None) -> None:
         if spent >= cap:
             raise BudgetExceeded(spent, cap)
     usd_cap = cost_cap(out_root)
-    if usd_cap is None:
+    if usd_cap is None or free:  # free: worker local, custo 0 (o tecto de USD não se aplica)
         return
     prices = cost.load_prices()
     missing = model if model is not None and model not in prices else None
@@ -418,7 +418,7 @@ def count_tokens(
     return total
 
 
-def check_budget_projected(out_root: Path, model: str, prompt_tokens: int, max_output_tokens: int) -> None:
+def check_budget_projected(out_root: Path, model: str, prompt_tokens: int, max_output_tokens: int, *, free: bool = False) -> None:
     """Guarda PROJECTIVA: lança BudgetExceeded se a PRÓXIMA chamada estourasse o tecto.
 
     Ao contrário do `check_budget` (reactivo: pára depois de gastar), estima o custo
@@ -431,7 +431,7 @@ def check_budget_projected(out_root: Path, model: str, prompt_tokens: int, max_o
     if cap is not None and ledger_spent(out_root) + projected > cap:
         raise BudgetExceeded(ledger_spent(out_root) + projected, cap)
     usd_cap = cost_cap(out_root)
-    if usd_cap is None:
+    if usd_cap is None or free:
         return
     prices = cost.load_prices()
     if model not in prices:
@@ -737,6 +737,8 @@ class GeminiWorker:
     """Executa um passo pendente com o Gemini e escreve result.json."""
 
     name = "gemini"
+    single_model = False  # True (worker local): um só modelo, sem os tiers da config; custo 0
+    free = False
 
     def __init__(
         self,
@@ -788,11 +790,14 @@ class GeminiWorker:
         # (router.signals, da planwright) escolhe o modelo. Config: config/model-tiers.yaml.
         plan_raw = _load_plan_raw(out_root)
         complexity = _step_signal(plan_raw, step_id, "complexity")
-        try:
-            model, tier = mt.resolve_model(_plan_step(plan_raw, step_id), self.model, complexity=complexity)
-        except mt.ModelTierError as e:
-            raise WorkerError(f"model_tier: {e}") from e
-        check_budget(out_root, model)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
+        if self.single_model:
+            model, tier = self.model, None
+        else:
+            try:
+                model, tier = mt.resolve_model(_plan_step(plan_raw, step_id), self.model, complexity=complexity)
+            except mt.ModelTierError as e:
+                raise WorkerError(f"model_tier: {e}") from e
+        check_budget(out_root, model, free=self.free)  # antes de gastar: uma pausa de orcamento nao e um erro (sem worker_error.json)
         request_path = pending / "request.json"
         if not request_path.is_file():
             raise WorkerError(f"sem request.json em {pending}")
@@ -865,7 +870,7 @@ class GeminiWorker:
                     system, user, model=model, api_key=self._api_key,
                     timeout=self.timeout, transport=self.transport,
                 )
-                check_budget_projected(out_root, model, prompt_tokens, self.max_output_tokens)
+                check_budget_projected(out_root, model, prompt_tokens, self.max_output_tokens, free=self.free)
             response = gemini_generate(
                 system,
                 user,
@@ -999,7 +1004,7 @@ class GeminiWorker:
         try:
             loop = te.run_tool_loop(
                 user=user, plan=plan, ctx=ctx, limits=limits, generate=generate,
-                before_turn=lambda _turn: check_budget(out_root, model), on_call=on_call,
+                before_turn=lambda _turn: check_budget(out_root, model, free=self.free), on_call=on_call,
                 resume=resume_state, approvals=approvals,
             )
         except te.ToolLoopError as e:
@@ -1091,7 +1096,7 @@ class GeminiWorker:
         return ToolApprovalPending(record["id"], names)
 
 
-WORKERS = ("gemini",)
+WORKERS = ("gemini", "local")
 
 
 def make_worker(name: str | None) -> GeminiWorker | None:
@@ -1099,6 +1104,9 @@ def make_worker(name: str | None) -> GeminiWorker | None:
         return None
     if name == "gemini":
         return GeminiWorker()
+    if name == "local":
+        from .local_worker import LocalWorker  # import tardio: local_worker importa este módulo
+        return LocalWorker()
     raise ValueError(f"worker desconhecido {name!r} (opcoes: none, {', '.join(WORKERS)})")
 
 
@@ -1109,6 +1117,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("out", type=Path, help="Directorio do run (com status.json)")
     parser.add_argument("--resume", action="store_true", help="Depois do passo, retoma o run com o worker inline (engine native)")
+    parser.add_argument("--worker", choices=list(WORKERS), default="gemini", help="Qual worker executa o passo (local = servidor OpenAI-compatível, ex. Ollama)")
     args = parser.parse_args(argv)
 
     out = args.out.resolve()
@@ -1117,7 +1126,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: sem status.json em {out}", file=sys.stderr)
         return 1
     status = _read_json(status_path)
-    worker = GeminiWorker()
+    worker = make_worker(args.worker)
     try:
         if status.get("state") == "paused_human_gate":
             check_hitl(out, str(status.get("paused_at_step")))
@@ -1146,7 +1155,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             from .engine import resume_run
 
-            summary["status"] = resume_run(out, decision="approve", worker="gemini")
+            summary["status"] = resume_run(out, decision="approve", worker=args.worker)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 
