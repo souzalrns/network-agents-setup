@@ -6,6 +6,7 @@ Corre os passos de um plano num modelo que está no teu computador. Serve qualqu
 ## Usar (Ollama, exemplo)
 
 ```bash
+pip install -e .               # núcleo: 6 pacotes, cerca de 23 MB (extras: .[langgraph], .[mcp], .[memory], .[eval], .[web])
 ollama pull qwen2.5:3b          # uma vez; modelo pequeno, corre em CPU
 export LOCAL_LLM_MODEL=qwen2.5:3b
 python -m plan_runner run <plano.yaml> --mode external --worker local

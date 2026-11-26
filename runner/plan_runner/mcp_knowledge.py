@@ -52,8 +52,13 @@ from typing import Any
 
 import anyio
 import httpx
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
+
+try:  # extra `mcp`: o núcleo corre sem ele; só falha (com mensagem clara) quando se usa o MCP
+    from mcp import ClientSession
+    from mcp.client.streamable_http import streamable_http_client
+except ImportError:  # pragma: no cover - depende do ambiente
+    ClientSession = None  # type: ignore[assignment,misc]
+    streamable_http_client = None  # type: ignore[assignment]
 
 MCP_URL_DEFAULT = "http://localhost:3000"
 MCP_TOOL_NAME = "retrieve_knowledge"
@@ -193,6 +198,9 @@ class McpKnowledge:
         }
         if filters is not None:
             arguments["filters"] = filters
+
+        if ClientSession is None or streamable_http_client is None:
+            raise McpKnowledgeError("pacote `mcp` em falta: pip install 'network-agents-setup[mcp]'")
 
         try:
             async with httpx.AsyncClient(
