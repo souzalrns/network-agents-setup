@@ -5,8 +5,8 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **137 itens vivos** (§4): ABERTO 75, EM CURSO 16, BLOQUEADO 46;
-> - **149 linhas de histórico** (no histórico, §7): 127 fechadas, 22 obsoletas;
+> - **136 itens vivos** (§4): ABERTO 75, EM CURSO 15, BLOQUEADO 46;
+> - **150 linhas de histórico** (no histórico, §7): 128 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
 > - **92 decisões** A/B/C: 92 tomadas (no histórico, §10) e **0 por decidir** (§10 abaixo).
 
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (137 itens vivos)
+## 4. Tabela única (136 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -215,7 +215,6 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | SKILL-SCOUT-2 | `skill-scout` Fase 2 (diferenciar): sandbox para os scripts de uma skill (processo filho, limites de CPU, memória, ficheiros e rede) e testes de comportamento (o que a skill faz em runtime) | FALTA-CONSTRUIR | ABERTO | CLAUDE | Média | — (o SKILL-SCOUT-1 fechou no #143) | Pedido do maestro (2026-10-08), Fase 2. Base: `docs/ops/SKILL-SCOUT.md` §4 | SKILL-NOTARY-2 | VERIFICADO |
 | SKILL-SCOUT-3 | `skill-scout` Fase 3 (consolidar): repo próprio, documentação própria, CI próprio e publicação no PyPI | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | O repo próprio, criado pelo DEV (nome decidido: P-43 = A, `skill-scout`); a publicação no PyPI é uma acção pública do DEV | Pedido do maestro (2026-10-08), Fase 3. O pacote e o workflow já estão autocontidos em `oss/skill-scout/` para serem extraídos sem mudanças | SKILL-NOTARY-3 | VERIFICADO |
 | GOV-42001-1 | ISO/IEC 42001 (P-40): sistema de gestão de IA, alinhamento voluntário (não certificação), âmbito NAS + ANM. Fechar as lacunas `Parcial`/`Falta` do mapeamento: avaliação de risco periódica (6.1.2, 8.2), objectivos mensuráveis (6.2, A.9.3), competências (7.2, A.4.6), fornecedores avaliados (A.10.3), clientes (A.10.4), reporte externo e incidentes (A.8.3, A.8.4), 1.ª auditoria interna (2027-01) e 1.ª revisão da política | FALTA-CONSTRUIR | EM CURSO | AMBOS | Média | #124 com merge (2026-10-07, `c9de58f`): política, mapeamento e teste em vigor. Falta fechar cada lacuna `Parcial`/`Falta` do mapeamento | `docs/governance/AI-MANAGEMENT-SYSTEM.md`; `docs/governance/ISO-42001-MAPPING.md` (27 cláusulas, 38 controlos, Declaração de Aplicabilidade); `runner/tests/test_governance_mapping.py` | — | VERIFICADO |
-| GOV-LOCAL-1 | Contrato local mínimo de governança (P-93 = B): identidade de agente, autorização de capacidade, cadeia de delegação e `ActionReceipt` com hash encadeado (JSONL/SQLite), política allow/approve/deny; fecha o M-010 com identificador de interrupção por gate; AGT, Cedar e AgentMesh só como adaptadores opcionais depois. **Feito:** `governance_local.py` + `config/governance.yaml` (política, delegação, recibos encadeados), nos motores nativo e LangGraph, `mode: enforce` por omissão; M-010 fechado. **Falta:** substituir os módulos MOCK de `packages/core` (SecurityManager e afins) | FALTA-CONSTRUIR | EM CURSO | CLAUDE | Média | Depois de P-81 e do perfil `edge` (passos 1 a 3 do plano `setup-estrutura-2`) | Plano aprovado pelo maestro a 2026-11-25 (conselho `setup-estrutura-2`, branch `council-sessions`, passo 5); `GOVERNANCE.md` §§2–4 (3 módulos MOCK, Delegation Graph e Action Receipts em falta) | — | VERIFICADO |
 | GOV-RET-2 | Retenção dos dados de **clientes** (política de privacidade §7): no fim do contrato + 90 dias, apagar a memória do cliente (`memory/<client_id>/`), o `project_state` e a L4 (`expires_at`) do projecto. Hoje é um procedimento manual (§8 da política); automatizar quando houver contratos com data de fim | FALTA-CONSTRUIR | BLOQUEADO | AMBOS | Baixa | 1.º cliente real (hoje 0 dados de clientes: GOV-IMPACT-1) e um registo de contratos com data de fim | `docs/governance/PRIVACY-POLICY.md` §7 e §8; `runner/plan_runner/memory_l4.py` (`expires_at`, `forget`) | GOV-RET-1 (parte dos clientes) | VERIFICADO |
 | GOV-PRIV-2 | Upgrade do GOV-PRIV-1 (opção A): limpar `transcripts/latest.json` também do **histórico** do git do `agent-network-mcp` (commit `fe3cc90`, 2026-08-10, com a transcrição de um vídeo público de terceiros) | FALTA-DECIDIR | ABERTO | DEV | Baixa | Decisão do DEV: reescrever a `main` do MCP (`git filter-repo` + force push) obriga quem tem um clone a clonar de novo. Até lá, o ficheiro já não está na árvore actual (GOV-PRIV-1, opção C) | `git log -- transcripts/latest.json` no MCP; MCP #20; AIMS §11.1 | GOV-PRIV-1 (opção A) | VERIFICADO |
 | S-005 | Tabela `_prisma_migrations` no esquema `public` do Supabase sem RLS (as restantes 23 tabelas têm). Não tem dados pessoais, mas fica legível pela API se as permissões do `anon` o permitirem | FALTA-CONSTRUIR | ABERTO | DEV | Baixa | SQL versionado (activar RLS sem políticas, ou mover para outro esquema); o DEV aplica | SELECT ao `pg_class` (2026-10-07, só leitura): `relrowsecurity = false` só nesta tabela | — | VERIFICADO |
@@ -313,7 +312,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Dono | N.º | IDs |
 |---|---:|---|
-| CLAUDE | 25 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, M-007, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, GOV-LOCAL-1, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
+| CLAUDE | 24 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, M-007, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
 | DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
 | AMBOS | 43 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, M-006, M-011, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
@@ -336,13 +335,13 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 |---|---:|---|
 | Crítica | 1 | G1.5 |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
-| Média | 52 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, M-007, M-011, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, GOV-LOCAL-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
+| Média | 51 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, M-007, M-011, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 73 | F0.12, F1b, F2-DISC-1, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 75 · EM CURSO 16 · BLOQUEADO 46.
+**Por estado:** ABERTO 75 · EM CURSO 15 · BLOQUEADO 46.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
-## 7. Histórico (149 linhas: 127 FECHADO, 22 OBSOLETO)
+## 7. Histórico (150 linhas: 128 FECHADO, 22 OBSOLETO)
 
 Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-10-25).
 

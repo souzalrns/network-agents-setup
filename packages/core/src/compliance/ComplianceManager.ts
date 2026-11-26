@@ -42,6 +42,7 @@ export class ComplianceManager extends EventEmitter {
   private consentRecords: Map<string, ConsentRecord> = new Map();
   private dataRequests: Map<string, DataSubjectRequest> = new Map();
   private auditLogs: AuditLog[] = [];
+  private dataRequestHandlers: Map<DataSubjectRequest['type'], (r: DataSubjectRequest) => Promise<string> | string> = new Map();
 
   constructor(
     _securityManager: SecurityManager,
@@ -134,50 +135,55 @@ export class ComplianceManager extends EventEmitter {
     this.logger.info(`[ComplianceManager] Data request: ${id} (${type})`);
     this.emit('datarequest:created', request);
 
-    // Processa automaticamente (simulação)
-    this.processDataRequest(id);
+    // Processa já; sem executor registado fica pendente (ver registerDataRequestHandler)
+    void this.processDataRequest(id);
 
     return request;
   }
 
   /**
-   * Processa solicitação de dados (P-077)
+   * Regista quem executa de verdade um tipo de pedido do titular (apagar, exportar, retificar...).
+   * Sem executor registado o pedido NÃO é dado como concluído: fica `pending` à espera de tratamento manual.
    */
-  private async processDataRequest(requestId: string): Promise<void> {
+  registerDataRequestHandler(
+    type: DataSubjectRequest['type'],
+    handler: (request: DataSubjectRequest) => Promise<string> | string
+  ): void {
+    this.dataRequestHandlers.set(type, handler);
+  }
+
+  /**
+   * Processa solicitação de dados (P-077). Só marca `completed` se um executor real correu sem erro.
+   */
+  async processDataRequest(requestId: string): Promise<DataSubjectRequest | undefined> {
     const request = this.dataRequests.get(requestId);
-    if (!request) return;
+    if (!request) return undefined;
+
+    const handler = this.dataRequestHandlers.get(request.type);
+    if (!handler) {
+      request.response = `Sem executor registado para "${request.type}": tratar manualmente. Nada foi alterado.`;
+      this.dataRequests.set(requestId, request);
+      this.logger.warn(`[ComplianceManager] Data request ${requestId} (${request.type}) sem executor: fica pendente`);
+      this.emit('datarequest:manual', request);
+      return request;
+    }
 
     request.status = 'processing';
     this.dataRequests.set(requestId, request);
-
-    // Simula processamento
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    let response = '';
-    switch (request.type) {
-      case 'access':
-        response = 'Dados do usuário: [dados simulados]';
-        break;
-      case 'erasure':
-        response = 'Dados removidos conforme solicitação';
-        break;
-      case 'rectification':
-        response = 'Dados retificados';
-        break;
-      case 'portability':
-        response = 'Dados exportados em formato JSON';
-        break;
-      default:
-        response = 'Solicitação processada';
+    try {
+      request.response = await handler(request);
+      request.status = 'completed';
+      request.processedAt = new Date();
+      this.logger.info(`[ComplianceManager] Data request completed: ${requestId}`);
+      this.emit('datarequest:completed', request);
+    } catch (err) {
+      request.status = 'pending';
+      request.response = `Falhou: ${err instanceof Error ? err.message : String(err)}. Nada foi dado como concluído.`;
+      this.logger.error(`[ComplianceManager] Data request ${requestId} falhou`);
+      this.emit('datarequest:failed', request);
     }
-
-    request.status = 'completed';
-    request.processedAt = new Date();
-    request.response = response;
     this.dataRequests.set(requestId, request);
-
-    this.logger.info(`[ComplianceManager] Data request completed: ${requestId}`);
-    this.emit('datarequest:completed', request);
+    return request;
   }
 
   // ===== P-078: Auditoria =====
@@ -356,7 +362,14 @@ export class ComplianceManager extends EventEmitter {
       totalDataRequests: requests.length,
       completedDataRequests: requests.filter((r) => r.status === 'completed').length,
       totalAuditLogs: this.auditLogs.length,
-      complianceScore: 80,
+      complianceScore: this.computeScore(requests, this.auditLogs),
     };
+  }
+
+  /** Média de (pedidos do titular concluídos / total) e (auditorias com sucesso / total), em %; 100 se não há dados. */
+  private computeScore(requests: DataSubjectRequest[], logs: AuditLog[]): number {
+    const req = requests.length ? requests.filter((r) => r.status === 'completed').length / requests.length : 1;
+    const aud = logs.length ? logs.filter((l) => l.status === 'success').length / logs.length : 1;
+    return Math.round(((req + aud) / 2) * 100);
   }
 }

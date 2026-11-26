@@ -39,12 +39,56 @@ export interface SecurityEvent {
   ip?: string;
   severity: 'info' | 'warning' | 'error' | 'critical';
 }
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+/** Base32 (RFC 4648, sem padding) -- o formato que as apps de autenticação esperam. */
+export function base32Encode(buf: Buffer): string {
+  let bits = 0;
+  let value = 0;
+  let out = '';
+  for (const byte of buf) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += B32[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += B32[(value << (5 - bits)) & 31];
+  return out;
+}
+export function base32Decode(text: string): Buffer {
+  let bits = 0;
+  let value = 0;
+  const bytes: number[] = [];
+  for (const ch of text.replace(/=+$/, '').toUpperCase()) {
+    const idx = B32.indexOf(ch);
+    if (idx < 0) throw new Error('Invalid base32');
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(bytes);
+}
+/** TOTP (RFC 6238): HMAC-SHA1, 30 s, 6 dígitos. */
+export function totp(secretBase32: string, atMs: number = Date.now(), stepSeconds = 30): string {
+  const counter = Math.floor(atMs / 1000 / stepSeconds);
+  const msg = Buffer.alloc(8);
+  msg.writeBigUInt64BE(BigInt(counter));
+  const h = crypto.createHmac('sha1', base32Decode(secretBase32)).update(msg).digest();
+  const off = h[h.length - 1] & 0xf;
+  const bin = ((h[off] & 0x7f) << 24) | (h[off + 1] << 16) | (h[off + 2] << 8) | h[off + 3];
+  return String(bin % 1_000_000).padStart(6, '0');
+}
 export class SecurityManager extends EventEmitter {
   private users: Map<string, User> = new Map();
   private sessions: Map<string, Session> = new Map();
   private events: SecurityEvent[] = [];
   private logger = getGlobalLogger();
   private rateLimits: Map<string, { count: number; resetAt: Date }> = new Map();
+  private failures: Map<string, { count: number; lockedUntil?: number }> = new Map();
   constructor(private config: {
     sessionTimeout?: number;
     maxLoginAttempts?: number;
@@ -89,9 +133,10 @@ export class SecurityManager extends EventEmitter {
   /**
    * Autentica um usuário
    */
-  async login(email: string, password: string, ip?: string, userAgent?: string): Promise<Session> {
-    // Verifica rate limit
+  async login(email: string, password: string, ip?: string, userAgent?: string, mfaCode?: string): Promise<Session> {
+    // Verifica rate limit e bloqueio por tentativas falhadas
     this.checkRateLimit(email);
+    this.checkLockout(email);
     const user = Array.from(this.users.values()).find((u) => u.email === email);
     if (!user) {
       this.logSecurityEvent({
@@ -102,9 +147,8 @@ export class SecurityManager extends EventEmitter {
       });
       throw new Error('Invalid credentials');
     }
-    // Verifica senha (simplificado)
-    // Em produção, verificar hash
     if (!this.verifyPassword(password, user.passwordHash)) {
+      this.registerFailure(email);
       this.logSecurityEvent({
         type: 'login',
         userId: user.id,
@@ -114,6 +158,19 @@ export class SecurityManager extends EventEmitter {
       });
       throw new Error('Invalid credentials');
     }
+    // Com MFA ligado, a senha sozinha não chega.
+    if (user.mfaEnabled && !(mfaCode && this.verifyMFA(user.id, mfaCode))) {
+      this.registerFailure(email);
+      this.logSecurityEvent({
+        type: 'login',
+        userId: user.id,
+        details: { reason: 'MFA required or invalid' },
+        ip,
+        severity: 'warning',
+      });
+      throw new Error('Invalid credentials');
+    }
+    this.failures.delete(email);
     // Cria sessão
     const session = this.createSession(user, ip, userAgent);
     user.lastLogin = new Date();
@@ -212,11 +269,11 @@ export class SecurityManager extends EventEmitter {
     if (!user) {
       throw new Error('User not found');
     }
-    const secret = crypto.randomBytes(20).toString('hex');
+    const secret = base32Encode(crypto.randomBytes(20));
     user.mfaEnabled = true;
     user.mfaSecret = secret;
     this.users.set(userId, user);
-    // Em produção, gerar QR code real
+    // URI otpauth:// (a app de autenticação gera o QR a partir dela)
     const qrCode = `otpauth://totp/NetworkAgents:${user.email}?secret=${secret}&issuer=NetworkAgents`;
     this.logSecurityEvent({
       type: 'mfa_enabled',
@@ -235,8 +292,38 @@ export class SecurityManager extends EventEmitter {
     if (!user || !user.mfaSecret) {
       return false;
     }
-    // Simula verificação (em produção, usar TOTP)
-    return code === '123456';
+    // TOTP real (RFC 6238), com tolerância de ±1 passo (relógios ligeiramente desfasados).
+    if (!/^\d{6}$/.test(code)) {
+      return false;
+    }
+    const now = Date.now();
+    let ok = false;
+    for (const drift of [-30_000, 0, 30_000]) {
+      const expected = Buffer.from(totp(user.mfaSecret, now + drift));
+      if (crypto.timingSafeEqual(expected, Buffer.from(code))) ok = true; // sem curto-circuito
+    }
+    return ok;
+  }
+  // ===== Bloqueio por tentativas falhadas =====
+  private checkLockout(email: string): void {
+    const f = this.failures.get(email);
+    if (f?.lockedUntil && Date.now() < f.lockedUntil) {
+      throw new Error('Account temporarily locked');
+    }
+  }
+  private registerFailure(email: string): void {
+    const f = this.failures.get(email) ?? { count: 0 };
+    f.count += 1;
+    if (f.count >= (this.config.maxLoginAttempts || 5)) {
+      f.lockedUntil = Date.now() + (this.config.rateLimitWindow || 60_000) * 15;
+      f.count = 0;
+      this.logSecurityEvent({
+        type: 'security_alert',
+        details: { email, reason: 'Account locked after repeated failures' },
+        severity: 'critical',
+      });
+    }
+    this.failures.set(email, f);
   }
   // ===== Rate Limiting =====
   /**

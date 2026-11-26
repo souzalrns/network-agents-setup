@@ -101,14 +101,15 @@
 > - `docs/architecture/EXECUTION-PLAN.md` (E): continua a ser o **plano** (o que fazer e porquê); só o seu estado passa para aqui.
 >
 
-## 7. Histórico (149 linhas: 127 FECHADO, 22 OBSOLETO)
+## 7. Histórico (150 linhas: 128 FECHADO, 22 OBSOLETO)
 
 Mais recente primeiro. Uma linha pode agrupar IDs fechados pelo mesmo PR ou decisão (separados por `/`). Às 4 colunas pedidas acrescentam-se 2 (`Estado final` e `Nota`).
 
 
 | ID | Título | Fechado em | PR / evidência | Estado final | Nota |
 |---|---|---|---|---|---|
-| M-010 | LangGraph: um `resume` dado para outra coisa respondia também a um gate humano pendente em paralelo, com `approve` por omissão | 2026-11-26 | PR do GOV-LOCAL-1 (fecho); `runner/tests/test_governance_local.py::test_m010_*`, `test_approval.py` | FECHADO | O `resume` passa a responder a UM gate pelo id da interrupção (`Command(resume={id: valor})`); um resume por outro motivo não responde a nenhum. O teste B1 de `test_approval.py` mudou para o comportamento certo |
+| GOV-LOCAL-1 | Contrato local mínimo de governança (P-93 = B): política allow/approve/deny, grafo de delegação, recibos com hash encadeado; nos motores nativo e LangGraph; `enforce` por omissão; os 3 módulos MOCK de `packages/core` (Security, Compliance, Data) corrigidos | 2026-11-26 | #331, #332; `runner/tests/test_governance_local.py`, `tests/unit/{Security,Compliance,Data}*.test.ts` | FECHADO | Limite conhecido: sem âncora externa, quem escreve na pasta refaz a cadeia (ver `GOVERNANCE.md` §9). AGT/Cedar/AgentMesh ficam como adaptadores opcionais futuros, sem item vivo |
+| M-010 | LangGraph: um `resume` dado para outra coisa respondia também a um gate humano pendente em paralelo, com `approve` por omissão | 2026-11-26 | #332; `runner/tests/test_governance_local.py::test_m010_*`, `test_approval.py` | FECHADO | O `resume` passa a responder a UM gate pelo id da interrupção (`Command(resume={id: valor})`); um resume por outro motivo não responde a nenhum. O teste B1 de `test_approval.py` mudou para o comportamento certo |
 | M-009 | Fase 2 das regras do motor: o conhecimento tem de chegar ao passo e a aprovação humana fica presa ao conteúdo (sha256 do plano e dos artefactos) | 2026-11-05 | #289 (`19d57c1`); `runner/tests/test_approval.py` | FECHADO | Revisão independente: 2 bloqueios no LangGraph corrigidos; o que ficou está no M-010 |
 | M-008 | Os 8 templates das áreas sem `knowledge:`; o motor passa a verificar as regras do plano antes de arrancar (`config/plan-policy.yaml`, `runner/plan_runner/policy.py`) | 2026-11-05 | #288 (`e17473b`); `runner/tests/test_policy.py` (81 testes) | FECHADO | As regras apanharam e corrigiram 21 planos do repo (conhecimento, compliance antes da aprovação, `web_search` que o motor nunca teve); fase 2 no M-009 |
 | RUNNER-RESUME-1 | Prova real da recuperação: interromper um plano real a meio e retomar com `resume` | 2026-10-27 | PR #259 (item no `setup_close_runs.py`); run real em PASS (`pilots/evidence/setup-close-2026-10-27T015747Z.md`): interrompido depois de `research`, retomado até `paused_human_gate`, cada passo terminou 1 vez | FECHADO | A Recuperação passa de TESTADA a PROVADA na matriz de prontidão |
