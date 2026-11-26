@@ -131,9 +131,13 @@ def test_councils_yaml_real_e_valido():
     assert cs.validate_councils(REPO_ROOT) == []
     assert validate_areas(REPO_ROOT) == []
     data = cs.load_councils(REPO_ROOT)
-    assert [c["id"] for c in data["councils"]] == ["architecture", "security", "product"]
+    assert [c["id"] for c in data["councils"]] == ["architecture", "security", "product", "structural"]
     for c in data["councils"]:
-        assert 2 <= len(c["members"]) <= 3 and c["chairman"] == "meta.chairman"
+        assert c["chairman"] == "meta.chairman"
+        if c.get("members_from"):  # M-011: membros = IAs registadas (config/council-providers.yaml)
+            assert c["members_from"] == "providers" and "members" not in c
+            continue
+        assert 2 <= len(c["members"]) <= 3
         assert c["chairman"] not in cs._member_ids(c)
 
 
