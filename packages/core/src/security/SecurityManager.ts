@@ -60,7 +60,9 @@ export function base32Decode(text: string): Buffer {
   let bits = 0;
   let value = 0;
   const bytes: number[] = [];
-  for (const ch of text.replace(/=+$/, '').toUpperCase()) {
+  let end = text.length;
+  while (end > 0 && text[end - 1] === '=') end--; // sem regex (evita ReDoS)
+  for (const ch of text.slice(0, end).toUpperCase()) {
     const idx = B32.indexOf(ch);
     if (idx < 0) throw new Error('Invalid base32');
     value = (value << 5) | idx;
