@@ -118,6 +118,8 @@ python -m plan_runner resume ../pilots/demo --decision approve
 
 **Footprint (measured, not promised):** about 12 MB of tracked files, 10 direct Python dependencies (about 17 MB installed, 33 packages in total) and a stub run in under a second using about 55 MB of RAM. `python scripts/setup_footprint.py` re-measures it on your machine; `--check` fails if it grows past the ceilings in [`docs/ops/FOOTPRINT-BASELINE.json`](./docs/ops/FOOTPRINT-BASELINE.json).
 
+**Local model (no paid key):** `--worker local` runs steps on Ollama, llama.cpp or any OpenAI-compatible server on your own machine, at zero cost. See [`docs/ops/LOCAL-WORKER.md`](./docs/ops/LOCAL-WORKER.md).
+
 Inspect `../pilots/demo/status.json` (final state), `events.jsonl` (the full audit log) and `artifacts/`. Full CLI reference: [`runner/README.md`](./runner/README.md).
 
 ## Repository map

@@ -19,7 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     p_run.add_argument("--out", type=Path, default=None, help="Output run directory")
     p_run.add_argument(
         "--worker",
-        choices=["none", "gemini"],
+        choices=["none", "gemini", "local"],
         default=None,
         help="Mode external: executa cada passo com este worker em vez de parar em waiting_external (engine native)",
     )
@@ -49,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
     p_res.add_argument("--payload-file", type=Path, default=None, help="Ficheiro JSON com payload para edit (opcional)")
     p_res.add_argument(
         "--worker",
-        choices=["none", "gemini"],
+        choices=["none", "gemini", "local"],
         default=None,
         help="Worker do modo external (omissao: o do run; engine native)",
     )
@@ -80,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_route.add_argument("--execute", action="store_true", help="Corre a decisao no plan_runner (mode external + worker)")
     p_route.add_argument("--out", type=Path, default=None, help="Directorio do run (dentro de pilots/; omissao: pilots/run-router-<id>)")
-    p_route.add_argument("--worker", choices=["none", "gemini"], default="gemini", help="Worker dos passos executados")
+    p_route.add_argument("--worker", choices=["none", "gemini", "local"], default="gemini", help="Worker dos passos executados")
     p_route.add_argument("--embeddings", action="store_true", help="Embeddings Gemini quando nenhuma keyword casa")
     p_route.add_argument("--log", type=Path, default=None, help="jsonl das decisoes (omissao: pilots/router-decisions.jsonl)")
     p_route.add_argument("--no-council", action="store_true", help="Nao escala pedidos estruturais para conselho")
