@@ -58,3 +58,7 @@ python -m mcp_plan_runner
 ```
 
 Audit: `mcp/plan_runner/audit/audit.jsonl`
+
+## Conselho com IAs externas (M-011)
+
+Três ferramentas para o conselho `structural` (ver `docs/ops/COUNCIL.md`): `council_get_request`, `council_status` (scope `runner:council:read`) e `council_submit_position` (scope `runner:council:submit`, mutante: em `strict` exige `PLAN_RUNNER_MCP_KEY`). Cada IA liga-se com a sua subscrição; as chaves por IA ficam em variáveis de ambiente nomeadas em `config/council-providers.yaml` (`key_env`), nunca no repo.
