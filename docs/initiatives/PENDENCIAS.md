@@ -8,7 +8,7 @@
 > - **137 itens vivos** (§4): ABERTO 76, EM CURSO 15, BLOQUEADO 46;
 > - **150 linhas de histórico** (no histórico, §7): 128 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
-> - **92 decisões** A/B/C: 92 tomadas (no histórico, §10) e **0 por decidir** (§10 abaixo).
+> - **93 decisões** A/B/C: 93 tomadas (no histórico, §10) e **0 por decidir** (§10 abaixo).
 
 ## 0. Como usar este documento
 
@@ -371,7 +371,7 @@ Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-1
 | # | Decisão | A | B | C | Recomendada |
 |---|---|---|---|---|---|
 
-> As 92 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
+> As 93 decisões já tomadas estão em [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) §10. Aqui ficam só as que estão **por decidir**.
 
 ## 11. Índice de aliases (ID antigo → onde está agora)
 
