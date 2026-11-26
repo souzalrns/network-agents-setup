@@ -30,6 +30,8 @@ import sys
 import time
 from pathlib import Path
 
+import yaml
+
 # --- sys.path + .env (antes de qualquer import do runner) -------------------
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -129,8 +131,22 @@ def embed_with_retry(text: str) -> list[float]:
     )
 
 
+# P-81 = A (maestro): uma área do config/areas.yaml tem a kb com o mesmo id, sem lista fixa por domínio.
+# `legal` fica de fora de propósito: o pack direito-br-pt já está ingerido na kb `global`; mudá-lo para `legal`
+# exige purgar e reingerir (decisão à parte). Qualquer área nova (trading, ...) já nasce com a kb própria.
+LEGACY_GLOBAL_AREAS = frozenset({"legal"})
+AREAS_FILE = Path(__file__).resolve().parent.parent / "config" / "areas.yaml"  # fixo: nao segue o ROOT dos testes
+
+
+def _area_ids() -> frozenset[str]:
+    data = yaml.safe_load(AREAS_FILE.read_text(encoding="utf-8")) or {}
+    return frozenset(a["id"] for a in data.get("areas") or [])
+
+
 def _kb_for(agent_id: str) -> str:
     """Deriva o id da base de conhecimento a partir do agent_id."""
+    if agent_id in _area_ids() and agent_id not in LEGACY_GLOBAL_AREAS:  # P-81 = A: kb = id da área
+        return agent_id
     if "security" in agent_id:  # F0.4: o pack de security (antes caia em "global")
         return "security"
     if "marketing" in agent_id:

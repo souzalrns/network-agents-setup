@@ -1,0 +1,35 @@
+# IAs registadas para o conselho "structural" (M-011, P-91 = A, P-92 = B).
+#
+# É OPCIONAL e vem VAZIO: sem IAs registadas, usa-se um dos conselhos internos
+# (`architecture`, `security`, `product`), que correm numa só IA (Gemini). Cada utilizador regista aqui
+# só as IAs que já tem (a subscrição que já paga); o repo nunca traz chaves nem custo extra.
+#
+# Como funciona (docs/ops/COUNCIL.md, "Conselho com IAs externas"):
+#   - cada IA liga-se ao MCP `plan-runner` (mcp/plan_runner) e usa 3 ferramentas:
+#     council_get_request, council_submit_position, council_status;
+#   - o motor lê as posições entregues, aplica anonimização, quórum, veto e dissidente, e o
+#     chairman interno sintetiza o veredicto e o plano executável;
+#   - o humano aprova (HITL) como em qualquer conselho.
+#
+# Modos, conforme o número de IAs registadas:
+#   0   -> o conselho `structural` recusa-se a correr (usa um conselho interno);
+#   1   -> modo simples: uma IA só, sem votação nem crítica entre pares; mantém o gate humano e o plano;
+#   3 ou 5 (ímpar) -> conselho completo, com desempate;
+#   2 ou 4 (par)   -> corre, mas sem desempate: o gate avisa e a decisão humana é obrigatória.
+#
+# Campos de cada IA:
+#   id:       letras minúsculas, números, - ou _ (2 a 31 caracteres). Ex.: claude, gpt, grok
+#   kind:     `mcp` (a IA liga-se ao MCP com a sua subscrição; custo zero). `api` (chave paga) NÃO está
+#             implementado nesta fase e o validador recusa-o.
+#   key_env:  (opcional) nome da variável de ambiente com a chave que ESSA IA tem de enviar ao entregar a
+#             posição. Se a variável existir, a entrega sem a chave certa é recusada (impede que uma IA se
+#             faça passar por outra). A chave nunca fica neste ficheiro.
+#
+# Exemplo (descomentar e ajustar):
+#   providers:
+#     - {id: claude, kind: mcp, key_env: COUNCIL_KEY_CLAUDE}
+#     - {id: gpt,    kind: mcp, key_env: COUNCIL_KEY_GPT}
+#     - {id: grok,   kind: mcp, key_env: COUNCIL_KEY_GROK}
+
+version: 1
+providers: []
