@@ -1,0 +1,74 @@
+# Golden set do L5, pack de trading (domínio de prova F6; docs/ops/F6-TRADING-DOC.md).
+# Mesmo formato e mesmas métricas do l5-golden-security.yaml. Perguntas parafraseadas de propósito
+# (medem procura semântica, não correspondência literal). Cada âncora cai em EXACTAMENTE um chunk.
+#   offline:  python -m plan_runner.l5_eval validate --golden config/l5-golden-trading.yaml
+#   medição:  python -m plan_runner.l5_eval run --golden config/l5-golden-trading.yaml   (MCP_URL + MCP_API_KEY)
+version: 1
+kb: trading
+source: docs/knowledge/trading/risk-policy.md
+k: 4
+
+cases:
+  - id: trd-01
+    section: "Escada de execução"
+    question: Quais são os três degraus por onde uma ordem passa antes de usar dinheiro real?
+    anchor: Cada degrau exige o anterior
+
+  - id: trd-02
+    section: "Escada de execução"
+    question: O que é preciso para ligar a testnet?
+    anchor: ECONOMIA_TRADER_ALLOW_TESTNET=1
+
+  - id: trd-03
+    section: "Escada de execução"
+    question: Um agente pode propor passar para ordens reais?
+    anchor: dinheiro real está bloqueado
+
+  - id: trd-04
+    section: "Limites de risco explícitos"
+    question: O que acontece se o ficheiro de limites não tiver o máximo de perda diária?
+    anchor: é recusado
+
+  - id: trd-05
+    section: "Limites de risco explícitos"
+    question: Que desvio de preço é aceite numa ordem limite face à referência?
+    anchor: 2% do preço de referência
+
+  - id: trd-06
+    section: "Limites de risco explícitos"
+    question: Posso comprar sem pôr stop?
+    anchor: Uma compra sem stop-loss é recusada
+
+  - id: trd-07
+    section: "Âmbito da v0.1"
+    question: Dá para operar futuros ou com alavancagem?
+    anchor: "Fora: futuros, margem, short, opções"
+
+  - id: trd-08
+    section: "Como um agente usa isto"
+    question: O que deve conter uma sugestão de entrada feita por um agente?
+    anchor: perda estimada no stop em R e em dinheiro
+
+  - id: trd-09
+    section: "Método: o que é um trade"
+    source: docs/knowledge/trading/post-trade-review-method.md
+    question: Como se conta uma corrida de grid com vários lotes?
+    anchor: conta como um trade
+
+  - id: trd-10
+    section: "Método: classificação do processo"
+    source: docs/knowledge/trading/post-trade-review-method.md
+    question: Qual é a gravidade de uma entrada sem stop?
+    anchor: Entrada sem stop
+
+  - id: trd-11
+    section: "Método: fuga de custos"
+    source: docs/knowledge/trading/post-trade-review-method.md
+    question: A partir de que slippage um trade limpo ganha um achado?
+    anchor: "Slippage acima de **20 bps**"
+
+  - id: trd-12
+    section: "Método: regras"
+    source: docs/knowledge/trading/post-trade-review-method.md
+    question: De onde se tira a verdade para rever um trade, do chat ou do exchange?
+    anchor: Rever a partir do registo do exchange
