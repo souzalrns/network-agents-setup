@@ -1,0 +1,23 @@
+{
+  "measured": {
+    "repo_tracked_mb": 11.6,
+    "repo_tracked_files": 1759,
+    "repo_md_files": 949,
+    "runner_deps_direct": 10,
+    "runner_deps_total": 33,
+    "runner_deps_mb": 16.7,
+    "runner_deps_missing": 3,
+    "cli_start_seconds": 0.56,
+    "cli_peak_mb": 54.0,
+    "stub_run_seconds": 0.68,
+    "stub_run_peak_mb": 55.6
+  },
+  "ceilings": {
+    "repo_tracked_mb": 14.5,
+    "runner_deps_mb": 20.88,
+    "stub_run_seconds": 3.4,
+    "stub_run_peak_mb": 83.4,
+    "cli_peak_mb": 81.0
+  },
+  "note": "tetos = medição × folga; recalcular de propósito, não por reflexo"
+}

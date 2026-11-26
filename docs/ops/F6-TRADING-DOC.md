@@ -66,3 +66,7 @@ DOC = core files modified + core code changes + new infrastructure + new runtime
 - **A-2 — o MANIFEST e o EXCLUDED são dados dentro de um `.py`.** Registar conhecimento de um domínio novo obriga a editar um script.
 - **A-3 — um teste fixa a lista exacta de domínios.** `test_capabilities.py` exige uma lista exacta de ficheiros, por isso cada domínio novo tem de o editar. Baixo impacto.
 - **A-4 — `pilots/` não está todo no `.gitignore`.** Só `pilots/_pytest_*` está. Um run manual deixa pastas por seguir no git. Baixo impacto.
+
+## Golden do trading (2026-11-26)
+
+`config/l5-golden-trading.yaml`: 12 perguntas parafraseadas sobre os dois packs (8 do `risk-policy.md`, 4 do `post-trade-review-method.md`), mesmo formato do golden de security. Offline: `python -m plan_runner.l5_eval validate --golden config/l5-golden-trading.yaml` (âncoras contra o chunking real; coberto por `runner/tests/test_setup_footprint.py`). A medição contra o MCP real (`l5_eval run --golden ...`, precisa de `MCP_URL` e `MCP_API_KEY`) ainda não foi feita.
