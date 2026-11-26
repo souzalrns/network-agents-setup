@@ -92,50 +92,18 @@ export class DataGovernance extends EventEmitter {
   // ===== P-029: Observação antes da Pergunta =====
 
   /**
-   * Observa dados automaticamente
+   * Devolve os activos já registados para uma fonte. Não inventa activos: sem conector real para a fonte,
+   * quem a conhece tem de a registar com `registerDataAsset`; uma fonte desconhecida devolve lista vazia.
    */
   async observeData(source: string): Promise<DataAsset[]> {
-    this.logger.info(`[DataGovernance] Observing data from: ${source}`);
-
-    // Simula observação de dados
-    // Em produção, isso se conectaria a sensores, APIs, etc.
-    const observed: DataAsset[] = [];
-
-    // Verifica se já existe
-    const existing = Array.from(this.assets.values()).filter(
-      (a) => a.source === source
-    );
-
-    if (existing.length > 0) {
-      this.logger.info(`[DataGovernance] Found ${existing.length} existing assets from ${source}`);
-      return existing;
+    const known = Array.from(this.assets.values()).filter((a) => a.source === source);
+    if (known.length === 0) {
+      this.logger.warn(`[DataGovernance] Sem activos registados para a fonte "${source}" (não há conector: registar com registerDataAsset)`);
+      return [];
     }
-
-    // Cria observação
-    const asset = this.registerDataAsset({
-      name: `Data from ${source}`,
-      type: 'unstructured',
-      source,
-      format: 'raw',
-      size: 0,
-      owner: 'system',
-      classification: 'internal',
-      retentionDays: 365,
-      tags: ['observed'],
-      lineage: {
-        source,
-        transformations: [],
-      },
-      metadata: {
-        observedAt: new Date(),
-        observedBy: 'DataGovernance',
-      },
-    });
-
-    observed.push(asset);
-
-    this.emit('data:observed', observed);
-    return observed;
+    this.logger.info(`[DataGovernance] ${known.length} activos conhecidos da fonte ${source}`);
+    this.emit('data:observed', known);
+    return known;
   }
 
   // ===== P-030: Soberania dos Dados =====

@@ -42,12 +42,12 @@ Detalhe e matriz item × evidência: [`docs/ops/RUNTIME-HARDENING.md`](../ops/RU
 | `governance/DeliberationEngine.ts` | Scoring ponderado (impacto/incerteza/risco/reversibilidade/custo/dependências) que decide o nível de aprovação necessário — operational/tactical/strategic/constitutional | **REAL** | Nada — funciona como está |
 | `governance/TrustManager.ts` | Certificação de competências por 6 níveis de confiança (LEVEL_0 a LEVEL_5), com limites de autonomia (`AutonomyBoundary`) por competência | INCOMPLETO | Persistência — todo o estado (`Map`) perde-se num restart |
 | `governance/ArchitectureCouncil.ts` | Fluxo de propostas arquiteturais → revisão/auto-aprovação → registo de decisões (ADRs) | INCOMPLETO | Persistência das propostas/decisões |
-| `security/SecurityManager.ts` | Autenticação, sessões, RBAC, MFA, detectores heurísticos (prompt injection, jailbreak) | **MOCK** | Tudo — `verifyPassword()` devolve sempre `true`, hash sem salt, `verifyMFA()` aceita código fixo `'123456'`. Não é base reaproveitável |
-| `compliance/ComplianceManager.ts` | Consentimento LGPD/GDPR, pedidos de titular de dados, logs de auditoria | **MOCK** | Lógica real — `processDataRequest` devolve strings fixas sem apagar nada; `getStats()` tem `complianceScore: 80` hardcoded |
-| `data/DataGovernance.ts` | Classificação de activos de dados, linhagem, score de qualidade | **MOCK** | `observeData()` é simulação explícita — a parte de classificação/linhagem tem mais substância que os outros MOCK, mas a ingestão é vazia |
+| `security/SecurityManager.ts` | Autenticação, sessões, RBAC, MFA, detectores heurísticos (prompt injection, jailbreak) | INCOMPLETO (corrigido 2026-11-26) | Persistência — utilizadores, sessões e bloqueios vivem em `Map`s. Já corrigido: senha com bcrypt, MFA com TOTP real (RFC 6238, com vetores de teste), MFA exigido no login, bloqueio por tentativas falhadas. Antes era MOCK (`verifyPassword` sempre `true`, MFA com código fixo) |
+| `compliance/ComplianceManager.ts` | Consentimento LGPD/GDPR, pedidos de titular de dados, logs de auditoria | INCOMPLETO (corrigido 2026-11-26) | Persistência e executores reais: pedidos do titular só ficam `completed` se um executor registado (`registerDataRequestHandler`) correr sem erro; sem executor ficam `pending`. A pontuação deixou de ser a constante 80 e é calculada. Antes era MOCK (respostas fixas sem apagar nada) |
+| `data/DataGovernance.ts` | Classificação de activos de dados, linhagem, score de qualidade | INCOMPLETO (corrigido 2026-11-26) | Conectores de fonte: `observeData` já não inventa activos (devolve só os registados). Antes era MOCK |
 | `hitl/HitlManager.ts` | Pedidos de aprovação humana (pending/approved/rejected/expired) + checkpoints | INCOMPLETO | Persistência — 5 `Map`s, todo o estado de aprovação é volátil |
 
-**Resumo do estado:** 1 REAL, 3 INCOMPLETO, 3 MOCK. Nenhum dos 3 MOCK (Security, Compliance, Data) vale a pena "consertar" incrementalmente — ver secção 3.
+**Resumo do estado:** 1 REAL, 6 INCOMPLETO, 0 MOCK (os 3 MOCK — Security, Compliance, Data — foram corrigidos a 2026-11-26; falta persistência). Nenhum dos 3 antigos MOCK vale a pena "consertar" incrementalmente — ver secção 3.
 
 ## 3. O que o AGT cobre
 
@@ -118,3 +118,18 @@ O AGT cobre identidade, política e execução — não cobre a delegação entr
 - [`plug-in-agents.md`](./plug-in-agents.md) — visão original das 3 camadas
 - [`../ops/SECURITY-REVIEW-ROUTINE.md`](../ops/SECURITY-REVIEW-ROUTINE.md) — rotina de revisão de segurança read-only
 - [`../ops/RUNTIME-HARDENING.md`](../ops/RUNTIME-HARDENING.md) — fecho da secção 3 (runtime hardening)
+
+## 9. Contrato local mínimo (GOV-LOCAL-1, P-93 = B)
+
+Implementado em `runner/plan_runner/governance_local.py`, política em `config/governance.yaml`. Sem dependências nem rede.
+
+| Preocupação | O que existe | Onde |
+|---|---|---|
+| Política | `allow`/`approve`/`deny` por (agente, capacidade); `deny` > `approve` > `allow`; sem regra decide `default` | `Policy`, `authorize` |
+| Delegação | concessões e revogações em `delegations.jsonl`; raiz humana, só se delega o que se tem, sem ciclos, profundidade máxima, expiração herdada | `DelegationGraph` |
+| Recibos | `receipts.jsonl` com hash encadeado, HMAC-SHA256 se `GOVERNANCE_HMAC_KEY` existir, `receipts.head` contra corte do fim; guarda hash dos inputs, nunca o conteúdo | `ReceiptLog` |
+| Motor | os motores nativo e LangGraph consultam a política antes de cada passo e escrevem um recibo no fim (o gate humano aprovado leva `approver`); `mode: enforce` (omissão) recusa o passo não autorizado e deixa um recibo `deny`, `record` só regista | `engine.run_plan` |
+
+Verificar uma pasta de run: `python -m plan_runner.governance_local verify <pasta>`.
+
+**Limite honesto:** sem âncora externa, quem escreve na pasta pode refazer a cadeia inteira. O HMAC e o `receipts.head` levantam a fasquia; não substituem um registo externo. **M-010:** o `resume` do LangGraph responde a um gate pelo id da interrupção. **Falta:** trocar os módulos MOCK de `packages/core`.
