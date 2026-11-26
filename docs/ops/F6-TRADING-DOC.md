@@ -59,7 +59,7 @@ DOC = core files modified + core code changes + new infrastructure + new runtime
 
 ## 4. Achados: abstracções incompletas (o objectivo do F6 é encontrá-las)
 
-- **A-1 — o ingest não conhece kbs novas.**
+- **A-1 — o ingest não conhece kbs novas. (Resolvido a 2026-11-25, P-81 = A: `_kb_for` devolve o id da área do `config/areas.yaml`; `legal` fica em `global` até haver purga; evolução do core, EXECUTION-PLAN §11.)**
   - `scripts/ingest_apply.py::_kb_for` tem uma lista fixa (`security`, `marketing`, `design`, `produto-tech`).
   - Uma fonte com `agent_id` `trading` ficaria com `kb = global`. O retrieve ainda a encontrava (filtra por `agent_id`), mas com a etiqueta errada, que é o que o R-005 corrigiu.
   - Por isso o conhecimento do pack entra pelos planos via `repo_files` e fica no `EXCLUDED`, até à decisão **P-80**.

@@ -116,3 +116,45 @@ def resume_plan(out_dir: str, decision: str = "approve") -> dict:
     except Exception as e:
         audit({"tool": "resume_plan", "ok": False, "error": str(e)})
         return {"ok": False, "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# M-011: conselho com IAs externas. A logica vive em plan_runner.council_providers; aqui so ha
+# autorizacao, caminho seguro (dentro do repo), auditoria SEM tema, posicoes nem chaves, e erros estruturados.
+# ---------------------------------------------------------------------------
+
+def _council_call(tool: str, session_dir: str, provider: str, fn):
+    auth = authorize(tool)
+    rate_limit(auth.caller)
+    if not auth.authorized:
+        audit({"tool": tool, "ok": False, "reason": auth.reason})
+        return {"ok": False, "error": auth.reason}
+    try:
+        root = _ensure_runner_on_path()
+        from plan_runner import council_providers as prov
+
+        path = sanitize_repo_path(session_dir, must_exist=True)
+        result = fn(prov, path, root)
+        audit({"tool": tool, "ok": True, "session": path.name, "provider": provider or None, "caller": auth.caller})
+        return {"ok": True, **result}
+    except Exception as e:  # noqa: BLE001 -- o cliente MCP recebe a mensagem, nunca um traceback
+        audit({"tool": tool, "ok": False, "provider": provider or None, "error": type(e).__name__})
+        return {"ok": False, "error": str(e)}
+
+
+def council_get_request(session_dir: str, provider: str, key: str = "") -> dict:
+    """O pedido da posicao desta IA (tema, contexto e formato da resposta; nunca as posicoes das outras)."""
+    return _council_call("council_get_request", session_dir, provider,
+                         lambda prov, path, root: prov.get_request(path, provider, key=key or None, repo_root=root))
+
+
+def council_submit_position(session_dir: str, provider: str, position: str, key: str = "") -> dict:
+    """Entrega a posicao (JSON em texto). Uma entrega por IA e por ronda."""
+    return _council_call("council_submit_position", session_dir, provider,
+                         lambda prov, path, root: prov.submit_position(path, provider, position, key=key or None, repo_root=root))
+
+
+def council_status(session_dir: str) -> dict:
+    """Estado publico da sessao: fase, ronda, modo do painel e que IAs faltam (sem tema nem posicoes)."""
+    return _council_call("council_status", session_dir, "",
+                         lambda prov, path, root: {"status": prov.session_status(path)})
