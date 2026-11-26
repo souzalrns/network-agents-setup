@@ -128,8 +128,8 @@ Implementado em `runner/plan_runner/governance_local.py`, política em `config/g
 | Política | `allow`/`approve`/`deny` por (agente, capacidade); `deny` > `approve` > `allow`; sem regra decide `default` | `Policy`, `authorize` |
 | Delegação | concessões e revogações em `delegations.jsonl`; raiz humana, só se delega o que se tem, sem ciclos, profundidade máxima, expiração herdada | `DelegationGraph` |
 | Recibos | `receipts.jsonl` com hash encadeado, HMAC-SHA256 se `GOVERNANCE_HMAC_KEY` existir, `receipts.head` contra corte do fim; guarda hash dos inputs, nunca o conteúdo | `ReceiptLog` |
-| Motor | o motor nativo consulta a política antes de cada passo e escreve um recibo no fim; `mode: record` (omissão) nunca bloqueia, `enforce` recusa | `engine.run_plan` |
+| Motor | os motores nativo e LangGraph consultam a política antes de cada passo e escrevem um recibo no fim (o gate humano aprovado leva `approver`); `mode: enforce` (omissão) recusa o passo não autorizado e deixa um recibo `deny`, `record` só regista | `engine.run_plan` |
 
 Verificar uma pasta de run: `python -m plan_runner.governance_local verify <pasta>`.
 
-**Limite honesto:** sem âncora externa, quem escreve na pasta pode refazer a cadeia inteira. O HMAC e o `receipts.head` levantam a fasquia; não substituem um registo externo. **Falta:** motor LangGraph, `enforce` por omissão, identificador de interrupção por gate (M-010), e trocar os módulos MOCK de `packages/core`.
+**Limite honesto:** sem âncora externa, quem escreve na pasta pode refazer a cadeia inteira. O HMAC e o `receipts.head` levantam a fasquia; não substituem um registo externo. **M-010:** o `resume` do LangGraph responde a um gate pelo id da interrupção. **Falta:** trocar os módulos MOCK de `packages/core`.

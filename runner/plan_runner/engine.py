@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
 
@@ -280,14 +281,12 @@ def run_plan(
         )
         inject_knowledge_context(out, step, log, run_id)
 
-        gov_ok, gov_dec = gov.governance_gate(out, step)  # GOV-LOCAL-1
-        if not gov_ok:
-            gov.ReceiptLog(out).append(run_id=run_id, step_id=step.id, agent=step.action, capability=gov.STEP_CAPABILITY,
-                                       decision=gov_dec, detail="recusado pela governança (mode: enforce)")
-            log.append("step_failed", run_id, {"step_id": step.id, "detail": f"governança: {gov_dec.reason}"})
+        gov_reason = gov.refuse_reason(out, run_id, step)  # GOV-LOCAL-1
+        if gov_reason:
+            log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
             status["state"] = "failed"
             status["failed_step"] = step.id
-            status["detail"] = f"governança: {gov_dec.reason}"
+            status["detail"] = gov_reason
             save_status(out, status)
             return status
 
@@ -357,7 +356,7 @@ def run_plan(
             run_id,
             {"step_id": step.id, "detail": result.detail, "artifact": result.artifact},
         )
-        gov.governance_receipt(out, run_id, step, gov_dec, detail=str(result.detail)[:200], artifact=result.artifact)
+        gov.record_step(out, run_id, step, result)
         completed.add(step.id)
         status["completed"] = sorted(completed)
         save_status(out, status)
@@ -451,6 +450,7 @@ def resume_run(
         if paused:
             completed.add(paused)
             step_gate = next(s for s in plan.steps if s.id == paused)
+            gov.record_step(out_dir, run_id, step_gate, SimpleNamespace(detail="human_gate", artifact=step_gate.output_artifact))
             if step_gate.output_artifact:
                 p = out_dir / step_gate.output_artifact
                 p.parent.mkdir(parents=True, exist_ok=True)
@@ -480,6 +480,14 @@ def resume_run(
         save_status(out_dir, status)
         log.append("step_started", run_id, {"step_id": step.id, "action": step.action, "skill": skill_ref(out_dir, step)})
         inject_knowledge_context(out_dir, step, log, run_id)
+
+        gov_reason = gov.refuse_reason(out_dir, run_id, step)  # GOV-LOCAL-1
+        if gov_reason:
+            log.append("step_failed", run_id, {"step_id": step.id, "detail": gov_reason})
+            status["state"] = "failed"
+            status["detail"] = gov_reason
+            save_status(out_dir, status)
+            return status
 
         if step.human_gate:
             log.append(
@@ -527,6 +535,7 @@ def resume_run(
             return status
 
         log.append("step_finished", run_id, {"step_id": step.id, "artifact": result.artifact})
+        gov.record_step(out_dir, run_id, step, result)
         completed.add(step.id)
         status["completed"] = sorted(completed)
         save_status(out_dir, status)
