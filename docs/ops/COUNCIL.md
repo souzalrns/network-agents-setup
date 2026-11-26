@@ -321,9 +321,34 @@ estado final: done | 7 chamadas (3 council_member, 3 council_peer, 1 council_cha
 ficheiros: council.json events.jsonl hitl-requests.jsonl hitl-decisions.jsonl memory_l4.jsonl status.json token_usage.jsonl verdict.json
 ```
 
+## Conselho `structural` com IAs externas (M-011, P-91 = A, P-92 = B)
+
+Para discussões estruturais e de projeto: o conselho entrega **a base e o plano executável** (`plan.yaml`, validado contra `runner/plan_runner/plan.schema.json`); quem executa continua a ser o Claude, depois de o maestro aprovar. O Execution Broker (M-001) fica de fora.
+
+**As IAs são opcionais.** Registam-se em `config/council-providers.yaml` (vem vazio). Chave só por nome de variável (`key_env`), nunca no repo. Sem nenhum registo, o `structural` recusa e aponta os conselhos internos (`architecture`, `security`, `product`).
+
+| IAs registadas | Modo | O que corre |
+|---|---|---|
+| 0 | recusa | usar um conselho interno |
+| 1 | simples | sem votação nem crítica entre pares; gate e aprovação humana mantêm-se (aviso no gate) |
+| ímpar ≥ 3 | completo | posições independentes, crítica às cegas (feita pelo chairman interno), quórum, veto, dissidente |
+| par | corre | o gate avisa "sem desempate" |
+
+**Fluxo.** `start` → estado `awaiting_external` (zero chamadas pagas) → cada IA, com a sua própria subscrição e pelo MCP `plan_runner`, chama `council_get_request` e `council_submit_position` (uma entrega por IA e por ronda, gravação atómica em `<sessão>/inbox/`) → `resume` (ou `resume --partial` se houver quórum) → o chairman sintetiza e emite o plano → gate → HITL → `approve` grava `plan.yaml` e `verdict.json["plan_file"]`. Plano inválido: o gate bloqueia o `approve`.
+
+**Ferramentas MCP** (`mcp/plan_runner`): `council_get_request` e `council_status` (scope `runner:council:read`), `council_submit_position` (scope `runner:council:submit`, mutante: em `strict` exige `PLAN_RUNNER_MCP_KEY`). A auditoria não regista tema, posições nem chaves. CLI equivalente: `python -m plan_runner.council_session submit ...`.
+
+**Perguntas abertas.** Para temas como "estruturar um app" ou "analisar o repo e propor mudanças", cada IA acrescenta `proposals` (título, porquê com prova, passos, critério de pronto, o que fica de fora; até 5) e usa `vote: approve` se defende as propostas. O chairman funde as convergentes num só plano e regista as restantes como dissidência.
+
+**Decisões em aberto e avisos do gate.** Se duas posições defendem abordagens incompatíveis, o chairman lista-as em `open_decisions` (o gate mostra-as como aviso, para o maestro decidir, em vez de escolher em silêncio). O gate avisa também quando o voto é unânime numa pergunta aberta (aprovar = defender as próprias propostas, não valida o plano) e quando um `done_when` já é verdadeiro neste repo. Erros 500/502/503/504 do Gemini repetem-se até 3 vezes, com espera crescente (`CouncilDeps.retry_delay`).
+
+**Segurança.** Uma `key_env` declarada mas sem variável no servidor falha fechada; as chaves comparam-se em tempo constante; o chairman nunca vê os nomes das IAs. Testes: `runner/tests/test_council_external.py` e `test_council_mcp_tools.py`.
+
+**Custo.** Só o chairman gasta tokens (1 chamada por ronda). As IAs externas correm nas subscrições do maestro; o tipo `api` não está implementado (regra: nada pago).
+
 ## Limites
 
-- **Fase 1 só:** membros `internal`. A Fase 2 (IAs externas, `kind: external_ai`) fica para depois, sobre o mesmo protocolo (ADR §2).
+- **Conselhos internos:** membros `internal`. IAs externas só no `structural` (secção acima), por MCP.
 - **O conselho delibera, não executa.** O `approve` só promove o veredicto na L4 (`council_session.py:853-858`). Quem executa a decisão, e a garantia de que só um executa, é a **Fase 2: Execution Broker + Execution Lease**: contrato em [META-AGENTS-PHASE-2.md](../architecture/META-AGENTS-PHASE-2.md), registo, não implementado.
 - **Anonimato parcial:**
   - o texto livre de uma posição pode revelar o papel do autor ("como revisor…");

@@ -84,6 +84,9 @@ MANIFEST: list[tuple[str, str, str]] = [
     ("docs/knowledge/marketing/seo-tech-audit-checklist.md", "marketing", "P1"),
     ("docs/knowledge/marketing/ugc-pipeline.md", "marketing", "P1"),
     ("docs/knowledge/marketing/video-edit-checklist.md", "marketing", "P1"),
+    # P-81 = A (maestro): o pack da área trading entra no L5 com kb própria (`_kb_for` por áreas).
+    ("docs/knowledge/trading/risk-policy.md", "trading", "P1"),
+    ("docs/knowledge/trading/post-trade-review-method.md", "trading", "P1"),
 ]
 
 # F3c (P-35 = A, P-36 = A): os .md de docs/knowledge/ que NÃO são ingeridos, cada um com
@@ -96,10 +99,6 @@ EXCLUDE_DESIGN = (
     "P-36 = A: sem consumidor de kb design no RAG. Os passos de design dos planos recebem "
     "estes ficheiros por repo_files (SEC-1, F3c-DESIGN-1 opção A), não por retrieve; "
     "reavaliar no F3c-DESIGN-1"
-)
-EXCLUDE_TRADING = (
-    "F6 trading: lido pelos planos via repo_files; não entra no L5 até a decisão do "
-    "_kb_for (docs/ops/F6-TRADING-DOC.md, achado A-1: uma kb nova cairia em `global`)"
 )
 EXCLUDED: dict[str, str] = {
     "docs/knowledge/README.md": EXCLUDE_META,
@@ -116,8 +115,6 @@ EXCLUDED: dict[str, str] = {
     "docs/knowledge/design/ux-principles.md": EXCLUDE_DESIGN,
     "docs/knowledge/design/ux-writing-examples.md": EXCLUDE_DESIGN,
     "docs/knowledge/design/ux-writing-principles.md": EXCLUDE_DESIGN,
-    "docs/knowledge/trading/post-trade-review-method.md": EXCLUDE_TRADING,
-    "docs/knowledge/trading/risk-policy.md": EXCLUDE_TRADING,
 }
 
 

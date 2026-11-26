@@ -73,3 +73,18 @@ councils:
     escalation:
       areas: [software]
       keywords: [decisao de produto, conselho de produto, priorizar funcionalidades, roadmap de produto]
+
+  # M-011 (P-91 = A, P-92 = B): discussoes estruturais e de projeto com as IAs que o utilizador registou em
+  # config/council-providers.yaml (vazio por omissao). Cada IA entrega a posicao por MCP (subscricao propria,
+  # custo zero); a critica entre pares e a sintese ficam no chairman interno; a saida inclui o plano executavel.
+  # Sem IAs registadas recusa-se a correr: usa um conselho interno. So manual (sem escalada automatica).
+  - id: structural
+    description: Discussoes estruturais e de projeto, com as IAs registadas pelo utilizador; entrega o projeto base e executivo (plano).
+    hitl_category: architectural
+    area: software
+    chairman: meta.chairman
+    members_from: providers
+    emits_plan: true
+    required: []
+    max_rounds: 2
+    confidence_threshold: 0.7

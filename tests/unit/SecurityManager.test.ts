@@ -72,3 +72,49 @@ describe('SecurityManager — password hash (CodeQL #5)', () => {
     ).rejects.toThrow('Invalid credentials');
   });
 });
+
+describe('SecurityManager — MFA TOTP real e bloqueio', () => {
+  it('totp bate com o vetor de teste do RFC 6238 (SHA1, T=59s -> 94287082, últimos 6 dígitos)', async () => {
+    const { totp, base32Encode } = await import('../../packages/core/src/security/SecurityManager');
+    const secret = base32Encode(Buffer.from('12345678901234567890'));
+    expect(totp(secret, 59_000)).toBe('287082');
+    expect(totp(secret, 1111111109_000)).toBe('081804');
+  });
+
+  it('já não aceita o código fixo 123456', () => {
+    const m = new SecurityManager();
+    const u = m.registerUser('mfa@test.com', 'Mfa', 'password123');
+    m.enableMFA(u.id);
+    expect(m.verifyMFA(u.id, '123456')).toBe(false);
+  });
+
+  it('aceita o código TOTP atual e recusa um errado', async () => {
+    const { totp } = await import('../../packages/core/src/security/SecurityManager');
+    const m = new SecurityManager();
+    const u = m.registerUser('mfa2@test.com', 'Mfa', 'password123');
+    const { secret } = m.enableMFA(u.id);
+    expect(m.verifyMFA(u.id, totp(secret))).toBe(true);
+    const wrong = totp(secret) === '000000' ? '000001' : '000000';
+    expect(m.verifyMFA(u.id, wrong)).toBe(false);
+    expect(m.verifyMFA(u.id, 'abc')).toBe(false);
+  });
+
+  it('com MFA ligado, a senha sozinha não faz login', async () => {
+    const { totp } = await import('../../packages/core/src/security/SecurityManager');
+    const m = new SecurityManager();
+    const u = m.registerUser('mfa3@test.com', 'Mfa', 'password123');
+    const { secret } = m.enableMFA(u.id);
+    await expect(m.login('mfa3@test.com', 'password123')).rejects.toThrow('Invalid credentials');
+    const s = await m.login('mfa3@test.com', 'password123', undefined, undefined, totp(secret));
+    expect(s.token).toBeDefined();
+  });
+
+  it('bloqueia a conta depois de falhas repetidas', async () => {
+    const m = new SecurityManager({ maxLoginAttempts: 3 });
+    m.registerUser('lock@test.com', 'L', 'password123');
+    for (let i = 0; i < 3; i++) {
+      await expect(m.login('lock@test.com', 'errada')).rejects.toThrow('Invalid credentials');
+    }
+    await expect(m.login('lock@test.com', 'password123')).rejects.toThrow('locked');
+  });
+});

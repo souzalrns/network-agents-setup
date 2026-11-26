@@ -93,7 +93,7 @@ Dois destes já têm o comportamento simulado documentado com detalhe (ver secç
 
 - **[CORRIGIDO em `d00cad5`; ver a errata] `security/SecurityManager.ts` — `verifyPassword()` devolve sempre `true`.** Comentário explícito no código: `// Em produção, verificar contra hash armazenado`. Qualquer password passa.
 - **[CORRIGIDO em `d00cad5`; ver a errata] `security/SecurityManager.ts` — hash sem salt.** `hashPassword()` usa `SHA-256` puro (`crypto.createHash('sha256')`), sem salt — vulnerável a rainbow tables. O hash gerado nem chega a ser guardado no objecto `User`.
-- **`security/SecurityManager.ts` — `verifyMFA()` aceita o código fixo `'123456'`.** Não há verificação TOTP real.
+- **[CORRIGIDO 2026-11-26] `security/SecurityManager.ts` — `verifyMFA()` aceitava o código fixo `'123456'`.** Agora é TOTP real (RFC 6238), exigido no `login` quando o MFA está ligado; há bloqueio por tentativas falhadas.
 - **`infrastructure/InfrastructureManager.ts` — `implementTokenEconomy()` usa `Math.random()` para fabricar resultado.** Tanto a estratégia escolhida como o valor de "poupança" (`savings`) são gerados aleatoriamente, não medidos — isto é uma simulação sem o comentário habitual a admiti-lo.
 - **Parâmetros de construtor recebidos e nunca usados:**
   - `compliance/ComplianceManager.ts` recebe `SecurityManager` e `CognitiveRepository` no construtor, mas nenhum dos dois é referenciado no corpo da classe (prefixados com `_`).
