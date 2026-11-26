@@ -19,7 +19,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -85,7 +85,7 @@ def render(owner: str, repo: str, job: str, facts: dict[str, str]) -> str:
     return f"""# Scorecard — {full}
 
 > Evaluated against **{job}**. Procedure: `docs/initiatives/REPO-EVAL-PLAYBOOK.md`.
-> Date: {datetime.now(timezone.utc).date().isoformat()}. Rule: evidence (file:line / test / run), not README.
+> Date: {datetime.now(UTC).date().isoformat()}. Rule: evidence (file:line / test / run), not README.
 
 ## Step 0 — Job
 `{job}` — compared only against this lane.

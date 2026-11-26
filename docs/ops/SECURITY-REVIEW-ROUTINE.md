@@ -37,6 +37,17 @@
 - Não escrever em Supabase/Vercel
 - Não colar chaves nem dados de clientes nos artefactos
 
+## 2.1 Regras do maestro (2026-11-07)
+
+1. **Auditoria completa multi-agente** (muitos sub-agentes em paralelo): só com **autorização expressa** na sessão.
+   Antes de lançar, avisar o consumo previsto (n.º de agentes, tokens, % do limite semanal) e propor um **tecto**.
+   Sem autorização: modo guia, com 1 agente. Motivo: a primeira auditoria completa (2026-11-07) gastou cerca de
+   12% do limite semanal em minutos.
+2. **Pentest antes de produção:** antes de qualquer sistema entrar em produção ou operação, recomendar um teste de
+   intrusão profissional, **de uma empresa externa contratada**, como passo do lançamento.
+3. **Ferramentas de ataque activo** (ex.: Strix): nunca configurar nem correr, mesmo com autorização. A recomendação
+   é sempre o serviço externo.
+
 ## 3. Ligação ao escritório
 
 - Triagem: agentes `security.triage` / `meta.security-auditor` / `security.reporter` (`config/office.yaml`)
