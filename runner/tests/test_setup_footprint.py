@@ -22,7 +22,10 @@ def test_tetos_estaticos_da_baseline():
     ceilings = json.loads(fp.BASELINE.read_text(encoding="utf-8"))["ceilings"]
     m = {**fp.repo_size(), **fp.deps_size()}
     assert m["repo_tracked_mb"] <= ceilings["repo_tracked_mb"], "o repo engordou: ver docs/ops/FOOTPRINT-BASELINE.json"
-    assert m["runner_deps_mb"] <= ceilings["runner_deps_mb"], "as dependências do runner engordaram"
+    # os MB das dependências mudam com o que cada máquina tem instalado (só o `--check` os compara);
+    # o que é estável em qualquer sítio é o nº de dependências directas.
+    measured = json.loads(fp.BASELINE.read_text(encoding="utf-8"))["measured"]
+    assert m["runner_deps_direct"] <= measured["runner_deps_direct"] + 2, "o runner ganhou dependências directas"
 
 
 def test_check_aponta_o_que_passa_do_teto(tmp_path, monkeypatch):

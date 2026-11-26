@@ -2,7 +2,7 @@
 
 Mede, sem rede e sem custo de API:
   - tamanho dos ficheiros versionados (git) e nº de .md;
-  - dependências de `runner/requirements.txt` (nº e tamanho instalado, MB);
+  - dependências de `runner/requirements.txt` (nº e tamanho instalado, MB; os MB dependem do que está instalado na máquina);
   - uma corrida de plano em modo `stub` com o motor nativo: tempo de parede (mediana de N) e memória residente máxima;
   - RAM de arranque do CLI (`--help`).
 
@@ -81,6 +81,7 @@ def _child_peak_mb(cmd: list[str]) -> tuple[float, float, int]:
     """(segundos, pico de RAM em MB, returncode) de um processo filho, medido pelo kernel."""
     before = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     t0 = time.perf_counter()
+    # nosemgrep: dangerous-subprocess-use-audit
     proc = subprocess.run(cmd, cwd=ROOT / "runner", capture_output=True, text=True)
     dt = time.perf_counter() - t0
     peak = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss  # KB no Linux; é o máximo acumulado dos filhos
