@@ -16,9 +16,13 @@ SCOPES = {
     "get_status": "runner:plan:read",
     "run_plan": "runner:plan:execute",
     "resume_plan": "runner:plan:resume",
+    # M-011: conselho com IAs externas (cada IA liga-se com a sua subscricao)
+    "council_get_request": "runner:council:read",
+    "council_status": "runner:council:read",
+    "council_submit_position": "runner:council:submit",
 }
 
-MUTATING = {"run_plan", "resume_plan"}
+MUTATING = {"run_plan", "resume_plan", "council_submit_position"}
 
 
 @dataclass

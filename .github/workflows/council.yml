@@ -1,0 +1,186 @@
+name: Council (conselho structural, ponte manual)
+
+# M-011: corre o conselho `structural` sem PC. As IAs externas (ChatGPT, Grok, ...) respondem na app delas;
+# as respostas entram aqui por `submit`. Só o chairman (Gemini, GEMINI_API_KEY já existente, tier grátis) corre aqui.
+# O estado de cada sessão fica na branch `council-sessions` (ver o aviso abaixo).
+#
+# AVISO: este repo é PÚBLICO. Tema, contexto e posições ficam legíveis por qualquer pessoa na branch
+# `council-sessions`. Só usar temas sem informação de negócio ou de clientes.
+#
+# Ações: start | prompt | submit | resume | decide | status
+#   start   -> abre a sessão (tema + lista de IAs) e escreve o pedido para cada IA em `prompt-<ia>.txt`
+#   submit  -> entrega a resposta colada de uma IA (`provider` + `text`)
+#   resume  -> quando todas entregaram (ou com `partial`), o chairman sintetiza e emite o plano
+#   decide  -> decisão humana (approve | reject | revise | edit); no approve grava `plan.yaml`
+# O resultado de cada passo fica em `<sessão>/last.json` na branch `council-sessions`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "start | prompt | submit | resume | decide | status"
+        required: true
+        type: choice
+        options: [start, prompt, submit, resume, decide, status]
+      session:
+        description: "Nome da sessão (a-z, 0-9, hífen)"
+        required: true
+        type: string
+      topic:
+        description: "start: tema da discussão"
+        required: false
+        type: string
+      providers:
+        description: "start: IAs registadas, separadas por vírgula (ex.: claude,gpt,grok)"
+        required: false
+        default: "claude,gpt,grok"
+        type: string
+      provider:
+        description: "submit/prompt: que IA"
+        required: false
+        type: string
+      text:
+        description: "submit: resposta da IA (JSON, pode ter texto à volta)"
+        required: false
+        type: string
+      partial:
+        description: "resume: avançar só com quem já entregou (exige quórum)"
+        required: false
+        default: false
+        type: boolean
+      decision:
+        description: "decide: approve | reject | revise | edit"
+        required: false
+        type: string
+      comment:
+        description: "decide: comentário (obrigatório no revise)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: council-sessions
+  cancel-in-progress: false
+
+jobs:
+  council:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      ACTION: ${{ inputs.action }}
+      SESSION: ${{ inputs.session }}
+      TOPIC: ${{ inputs.topic }}
+      PROVIDERS: ${{ inputs.providers }}
+      PROVIDER: ${{ inputs.provider }}
+      TEXT: ${{ inputs.text }}
+      PARTIAL: ${{ inputs.partial }}
+      DECISION: ${{ inputs.decision }}
+      COMMENT: ${{ inputs.comment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: runner/requirements.txt
+
+      - run: pip install -r runner/requirements.txt
+
+      - name: Validar entradas
+        run: |
+          [[ "$SESSION" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "::error::session inválida (a-z, 0-9, hífen, até 40)"; exit 1; }
+          [[ "$PROVIDERS" =~ ^[a-z0-9,-]{0,120}$ ]] || { echo "::error::providers inválido"; exit 1; }
+          [[ -z "$PROVIDER" || "$PROVIDER" =~ ^[a-z0-9-]{1,30}$ ]] || { echo "::error::provider inválido"; exit 1; }
+
+      - name: Trazer o estado das sessões
+        run: |
+          mkdir -p council-sessions
+          if git ls-remote --exit-code --heads origin council-sessions >/dev/null 2>&1; then
+            git fetch --depth=1 origin council-sessions
+            git archive FETCH_HEAD | tar -x -C council-sessions
+          fi
+
+      - name: Correr o passo
+        run: |
+          set -u +e  # o passo nunca aborta: o resultado (mesmo de erro) fica em last.json
+          OUT="$GITHUB_WORKSPACE/council-sessions/$SESSION"
+          cd runner
+          export PYTHONPATH="$PWD"
+          council() { python -m plan_runner.council_session "$@"; }
+
+          # o cadastro de IAs vem da sessão (ou do input, no start); nunca é commitado em main
+          if [[ "$ACTION" == "start" ]]; then
+            LIST="$PROVIDERS"
+          else
+            LIST=$(python - "$OUT/council.json" <<'PY'
+          import json, sys
+          print(",".join(json.load(open(sys.argv[1]))["panel"]["providers"]))
+          PY
+          )
+          fi
+          python - "$LIST" <<'PY'
+          import sys, yaml
+          ids = [i for i in sys.argv[1].split(",") if i]
+          open("../config/council-providers.yaml", "w").write(
+              yaml.safe_dump({"version": 1, "providers": [{"id": i, "kind": "mcp"} for i in ids]}))
+          PY
+
+          mkdir -p "$OUT"
+          case "$ACTION" in
+            start)
+              [[ -n "$TOPIC" ]] || { echo "::error::falta o tema"; exit 1; }
+              rm -rf "$OUT"
+              council run structural "$TOPIC" --out "$OUT" --no-memory > "$OUT.last" 2>&1; rc=$?
+              mkdir -p "$OUT"; mv "$OUT.last" "$OUT/last.json"
+              for p in ${LIST//,/ }; do council prompt "$OUT" "$p" > "$OUT/prompt-$p.txt" 2>>"$OUT/last.json" || true; done
+              ;;
+            prompt)
+              council prompt "$OUT" "$PROVIDER" > "$OUT/prompt-$PROVIDER.txt" 2> "$OUT/last.json"; rc=$?
+              ;;
+            submit)
+              printf '%s' "$TEXT" > "$RUNNER_TEMP/resposta.txt"
+              council submit "$OUT" "$PROVIDER" --file "$RUNNER_TEMP/resposta.txt" > "$OUT/last.json" 2>&1; rc=$?
+              ;;
+            resume)
+              if [[ "$PARTIAL" == "true" ]]; then council resume "$OUT" --partial > "$OUT/last.json" 2>&1; rc=$?
+              else council resume "$OUT" > "$OUT/last.json" 2>&1; rc=$?; fi
+              ;;
+            decide)
+              council decide "$OUT" "$DECISION" --comment "$COMMENT" --by maestro > "$OUT/last.json" 2>&1; rc=$?
+              ;;
+            status)
+              council status "$OUT" > "$OUT/last.json" 2>&1; rc=$?
+              ;;
+          esac
+          echo "rc=$rc"; cat "$OUT/last.json"
+          # a chave GEMINI nunca é escrita; o cadastro temporário não segue para o commit
+          rm -f ../config/council-providers.yaml; git -C .. checkout -- config/council-providers.yaml 2>/dev/null || true
+          # o passo não falha o job por veredicto/estado de espera: o resultado está em last.json
+          exit 0
+
+      - name: Gravar o estado na branch council-sessions
+        run: |
+          set -euo pipefail
+          WT="$RUNNER_TEMP/wt"
+          if git ls-remote --exit-code --heads origin council-sessions >/dev/null 2>&1; then
+            git fetch origin council-sessions
+            git worktree add "$WT" FETCH_HEAD
+            git -C "$WT" checkout -B council-sessions
+          else
+            git worktree add --detach "$WT"
+            git -C "$WT" checkout --orphan council-sessions
+            git -C "$WT" rm -rf . >/dev/null 2>&1 || true
+          fi
+          rsync -a --delete --exclude=.git council-sessions/ "$WT/"
+          cd "$WT"
+          git config user.name "council-bot"
+          git config user.email "council-bot@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "council: $ACTION $SESSION"
+          git push origin council-sessions
