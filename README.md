@@ -122,6 +122,8 @@ python -m plan_runner resume ../pilots/demo --decision approve
 
 **Minimal install:** `pip install -e .` installs the core only (6 small packages, about 23 MB). Heavier parts are opt-in extras: `.[langgraph]`, `.[mcp]`, `.[memory]`, `.[eval]`, `.[web]`.
 
+**Low-capacity profile:** agent memory can live in one SQLite file (`L4_SQLITE=memory.db`), no Postgres needed. See [`docs/ops/EDGE-PROFILE.md`](./docs/ops/EDGE-PROFILE.md).
+
 Inspect `../pilots/demo/status.json` (final state), `events.jsonl` (the full audit log) and `artifacts/`. Full CLI reference: [`runner/README.md`](./runner/README.md).
 
 ## Repository map
