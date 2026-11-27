@@ -8,3 +8,7 @@ markitdown[docx,pdf,xlsx]>=0.1.9
 # Pillow chega por transitiva (markitdown). Mínimo 13.0.0: abaixo há CVE-2026-112900 (RCE pelo
 # Ghostscript em EPS), CVE-2026-112393 (TIFF) e CVE-2026-112403 (miniatura JPEG) - 2026-10-23.
 pillow>=13.0.0
+# lxml 6.2.0 (2026-11) parte a conversão de .docx do markitdown 0.1.9: "Could not find the body element".
+# Confirmado: com 6.1.0 passam os 8 testes de ingestão .docx, com 6.2.0 falham todos. Subir o tecto só depois de
+# correr runner/tests/test_ingest_*.py com a versão nova.
+lxml>=5.3,<6.2
