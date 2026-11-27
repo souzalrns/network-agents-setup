@@ -14,3 +14,21 @@ max_delegation_depth: 3
 rules:
   - { agent: "*", capability: "tool:shell*", effect: approve }
   - { agent: "*", capability: "tool:send_*", effect: approve }
+  # G1.5 (P-95): nenhum passo do PCU envia, altera ou cancela ordens, mexe em saldos, limites ou chaves. A execução
+  # (paper/testnet/live) vive no oss/economia-trader, com o seu portão (safety.py). `deny` ganha sempre, até a uma delegação.
+  # Ler dados de mercado (`get_order_book`, `fetch_ticker`) continua permitido: as regras usam verbos de acção, não a palavra "order".
+  - { agent: "*", capability: "tool:place_*", effect: deny }
+  - { agent: "*", capability: "tool:create_order*", effect: deny }
+  - { agent: "*", capability: "tool:submit_order*", effect: deny }
+  - { agent: "*", capability: "tool:send_order*", effect: deny }
+  - { agent: "*", capability: "tool:cancel_order*", effect: deny }
+  - { agent: "*", capability: "tool:modify_order*", effect: deny }
+  - { agent: "*", capability: "tool:amend_order*", effect: deny }
+  - { agent: "*", capability: "tool:execute_order*", effect: deny }
+  - { agent: "*", capability: "tool:execute_trade*", effect: deny }
+  - { agent: "*", capability: "tool:close_position*", effect: deny }
+  - { agent: "*", capability: "tool:set_leverage*", effect: deny }
+  - { agent: "*", capability: "tool:*withdraw*", effect: deny }
+  - { agent: "*", capability: "tool:transfer_*", effect: deny }
+  - { agent: "*", capability: "tool:*api_key*", effect: deny }
+  - { agent: "*", capability: "tool:*api_secret*", effect: deny }

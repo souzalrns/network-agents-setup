@@ -5,8 +5,8 @@
 > **Histórico** (notas de sessão, §7 histórico, §8 contradições, decisões já tomadas do §10, §11 aliases e §12 limites): [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md). Este ficheiro guarda só o que está vivo.
 >
 > **Contagens** (geradas: `cd runner && python -m plan_runner.pendencias --fix`; o CI falha se divergirem):
-> - **137 itens vivos** (§4): ABERTO 94, EM CURSO 15, BLOQUEADO 28;
-> - **153 linhas de histórico** (no histórico, §7): 131 fechadas, 22 obsoletas;
+> - **136 itens vivos** (§4): ABERTO 93, EM CURSO 15, BLOQUEADO 28;
+> - **154 linhas de histórico** (no histórico, §7): 132 fechadas, 22 obsoletas;
 > - **44 contradições resolvidas** (no histórico, §8);
 > - **95 decisões** A/B/C: 95 tomadas (no histórico, §10) e **0 por decidir** (§10 abaixo).
 
@@ -86,7 +86,7 @@
 | AU-, EX-, INIT-, SEC-, B*, A*, G*, H*, I*, J*, P*, U* | Séries antigas | Mantêm-se quando são únicas; quando colidem, a linha usa um ID novo e cita o antigo na coluna "IDs antigos" |
 
 
-## 4. Tabela única (137 itens vivos)
+## 4. Tabela única (136 itens vivos)
 
 Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → backlog (G/H/I).
 
@@ -161,7 +161,6 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | G1.2 | Trading: World Monitor + Finance News Aggregator (licença AGPL a avaliar) | FALTA-DECIDIR | ABERTO | DEV | Média | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27)  | A5 §5.4 (grupos G–J); EP:1618-2428 | F20; F21 | VERIFICADO |
 | G1.3 | Trading: competências dos papéis financeiros | FALTA-DECIDIR | ABERTO | DEV | Alta | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27)  | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
 | G1.4 | Trading: contratos de dados entre papéis | FALTA-DECIDIR | ABERTO | DEV | Alta | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27)  | A5 §5.4 (grupos G–J); EP:1618-2428 | D7 da Fase 3 (handoff) | VERIFICADO |
-| G1.5 | Trading: isolar credenciais / garantir que não há execução real (pré-requisito de ordens autónomas) | FALTA-DECIDIR | ABERTO | DEV | Crítica | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27); gate §6.3 do E | A5 §5.4 (grupos G–J); EP:1618-2428 | — | VERIFICADO |
 | G1.6 | Trading: MiroFish e repos de simulação (AGPL) | FALTA-DECIDIR | ABERTO | DEV | Baixa | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27)  | A5 §5.4 (grupos G–J); EP:1618-2428 | B6 (ST) | VERIFICADO |
 | G1.7 | Trading: agente de trading em simulação | FALTA-DECIDIR | ABERTO | DEV | Alta | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27)  | A5 §5.4 (grupos G–J); EP:1618-2428 | B3 (ST:101) | VERIFICADO |
 | G1.8 | Trading: agente de investimentos | FALTA-DECIDIR | ABERTO | DEV | Média | — (D-EP8 / P-79 = A, 2026-10-23; desbloqueado por P-95 em 2026-11-27)  | A5 §5.4 (grupos G–J); EP:1618-2428 | B12 (secção 09-14) | VERIFICADO |
@@ -314,7 +313,7 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 | Dono | N.º | IDs |
 |---|---:|---|
 | CLAUDE | 25 | F1b, F2-DISC-1, SEC-SCA-2, AUDITRON-1, AUDITRON-2, PLANWRIGHT-1, PLANWRIGHT-2, W-003, W-010, EX-B7, AU-22b, M-007, F3c-DESIGN-1, ING-008, ING-009, R-007, SKILL-SCOUT-2, S-006, AU-11b, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-A3, OFFICE-3D-1, COM-1 |
-| DEV | 69 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.5, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
+| DEV | 68 | F0.6, F0.12, S27, S19, S21, S28, S32, A12, A13, A19, A22, EX-C3, EX-C4, AU-25, T-003, W-001, W-004, M-005, L4-1b, L4-4, Q-001, E-001, M7, G6, E15, G1.2, G1.3, G1.4, G1.6, G1.7, G1.8, G1.9, G1.10, G1.11, G1.12, G1.13, G1.14, G2.2, G2.3, G2.4, G3.1, G3.2, G3.3, G4.1, G4.2, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-004, T-005, S-003, H-004, F3b-VAL-1, ING-010, ING-011, GOV-PRIV-2, S-005 |
 | AMBOS | 43 | F3, F6, R-001, AU-44, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, B2b, B2c, A9, B16, B1-bis-C, T-001, T-002, M-001, M-002, M-003, M-004, M-006, M-011, L4-2, L4-3, Q-002, E-002, AU-36, INIT-093, G1.1, G2.1, S-004, F3-MCP-1, E-004, R-008, R-009, R-010, SKILL-EXT-1, SKILL-SCOUT-3, GOV-42001-1, GOV-RET-2, ING-012, OFFICE-A2, OFFICE-A4, OFFICE-VOZ-1 |
 
 **Só do DEV, sem código** (refeito na revisão de 2026-10-07; a lista anterior citava merges e SELECTs já feitos):
@@ -334,15 +333,15 @@ Ordenada por grupo: F → R → S → C → T → W → M/L4/Q → E → H → b
 
 | Sev | N.º | IDs |
 |---|---:|---|
-| Crítica | 1 | G1.5 |
+| Crítica | 0 |  |
 | Alta | 11 | F3, G1.1, G1.3, G1.4, G1.7, G1.11, G1.14, G2.1, G2.2, G2.3, G2.4 |
 | Média | 52 | F0.6, F6, AU-44, S27, S19, S32, AUDITRON-1, PLANWRIGHT-1, B2b, B2c, A9, A13, A22, EX-C3, EX-C4, B1-bis-C, W-001, W-004, EX-B7, M-001, M-002, M-005, M-006, M-007, M-011, L4-1b, L4-3, Q-001, Q-002, E-001, E-002, AU-36, M7, INIT-093, G1.2, G1.8, G1.9, G4.1, G4.2, T-004, S-004, F3-MCP-1, F3b-VAL-1, ING-009, R-010, SKILL-SCOUT-2, GOV-42001-1, S-006, OFFICE-A2, OFFICE-A3, OFFICE-A4, COM-1 |
 | Baixa | 73 | F0.12, F1b, F2-DISC-1, R-001, S21, S28, SEC-3, SEC-STRIX-1, SEC-SUITE-1, SEC-LLMRT-1, SEC-SCA-2, AUDITRON-2, PLANWRIGHT-2, A12, A19, B16, AU-25, T-001, T-002, T-003, W-003, W-010, AU-22b, M-003, M-004, L4-2, L4-4, G6, E15, G1.6, G1.10, G1.12, G1.13, G3.1, G3.2, G3.3, H1, H2, H3, H4, I1, I2, I3, I4, I5, I6, I7, I9, I10, I11, T-005, S-003, H-004, F3c-DESIGN-1, E-004, ING-008, ING-010, ING-011, R-007, R-008, R-009, SKILL-EXT-1, SKILL-SCOUT-3, GOV-RET-2, GOV-PRIV-2, S-005, AU-11b, ING-012, RUNNER-WHY-1, TRADER-SIM-1, TRADER-RISK-1, OFFICE-3D-1, OFFICE-VOZ-1 |
 
-**Por estado:** ABERTO 94 · EM CURSO 15 · BLOQUEADO 28.
+**Por estado:** ABERTO 93 · EM CURSO 15 · BLOQUEADO 28.
 **NÃO VERIFICADO (3):** S27, A22, T-003.
 
-## 7. Histórico (153 linhas: 131 FECHADO, 22 OBSOLETO)
+## 7. Histórico (154 linhas: 132 FECHADO, 22 OBSOLETO)
 
 Movido para [`PENDENCIAS-HISTORICO.md`](./PENDENCIAS-HISTORICO.md) (H-01, 2026-10-25).
 
