@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "network-agents-setup"
+version = "0.1.0"
+description = "PCU: motor de planos para agentes de IA, com governança local e worker local."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+# Núcleo: o mínimo para correr planos (stub, external, worker local). Medido: cerca de 23 MB instalados.
+dependencies = [
+  "PyYAML>=6.0.3",
+  "httpx>=0.28.1",
+  "jsonschema>=4.26.0",
+  "doneproof==0.1.0",
+  "hitlwright==0.1.0",
+  "tokenwright==0.1.0",
+]
+
+[project.optional-dependencies]
+langgraph = ["langgraph>=0.6.11", "langgraph-checkpoint-sqlite>=3.1.3"]   # motor LangGraph
+mcp = ["mcp==1.30.0"]                                                      # cliente do MCP de conhecimento
+memory = ["psycopg[binary]>=3.3.9"]                                        # memória L4 / Supabase em Postgres
+eval = ["groundwright==0.1.0"]                                             # avaliação L5 (grounding)
+web = ["fetchtron==0.2.0"]                                                 # scripts/web_fetch.py
+dev = ["pytest-cov>=5.0.0"]                                                # cobertura nos testes
+all = ["network-agents-setup[langgraph,mcp,memory,eval,web,dev]"]
+
+[project.scripts]
+plan-runner = "plan_runner.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["runner"]
+include = ["plan_runner*"]

@@ -120,6 +120,8 @@ python -m plan_runner resume ../pilots/demo --decision approve
 
 **Local model (no paid key):** `--worker local` runs steps on Ollama, llama.cpp or any OpenAI-compatible server on your own machine, at zero cost. See [`docs/ops/LOCAL-WORKER.md`](./docs/ops/LOCAL-WORKER.md).
 
+**Minimal install:** `pip install -e .` installs the core only (6 small packages, about 23 MB). Heavier parts are opt-in extras: `.[langgraph]`, `.[mcp]`, `.[memory]`, `.[eval]`, `.[web]`.
+
 Inspect `../pilots/demo/status.json` (final state), `events.jsonl` (the full audit log) and `artifacts/`. Full CLI reference: [`runner/README.md`](./runner/README.md).
 
 ## Repository map
