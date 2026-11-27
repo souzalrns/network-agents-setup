@@ -52,8 +52,8 @@ class MemoryStore:
 
 
 def store_from_env() -> MemoryStore | None:
-    """DATABASE_URL (o mesmo do J3/RAG) => store; sem ele, None (L4 desligada)."""
-    if not os.environ.get("DATABASE_URL", "").strip():
+    """DATABASE_URL (o mesmo do J3/RAG) ou L4_SQLITE (ficheiro local) => store; sem eles, None (L4 desligada)."""
+    if not os.environ.get("DATABASE_URL", "").strip() and not os.environ.get("L4_SQLITE", "").strip():
         return None
     embed = None
     if os.environ.get("GEMINI_API_KEY"):

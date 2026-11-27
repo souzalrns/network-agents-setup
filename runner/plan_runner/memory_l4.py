@@ -32,6 +32,7 @@ import argparse
 import getpass
 import json
 import os
+import sqlite3
 import sys
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
@@ -41,6 +42,7 @@ from pathlib import Path
 from typing import Any
 
 from . import hitl
+from . import memory_l4_sqlite as sq
 
 SCOPE_KINDS = ("global", "org", "project", "user", "agent")
 AGENT_WRITABLE = ("project", "user", "agent")  # nunca org/global (scopes.md:23-24)
@@ -93,20 +95,46 @@ def _validate_scope(scope: Scope | None) -> Scope:
     return scope
 
 
+def sqlite_path(database_url: str | None = None) -> str | None:
+    """Caminho do SQLite do perfil de pouca capacidade, ou None (usa Postgres).
+
+    `DATABASE_URL=sqlite:///x.db` ou, sem DATABASE_URL, `L4_SQLITE=x.db`.
+    """
+    url = (database_url or os.environ.get("DATABASE_URL", "")).strip()
+    if url.startswith("sqlite:"):
+        return sq.path_from_url(url)
+    if not url:
+        return os.environ.get("L4_SQLITE", "").strip() or None
+    return None
+
+
 @contextmanager
 def connect(database_url: str | None = None) -> Iterator[Any]:
-    """Ligacao ao Postgres da L4: o mesmo DATABASE_URL do J3/RAG (D3)."""
+    """Ligacao a L4: Postgres (DATABASE_URL, o mesmo do J3/RAG, D3) ou SQLite (perfil de pouca capacidade)."""
+    lite = sqlite_path(database_url)
+    if lite is not None:
+        db = sq.open_db(lite)
+        try:
+            yield db
+        finally:
+            db.close()
+        return
     import psycopg
     from psycopg.rows import dict_row
 
     url = (database_url or os.environ.get("DATABASE_URL", "")).strip()
     if not url:
-        raise L4Error("DATABASE_URL nao definida (a L4 vive no Supabase do projecto agent-network-memory)")
+        raise L4Error("DATABASE_URL nao definida (a L4 vive no Supabase do projecto agent-network-memory); "
+                      "para um ficheiro local usa L4_SQLITE=caminho.db")
     conn = psycopg.connect(url, autocommit=False, row_factory=dict_row)
     try:
         yield conn
     finally:
         conn.close()
+
+
+def _lite(conn: Any) -> bool:
+    return isinstance(conn, sqlite3.Connection)
 
 
 def _embed(embed: Embed | None, text: str) -> tuple[list[float] | None, str | None]:
@@ -128,6 +156,8 @@ def _row(cur) -> dict[str, Any] | None:
 
 
 def get(conn, memory_id: str) -> dict[str, Any] | None:
+    if _lite(conn):
+        return sq.get(conn, memory_id)
     with conn.cursor() as cur:
         # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
         # nosemgrep: sqlalchemy-execute-raw-query
@@ -183,6 +213,14 @@ def remember(
     meta = dict(metadata or {})
     if embed_error:
         meta["embedding_error"] = embed_error
+    if _lite(conn):
+        row = sq.insert(conn, scope_kind=scope.kind, scope_id=scope.id, subject=subject, statement=text, status=status,
+                        confidence=confidence, source_run_id=source_run_id, tags=list(tags or []), metadata=meta,
+                        vector=vector, supersedes=supersedes, actor=actor, expires_at=expires_at)
+        if old is not None and status == "active":
+            sq.supersede(conn, old["id"], row["id"])
+        conn.commit()
+        return row
     with conn.cursor() as cur:
         # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
         # nosemgrep: sqlalchemy-execute-raw-query
@@ -228,6 +266,9 @@ def recall(
     if not 1 <= int(limit) <= 50:
         raise L4Error("limit tem de estar em 1..50 (contracts.md:46)")
     vector, _ = _embed(embed, query or "")
+    if _lite(conn):
+        return sq.recall(conn, chain=[(s.kind, s.id) for s in scopes], vector=vector, limit=int(limit),
+                         tags=list(tags) if tags else None, include_candidates=include_candidates)
     with conn.cursor() as cur:
         cur.execute(
             "SELECT * FROM recall_l4(%s::vector, %s::text[], %s::text[], %s, %s::text[], %s)",
@@ -241,6 +282,13 @@ def recall(
 
 def forget(conn, memory_id: str, *, actor: str, reason: str | None = None) -> dict[str, Any]:
     """Tombstone (contracts.md:54-68): status archived. Nunca apaga. Idempotente."""
+    if _lite(conn):
+        sq.forget_row(conn, memory_id, actor, reason)
+        conn.commit()
+        row = sq.get(conn, memory_id)
+        if row is None:
+            raise L4Error(f"memoria {memory_id} nao existe")
+        return row
     with conn.cursor() as cur:
         # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
         # nosemgrep: sqlalchemy-execute-raw-query
@@ -269,6 +317,10 @@ def promote(conn, memory_id: str, *, actor: str) -> dict[str, Any]:
         return row
     if row["status"] != "candidate":
         raise L4Error(f"so candidate pode ser promovida (esta {row['status']})")
+    if _lite(conn):
+        row = sq.promote_row(conn, memory_id, actor)
+        conn.commit()
+        return row
     with conn.cursor() as cur:
         # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS (linha 51); os valores vao como parametros %s.
         # nosemgrep: sqlalchemy-execute-raw-query
@@ -285,6 +337,8 @@ def promote(conn, memory_id: str, *, actor: str) -> dict[str, Any]:
 
 def candidates(conn, *, scopes: list[Scope] | None = None, limit: int = 50) -> list[dict[str, Any]]:
     """Fila de revisao: candidates (todas ou de uma cadeia de ambitos)."""
+    if _lite(conn):
+        return sq.candidates(conn, [(s.kind, s.id) for s in scopes] if scopes else None, limit)
     sql = f"SELECT {COLUMNS} FROM memory_l4 WHERE status = 'candidate'"
     params: list[Any] = []
     if scopes:
