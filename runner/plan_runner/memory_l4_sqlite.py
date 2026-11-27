@@ -110,6 +110,8 @@ def _row(r: sqlite3.Row | None) -> dict[str, Any] | None:
 
 
 def get(conn: sqlite3.Connection, memory_id: str) -> dict[str, Any] | None:
+    # SEC-2d falso positivo: a f-string so interpola a constante COLUMNS; os valores vao como parametros `?`.
+    # nosemgrep: sqlalchemy-execute-raw-query
     return _row(conn.execute(f"SELECT {COLUMNS} FROM memory_l4 WHERE id = ?", (memory_id,)).fetchone())  # noqa: S608
 
 
@@ -162,6 +164,8 @@ def candidates(conn: sqlite3.Connection, scopes: list[tuple[str, str]] | None, l
             params += [kind, sid]
     sql += " ORDER BY created_at LIMIT ?"
     params.append(limit)
+    # SEC-2d falso positivo: `sql` so junta COLUMNS e placeholders `?`; os valores vao em `params`.
+    # nosemgrep: sqlalchemy-execute-raw-query
     return [_row(r) for r in conn.execute(sql, params).fetchall()]  # type: ignore[misc]
 
 
@@ -180,6 +184,8 @@ def recall(conn: sqlite3.Connection, *, chain: list[tuple[str, str]], vector: li
     now = _now()
     out: list[dict[str, Any]] = []
     for kind, sid in chain:
+        # SEC-2d falso positivo: a f-string so interpola COLUMNS e marcas `?`; os valores vao como parametros.
+        # nosemgrep: sqlalchemy-execute-raw-query
         rows = conn.execute(
             f"SELECT {COLUMNS}, embedding FROM memory_l4 WHERE scope_kind = ? AND scope_id = ? "  # noqa: S608
             f"AND status IN ({marks}) AND (expires_at IS NULL OR expires_at > ?)", (kind, sid, *statuses, now)).fetchall()
