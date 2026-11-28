@@ -72,4 +72,6 @@ jobs:
           NICHO: ${{ inputs.nicho }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python3 scripts/leads_to_supabase.py work/results.json "$QUERY" "$NICHO"
+        run: |
+          pip install -q requests
+          python3 scripts/leads_to_supabase.py work/results.json "$QUERY" "$NICHO"

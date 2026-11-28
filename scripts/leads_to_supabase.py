@@ -5,15 +5,13 @@ Uso: leads_to_supabase.py <results.json> <query> [nicho]
 
 - Sem SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY faz só um resumo (dry-run) e sai com 0.
 - Duplicados (mesmo place_key) são ignorados: nunca sobrescreve o status de um lead já trabalhado.
-- Só stdlib, para não gastar tempo de instalação no runner.
+- Dry-run só com stdlib; para gravar usa `requests`.
 """
 from __future__ import annotations
 
-import http.client
 import json
 import os
 import sys
-import urllib.parse
 
 
 def parse_line(raw: dict, query: str, nicho: str | None) -> dict | None:
@@ -65,8 +63,9 @@ def load(path: str, query: str, nicho: str | None) -> list[dict]:
 
 
 def upload(rows: list[dict], url: str, key: str) -> None:
-    parts = urllib.parse.urlsplit(url)
-    if parts.scheme != "https" or not parts.hostname:
+    import requests  # só é preciso para gravar (o dry-run corre sem dependências)
+
+    if not url.startswith("https://"):
         raise SystemExit("SUPABASE_URL tem de começar por https://")
     headers = {
         "apikey": key,
@@ -74,21 +73,10 @@ def upload(rows: list[dict], url: str, key: str) -> None:
         "Content-Type": "application/json",
         "Prefer": "resolution=ignore-duplicates,return=minimal",
     }
-    conn = http.client.HTTPSConnection(parts.hostname, parts.port or 443, timeout=60)
-    try:
-        for i in range(0, len(rows), 200):
-            conn.request(
-                "POST",
-                "/rest/v1/leads?on_conflict=place_key",
-                body=json.dumps(rows[i : i + 200]),
-                headers=headers,
-            )
-            resp = conn.getresponse()
-            resp.read()
-            if resp.status >= 300:
-                raise SystemExit(f"Supabase respondeu {resp.status}")
-    finally:
-        conn.close()
+    endpoint = f"{url.rstrip('/')}/rest/v1/leads?on_conflict=place_key"
+    for i in range(0, len(rows), 200):
+        resp = requests.post(endpoint, headers=headers, data=json.dumps(rows[i : i + 200]), timeout=60)
+        resp.raise_for_status()
 
 
 def main() -> int:
