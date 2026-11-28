@@ -9,10 +9,11 @@ Uso: leads_to_supabase.py <results.json> <query> [nicho]
 """
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
-import urllib.request
+import urllib.parse
 
 
 def parse_line(raw: dict, query: str, nicho: str | None) -> dict | None:
@@ -64,25 +65,30 @@ def load(path: str, query: str, nicho: str | None) -> list[dict]:
 
 
 def upload(rows: list[dict], url: str, key: str) -> None:
-    if not url.startswith("https://"):
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme != "https" or not parts.hostname:
         raise SystemExit("SUPABASE_URL tem de começar por https://")
-    endpoint = f"{url.rstrip('/')}/rest/v1/leads?on_conflict=place_key"
-    for i in range(0, len(rows), 200):
-        req = urllib.request.Request(
-            endpoint,
-            data=json.dumps(rows[i : i + 200]).encode(),
-            method="POST",
-            headers={
-                "apikey": key,
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json",
-                "Prefer": "resolution=ignore-duplicates,return=minimal",
-            },
-        )
-        # esquema https validado acima (sem file://)
-        with urllib.request.urlopen(req, timeout=60) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+    headers = {
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=ignore-duplicates,return=minimal",
+    }
+    conn = http.client.HTTPSConnection(parts.hostname, parts.port or 443, timeout=60)
+    try:
+        for i in range(0, len(rows), 200):
+            conn.request(
+                "POST",
+                "/rest/v1/leads?on_conflict=place_key",
+                body=json.dumps(rows[i : i + 200]),
+                headers=headers,
+            )
+            resp = conn.getresponse()
+            resp.read()
             if resp.status >= 300:
                 raise SystemExit(f"Supabase respondeu {resp.status}")
+    finally:
+        conn.close()
 
 
 def main() -> int:
