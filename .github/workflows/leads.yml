@@ -1,0 +1,77 @@
+name: leads
+
+# Ferramenta OPCIONAL (desligada por omissão: só corre quando alguém a dispara à mão).
+# Procura empresas no Google Maps (gosom/google-maps-scraper, MIT) e grava na tabela `leads`
+# do Supabase do utilizador (scripts/create_leads_table.sql). Sem custo: repo público, runner gratuito.
+#
+# Só dados de EMPRESAS. Ver docs/ops/LEADS.md (RGPD/LGPD e termos do Google Maps).
+
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'Pesquisa, ex.: "restaurantes Porto"'
+        required: true
+        type: string
+      nicho:
+        description: 'Etiqueta livre para filtrar depois (opcional)'
+        required: false
+        type: string
+      depth:
+        description: 'Profundidade do scroll (1 = ~20 resultados; mais = mais resultados e mais tempo)'
+        required: false
+        default: '1'
+        type: string
+      email:
+        description: 'Procurar email nos sites das empresas'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: leads
+  cancel-in-progress: false
+
+jobs:
+  leads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Validar entradas
+        env:
+          DEPTH: ${{ inputs.depth }}
+        run: |
+          case "$DEPTH" in ''|*[!0-9]*) echo "depth tem de ser um número"; exit 1;; esac
+          [ "$DEPTH" -le 10 ] || { echo "depth máximo: 10"; exit 1; }
+
+      - name: Extrair do Google Maps
+        env:
+          QUERY: ${{ inputs.query }}
+          DEPTH: ${{ inputs.depth }}
+          WITH_EMAIL: ${{ inputs.email }}
+        run: |
+          mkdir -p work
+          printf '%s\n' "$QUERY" > work/queries.txt
+          EXTRA=""
+          [ "$WITH_EMAIL" = "true" ] && EXTRA="-email"
+          docker run --rm -v "$PWD/work:/work" gosom/google-maps-scraper:latest \
+            -input /work/queries.txt -results /work/results.json -json \
+            -depth "$DEPTH" -lang pt $EXTRA -exit-on-inactivity 3m
+          ls -la work
+
+      - name: Gravar no Supabase
+        env:
+          QUERY: ${{ inputs.query }}
+          NICHO: ${{ inputs.nicho }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          pip install -q requests
+          python3 scripts/leads_to_supabase.py work/results.json "$QUERY" "$NICHO"

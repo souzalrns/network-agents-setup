@@ -40,6 +40,7 @@ funciona em modo gratuito; os avisos dizem quando uma escala ou um uso diferente
 | **LangGraph, CrewAI, PydanticAI** | Frameworks de agentes (todos MIT) | Não | Não | Dependências opcionais ou referência de desenho; o repo tem runtime próprio. |
 | **Wren AI** | Perguntas em linguagem natural sobre bases de dados (texto para SQL), com camada semântica e servidor MCP | Não (núcleo Apache-2.0; existe versão comercial) | Sim | Dá a um modelo acesso a dados reais: ligar **só com utilizador de base de dados só de leitura**. Precisa de chave de um modelo de linguagem. |
 | **agenttrace** | Relatórios locais de custo, tokens e lentidão das sessões de agentes de código | Não | Sim, baixo | Corre localmente e não envia prompts para fora. Instala-se por script (`curl … \| sh`): ler o script antes de correr e confirmar a licença no repositório. Só serve a quem usa o Claude Code no próprio computador. |
+| **Leads (gosom/google-maps-scraper)** | Prospeção B2B: extrai empresas, contactos e sites do Google Maps para uma tabela `leads` | Não (MIT, runner gratuito) | Sim, moderado | Só dados de **empresas**; RGPD/LGPD e termos do Google Maps. Guia em [`LEADS.md`](./LEADS.md). |
 
 ## Práticas adoptadas (não são instalação)
 
