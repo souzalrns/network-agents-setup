@@ -65,6 +65,7 @@ jobs:
             -input /work/queries.txt -results /work/results.json -json \
             -depth "$DEPTH" -lang pt $EXTRA -exit-on-inactivity 3m
           ls -la work
+          head -n1 work/results.json | python3 -c "import sys,json; print('Campos:', sorted(json.loads(sys.stdin.read()).keys()))"
 
       - name: Gravar no Supabase
         env:

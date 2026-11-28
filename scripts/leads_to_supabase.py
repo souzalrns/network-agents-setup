@@ -31,7 +31,7 @@ def parse_line(raw: dict, query: str, nicho: str | None) -> dict | None:
         "categoria": raw.get("category") or None,
         "morada": morada or None,
         "telefone": raw.get("phone") or None,
-        "website": raw.get("website") or None,
+        "website": raw.get("web_site") or raw.get("website") or None,
         "email": emails[0] if emails else None,
         "emails": emails,
         "rating": raw.get("review_rating") or None,
