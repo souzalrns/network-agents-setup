@@ -64,6 +64,8 @@ def load(path: str, query: str, nicho: str | None) -> list[dict]:
 
 
 def upload(rows: list[dict], url: str, key: str) -> None:
+    if not url.startswith("https://"):
+        raise SystemExit("SUPABASE_URL tem de começar por https://")
     endpoint = f"{url.rstrip('/')}/rest/v1/leads?on_conflict=place_key"
     for i in range(0, len(rows), 200):
         req = urllib.request.Request(
@@ -77,7 +79,8 @@ def upload(rows: list[dict], url: str, key: str) -> None:
                 "Prefer": "resolution=ignore-duplicates,return=minimal",
             },
         )
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        # esquema https validado acima (sem file://)
+        with urllib.request.urlopen(req, timeout=60) as resp:  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             if resp.status >= 300:
                 raise SystemExit(f"Supabase respondeu {resp.status}")
 
