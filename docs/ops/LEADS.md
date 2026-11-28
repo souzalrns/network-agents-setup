@@ -21,9 +21,15 @@ Actions → **leads** → Run workflow, ou por linha de comando:
 gh workflow run leads.yml -f query="restaurantes Porto" -f nicho="restaurantes" -f depth=1
 ```
 
-`depth=1` traz cerca de 20 empresas por pesquisa. Subir devagar (máximo 10): mais resultados, mais tempo,
-mais risco de bloqueio pelo Google. Uma pesquisa por cidade e por tipo de negócio dá melhor resultado
-do que uma pesquisa enorme.
+O Google Maps limita cada pesquisa: `depth=1` traz cerca de 16 empresas e `depth=8` cerca de 50 (medido em
+"restaurantes Porto"). Mais profundidade não passa muito disso. **Para cobrir uma cidade, use várias pesquisas
+por zona**, separadas por `;` (até 30 por corrida), por exemplo as freguesias do Porto:
+
+```bash
+gh workflow run leads.yml -f nicho="restaurantes" -f depth=5 -f query="restaurantes Bonfim; restaurantes Campanhã; restaurantes Paranhos; restaurantes Ramalde; restaurantes Cedofeita; restaurantes Sé Porto; restaurantes Miragaia; restaurantes Foz do Douro; restaurantes Lordelo do Ouro; restaurantes Aldoar; restaurantes Massarelos; restaurantes Vitória Porto"
+```
+
+Subir a profundidade aumenta o tempo e o risco de bloqueio pelo Google. Os duplicados entre zonas são ignorados.
 
 Ver os resultados no Supabase: tabela `leads`, filtrar por `status = 'novo'` e por `nicho`.
 Estados: `novo`, `contactado`, `respondeu`, `cliente`, `recusou`, `descartado`.

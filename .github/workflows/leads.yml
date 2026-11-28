@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       query:
-        description: 'Pesquisa, ex.: "restaurantes Porto"'
+        description: 'Pesquisa(s) separadas por ; ex.: "restaurantes Bonfim; restaurantes Paranhos"'
         required: true
         type: string
       nicho:
@@ -18,9 +18,9 @@ on:
         required: false
         type: string
       depth:
-        description: 'Profundidade do scroll (1 = ~20 resultados; mais = mais resultados e mais tempo)'
+        description: 'Profundidade do scroll (1 = ~16 resultados; 8 = ~50; o Google limita cada pesquisa, por isso use várias pesquisas por zona)'
         required: false
-        default: '1'
+        default: '5'
         type: string
       email:
         description: 'Procurar email nos sites das empresas'
@@ -38,7 +38,7 @@ concurrency:
 jobs:
   leads:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -58,7 +58,8 @@ jobs:
           WITH_EMAIL: ${{ inputs.email }}
         run: |
           mkdir -p work
-          printf '%s\n' "$QUERY" > work/queries.txt
+          printf '%s' "$QUERY" | tr ';' '\n' | sed 's/^ *//;s/ *$//;/^$/d' > work/queries.txt
+          [ "$(wc -l < work/queries.txt)" -le 30 ] || { echo "máximo 30 pesquisas por corrida"; exit 1; }
           EXTRA=""
           [ "$WITH_EMAIL" = "true" ] && EXTRA="-email"
           docker run --rm -v "$PWD/work:/work" gosom/google-maps-scraper:latest \
